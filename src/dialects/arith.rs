@@ -1,8 +1,10 @@
 //! `arith` (subset; formats from `ArithOps.td`, checked against `mlir-opt` 22.1.8 output).
 
+use core::fmt::{self, Write};
+
 use serde::{Deserialize, Serialize};
 
-use crate::{Attribute, Type, Value, mlir};
+use crate::{Attribute, Content, Op, Parser, Printer, R, Type, Value, mlir};
 
 /// `lhs, rhs : T` binary ops without properties.
 macro_rules! binops {
@@ -112,6 +114,93 @@ predicates! {
     }
 }
 
+/// `arith.truncf` rounding modes (`i32` case values).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[allow(non_camel_case_types)]
+pub enum RoundingMode {
+    to_nearest_even,
+    downward,
+    upward,
+    toward_zero,
+    to_nearest_away,
+}
+
+#[mlir::op("arith.extf", format = "$in (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `to` type($out)", results(out))]
+pub struct ExtF<'a> {
+    #[slot(in_ty, name = "in")]
+    pub input: Value<'a>,
+    #[attr(dialect = "arith.fastmath")]
+    pub fastmath: Option<Attribute<'a>>,
+    #[dtype]
+    pub in_ty: Type<'a>,
+    #[dtype]
+    pub out: Type<'a>,
+}
+
+#[mlir::op(
+    "arith.truncf",
+    format = "$in ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `to` type($out)",
+    results(out)
+)]
+pub struct TruncF<'a> {
+    #[slot(in_ty, name = "in")]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
+    #[attr(dialect = "arith.fastmath")]
+    pub fastmath: Option<Attribute<'a>>,
+    #[dtype]
+    pub in_ty: Type<'a>,
+    #[dtype]
+    pub out: Type<'a>,
+}
+
+/// `arith.select %c, %a, %b : T`, or `: C, T` when the condition is a vector / tensor of `i1`:
+/// hand-written syntax (the condition's type is spelled only when it is not `i1`).
+#[mlir::op("arith.select", custom, results(result))]
+pub struct Select<'a> {
+    #[slot(condition_ty)]
+    pub condition: Value<'a>,
+    #[slot(result)]
+    pub true_value: Value<'a>,
+    #[slot(result)]
+    pub false_value: Value<'a>,
+    #[dtype]
+    pub condition_ty: Type<'a>,
+    #[dtype]
+    pub result: Type<'a>,
+}
+
+impl Op for Select<'_> {
+    const NAME: &'static str = "arith.select";
+    const FORMAT: &'static str = "";
+
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        p.op_name(Self::NAME)?;
+        write!(p, " {}, {}, {}", self.condition, self.true_value, self.false_value)?;
+        p.attr_dict("", &self.attrs, &[])?;
+        match self.condition_ty {
+            Type::I1 => write!(p, " : {}", self.result)?,
+            ref c => write!(p, " : {c}, {}", self.result)?,
+        }
+        p.loc(&self.loc)
+    }
+
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let condition = p.value()?;
+        p.expect(",")?;
+        let true_value = p.value()?;
+        p.expect(",")?;
+        let false_value = p.value()?;
+        let attrs = p.opt_dict()?;
+        p.expect(":")?;
+        let first = p.ty()?;
+        let (condition_ty, result) = if p.eat(",") { (first, p.ty()?) } else { (Type::I1, first) };
+        let op = Select { condition, true_value, false_value, condition_ty, result, attrs, loc: p.opt_loc()? };
+        Content::convert(&op).or_else(|e| p.err(e.0))
+    }
+}
+
 #[mlir::op("arith.negf", format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct NegF<'a> {
     #[slot(result)]
@@ -173,4 +262,5 @@ pub enum Arith<'a> {
     IndexCast(IndexCast<'a>), IndexCastUI(IndexCastUI<'a>), ExtSI(ExtSI<'a>), ExtUI(ExtUI<'a>),
     SIToFP(SIToFP<'a>), UIToFP(UIToFP<'a>), FPToSI(FPToSI<'a>), FPToUI(FPToUI<'a>), Bitcast(Bitcast<'a>),
     NegF(NegF<'a>), CmpI(CmpI<'a>), CmpF(CmpF<'a>), Constant(Constant<'a>),
+    ExtF(ExtF<'a>), TruncF(TruncF<'a>), Select(Select<'a>),
 }

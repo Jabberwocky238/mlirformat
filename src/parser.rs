@@ -1464,7 +1464,10 @@ impl Format<'_> {
                 Role::Operand { .. } => p.at(b'%'),
                 Role::Successor => p.at(b'^'),
                 Role::Region => p.at(b'{'),
-                _ => p.at(b'<'),
+                Role::Prop { dialect: Some(_), .. } => p.at(b'<'),
+                // An enum keyword: any word the format does not spell as a literal.
+                Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w)),
+                _ => false,
             },
             _ => false,
         };

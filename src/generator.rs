@@ -582,6 +582,19 @@ impl Content {
     }
 }
 
+impl Field {
+    /// A property field's value as an attribute (`None`: absent), enum case values typed `:iN`.
+    pub fn attr(&self, c: Content) -> Result<Option<Attribute<'static>>, Error> {
+        let a = Option::<Attribute>::try_from(c)?;
+        Ok(match (a, self.role) {
+            (Some(Attribute::Int { lit, .. }), Role::Prop { int: Some(ty), .. }) => {
+                Some(Attribute::Int { lit, ty: Some(Type::try_from(ty).map_err(|e| Error(e.msg))?) })
+            }
+            (a, _) => a,
+        })
+    }
+}
+
 impl NamedAttr<'_> {
     pub fn of(name: &str, value: Attribute<'static>) -> NamedAttr<'static> {
         NamedAttr { name: Cow::Owned(name.into()), value: (value != Attribute::Unit).then_some(value) }
@@ -621,7 +634,7 @@ impl Operation<'_> {
         results.sort_by_key(|(k, _)| *k);
         let mut props: Vec<NamedAttr<'static>> = Vec::new();
         for f in schema.of_role(|r| matches!(r, Role::Prop { .. })) {
-            props.extend(Option::<Attribute>::try_from(take(f.key)?)?.map(|a| NamedAttr::of(f.name, a)));
+            props.extend(f.attr(take(f.key)?)?.map(|a| NamedAttr::of(f.name, a)));
         }
         if schema.of_role(|r| matches!(r, Role::Operand { .. })).filter(|f| f.variadic).count() > 1 {
             let values = sizes.iter().map(|n| Cow::Owned(n.to_string())).collect();
@@ -704,8 +717,12 @@ impl Spacer {
 struct Values(Vec<(&'static str, Content)>);
 
 impl Values {
+    /// A field's value; an `Option`'s `Some` is looked through.
     fn raw(&self, f: &Field) -> Option<&Content> {
-        self.0.iter().find(|(k, _)| *k == f.key).map(|(_, v)| v)
+        self.0.iter().find(|(k, _)| *k == f.key).map(|(_, v)| match v {
+            Content::Some(x) => &**x,
+            v => v,
+        })
     }
 
     fn get<T: DeserializeOwned>(&self, f: &Field) -> Result<T, Error> {
@@ -714,7 +731,7 @@ impl Values {
 
     /// The property as an attribute (`None`: absent or default).
     fn prop(&self, f: &Field) -> Result<Option<Attribute<'static>>, Error> {
-        let a = self.raw(f).cloned().map(Option::<Attribute>::try_from).transpose()?.flatten();
+        let a = self.raw(f).cloned().map(|c| f.attr(c)).transpose()?.flatten();
         Ok(a.filter(|a| Some(a) != f.default_attr().as_ref()))
     }
 

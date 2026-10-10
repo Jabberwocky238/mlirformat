@@ -377,8 +377,9 @@ pub enum Infer {
 /// ```text
 /// %name[*]:T                      operand(s); their type is type variable `T`
 /// !name[*][=k][~i1|~i1:T|~of:a]   type variable; `=k`: result #k; `~`: how custom form infers it
-/// #name[?][@dialect.attr][|default]
-///                                 property; `?`: unit (a `bool`); `@`: a dialect attribute spelled
+/// #name[?][:iN][@dialect.attr][|default]
+///                                 property; `?`: unit (a `bool`); `:iN`: integer type of an enum's
+///                                 case value (default `i64`); `@`: a dialect attribute spelled
 ///                                 without its prefix in custom form; `|`: default body, omitted there
 /// ^name[*]   region(s)      >name   successor      {}   discardable attributes      @   location
 /// ```
@@ -386,7 +387,7 @@ pub enum Infer {
 pub enum Role {
     Operand { ty: &'static str },
     Type { result: Option<usize>, infer: Option<Infer> },
-    Prop { unit: bool, dialect: Option<&'static str>, default: Option<&'static str> },
+    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str> },
     Region,
     Successor,
     Attrs,
@@ -439,9 +440,10 @@ impl TryFrom<&'static str> for Field {
             }
             b'#' => {
                 let (head, default) = split(rest, '|');
-                let (name, dialect) = split(head, '@');
+                let (head, dialect) = split(head, '@');
+                let (name, int) = split(head, ':');
                 let (name, unit) = name.strip_suffix('?').map_or((name, false), |n| (n, true));
-                (name, false, Role::Prop { unit, dialect, default })
+                (name, false, Role::Prop { unit, int, dialect, default })
             }
             b'^' => {
                 let (name, variadic) = star(rest);
@@ -536,6 +538,13 @@ impl<'f> Format<'f> {
         Elem::flatten(&self.elems, &mut flat);
         let mut after = flat.into_iter().skip_while(|e| **e != Elem::Var(name)).skip(1);
         after.find(|e| **e != Elem::AttrDict) == Some(&Elem::Lit(":"))
+    }
+
+    /// Is `word` one of the format's literals?
+    pub fn literal(&self, word: &str) -> bool {
+        let mut flat = Vec::new();
+        Elem::flatten(&self.elems, &mut flat);
+        flat.contains(&&Elem::Lit(word))
     }
 
     /// Fields the format spells by name (the other properties go through `attr-dict`).

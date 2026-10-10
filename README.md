@@ -48,3 +48,10 @@ MLIR names are lowerCamelCase unless `name = "..."`. `attrs` and `loc` fields ar
 
 `cargo test -p mlirformat` (fixtures: llvm-project 22.1.8 `mlir/test` + `mlir-opt` custom / generic
 output), `cargo test -p mlirformat-sampleplugin`.
+
+## Release
+
+Bump `version` in `Cargo.toml` and `macros/Cargo.toml` (and the `mlirformat-macros` dependency),
+commit, then push a tag with the same number (`git tag 0.1.0 && git push origin 0.1.0`). The
+`release` workflow tests, publishes `mlirformat-macros` and `mlirformat` to crates.io (repository
+secret `CARGO_REGISTRY_TOKEN`) and creates the GitHub release. `ci` runs the tests on every push.

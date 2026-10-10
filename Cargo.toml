@@ -2,15 +2,20 @@
 name = "mlirformat"
 version = "0.1.0"
 edition = "2024"
-description = "Dialect-agnostic MLIR textual format parser/printer with serde support"
+description = "MLIR text <-> IR <-> typed Rust ops: parser, printer, serde-based #[mlir::op] and dialect plugins"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Jabberwocky238/mlirformat.rs"
+readme = "README.md"
+keywords = ["mlir", "parser", "serde", "compiler", "ir"]
+categories = ["parser-implementations", "compilers", "no-std"]
+# The mlir-opt fixtures stay in the repository.
+exclude = ["tests", "examples", ".github"]
 
 [workspace]
 members = ["macros", "sampleplugin"]
 
 [dependencies]
-mlirformat-macros = { path = "macros" }
+mlirformat-macros = { path = "macros", version = "0.1.0" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
 thiserror = { version = "2", default-features = false }
 

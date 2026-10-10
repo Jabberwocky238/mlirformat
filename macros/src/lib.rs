@@ -18,8 +18,9 @@
 //! #[slot(T)]                       operand(s) typed by type variable T
 //! #[dtype] #[dtype(i1)] #[dtype(i1 = x)] #[dtype(of = attr)]
 //!                                  type variable; how custom form infers it when unspelled
-//! #[attr] #[attr(dialect = "arith.overflow", default = "<none>")]
-//!                                  property (`bool`: unit attribute); a dialect attribute is
+//! #[attr] #[attr(int = "i32")] #[attr(dialect = "arith.overflow", default = "<none>")]
+//!                                  property (`bool`: unit attribute; enum: case value typed
+//!                                  `int`, default i64); a dialect attribute is
 //!                                  spelled without its prefix, its default is omitted
 //! #[region]  #[successor]
 //! ```
