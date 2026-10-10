@@ -26,11 +26,18 @@ pub struct Args {
     /// Only this dialect (namespace, e.g. `arith`).
     #[arg(long)]
     dialect: Option<String>,
+    /// A dialect's type / attribute parameter hook, `<namespace>=<path>`
+    /// (`dope=crate::Dope::params` ⇒ `#[mlir::dialect("dope", params = crate::Dope::params)]`). Repeatable.
+    #[arg(long = "params", value_name = "NS=PATH")]
+    params: Vec<String>,
 }
 
 impl Args {
     /// ⭐ Each `.td` file on its own thread (nearly all the time is `llvm-tblgen`); reports in input order.
     pub fn run(self) -> Result<(), String> {
+        if let Some(bad) = self.params.iter().find(|p| !p.contains('=')) {
+            return Err(format!("--params `{bad}`: expected `<namespace>=<path>`"));
+        }
         if self.json.is_some() && self.td.len() != 1 {
             return Err("--json reads the records of exactly one `.td` file".into());
         }
@@ -64,7 +71,8 @@ impl Args {
             .iter()
             .map(|d| {
                 let path = self.out.join(d.file_name());
-                std::fs::write(&path, d.render(&source)).map_err(|e| format!("writing {}: {e}", path.display()))?;
+                let params = self.params.iter().find_map(|p| p.split_once('=').filter(|(ns, _)| *ns == d.name).map(|(_, path)| path));
+                std::fs::write(&path, d.render(&source, params)).map_err(|e| format!("writing {}: {e}", path.display()))?;
                 let generic = d.ops.iter().filter(|o| o.format.is_none()).count();
                 Ok(format!("{}: {} ops ({} custom form, {generic} generic only)", path.display(), d.ops.len(), d.ops.len() - generic))
             })

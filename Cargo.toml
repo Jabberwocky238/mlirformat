@@ -1,6 +1,6 @@
 [package]
 name = "mlirformat"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "MLIR text <-> IR <-> typed Rust ops: parser, printer, serde-based #[mlir::op] and dialect plugins"
 license = "MIT"
@@ -14,10 +14,10 @@ exclude = ["tests", "examples", ".github"]
 [workspace]
 members = ["macros"]
 # An out-of-tree dialect: its own crate, depending on mlirformat by path.
-exclude = ["sampleplugin"]
+exclude = ["sampleplugin", "tests/nostd"]
 
 [dependencies]
-mlirformat-macros = { path = "macros", version = "0.2.0" }
+mlirformat-macros = { path = "macros", version = "0.2.1" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
 thiserror = { version = "2", default-features = false }
 clap = { version = "4", features = ["derive"], optional = true }

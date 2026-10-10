@@ -20,3 +20,5 @@ jobs:
       - run: cargo test --release -p mlirformat
       - run: cargo test --manifest-path sampleplugin/Cargo.toml
       - run: cargo build -p mlirformat --no-default-features
+      - name: Generated dialects compile in a no_std crate
+        run: cargo build --manifest-path tests/nostd/Cargo.toml
