@@ -6,15 +6,17 @@ on:
   pull_request:
 
 jobs:
+  versions:
+    uses: ./.github/workflows/versions.yml
+
   test:
+    needs: versions
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --all-targets
       - run: cargo test --release -p mlirformat
-      - run: cargo test -p mlirformat-sampleplugin
+      - run: cargo test --manifest-path sampleplugin/Cargo.toml
       - run: cargo build -p mlirformat --no-default-features

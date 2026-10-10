@@ -2,11 +2,26 @@
 
 MLIR text ⇄ IR ⇄ typed Rust ops.
 
+MLIR behavior follows **MLIR 22.1.8** (llvm-project `llvmorg-22.1.8`): the textual format, the
+dialects and their assembly formats are checked against `mlir-opt` 22.1.8.
+
 ## Install
 
 ```sh
-cargo add mlirformat
+cargo add mlirformat        # the library
+cargo install mlirformat    # the `mlirformat` command line
 ```
+
+Prebuilt `mlirformat` binaries are attached to each GitHub release.
+
+## Features
+
+| feature | default | what it is |
+|---|---|---|
+| `std` | yes | Standard library support. Without it the library is `no_std` (needs `alloc`). |
+| `tblgen` | yes | The `mlirformat` command line, which generates dialects from ODS `.td` files. Pulls in `clap` and `serde_json`; implies `std`. |
+
+For the library alone: `cargo add mlirformat --no-default-features`.
 
 ## Usage
 
@@ -44,6 +59,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(opt.show(&module).to_string(), "%0 = demo.max %a, %b : i32\n");
     Ok(())
 }
+```
+
+## Command line
+
+`mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
+op and a `#[mlir::dialect]` enum. It runs `llvm-tblgen --dump-json` (LLVM 22.1.8) to resolve the
+records.
+
+```sh
+mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
+    -I $LLVM/mlir/include --llvm-tblgen $LLVM/build/bin/llvm-tblgen -o src/dialects
 ```
 
 ## License

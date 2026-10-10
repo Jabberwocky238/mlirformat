@@ -128,8 +128,14 @@ impl Template {
         Operation::of_op(&op).or_else(|e| p.err(e.0))
     }
 
+    /// The custom form, or `None` (the op then prints generic) when it does not fit `O` or `O`
+    /// cannot print it.
     fn print_as<O: Op>(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
-        op.to_op::<O>().ok().map(|o| o.print(p))
+        O::CUSTOM.then_some(())?;
+        let typed = op.to_op::<O>().ok()?;
+        let mut text = alloc::string::String::new();
+        typed.print(&mut p.fork(&mut text)).ok()?;
+        Some(fmt::Write::write_str(p, &text))
     }
 }
 

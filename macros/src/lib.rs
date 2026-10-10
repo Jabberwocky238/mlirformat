@@ -26,7 +26,8 @@
 //! ```
 //!
 //! `attrs` (discardable attributes) and `loc` fields are added. Options: `format = "..."`,
-//! `results(a, b)`, `custom` (no `Op` impl: `print` / `parse` written by hand).
+//! `results(a, b)`, `custom` (no `Op` impl: `print` / `parse` written by hand), `generic` (no custom
+//! form: always printed generic).
 //!
 //! `#[mlir::dialect("ns", params = f)]`: `f` structures `!ns.x<...>` / `#ns.x<...>` bodies
 //! (`Dialect::parse_params`).

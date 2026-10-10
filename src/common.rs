@@ -266,14 +266,23 @@ pub trait Op: Serialize + DeserializeOwned {
     const NAME: &'static str;
     /// ODS-style assembly format (see [`Elem`]).
     const FORMAT: &'static str;
+    /// Whether the op has a custom form; `false` (`#[mlir::op(..., generic)]`): it always prints
+    /// generic, typed conversions still work.
+    const CUSTOM: bool = true;
 
-    /// Prints the custom form, op name included.
+    /// Prints the custom form (op name included), or the generic form without one.
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        if !Self::CUSTOM {
+            return p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?);
+        }
         Format::of::<Self>().map_err(|_| fmt::Error)?.print(self, p)
     }
 
     /// Parses the custom form after the op name.
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        if !Self::CUSTOM {
+            return p.err(format!("`{}` has no custom form", Self::NAME));
+        }
         Format::of::<Self>().or_else(|e| p.err(e.0))?.parse(p)
     }
 
@@ -374,7 +383,7 @@ pub enum Infer {
     Same(&'static str),
     /// Always type `.0` (`index`'s operands and results).
     Is(&'static str),
-    /// The element type of `complex<…>` type variable `.0` (`complex.re`'s result).
+    /// The element type of type variable `.0`: `complex<T>`, a tensor / vector / memref of `T` (`complex.re`'s result).
     ElemOf(&'static str),
 }
 
@@ -597,6 +606,12 @@ impl<'f> Elem<'f> {
                     (Self::Group { anchor, elems }, tail.strip_prefix(")?").ok_or_else(|| bad("a group must end with `)?`".into()))?)
                 }
                 _ if rest.starts_with("attr-dict") => (Self::AttrDict, &rest["attr-dict".len()..]),
+                // `qualified(x)`: types and attributes always print with their dialect prefix here.
+                _ if rest.starts_with("qualified(") => {
+                    let (mut inner, tail) = Self::list(&rest["qualified(".len()..], op)?;
+                    let (Some(elem), true) = (inner.pop(), inner.is_empty()) else { return Err(bad("`qualified(...)` takes one element".into())) };
+                    (elem, close(tail, ')')?)
+                }
                 _ if rest.starts_with("type(") => {
                     let (name, tail) = var(&rest["type(".len()..])?;
                     (Self::TypeOf(name), close(tail, ')')?)

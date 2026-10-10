@@ -52,6 +52,11 @@ impl<'p, 'd> Printer<'p, 'd> {
         Self { out, indent: 0, opt, default_ns: Some("builtin") }
     }
 
+    /// A printer into `out` in the same state (indentation, default dialect, dialects).
+    pub fn fork<'q>(&self, out: &'q mut dyn Write) -> Printer<'q, 'd> {
+        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns }
+    }
+
     /// Prints with `f` into `out`, no dialects registered.
     pub fn write(out: &mut dyn Write, f: impl FnOnce(&mut Printer<'_, '_>) -> fmt::Result) -> fmt::Result {
         f(&mut Printer::new(out, &MlirOpt::new()))

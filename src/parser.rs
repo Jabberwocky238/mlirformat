@@ -1255,6 +1255,11 @@ impl<'a> Operation<'a> {
                 Some((_, Bound::Many(ts))) if f.variadic => Content::of(ts)?,
                 // A variadic variable of an empty variadic group: no types.
                 None if f.variadic => Content::Seq(Vec::new()),
+                // A fixed type whose only operand groups are empty.
+                None if matches!(f.role, Role::Type { infer: Some(Infer::Is(_)), .. }) => {
+                    let Role::Type { infer: Some(Infer::Is(ty)), .. } = f.role else { unreachable!() };
+                    Content::of(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?
+                }
                 _ => return Err(format!("type variable `{}` is not determined", f.name).into()),
             }));
         }
@@ -1494,7 +1499,7 @@ impl Format<'_> {
                 (None, Role::Type { infer: Some(Infer::I1), .. }) => vec![Type::I1],
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like()],
                 (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
-                    Some(Type::Complex(elem)) => vec![Content::convert(&**elem)?],
+                    Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => vec![Content::convert(&**elem)?],
                     _ => return Err(undetermined()),
                 },
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],

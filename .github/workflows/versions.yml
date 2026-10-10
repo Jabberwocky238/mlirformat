@@ -1,0 +1,18 @@
+name: versions
+
+# Reusable check: every crate shares one version (and matches the release tag when given).
+# ci and release run it first; nothing else runs unless it passes.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag that must equal the crate version.
+        type: string
+        default: ""
+
+jobs:
+  versions:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: sh scripts/check-versions.sh ${{ inputs.tag }}

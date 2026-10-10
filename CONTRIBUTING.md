@@ -16,7 +16,7 @@ Anything goes. For a bug, the MLIR text that fails and what you expected help th
 
    ```sh
    cargo test --release -p mlirformat
-   cargo test -p mlirformat-sampleplugin
+   cargo test --manifest-path sampleplugin/Cargo.toml
    ```
 
 4. Open the pull request. CI runs the same tests.

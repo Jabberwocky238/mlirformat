@@ -11,11 +11,12 @@ pub struct OpArgs {
     format: Option<LitStr>,
     results: Vec<Ident>,
     custom: bool,
+    generic: bool,
 }
 
 impl Parse for OpArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut a = Self { name: input.parse()?, format: None, results: Vec::new(), custom: false };
+        let mut a = Self { name: input.parse()?, format: None, results: Vec::new(), custom: false, generic: false };
         while input.parse::<Option<Token![,]>>()?.is_some() && !input.is_empty() {
             let key: Ident = input.parse()?;
             match key.to_string().as_str() {
@@ -29,7 +30,8 @@ impl Parse for OpArgs {
                     a.results = Punctuated::<Ident, Token![,]>::parse_terminated(&c)?.into_iter().collect();
                 }
                 "custom" => a.custom = true,
-                _ => return Err(Error::new(key.span(), "expected `format = \"...\"`, `results(...)` or `custom`")),
+                "generic" => a.generic = true,
+                _ => return Err(Error::new(key.span(), "expected `format = \"...\"`, `results(...)`, `custom` or `generic`")),
             }
         }
         Ok(a)
@@ -180,6 +182,13 @@ impl OpArgs {
         let name = &self.name;
         let (ig, tg, wc) = item.generics.split_for_impl();
         let op_impl = match (&self.format, self.custom) {
+            _ if self.generic => quote! {
+                impl #ig ::mlirformat::Op for #ty #tg #wc {
+                    const NAME: &'static str = #name;
+                    const FORMAT: &'static str = "";
+                    const CUSTOM: bool = false;
+                }
+            },
             (_, true) => quote!(),
             (Some(format), false) => quote! {
                 impl #ig ::mlirformat::Op for #ty #tg #wc {
@@ -187,7 +196,7 @@ impl OpArgs {
                     const FORMAT: &'static str = #format;
                 }
             },
-            (None, false) => return Err(Error::new(name.span(), "missing `format = \"...\"` (or `custom`)")),
+            (None, false) => return Err(Error::new(name.span(), "missing `format = \"...\"` (or `custom` / `generic`)")),
         };
         Ok(quote! {
             #[derive(::core::fmt::Debug, ::core::clone::Clone, ::core::cmp::PartialEq, ::mlirformat::__serde::Serialize, ::mlirformat::__serde::Deserialize)]

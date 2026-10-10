@@ -2,88 +2,28 @@
 //! upstream op table knows prints exactly as `mlir-opt` prints its custom form, and parses back
 //! to the same op.
 
-use std::fs;
-use std::path::Path;
+mod common;
 
+use std::collections::BTreeMap;
+
+use common::{Fixtures, Verdict};
 use mlirformat::*;
-
-/// Replaces SSA names (`%arg0`, `%c1_i64`, ...), block names and alias numbers (`#map3`) by `_`,
-/// so the two outputs are comparable.
-fn anon(s: &str) -> String {
-    let name = |c: &char| c.is_ascii_alphanumeric() || matches!(c, '_' | '$' | '.' | '-' | '#');
-    let mut out = String::new();
-    let mut it = s.chars().peekable();
-    while let Some(c) = it.next() {
-        out.push(c);
-        if matches!(c, '%' | '^') {
-            out.push('_');
-            while it.peek().is_some_and(name) {
-                it.next();
-            }
-        }
-        if out.ends_with("#map") {
-            while it.peek().is_some_and(char::is_ascii_digit) {
-                it.next();
-            }
-        }
-    }
-    out
-}
-
-/// Visits ops with whether they are visible in custom form: `mlir-opt` elides the bodies of
-/// linalg named ops there.
-fn walk<'x, 'a>(ops: &'x [Operation<'a>], visible: bool, f: &mut impl FnMut(&'x Operation<'a>, bool)) {
-    for op in ops {
-        f(op, visible);
-        let inner = visible && !op.name.starts_with("linalg.");
-        op.regions.iter().flat_map(|r| &r.blocks).for_each(|b| walk(&b.ops, inner, f));
-    }
-}
 
 #[test]
 fn upstream_ops_match_mlir_opt() {
     let opt = MlirOpt::upstream();
-    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
-    let (mut hits, mut declined, mut failures) = (std::collections::BTreeMap::<String, usize>::new(), Vec::new(), Vec::new());
-    for entry in fs::read_dir(dir.join("generic")).unwrap() {
-        let path = entry.unwrap().path();
-        let src = fs::read_to_string(&path).unwrap();
-        let custom = anon(&fs::read_to_string(dir.join("custom").join(path.file_name().unwrap())).unwrap());
-        for chunk in src.split("// -----") {
-            let m = Module::try_from(chunk.trim_start_matches('-')).unwrap();
-            let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
-            walk(&ops, true, &mut |op, visible| {
-                if opt.template(&op.name).is_none() {
-                    return;
-                }
-                let text = opt.show(op).to_string();
-                if text.starts_with(&format!("{} = \"", op.results.iter().map(|r| format!("%{}", r.name)).collect::<Vec<_>>().join(", "))) || text.starts_with('"') {
-                    declined.push(text);
-                    return;
-                }
-                let one_line = !text.contains('\n');
-                // Inside its own dialect's regions an op prints without its prefix (`return`).
-                let (full, short) = (&*op.name, op.name.split_once('.').map_or(&*op.name, |(_, n)| n));
-                // Result names are mlir-opt's choice (`%low, %high` vs `%36:2`): compare from the op name on.
-                let body = if op.results.is_empty() { text.as_str() } else { text.split_once(" = ").map_or(text.as_str(), |(_, b)| b) };
-                let long = if body.starts_with(full) { body.to_string() } else { body.replacen(short, full, 1) };
-                let brief = long.replacen(full, short, 1);
-                if visible && one_line && !custom.contains(&anon(&long)) && !custom.contains(&anon(&brief)) {
-                    failures.push(format!("{}: `{text}` not in mlir-opt custom output", path.display()));
-                }
-                match opt.parse_op(&text) {
-                    Ok(back) if back == *op => *hits.entry(op.name.to_string()).or_default() += 1,
-                    Ok(back) => failures.push(format!("{}: reparse mismatch: {text}\n{back:?}\n{op:?}", path.display())),
-                    Err(e) => failures.push(format!("{}: reparse: {e}: {text}", path.display())),
-                }
-            });
-        }
-    }
+    let (mut hits, mut declined, mut failures) = (BTreeMap::<String, usize>::new(), Vec::new(), Vec::new());
+    Fixtures::each(|path, op, visible, custom| match Fixtures::judge(&opt, op, visible, custom) {
+        Verdict::Unknown => {}
+        Verdict::Generic => declined.push(op.to_string()),
+        Verdict::Matched | Verdict::Reparsed => *hits.entry(op.name.to_string()).or_default() += 1,
+        Verdict::Mismatch(text) => failures.push(format!("{}: `{text}` not in mlir-opt custom output", path.display())),
+        Verdict::Broken(why) => failures.push(format!("{}: {why}", path.display())),
+    });
     println!("checked: {hits:?}\n{} declined:\n{}", declined.len(), declined.join("\n"));
     assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.iter().take(40).cloned().collect::<Vec<_>>().join("\n"));
     assert!(hits.len() > 20);
 }
-
 /// A user-defined op: a struct and `#[mlir::op]` are all it takes.
 #[mlir::op("arith.maxsi", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
 pub struct ArithMax<'a> {

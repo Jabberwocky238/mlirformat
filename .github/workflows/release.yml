@@ -1,7 +1,8 @@
 name: release
 
-# Push a version tag (`0.1.0`) whose number matches Cargo.toml: tests, publishes
-# mlirformat-macros then mlirformat to crates.io, and creates the GitHub release.
+# Push a tag equal to the crate version (`0.2.0`): checks the versions, tests, publishes
+# mlirformat-macros then mlirformat to crates.io, creates the GitHub release and attaches the
+# `mlirformat` command line built for Linux, macOS and Windows.
 # Needs the repository secret CARGO_REGISTRY_TOKEN (a crates.io API token).
 on:
   push:
@@ -11,20 +12,20 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  versions:
+    uses: ./.github/workflows/versions.yml
+    with:
+      tag: ${{ github.ref_name }}
+
+  publish:
+    needs: versions
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Tag matches the crate versions
-        run: |
-          for m in Cargo.toml macros/Cargo.toml; do
-            v=$(sed -n 's/^version = "\(.*\)"/\1/p' "$m" | head -1)
-            [ "$v" = "$GITHUB_REF_NAME" ] || { echo "$m is $v, tag is $GITHUB_REF_NAME"; exit 1; }
-          done
       - run: cargo test --release -p mlirformat
-      - run: cargo test -p mlirformat-sampleplugin
+      - run: cargo test --manifest-path sampleplugin/Cargo.toml
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
@@ -35,3 +36,35 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+
+  binaries:
+    needs: publish
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --bin mlirformat --target ${{ matrix.target }}
+      - name: Attach to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          name="mlirformat-$GITHUB_REF_NAME-${{ matrix.target }}"
+          dir="target/${{ matrix.target }}/release"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a "$name.zip" "./$dir/mlirformat.exe"
+            gh release upload "$GITHUB_REF_NAME" "$name.zip"
+          else
+            tar -czf "$name.tar.gz" -C "$dir" mlirformat
+            gh release upload "$GITHUB_REF_NAME" "$name.tar.gz"
+          fi
