@@ -1,0 +1,79 @@
+module {
+  func.func @constant_vec() -> vector<8xindex> {
+    %cst = arith.constant dense<[0, 1, 2, 3, 4, 5, 6, 7]> : vector<8xindex>
+    %0 = test.reflect_bounds %cst : vector<8xindex>
+    return %0 : vector<8xindex>
+  }
+  func.func @constant_splat() -> vector<8xi32> {
+    %cst = arith.constant dense<3> : vector<8xi32>
+    %0 = test.reflect_bounds %cst : vector<8xi32>
+    return %0 : vector<8xi32>
+  }
+  func.func @float_constant_splat() -> vector<8xf32> {
+    %cst = arith.constant dense<3.000000e+00> : vector<8xf32>
+    return %cst : vector<8xf32>
+  }
+  func.func @vector_splat() -> vector<4xindex> {
+    %0 = test.with_bounds {smax = 5 : index, smin = 4 : index, umax = 5 : index, umin = 4 : index} : index
+    %1 = vector.broadcast %0 : index to vector<4xindex>
+    %2 = test.reflect_bounds %1 : vector<4xindex>
+    return %2 : vector<4xindex>
+  }
+  func.func @vector_broadcast() -> vector<4x16xindex> {
+    %0 = test.with_bounds {smax = 5 : index, smin = 4 : index, umax = 5 : index, umin = 4 : index} : vector<16xindex>
+    %1 = vector.broadcast %0 : vector<16xindex> to vector<4x16xindex>
+    %2 = test.reflect_bounds %1 : vector<4x16xindex>
+    return %2 : vector<4x16xindex>
+  }
+  func.func @vector_shape_cast() -> vector<4x4xindex> {
+    %0 = test.with_bounds {smax = 5 : index, smin = 4 : index, umax = 5 : index, umin = 4 : index} : vector<16xindex>
+    %1 = vector.shape_cast %0 : vector<16xindex> to vector<4x4xindex>
+    %2 = test.reflect_bounds %1 : vector<4x4xindex>
+    return %2 : vector<4x4xindex>
+  }
+  func.func @vector_transpose() -> vector<2x4xindex> {
+    %0 = test.with_bounds {smax = 8 : index, smin = 7 : index, umax = 8 : index, umin = 7 : index} : vector<4x2xindex>
+    %1 = vector.transpose %0, [1, 0] : vector<4x2xindex> to vector<2x4xindex>
+    %2 = test.reflect_bounds %1 : vector<2x4xindex>
+    return %2 : vector<2x4xindex>
+  }
+  func.func @vector_extract() -> index {
+    %0 = test.with_bounds {smax = 6 : index, smin = 5 : index, umax = 6 : index, umin = 5 : index} : vector<4xindex>
+    %1 = vector.extract %0[0] : index from vector<4xindex>
+    %2 = test.reflect_bounds %1 : index
+    return %2 : index
+  }
+  func.func @vector_add() -> vector<4xindex> {
+    %0 = test.with_bounds {smax = 5 : index, smin = 4 : index, umax = 5 : index, umin = 4 : index} : vector<4xindex>
+    %1 = test.with_bounds {smax = 7 : index, smin = 6 : index, umax = 7 : index, umin = 6 : index} : vector<4xindex>
+    %2 = arith.addi %0, %1 : vector<4xindex>
+    %3 = test.reflect_bounds %2 : vector<4xindex>
+    return %3 : vector<4xindex>
+  }
+  func.func @vector_insert() -> vector<4xindex> {
+    %0 = test.with_bounds {smax = 7 : index, smin = 5 : index, umax = 7 : index, umin = 5 : index} : vector<4xindex>
+    %1 = test.with_bounds {smax = 8 : index, smin = 6 : index, umax = 8 : index, umin = 6 : index} : index
+    %2 = vector.insert %1, %0 [0] : index into vector<4xindex>
+    %3 = test.reflect_bounds %2 : vector<4xindex>
+    return %3 : vector<4xindex>
+  }
+  func.func @test_loaded_vector_extract(%arg0: memref<16xi32>) -> i32 {
+    %c0 = arith.constant 0 : index
+    %0 = vector.load %arg0[%c0] : memref<16xi32>, vector<4xi32>
+    %1 = vector.extract %0[0] : i32 from vector<4xi32>
+    %2 = test.reflect_bounds %1 : i32
+    return %2 : i32
+  }
+  func.func @test_vector_extsi() -> vector<2xi32> {
+    %0 = test.with_bounds {smax = 5 : si8, smin = 1 : si8, umax = 5 : ui8, umin = 1 : ui8} : vector<2xi8>
+    %1 = arith.extsi %0 : vector<2xi8> to vector<2xi32>
+    %2 = test.reflect_bounds %1 : vector<2xi32>
+    return %2 : vector<2xi32>
+  }
+  func.func @vector_step() -> vector<8xindex> {
+    %0 = vector.step : vector<8xindex>
+    %1 = test.reflect_bounds %0 : vector<8xindex>
+    return %1 : vector<8xindex>
+  }
+}
+

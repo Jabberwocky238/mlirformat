@@ -1,0 +1,13 @@
+module {
+  %0 = "foo.op"() : () -> !foo.type
+  %1 = "foo.op"() : () -> !foo.tuple_type<!foo.type, !foo.type>
+  %2 = unrealized_conversion_cast to !bar.tuple_type<>
+  %3 = unrealized_conversion_cast %0 : !foo.type to !bar.lowered_type
+  %4:2 = unrealized_conversion_cast %1 : !foo.tuple_type<!foo.type, !foo.type> to !foo.type, !foo.type
+  %5 = unrealized_conversion_cast %0, %0 : !foo.type, !foo.type to !bar.tuple_type<!foo.type, !foo.type>
+  %6 = "foo.op"() : () -> vector<[4]xi32>
+  %7 = "foo.op"() : () -> vector<[2]x[2]xf64>
+  %8 = "foo.op"() : () -> vector<2x[4]xbf16>
+  %9 = "foo.op"() : () -> vector<2x2x[4]x[4]xi8>
+}
+
