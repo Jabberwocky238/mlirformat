@@ -1,14 +1,15 @@
-//! Dialect-agnostic MLIR textual format parser and printer.
+//! MLIR text ⇄ IR ⇄ typed Rust ops.
 //!
-//! * The generic operation form (`"dialect.op"(...) ... : (...) -> (...)`) is parsed fully.
-//! * Custom (pretty) operation forms are kept as raw text pieces; nested regions inside
-//!   them are still parsed structurally.
-//! * Builtin types are structured; dialect types/attributes are kept as `name` + raw body.
+//! * [`MlirOpt`] is the central converter: register dialects, inject ops, parse, print.
+//! * The generic op form is parsed fully; a custom form is structured when its op is in the
+//!   op table, else kept as raw text (nested regions still parsed).
+//! * A typed op is a struct with `#[mlir::op]`: serde turns it into / out of an [`Operation`],
+//!   its assembly format gives the custom form.
 //!
-//! Every AST node borrows from the source (`Cow<'a, str>`), is `#[repr(C)]`, and
-//! implements `serde::{Serialize, Deserialize}`. `Display` prints MLIR text back.
+//! Layout: `common` (what an IR is), `parser` (text → IR), `generator` (IR → text), `mliropt`
+//! (the converter, re-exporting everything public), `dialects` (upstream dialects).
 //!
-//! `no_std` compatible (needs `alloc`); the default `std` feature only forwards to deps.
+//! `no_std` compatible (needs `alloc`).
 
 #![no_std]
 
@@ -16,7 +17,7 @@ extern crate alloc;
 /// Lets `#[mlir::op]` output use `::mlirformat::` paths inside this crate too.
 extern crate self as mlirformat;
 
-/// Declares AST nodes with the common derive set.
+/// Declares IR nodes with the common derive set.
 macro_rules! ast {
     ($($(#[$m:meta])* $vis:vis $kw:ident $name:ident $(<$lt:lifetime>)? { $($body:tt)* })*) => {$(
         $(#[$m])*
@@ -49,24 +50,15 @@ macro_rules! keywords {
     )*};
 }
 
-mod ast;
-mod dialect;
+mod common;
 mod dialects;
-mod error;
-mod op;
-mod parse;
-mod print;
+mod generator;
+mod mliropt;
+mod parser;
 
-/// `#[mlir::op]` with field markers `#[slot(T)]`, `#[dtype]`.
+/// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
+pub use mliropt::*;
 
 #[doc(hidden)]
 pub use {alloc::vec as __vec, alloc::vec::Vec as __Vec, serde as __serde};
-
-pub use ast::*;
-pub use dialects::*;
-pub use dialect::{Dialect, Dialects, SymKind};
-pub use error::ParseError;
-pub use op::{Op, Spacer, Syntax};
-pub use parse::{Parser, R};
-pub use print::{Printer, Sep, WithDialects};

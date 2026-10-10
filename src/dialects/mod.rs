@@ -1,5 +1,7 @@
-//! Upstream MLIR dialects described with `#[mlir::op]`.
+//! Upstream MLIR dialects described with `#[mlir::op]` / `#[mlir::dialect]`; the only module
+//! allowed to `pub mod`.
 
-mod arith;
-
-pub use arith::*;
+pub mod arith;
+pub mod builtin;
+pub mod cf;
+pub mod func;

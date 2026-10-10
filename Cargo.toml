@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/Jabberwocky238/mlirformat.rs"
 
 [workspace]
-members = ["macros"]
+members = ["macros", "sampleplugin"]
 
 [dependencies]
 mlirformat-macros = { path = "macros" }

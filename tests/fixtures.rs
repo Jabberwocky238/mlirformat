@@ -24,35 +24,29 @@ fn each_chunk(dir: &str, mut check: impl FnMut(&str) -> Result<(), String>) {
     assert!(failures.is_empty(), "{}/{total} chunks failed:\n{}", failures.len(), failures.join("\n"));
 }
 
-/// print → parse → equal, and JSON → equal.
-fn roundtrip(m: &Module<'_>, dialects: Dialects<'_>) -> Result<(), String> {
-    let text = m.display(dialects).to_string();
-    let again = Module::parse(&text, dialects).map_err(|e| format!("reparse: {e}\n{text}"))?;
-    (again == *m).then_some(()).ok_or_else(|| format!("print/parse mismatch:\n{text}"))?;
-    let json = serde_json::to_string(m).unwrap();
+/// parse → print → parse → equal, and JSON → equal.
+fn roundtrip(src: &str, opt: &MlirOpt) -> Result<(), String> {
+    let m = opt.parse(src).map_err(|e| e.to_string())?;
+    let text = opt.show(&m).to_string();
+    let again = opt.parse(&text).map_err(|e| format!("reparse: {e}\n{text}"))?;
+    (again == m).then_some(()).ok_or_else(|| format!("print/parse mismatch:\n{text}"))?;
+    let json = serde_json::to_string(&m).unwrap();
     let back: Module<'_> = serde_json::from_str(&json).map_err(|e| e.to_string())?;
-    (back == *m).then_some(()).ok_or_else(|| "json mismatch".into())
+    (back == m).then_some(()).ok_or_else(|| "json mismatch".into())
 }
 
-fn custom_ops(ops: &[Operation<'_>]) -> usize {
-    ops.iter()
-        .map(|op| match &op.body {
-            OpBody::Custom(_) => 1,
-            OpBody::Generic(g) => g.regions.iter().flat_map(|r| &r.blocks).map(|b| custom_ops(&b.ops)).sum(),
-        })
-        .sum()
-}
-
-fn top_ops<'x, 'a>(m: &'x Module<'a>) -> Vec<Operation<'a>> {
-    m.items.iter().filter_map(|i| if let Item::Op(op) = i { Some(op.clone()) } else { None }).collect()
+/// Ops left as raw text.
+fn raw_ops(ops: &[Operation<'_>]) -> usize {
+    ops.iter().map(|op| if op.raw.is_some() { 1 } else { op.regions.iter().flat_map(|r| &r.blocks).map(|b| raw_ops(&b.ops)).sum() }).sum()
 }
 
 #[test]
 fn generic_form_is_fully_structured() {
     each_chunk("generic", |src| {
         let m = Module::try_from(src).map_err(|e| e.to_string())?;
-        match custom_ops(&top_ops(&m)) {
-            0 => roundtrip(&m, &[]),
+        let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
+        match raw_ops(&ops) {
+            0 => roundtrip(src, &MlirOpt::new()),
             n => Err(format!("{n} ops left unstructured")),
         }
     });
@@ -60,10 +54,22 @@ fn generic_form_is_fully_structured() {
 
 #[test]
 fn custom_form_roundtrips() {
-    each_chunk("custom", |src| roundtrip(&Module::try_from(src).map_err(|e| e.to_string())?, &[]));
+    each_chunk("custom", |src| roundtrip(src, &MlirOpt::new()));
 }
 
 #[test]
 fn upstream_sources_roundtrip() {
-    each_chunk("upstream", |src| roundtrip(&Module::try_from(src).map_err(|e| e.to_string())?, &[]));
+    each_chunk("upstream", |src| roundtrip(src, &MlirOpt::new()));
+}
+
+#[test]
+fn generic_form_roundtrips_through_upstream_dialects() {
+    let opt = MlirOpt::upstream();
+    each_chunk("generic", |src| roundtrip(src, &opt));
+}
+
+#[test]
+fn custom_form_roundtrips_through_upstream_dialects() {
+    let opt = MlirOpt::upstream();
+    each_chunk("custom", |src| roundtrip(src, &opt));
 }
