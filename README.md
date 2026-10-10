@@ -4,9 +4,8 @@ MLIR text ⇄ IR ⇄ typed Rust ops.
 
 ## Install
 
-```toml
-[dependencies]
-mlirformat = "0.1"
+```sh
+cargo add mlirformat
 ```
 
 ## Usage
