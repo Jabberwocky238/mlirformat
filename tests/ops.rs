@@ -64,7 +64,9 @@ fn upstream_ops_match_mlir_opt() {
                 let one_line = !text.contains('\n');
                 // Inside its own dialect's regions an op prints without its prefix (`return`).
                 let (full, short) = (&*op.name, op.name.split_once('.').map_or(&*op.name, |(_, n)| n));
-                let long = if text.contains(full) { text.clone() } else { text.replacen(short, full, 1) };
+                // Result names are mlir-opt's choice (`%low, %high` vs `%36:2`): compare from the op name on.
+                let body = if op.results.is_empty() { text.as_str() } else { text.split_once(" = ").map_or(text.as_str(), |(_, b)| b) };
+                let long = if body.starts_with(full) { body.to_string() } else { body.replacen(short, full, 1) };
                 let brief = long.replacen(full, short, 1);
                 if visible && one_line && !custom.contains(&anon(&long)) && !custom.contains(&anon(&brief)) {
                     failures.push(format!("{}: `{text}` not in mlir-opt custom output", path.display()));

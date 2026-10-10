@@ -63,6 +63,14 @@ impl<'p, 'd> Printer<'p, 'd> {
         self.write_str(short)
     }
 
+    /// Runs `f` one indentation level deeper (multi-line custom syntax: `cf.switch`'s cases).
+    pub fn nested(&mut self, f: impl FnOnce(&mut Self) -> fmt::Result) -> fmt::Result {
+        self.indent += 2;
+        let done = f(self);
+        self.indent -= 2;
+        done
+    }
+
     /// Newline followed by the current indentation.
     pub fn nl(&mut self) -> fmt::Result {
         write!(self.out, "\n{:1$}", "", self.indent)
@@ -649,7 +657,11 @@ impl Operation<'_> {
         Ok(Operation {
             name: Cow::Borrowed(name),
             operands,
-            successors: schema.of_role(|r| *r == Role::Successor).map(|f| take(f.key)?.to()).collect::<Result<_, _>>()?,
+            successors: schema
+                .of_role(|r| *r == Role::Successor)
+                .map(|f| if f.variadic { take(f.key)?.to() } else { take(f.key)?.to().map(|s| vec![s]) })
+                .collect::<Result<Vec<Vec<_>>, _>>()?
+                .concat(),
             properties: (!props.is_empty()).then_some(Attribute::Dict(props)),
             regions,
             attributes: one(Role::Attrs)?.map(Content::to).transpose()?.unwrap_or_default(),
@@ -678,12 +690,17 @@ impl Default for Spacer {
 }
 
 impl Spacer {
-    /// `` `lit` ``; the empty literal suppresses the next space.
+    /// `` `lit` ``; the empty literal suppresses the next space, `` ` ` `` writes one.
     pub fn lit(&mut self, p: &mut Printer<'_, '_>, s: &str) -> fmt::Result {
         let Some(&c) = s.as_bytes().first() else {
             (self.space, self.punct) = (false, true);
             return Ok(());
         };
+        // `` ` ` ``: an explicit space, and none of its own after it.
+        if s == " " {
+            (self.space, self.punct) = (false, true);
+            return p.write_char(' ');
+        }
         let before = match (s.len() != 1 && s != "->", self.punct) {
             (true, _) => true,
             (false, true) => !b">)}],".contains(&c),
@@ -785,6 +802,10 @@ impl Format<'_> {
                         Role::Prop { dialect, .. } => match (v.raw(f), v.prop(f)?) {
                             // A user enum prints its case name.
                             (Some(Content::Variant(e, _, case, _)), _) if !matches!(*e, "Attribute" | "Type") => p.write_str(case).map_err(io)?,
+                            // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).
+                            (Some(Content::I8(_) | Content::I16(_) | Content::I32(_) | Content::I64(_) | Content::U8(_) | Content::U16(_) | Content::U32(_) | Content::U64(_) | Content::F32(_) | Content::F64(_)), Some(a)) => {
+                                write!(p, "{}", a.untyped()).map_err(io)?;
+                            }
                             (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
                             // A dense array prints as a list: `[30, 70]`.
                             (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(&values, ", ")).map_err(io)?,

@@ -3,7 +3,7 @@
 //! [`Operation`], and typed ops.
 //!
 //! ```ignore
-//! let mut opt = MlirOpt::upstream();               // arith, func, cf, builtin
+//! let mut opt = MlirOpt::upstream();               // arith, builtin, cf, complex, func, index, math, ub
 //! opt.register::<MyDialect>();                     // a whole dialect (`#[mlir::dialect]`)
 //! opt.inject(MyOp::template());                    // one op (`#[mlir::op]`)
 //! let m = opt.parse(src)?;                         // text → Module (known ops structured)
@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{arith, builtin, cf, func};
+pub use crate::dialects::{arith, builtin, cf, complex, func, index, math, ub};
 pub use crate::generator::{Emit, Printer, Sep, Shown, Spacer};
 pub use crate::parser::{Parser, R};
 
@@ -44,10 +44,10 @@ impl MlirOpt {
         Self { dialects: BTreeMap::new(), ops: BTreeMap::new() }
     }
 
-    /// The upstream dialects this crate describes: `arith`, `func`, `cf`, `builtin`.
+    /// The upstream dialects this crate describes: `arith`, `builtin`, `cf`, `complex`, `func`, `index`, `math`, `ub`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
-        opt.register::<arith::Arith>().register::<func::Func>().register::<cf::Cf>().register::<builtin::Builtin>();
+        opt.register::<arith::Arith>().register::<func::Func>().register::<cf::Cf>().register::<builtin::Builtin>().register::<math::Math>().register::<index::Index>().register::<ub::Ub>().register::<complex::Complex>();
         opt
     }
 

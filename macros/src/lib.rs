@@ -16,7 +16,7 @@
 //!
 //! ```text
 //! #[slot(T)]                       operand(s) typed by type variable T
-//! #[dtype] #[dtype(i1)] #[dtype(i1 = x)] #[dtype(of = attr)]
+//! #[dtype] #[dtype(i1)] #[dtype(i1 = x)] #[dtype(of = attr)] #[dtype(eq = x)] #[dtype(is = index)] #[dtype(el = x)]
 //!                                  type variable; how custom form infers it when unspelled
 //! #[attr] #[attr(int = "i32")] #[attr(dialect = "arith.overflow", default = "<none>")]
 //!                                  property (`bool`: unit attribute; enum: case value typed

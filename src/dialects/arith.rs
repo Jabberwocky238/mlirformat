@@ -249,6 +249,92 @@ pub struct Constant<'a> {
     pub result: Type<'a>,
 }
 
+#[mlir::op("arith.trunci", format = "$in (`overflow` `` $overflowFlags^)? attr-dict `:` type($in) `to` type($out)", results(out))]
+pub struct TruncI<'a> {
+    #[slot(in_ty, name = "in")]
+    pub input: Value<'a>,
+    #[attr(dialect = "arith.overflow", default = "<none>")]
+    pub overflow_flags: Attribute<'a>,
+    #[dtype]
+    pub in_ty: Type<'a>,
+    #[dtype]
+    pub out: Type<'a>,
+}
+
+/// `%low, %high = lhs, rhs : T`: the full product in two halves.
+macro_rules! extended_mul {
+    ($($ty:ident = $name:literal),* $(,)?) => {$(
+        #[mlir::op($name, format = "$lhs `,` $rhs attr-dict `:` type($lhs)", results(low, high))]
+        pub struct $ty<'a> {
+            #[slot(low)]
+            pub lhs: Value<'a>,
+            #[slot(low)]
+            pub rhs: Value<'a>,
+            #[dtype]
+            pub low: Type<'a>,
+            #[dtype(eq = low)]
+            pub high: Type<'a>,
+        }
+    )*};
+}
+
+extended_mul! { MulSIExtended = "arith.mulsi_extended", MulUIExtended = "arith.mului_extended" }
+
+/// `%sum, %overflow = lhs, rhs : T, i1`.
+#[mlir::op("arith.addui_extended", format = "$lhs `,` $rhs attr-dict `:` type($sum) `,` type($overflow)", results(sum, overflow))]
+pub struct AddUIExtended<'a> {
+    #[slot(sum)]
+    pub lhs: Value<'a>,
+    #[slot(sum)]
+    pub rhs: Value<'a>,
+    #[dtype]
+    pub sum: Type<'a>,
+    #[dtype]
+    pub overflow: Type<'a>,
+}
+
+#[mlir::op(
+    "arith.scaling_extf",
+    format = "$in `,` $scale (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `,` type($scale) `to` type($out)",
+    results(out)
+)]
+pub struct ScalingExtF<'a> {
+    #[slot(in_ty, name = "in")]
+    pub input: Value<'a>,
+    #[slot(scale_ty)]
+    pub scale: Value<'a>,
+    #[attr(dialect = "arith.fastmath")]
+    pub fastmath: Option<Attribute<'a>>,
+    #[dtype]
+    pub in_ty: Type<'a>,
+    #[dtype]
+    pub scale_ty: Type<'a>,
+    #[dtype]
+    pub out: Type<'a>,
+}
+
+#[mlir::op(
+    "arith.scaling_truncf",
+    format = "$in `,` $scale ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `,` type($scale) `to` type($out)",
+    results(out)
+)]
+pub struct ScalingTruncF<'a> {
+    #[slot(in_ty, name = "in")]
+    pub input: Value<'a>,
+    #[slot(scale_ty)]
+    pub scale: Value<'a>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
+    #[attr(dialect = "arith.fastmath")]
+    pub fastmath: Option<Attribute<'a>>,
+    #[dtype]
+    pub in_ty: Type<'a>,
+    #[dtype]
+    pub scale_ty: Type<'a>,
+    #[dtype]
+    pub out: Type<'a>,
+}
+
 /// The `arith` dialect.
 #[mlir::dialect("arith")]
 pub enum Arith<'a> {
@@ -262,5 +348,7 @@ pub enum Arith<'a> {
     IndexCast(IndexCast<'a>), IndexCastUI(IndexCastUI<'a>), ExtSI(ExtSI<'a>), ExtUI(ExtUI<'a>),
     SIToFP(SIToFP<'a>), UIToFP(UIToFP<'a>), FPToSI(FPToSI<'a>), FPToUI(FPToUI<'a>), Bitcast(Bitcast<'a>),
     NegF(NegF<'a>), CmpI(CmpI<'a>), CmpF(CmpF<'a>), Constant(Constant<'a>),
-    ExtF(ExtF<'a>), TruncF(TruncF<'a>), Select(Select<'a>),
+    ExtF(ExtF<'a>), TruncF(TruncF<'a>), Select(Select<'a>), TruncI(TruncI<'a>),
+    MulSIExtended(MulSIExtended<'a>), MulUIExtended(MulUIExtended<'a>), AddUIExtended(AddUIExtended<'a>),
+    ScalingExtF(ScalingExtF<'a>), ScalingTruncF(ScalingTruncF<'a>),
 }

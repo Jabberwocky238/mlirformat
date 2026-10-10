@@ -92,7 +92,7 @@ impl Marked {
                     match (marker, key.as_str()) {
                         (_, "name") => name = Some(value(&m)?),
                         ("slot", _) => ty_var = m.path.get_ident().cloned(),
-                        ("dtype", "i1" | "of") => {
+                        ("dtype", "i1" | "of" | "eq" | "is" | "el") => {
                             let arg = if m.input.peek(Token![=]) { Some(m.value()?.parse::<Ident>()?) } else { None };
                             rule = Some((key, arg));
                         }
@@ -146,6 +146,7 @@ impl OpArgs {
                     let infer = match rule {
                         None => String::new(),
                         Some((r, None)) => format!("~{r}"),
+                        Some((r, Some(x))) if r == "is" => format!("~is:{x}"),
                         Some((r, Some(x))) => format!("~{r}:{}", mlir_name(x)?),
                     };
                     format!("!{}{star}{result}{infer}", m.name)
@@ -158,7 +159,7 @@ impl OpArgs {
                     format!("#{}{unit}{int}{dialect}{default}", m.name)
                 }
                 Kind::Region => format!("^{}{star}", m.name),
-                Kind::Successor => format!(">{}", m.name),
+                Kind::Successor => format!(">{}{star}", m.name),
             };
             f.attrs.push(parse_quote!(#[serde(rename = #key)]));
             if m.unit {

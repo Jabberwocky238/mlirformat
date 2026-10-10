@@ -370,18 +370,24 @@ pub enum Infer {
     I1Like(&'static str),
     /// The type of attribute `.0` (`arith.constant`'s result).
     TypeOf(&'static str),
+    /// The same type(s) as type variable `.0` (`arith.mulsi_extended`'s high half).
+    Same(&'static str),
+    /// Always type `.0` (`index`'s operands and results).
+    Is(&'static str),
+    /// The element type of `complex<…>` type variable `.0` (`complex.re`'s result).
+    ElemOf(&'static str),
 }
 
 /// A field's MLIR role. `#[mlir::op]` spells it in the field's serde name:
 ///
 /// ```text
 /// %name[*]:T                      operand(s); their type is type variable `T`
-/// !name[*][=k][~i1|~i1:T|~of:a]   type variable; `=k`: result #k; `~`: how custom form infers it
+/// !name[*][=k][~i1|~i1:T|~of:a|~eq:T|~is:ty|~el:T]   type variable; `=k`: result #k; `~`: how custom form infers it
 /// #name[?][:iN][@dialect.attr][|default]
 ///                                 property; `?`: unit (a `bool`); `:iN`: integer type of an enum's
 ///                                 case value (default `i64`); `@`: a dialect attribute spelled
 ///                                 without its prefix in custom form; `|`: default body, omitted there
-/// ^name[*]   region(s)      >name   successor      {}   discardable attributes      @   location
+/// ^name[*]   region(s)      >name[*]   successor(s)      {}   discardable attributes      @   location
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
@@ -434,6 +440,9 @@ impl TryFrom<&'static str> for Field {
                     Some(("i1", None)) => Some(Infer::I1),
                     Some(("i1", Some(var))) => Some(Infer::I1Like(var)),
                     Some(("of", Some(attr))) => Some(Infer::TypeOf(attr)),
+                    Some(("eq", Some(var))) => Some(Infer::Same(var)),
+                    Some(("is", Some(ty))) => Some(Infer::Is(ty)),
+                    Some(("el", Some(var))) => Some(Infer::ElemOf(var)),
                     Some(_) => return Err(bad()),
                 };
                 (name, variadic, Role::Type { result: result.map(str::parse).transpose().map_err(|_| bad())?, infer })
@@ -449,7 +458,10 @@ impl TryFrom<&'static str> for Field {
                 let (name, variadic) = star(rest);
                 (name, variadic, Role::Region)
             }
-            b'>' => (rest, false, Role::Successor),
+            b'>' => {
+                let (name, variadic) = star(rest);
+                (name, variadic, Role::Successor)
+            }
             b'{' if rest == "}" => ("", false, Role::Attrs),
             b'@' => ("", false, Role::Loc),
             _ => return Err(bad()),
@@ -472,7 +484,8 @@ impl Field {
     /// A property's default value (`#dialect.attr<default>`).
     pub fn default_attr(&self) -> Option<Attribute<'static>> {
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
-        Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body: Some(Cow::Borrowed(body)), params: Vec::new() }, ty: None })
+        let body = (!body.is_empty()).then_some(Cow::Borrowed(body));
+        Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
     }
 }
 
@@ -481,7 +494,7 @@ impl Field {
 /// One element of an ODS-style assembly format.
 ///
 /// ```text
-/// `lit`                     literal (keyword or punctuation; `` `` `` suppresses the next space)
+/// `lit`                     literal (keyword or punctuation; `` `` `` suppresses the next space, `` ` ` `` writes one)
 /// $x                        a field: operand(s), type variable, property, successor, region
 /// type($x)                  the type(s) of operand group `x` (or type variable `x`)
 /// functional-type($a, $b)   `(types of a) -> types of b`

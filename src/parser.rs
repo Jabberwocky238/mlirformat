@@ -1276,11 +1276,13 @@ impl<'a> Operation<'a> {
             return Err("too many regions".into());
         }
         let succ: Vec<&Field> = schema.of_role(|r| *r == Role::Successor).collect();
-        if succ.len() != self.successors.len() {
-            return Err("successors do not match".into());
+        let rest = self.successors.len().checked_sub(succ.iter().filter(|f| !f.variadic).count()).ok_or_else(|| Error("too few successors".into()))?;
+        if rest > 0 && !succ.iter().any(|f| f.variadic) {
+            return Err("too many successors".into());
         }
-        for (f, s) in succ.iter().zip(&self.successors) {
-            fields.push((f.key, Content::of(s)?));
+        let mut successors = self.successors.iter();
+        for f in succ {
+            fields.push((f.key, if f.variadic { Content::of(&successors.by_ref().take(rest).collect::<Vec<_>>())? } else { Content::of(successors.next().ok_or_else(|| Error("too few successors".into()))?)? }));
         }
         match schema.of_role(|r| *r == Role::Attrs).next() {
             Some(f) => fields.push((f.key, Content::of(&self.attributes)?)),
@@ -1341,6 +1343,7 @@ impl Format<'_> {
         let owned = |p: &Parser<'a, '_>, a: Option<&Attribute<'a>>| a.map_or(Ok(Attribute::Unit), Content::convert).map(Content::Attr).or_else(|e| p.err(e.0));
         for e in elems {
             match e {
+                Elem::Lit(l) if l.trim().is_empty() => {}
                 Elem::Lit(l) => p.expect_lit(l)?,
                 Elem::Group { anchor, elems } => {
                     if self.group_ahead(elems, p).or_else(|e| p.err(e.0))? {
@@ -1490,6 +1493,12 @@ impl Format<'_> {
                 (Some(ts), _) => Content::convert(ts)?,
                 (None, Role::Type { infer: Some(Infer::I1), .. }) => vec![Type::I1],
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like()],
+                (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
+                    Some(Type::Complex(elem)) => vec![Content::convert(&**elem)?],
+                    _ => return Err(undetermined()),
+                },
+                (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],
+                (None, Role::Type { infer: Some(Infer::Same(var)), .. }) => Content::convert(r.bound(var).ok_or_else(undetermined)?)?,
                 (None, Role::Type { infer: Some(Infer::TypeOf(attr)), .. }) => {
                     let a = self.schema.field(attr).and_then(|f| r.get(f));
                     vec![if let Some(Content::Attr(a)) = a { a.type_of() } else { None }.ok_or_else(undetermined)?]

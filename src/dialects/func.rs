@@ -163,10 +163,65 @@ impl Op for FuncOp<'_> {
     }
 }
 
+/// `%f = constant @symbol : (T) -> U`.
+#[mlir::op("func.constant", format = "$value attr-dict `:` type($result)", results(result))]
+pub struct Constant<'a> {
+    #[attr]
+    pub value: Attribute<'a>,
+    #[dtype]
+    pub result: Type<'a>,
+}
+
+/// `call_indirect %f(%args) : (T) -> U`: the callee's function type gives every other type.
+#[mlir::op("func.call_indirect", custom, results(results))]
+pub struct CallIndirect<'a> {
+    #[slot(callee_ty)]
+    pub callee: Value<'a>,
+    #[slot(arg_types)]
+    pub callee_operands: Vec<Value<'a>>,
+    #[dtype]
+    pub callee_ty: Type<'a>,
+    #[dtype]
+    pub arg_types: Vec<Type<'a>>,
+    #[dtype]
+    pub results: Vec<Type<'a>>,
+}
+
+impl Op for CallIndirect<'_> {
+    const NAME: &'static str = "func.call_indirect";
+    const FORMAT: &'static str = "";
+
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        p.op_name(Self::NAME)?;
+        write!(p, " {}(", self.callee)?;
+        for (i, v) in self.callee_operands.iter().enumerate() {
+            write!(p, "{}{v}", if i > 0 { ", " } else { "" })?;
+        }
+        p.write_char(')')?;
+        p.attr_dict("", &self.attrs, &[])?;
+        write!(p, " : {}", self.callee_ty)?;
+        p.loc(&self.loc)
+    }
+
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let callee = p.value()?;
+        p.expect("(")?;
+        let callee_operands = p.list(")", Parser::value)?;
+        let attrs = p.opt_dict()?;
+        p.expect(":")?;
+        let ty = p.fn_ty()?;
+        let (arg_types, results) = (ty.inputs.clone(), ty.results.clone());
+        let op = CallIndirect { callee, callee_operands, callee_ty: Type::Function(ty), arg_types, results, attrs, loc: p.opt_loc()? };
+        Content::convert(&op).or_else(|e| p.err(e.0))
+    }
+}
+
 /// The `func` dialect.
 #[mlir::dialect("func")]
 pub enum Func<'a> {
     Func(FuncOp<'a>),
     Return(Return<'a>),
     Call(Call<'a>),
+    Constant(Constant<'a>),
+    CallIndirect(CallIndirect<'a>),
 }
