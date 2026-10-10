@@ -1,12 +1,20 @@
 name: release
 
-# Push a tag equal to the crate version (`0.2.0`): checks the versions, tests, publishes
-# mlirformat-macros then mlirformat to crates.io, creates the GitHub release and attaches the
-# `mlirformat` command line built for Linux, macOS and Windows.
+# Manual only (Actions ⇒ release ⇒ Run workflow, or `gh workflow run release -f version=0.2.1`),
+# with `version` equal to the crate version: checks the versions, tests, publishes
+# mlirformat-macros then mlirformat to crates.io, creates the GitHub release (tag `version` on the
+# chosen commit) and attaches the `mlirformat` command line built for Linux, macOS and Windows.
 # Needs the repository secret CARGO_REGISTRY_TOKEN (a crates.io API token).
 on:
-  push:
-    tags: ["[0-9]+.[0-9]+.[0-9]+*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release; must equal the crate version (e.g. 0.2.1).
+        required: true
+        type: string
+
+env:
+  VERSION: ${{ inputs.version }}
 
 permissions:
   contents: write
@@ -15,7 +23,7 @@ jobs:
   versions:
     uses: ./.github/workflows/versions.yml
     with:
-      tag: ${{ github.ref_name }}
+      tag: ${{ inputs.version }}
 
   publish:
     needs: versions
@@ -35,7 +43,7 @@ jobs:
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$VERSION" --target "$GITHUB_SHA" --title "$VERSION" --generate-notes
 
   binaries:
     needs: publish
@@ -59,12 +67,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          name="mlirformat-$GITHUB_REF_NAME-${{ matrix.target }}"
+          name="mlirformat-$VERSION-${{ matrix.target }}"
           dir="target/${{ matrix.target }}/release"
           if [ "${{ runner.os }}" = "Windows" ]; then
             7z a "$name.zip" "./$dir/mlirformat.exe"
-            gh release upload "$GITHUB_REF_NAME" "$name.zip"
+            gh release upload "$VERSION" "$name.zip"
           else
             tar -czf "$name.tar.gz" -C "$dir" mlirformat
-            gh release upload "$GITHUB_REF_NAME" "$name.tar.gz"
+            gh release upload "$VERSION" "$name.tar.gz"
           fi
