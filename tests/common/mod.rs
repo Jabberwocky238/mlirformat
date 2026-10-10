@@ -3,8 +3,10 @@
 
 #![allow(dead_code)]
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mlirformat::{Item, MlirOpt, Module, Operation};
 
@@ -65,10 +67,50 @@ impl Fixtures {
         }
     }
 
-    /// ⭐ Every op of every generic fixture (nested ones too): `f(file, op, visible, anonymized custom output)`.
+    /// The generic fixture files, sorted.
+    pub fn files() -> Vec<PathBuf> {
+        let mut files: Vec<PathBuf> = fs::read_dir(Self::dir().join("generic")).unwrap().map(|e| e.unwrap().path()).collect();
+        files.sort();
+        files
+    }
+
+    /// ⭐ Every op of every generic fixture (nested ones too), on all cores: `f(file, op, visible,
+    /// anonymized custom output)`; the `Some`s are collected (order: by file, then by op).
+    pub fn map<T: Send>(f: impl Fn(&Path, &Operation<'_>, bool, &str) -> Option<T> + Sync) -> Vec<T> {
+        let files = Self::files();
+        let next = AtomicUsize::new(0);
+        let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
+        let mut per_file: Vec<(usize, Vec<T>)> = std::thread::scope(|s| {
+            let workers: Vec<_> = (0..threads)
+                .map(|_| {
+                    s.spawn(|| {
+                        let mut done = Vec::new();
+                        loop {
+                            let i = next.fetch_add(1, Ordering::Relaxed);
+                            let Some(path) = files.get(i) else { break };
+                            let src = fs::read_to_string(path).unwrap();
+                            let custom = Self::anon(&fs::read_to_string(Self::dir().join("custom").join(path.file_name().unwrap())).unwrap());
+                            let mut out = Vec::new();
+                            for chunk in src.split("// -----") {
+                                let m = Module::try_from(chunk.trim_start_matches('-')).unwrap();
+                                let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
+                                Self::walk(&ops, true, &mut |op, visible| out.extend(f(path, op, visible, &custom)));
+                            }
+                            done.push((i, out));
+                        }
+                        done
+                    })
+                })
+                .collect();
+            workers.into_iter().flat_map(|w| w.join().unwrap()).collect()
+        });
+        per_file.sort_by_key(|(i, _)| *i);
+        per_file.into_iter().flat_map(|(_, out)| out).collect()
+    }
+
+    /// Every op of every generic fixture, in order (single-threaded callers with state).
     pub fn each(mut f: impl FnMut(&Path, &Operation<'_>, bool, &str)) {
-        for entry in fs::read_dir(Self::dir().join("generic")).unwrap() {
-            let path = entry.unwrap().path();
+        for path in Self::files() {
             let src = fs::read_to_string(&path).unwrap();
             let custom = Self::anon(&fs::read_to_string(Self::dir().join("custom").join(path.file_name().unwrap())).unwrap());
             for chunk in src.split("// -----") {
@@ -77,6 +119,35 @@ impl Fixtures {
                 Self::walk(&ops, true, &mut |op, visible| f(&path, op, visible, &custom));
             }
         }
+    }
+
+    /// ⭐ One generated dialect (`opt` registers it alone) against `mlir-opt`: prints its tally,
+    /// fails on a custom form that `mlir-opt` does not print or that does not parse back.
+    pub fn check_dialect(opt: &MlirOpt, ns: &str) {
+        let verdicts = Self::map(|path, op, visible, custom| {
+            (op.name.split_once('.').map(|(n, _)| n) == Some(ns)).then(|| (path.file_name().unwrap().to_string_lossy().into_owned(), Self::judge(opt, op, visible, custom)))
+        });
+        let mut tally: BTreeMap<&str, usize> = BTreeMap::new();
+        let mut failures = Vec::new();
+        for (file, v) in &verdicts {
+            let kind = match v {
+                Verdict::Unknown => "unknown",
+                Verdict::Generic => "generic",
+                Verdict::Matched => "matched",
+                Verdict::Reparsed => "reparsed",
+                Verdict::Mismatch(text) => {
+                    failures.push(format!("{file}: not mlir-opt's: {text}"));
+                    "mismatch"
+                }
+                Verdict::Broken(why) => {
+                    failures.push(format!("{file}: {why}"));
+                    "broken"
+                }
+            };
+            *tally.entry(kind).or_default() += 1;
+        }
+        println!("{ns}: {} ops {tally:?}", verdicts.len());
+        assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.iter().take(60).cloned().collect::<Vec<_>>().join("\n"));
     }
 
     /// ⭐ Judges `op` printed with `opt` against `mlir-opt`'s custom output of its file.

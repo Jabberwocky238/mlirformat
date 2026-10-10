@@ -13,13 +13,16 @@ use mlirformat::*;
 fn upstream_ops_match_mlir_opt() {
     let opt = MlirOpt::upstream();
     let (mut hits, mut declined, mut failures) = (BTreeMap::<String, usize>::new(), Vec::new(), Vec::new());
-    Fixtures::each(|path, op, visible, custom| match Fixtures::judge(&opt, op, visible, custom) {
-        Verdict::Unknown => {}
-        Verdict::Generic => declined.push(op.to_string()),
-        Verdict::Matched | Verdict::Reparsed => *hits.entry(op.name.to_string()).or_default() += 1,
-        Verdict::Mismatch(text) => failures.push(format!("{}: `{text}` not in mlir-opt custom output", path.display())),
-        Verdict::Broken(why) => failures.push(format!("{}: {why}", path.display())),
-    });
+    let verdicts = Fixtures::map(|path, op, visible, custom| Some((path.display().to_string(), op.name.to_string(), op.to_string(), Fixtures::judge(&opt, op, visible, custom))));
+    for (path, name, text, verdict) in verdicts {
+        match verdict {
+            Verdict::Unknown => {}
+            Verdict::Generic => declined.push(text),
+            Verdict::Matched | Verdict::Reparsed => *hits.entry(name).or_default() += 1,
+            Verdict::Mismatch(text) => failures.push(format!("{path}: `{text}` not in mlir-opt custom output")),
+            Verdict::Broken(why) => failures.push(format!("{path}: {why}")),
+        }
+    }
     println!("checked: {hits:?}\n{} declined:\n{}", declined.len(), declined.join("\n"));
     assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.iter().take(40).cloned().collect::<Vec<_>>().join("\n"));
     assert!(hits.len() > 20);

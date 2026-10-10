@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
 op and a `#[mlir::dialect]` enum. It runs `llvm-tblgen --dump-json` (LLVM 22.1.8) to resolve the
-records.
+records. Several `.td` files are generated in parallel.
 
 ```sh
 mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \

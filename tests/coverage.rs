@@ -4,11 +4,12 @@
 //! Locked in: every registered dialect covers every one of its ops that the fixtures use, and no
 //! known op is declined (left generic because it does not fit its typed op).
 
-use std::collections::BTreeMap;
-use std::fs;
-use std::path::Path;
+mod common;
 
-use mlirformat::{Item, MlirOpt, Module, Operation, Printer};
+use std::collections::BTreeMap;
+
+use common::Fixtures;
+use mlirformat::{MlirOpt, Printer};
 
 /// One dialect's tally.
 #[derive(Default)]
@@ -30,12 +31,11 @@ impl Tally {
     }
 }
 
-/// Every op of the generic fixtures, nested ones included.
-fn walk<'x, 'a>(ops: &'x [Operation<'a>], f: &mut impl FnMut(&'x Operation<'a>)) {
-    for op in ops {
-        f(op);
-        op.regions.iter().flat_map(|r| &r.blocks).for_each(|b| walk(&b.ops, f));
-    }
+/// What the op table makes of one op.
+enum Seen {
+    Missing,
+    Converted,
+    Declined(String),
 }
 
 fn percent(part: usize, whole: usize) -> f64 {
@@ -45,31 +45,36 @@ fn percent(part: usize, whole: usize) -> f64 {
 #[test]
 fn op_coverage() {
     let opt = MlirOpt::upstream();
-    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/generic");
-    let mut dialects: BTreeMap<String, Tally> = BTreeMap::new();
-    for entry in fs::read_dir(dir).unwrap() {
-        let src = fs::read_to_string(entry.unwrap().path()).unwrap();
-        for chunk in src.split("// -----") {
-            let m = Module::try_from(chunk.trim_start_matches('-')).unwrap();
-            let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
-            walk(&ops, &mut |op| {
-                let ns = op.name.split_once('.').map_or("", |(ns, _)| ns);
-                let tally = dialects.entry(ns.into()).or_default();
-                *tally.ops.entry(op.name.to_string()).or_default() += 1;
-                let Some(template) = opt.template(&op.name) else {
-                    *tally.missing.entry(op.name.to_string()).or_default() += 1;
-                    return;
-                };
-                tally.known += 1;
+    let seen = Fixtures::map(|_, op, _, _| {
+        let seen = match opt.template(&op.name) {
+            None => Seen::Missing,
+            Some(template) => {
                 let mut text = String::new();
                 match (template.print)(op, &mut Printer::new(&mut text, &opt)) {
-                    Some(Ok(())) => tally.converted += 1,
-                    _ => tally.declined.push(op.to_string()),
+                    Some(Ok(())) => Seen::Converted,
+                    _ => Seen::Declined(op.to_string()),
                 }
-            });
+            }
+        };
+        Some((op.name.to_string(), seen))
+    });
+    let mut dialects: BTreeMap<String, Tally> = BTreeMap::new();
+    for (name, seen) in seen {
+        let ns = name.split_once('.').map_or("", |(ns, _)| ns);
+        let tally = dialects.entry(ns.into()).or_default();
+        *tally.ops.entry(name.clone()).or_default() += 1;
+        match seen {
+            Seen::Missing => *tally.missing.entry(name).or_default() += 1,
+            Seen::Converted => {
+                tally.known += 1;
+                tally.converted += 1;
+            }
+            Seen::Declined(text) => {
+                tally.known += 1;
+                tally.declined.push(text);
+            }
         }
     }
-
     let registered: Vec<&str> = opt.namespaces().collect();
     let (mut total, mut known, mut converted, mut distinct, mut distinct_known) = (0, 0, 0, 0, 0);
     let mut rows: Vec<(&String, &Tally)> = dialects.iter().collect();

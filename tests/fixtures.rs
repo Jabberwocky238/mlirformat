@@ -3,24 +3,41 @@
 
 use std::fs;
 use std::path::Path;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mlirformat::*;
 
-/// Runs `check` on every `// -----` chunk of every file in `dir`, collecting failures.
-fn each_chunk(dir: &str, mut check: impl FnMut(&str) -> Result<(), String>) {
+/// Runs `check` on every `// -----` chunk of every file in `dir`, on all cores, collecting failures.
+fn each_chunk(dir: &str, check: impl Fn(&str) -> Result<(), String> + Sync) {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures").join(dir);
     let mut files: Vec<_> = fs::read_dir(&dir).unwrap().map(|e| e.unwrap().path()).collect();
     files.sort();
-    let (mut total, mut failures) = (0, Vec::new());
-    for path in &files {
-        let src = fs::read_to_string(path).unwrap();
-        for (i, chunk) in src.split("// -----").enumerate() {
-            total += 1;
-            if let Err(e) = check(chunk.trim_start_matches('-')) {
-                failures.push(format!("{}#{i}: {e}", path.file_name().unwrap().to_string_lossy()));
-            }
-        }
-    }
+    let next = AtomicUsize::new(0);
+    let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
+    let (total, mut failures) = std::thread::scope(|s| {
+        let workers: Vec<_> = (0..threads)
+            .map(|_| {
+                s.spawn(|| {
+                    let (mut total, mut failures) = (0, Vec::new());
+                    while let Some(path) = files.get(next.fetch_add(1, Ordering::Relaxed)) {
+                        let src = fs::read_to_string(path).unwrap();
+                        for (i, chunk) in src.split("// -----").enumerate() {
+                            total += 1;
+                            if let Err(e) = check(chunk.trim_start_matches('-')) {
+                                failures.push(format!("{}#{i}: {e}", path.file_name().unwrap().to_string_lossy()));
+                            }
+                        }
+                    }
+                    (total, failures)
+                })
+            })
+            .collect();
+        workers.into_iter().map(|w| w.join().unwrap()).fold((0, Vec::new()), |(t, mut f), (n, more)| {
+            f.extend(more);
+            (t + n, f)
+        })
+    });
+    failures.sort();
     assert!(failures.is_empty(), "{}/{total} chunks failed:\n{}", failures.len(), failures.join("\n"));
 }
 
