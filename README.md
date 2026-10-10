@@ -1,57 +1,45 @@
 # mlirformat
 
-MLIR text ⇄ IR ⇄ typed Rust ops, `no_std` (+ `alloc`), serde throughout.
+MLIR text ⇄ IR ⇄ typed Rust ops.
 
-```rust
-use mlirformat::*;
+## Install
 
-#[mlir::op("arith.maxsi", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
-pub struct ArithMax<'a> {
-    #[slot(result)] pub lhs: Value<'a>,   // operand typed by type variable `result`
-    #[slot(result)] pub rhs: Value<'a>,
-    #[dtype] pub result: Type<'a>,        // type variable, result #0
-}
-
-let max = ArithMax::try_from("arith.maxsi %a, %b : i32")?;        // custom form → struct
-let op = Operation::try_from(&max)?;                               // struct → generic op
-assert_eq!(op.to_string(), r#""arith.maxsi"(%a, %b) : (i32, i32) -> i32"#);
-
-let mut opt = MlirOpt::upstream();     // arith, func, cf, builtin
-opt.inject(ArithMax::template());      // one op …
-opt.register::<my::Dialect>();         // … or a whole `#[mlir::dialect]` enum
-let m = opt.parse(src)?;               // known ops structured, unknown custom ops kept raw
-println!("{}", opt.show(&m));          // known ops in custom form
-opt.unregister("my");
+```toml
+[dependencies]
+mlirformat = "0.1"
 ```
 
-## Layout
+## Usage
 
-| file | role |
-|---|---|
-| `src/common.rs` | what an IR is: `Module`, `Operation`, `Region`, `Block`, `Value`, `Type`, `Attribute`, the `Op` / `Dialect` traits, `Template`, `Content`, field roles, assembly-format elements |
-| `src/parser.rs` | text → IR, serde `Deserializer` (`Content` → typed op), `Operation` → typed op, format reader |
-| `src/generator.rs` | IR → text, serde `Serializer` (typed op → `Content`), typed op → `Operation`, format writer |
-| `src/mliropt.rs` | `MlirOpt`: dialect registry, op table, conversions; re-exports the public API |
-| `src/dialects/` | `arith` (subset), `func`, `cf`, `builtin` |
-| `macros/` | `#[mlir::op]` (`op.rs`), `#[mlir::dialect]` (`dialect.rs`) |
-| `sampleplugin/` | an out-of-tree dialect |
+```rust
+use mlirformat::{MlirOpt, Op, Operation, Type, Value, mlir};
 
-## Field markers
+#[mlir::op("arith.maxsi", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct MaxSI<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
+    #[dtype]
+    pub result: Type<'a>,
+}
 
-`#[slot(T)]` operand(s) · `#[dtype]` / `#[dtype(i1)]` / `#[dtype(i1 = x)]` / `#[dtype(of = attr)]` type
-variable · `#[attr]` / `#[attr(dialect = "arith.overflow", default = "<none>")]` property (`bool`: unit
-attribute; user enum: case value / keyword) · `#[region]` · `#[successor]`. A `Vec` field is variadic;
-MLIR names are lowerCamelCase unless `name = "..."`. `attrs` and `loc` fields are added.
-`#[mlir::op(..., custom)]` leaves `Op` to a hand-written impl (`func.func`, `builtin.module`).
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // custom form ⇄ struct ⇄ generic op
+    let op = MaxSI::try_from("arith.maxsi %a, %b : i32")?;
+    let generic = Operation::try_from(&op)?;
+    assert_eq!(generic.to_string(), r#""arith.maxsi"(%a, %b) : (i32, i32) -> i32"#);
+    assert_eq!(MaxSI::try_from(&generic)?, op);
 
-## Tests
+    // whole files: register dialects, inject ops
+    let mut opt = MlirOpt::upstream();
+    opt.inject(MaxSI::template());
+    let module = opt.parse(r#"%0 = "arith.maxsi"(%a, %b) : (i32, i32) -> i32"#)?;
+    assert_eq!(opt.show(&module).to_string(), "%0 = arith.maxsi %a, %b : i32\n");
+    Ok(())
+}
+```
 
-`cargo test -p mlirformat` (fixtures: llvm-project 22.1.8 `mlir/test` + `mlir-opt` custom / generic
-output), `cargo test -p mlirformat-sampleplugin`.
+## License
 
-## Release
-
-Bump `version` in `Cargo.toml` and `macros/Cargo.toml` (and the `mlirformat-macros` dependency),
-commit, then push a tag with the same number (`git tag 0.1.0 && git push origin 0.1.0`). The
-`release` workflow tests, publishes `mlirformat-macros` and `mlirformat` to crates.io (repository
-secret `CARGO_REGISTRY_TOKEN`) and creates the GitHub release. `ci` runs the tests on every push.
+MIT
