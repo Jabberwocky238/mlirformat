@@ -64,13 +64,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
-op and a `#[mlir::dialect]` enum. It runs `llvm-tblgen --dump-json` (LLVM 22.1.8) to resolve the
-records. Several `.td` files are generated in parallel. The generated files also compile in
+op and a `#[mlir::dialect]` enum. TableGen itself is built in: a port of LLVM 22.1.8's front end
+resolves the records in process (no LLVM build needed; only the `.td` sources, e.g. `mlir/include`).
+`--dump-json` prints those records exactly as `llvm-tblgen --dump-json` does (checked byte for byte on
+every MLIR dialect `.td` that `llvm-tblgen` accepts on its own). Several `.td` files are generated in parallel. The generated files also compile in
 `no_std` crates; `--params <namespace>=<path>` attaches a dialect's type / attribute parameter hook.
 
 ```sh
 mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
-    -I $LLVM/mlir/include --llvm-tblgen $LLVM/build/bin/llvm-tblgen -o src/dialects
+    -I $LLVM/mlir/include -o src/dialects
 ```
 
 ## License

@@ -1,6 +1,7 @@
 //! `mlirformat tblgen`: ODS (`.td`) ⇒ `<dialect>.gen.rs`.
 
 mod records;
+mod td;
 
 use std::path::{Path, PathBuf};
 
@@ -17,12 +18,12 @@ pub struct Args {
     /// Output directory.
     #[arg(short, long, default_value = ".")]
     out: PathBuf,
-    /// The `llvm-tblgen` to run (`--dump-json`).
-    #[arg(long = "llvm-tblgen", default_value = "llvm-tblgen")]
-    llvm_tblgen: PathBuf,
-    /// Read records already dumped with `llvm-tblgen --dump-json` instead of running it (one `.td` only).
+    /// Read records already dumped with `llvm-tblgen --dump-json` instead of parsing the `.td` (one `.td` only).
     #[arg(long)]
     json: Option<PathBuf>,
+    /// Print the resolved records as `llvm-tblgen --dump-json` would (byte for byte) instead of generating (one `.td` only).
+    #[arg(long)]
+    dump_json: bool,
     /// Only this dialect (namespace, e.g. `arith`).
     #[arg(long)]
     dialect: Option<String>,
@@ -33,13 +34,18 @@ pub struct Args {
 }
 
 impl Args {
-    /// ⭐ Each `.td` file on its own thread (nearly all the time is `llvm-tblgen`); reports in input order.
+    /// ⭐ Each `.td` file on its own thread (nearly all the time is TableGen); reports in input order.
     pub fn run(self) -> Result<(), String> {
         if let Some(bad) = self.params.iter().find(|p| !p.contains('=')) {
             return Err(format!("--params `{bad}`: expected `<namespace>=<path>`"));
         }
         if self.json.is_some() && self.td.len() != 1 {
             return Err("--json reads the records of exactly one `.td` file".into());
+        }
+        if self.dump_json {
+            let [td] = self.td.as_slice() else { return Err("--dump-json takes exactly one `.td` file".into()) };
+            print!("{}", td::dump_json(td, &self.includes).map_err(|e| e.to_string())?);
+            return Ok(());
         }
         let reports: Vec<Result<Vec<String>, String>> = std::thread::scope(|s| {
             let workers: Vec<_> = self.td.iter().map(|td| s.spawn(|| self.one(td))).collect();
@@ -59,7 +65,7 @@ impl Args {
     fn one(&self, td: &Path) -> Result<Vec<String>, String> {
         let records = match &self.json {
             Some(path) => Records::from_json(&std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?, td),
-            None => Records::dump(&self.llvm_tblgen, td, &self.includes),
+            None => Records::parse(td, &self.includes),
         }
         .map_err(|e| e.to_string())?;
         let source = td.file_name().map_or_else(String::new, |f| f.to_string_lossy().into_owned());

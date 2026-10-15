@@ -1,5 +1,5 @@
 //! ⭐ The records behind `mlirformat tblgen`: MLIR ODS (`.td`) → `<dialect>.gen.rs`, one `#[mlir::op]` struct per op and a
-//! `#[mlir::dialect]` enum. TableGen itself resolves the records (`llvm-tblgen --dump-json`, classes,
+//! `#[mlir::dialect]` enum. TableGen itself resolves the records (`--dump-json`, classes,
 //! `let`s and multiclasses included); this file only reads them.
 //!
 //! ```text
@@ -17,21 +17,20 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use serde_json::{Map, Value as Json};
 
 /// Why records could not be read.
 #[derive(Debug)]
 pub enum TdError {
-    Tblgen { tool: String, why: String },
+    Tblgen(String),
     Json(String),
 }
 
 impl std::fmt::Display for TdError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Tblgen { tool, why } => write!(f, "running {tool}: {why}"),
+            Self::Tblgen(why) => write!(f, "{why}"),
             Self::Json(why) => write!(f, "records: {why}"),
         }
     }
@@ -92,19 +91,10 @@ const KEYWORDS: &[&str] = &[
 ];
 
 impl Records {
-    /// Runs `tblgen --dump-json` on `td` with the include directories.
-    pub fn dump(tblgen: &Path, td: &Path, includes: &[PathBuf]) -> Result<Self, TdError> {
-        let fail = |why: String| TdError::Tblgen { tool: tblgen.display().to_string(), why };
-        let mut cmd = Command::new(tblgen);
-        cmd.arg("--dump-json").arg(td);
-        for i in includes {
-            cmd.arg("-I").arg(i);
-        }
-        let out = cmd.output().map_err(|e| fail(e.to_string()))?;
-        if !out.status.success() {
-            return Err(fail(String::from_utf8_lossy(&out.stderr).into_owned()));
-        }
-        Self::from_json(&String::from_utf8_lossy(&out.stdout), td)
+    /// Parses `td` with the include directories (the in-process TableGen front end, [`super::td`]).
+    pub fn parse(td: &Path, includes: &[PathBuf]) -> Result<Self, TdError> {
+        let json = super::td::dump_json(td, includes).map_err(|e| TdError::Tblgen(e.to_string()))?;
+        Self::from_json(&json, td)
     }
 
     /// Records already dumped (`llvm-tblgen --dump-json` output) for `td`.
