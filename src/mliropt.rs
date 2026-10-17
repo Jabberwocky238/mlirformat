@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, arith, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
+pub use crate::dialects::{affine, affine_ops, arith, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R};
 
@@ -66,6 +66,9 @@ impl MlirOpt {
             .register::<scf::Scf>()
             .register::<tensor::Tensor>()
             .register::<vector::Vector>();
+        // Hand-written forms for ops ODS describes in C++; injected by name over the generated
+        // templates, so the generated files stay exactly as `mlirformat tblgen` wrote them.
+        opt.inject(affine_ops::Apply::template()).inject(affine_ops::Min::template()).inject(affine_ops::Max::template());
         opt
     }
 

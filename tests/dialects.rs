@@ -8,7 +8,8 @@
 mod common;
 
 use common::Fixtures;
-use mlirformat::MlirOpt;
+use mlirformat::affine_ops::{Apply, Max, Min};
+use mlirformat::{MlirOpt, Op};
 
 /// One test per dialect: `opt` registers it alone, so only its own custom forms are judged.
 macro_rules! dialects {
@@ -17,6 +18,9 @@ macro_rules! dialects {
         fn $test() {
             let mut opt = MlirOpt::new();
             opt.register::<$dialect>();
+            // Hand-written forms for ops ODS describes in C++, as `MlirOpt::upstream` injects
+            // them; they are named `affine.*`, so they change nothing for the other dialects.
+            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template());
             Fixtures::check_dialect(&opt, $ns);
         }
     )*};

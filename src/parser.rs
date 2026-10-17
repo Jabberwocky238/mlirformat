@@ -364,7 +364,10 @@ impl<'a, 'd> Parser<'a, 'd> {
     fn extended(&mut self, kind: SymKind) -> R<Extended<'a>> {
         let name = self.sigil(kind.sigil())?;
         let start = self.pos;
-        let body = self.groups()?;
+        // A dialect type / attribute body is angle bracketed (`#ns.name<...>`) and an alias has
+        // none at all. Whatever follows belongs to the reader: `affine.apply #map(%i)` puts the
+        // op's operand list right after the alias, and it is not part of the attribute.
+        let body = (self.peek() == Some(b'<')).then(|| self.group()).transpose()?;
         let mut params = Vec::new();
         if let (Some(_), Some(parse)) = (body, name.split_once('.').and_then(|(ns, _)| self.opt.params(ns))) {
             let end = self.pos;
@@ -544,7 +547,12 @@ impl<'a, 'd> Parser<'a, 'd> {
             | "strided" | "distinct" | "loc")
                 if self.at_group() =>
             {
-                let body = self.groups()?.unwrap_or_default().into();
+                // `affine_map<...>` / `affine_set<...>` are one group each: an `affine.apply`
+                // writes its operand list right after the map, and that is not part of it.
+                let body = match name {
+                    "affine_map" | "affine_set" => self.group()?.into(),
+                    _ => self.groups()?.unwrap_or_default().into(),
+                };
                 let typed = matches!(name, "dense" | "dense_resource" | "sparse" | "opaque");
                 let ty = if typed { self.suffix(bare)? } else { None };
                 Attribute::Builtin { name: name.into(), body, ty }
