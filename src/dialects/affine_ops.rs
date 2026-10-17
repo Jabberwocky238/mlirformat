@@ -9,7 +9,7 @@
 
 use crate::affine_expr::{Map, Set};
 use crate::mlir;
-use crate::common::{Attribute, Block, BlockArg, Content, Extended, Op, Operation, Region, Shaped, Str, Type, Value};
+use crate::common::{Attribute, Block, BlockArg, Content, Dim, Extended, Op, Operation, Region, Shaped, ShapedKind, Signedness, Str, Type, Value};
 use crate::generator::{Printer, Sep};
 use crate::parser::{Parser, R};
 use alloc::string::String;
@@ -618,4 +618,179 @@ impl Op for If<'_> {
         };
         Self::owned(&op, p)
     }
+}
+
+/// `affine.parallel (%i, %j) = (0, 0) to (10, 5) step (3, 2) { ... }`.
+///
+/// Only the shape `mlir-opt` writes almost everywhere is taken: one map result per induction
+/// variable (`lowerBoundsGroups` a splat of 1, so no `max` / `min` to choose between) and no
+/// reductions. Anything else keeps the generic form.
+#[mlir::op("affine.parallel", custom, results(results))]
+pub struct Parallel<'a> {
+    #[slot(map_operands_ty, name = "mapOperands")]
+    pub map_operands: Vec<Value<'a>>,
+    #[attr(name = "reductions")]
+    pub reductions: Attribute<'a>,
+    #[attr(name = "lowerBoundsMap")]
+    pub lower_bounds_map: Attribute<'a>,
+    #[attr(name = "lowerBoundsGroups")]
+    pub lower_bounds_groups: Attribute<'a>,
+    #[attr(name = "upperBoundsMap")]
+    pub upper_bounds_map: Attribute<'a>,
+    #[attr(name = "upperBoundsGroups")]
+    pub upper_bounds_groups: Attribute<'a>,
+    #[attr(name = "steps")]
+    pub steps: Attribute<'a>,
+    #[region(name = "region")]
+    pub region: Region<'a>,
+    #[dtype(name = "mapOperands_ty", is = index)]
+    pub map_operands_ty: Type<'a>,
+    #[dtype(name = "results")]
+    pub results: Vec<Type<'a>>,
+}
+
+/// `dense<1> : tensor<Nxi32>`: one map result per induction variable, which is the only grouping
+/// this op writes out.
+fn ones(attr: &Attribute<'_>, n: usize) -> bool {
+    matches!(attr, Attribute::Builtin { name, body, ty: Some(Type::Shaped(Shaped { shape: Some(dims), .. })) }
+        if name == "dense" && body == "<1>" && dims.as_slice() == [Dim::Static(i64::try_from(n).unwrap_or(-1))])
+}
+
+/// The grouping [`ones`] accepts, rebuilt.
+fn ones_attr<'a>(n: usize) -> Attribute<'a> {
+    let shape = alloc::vec![Dim::Static(i64::try_from(n).unwrap_or_default())];
+    let elem = Type::Integer { signedness: Signedness::Signless, width: 32 };
+    let ty = Type::Shaped(Shaped { kind: ShapedKind::Tensor, shape: Some(shape), elem: alloc::boxed::Box::new(elem), extras: Vec::new() });
+    Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Borrowed("<1>"), ty: Some(ty) }
+}
+
+/// `[1, 2]` as the op holds it.
+fn ints_attr<'a>(xs: &[i64]) -> Attribute<'a> {
+    Attribute::Array(xs.iter().map(|v| Attribute::Int { lit: Str::Owned(format!("{v}")), ty: None }).collect())
+}
+
+/// The integers of an `[...]` attribute, or `None` when it is not one.
+fn ints_of(attr: &Attribute<'_>) -> Option<Vec<i64>> {
+    match attr {
+        Attribute::Array(xs) => xs.iter().map(|x| x.clone().int().ok().and_then(|v| i64::try_from(v).ok())).collect(),
+        _ => None,
+    }
+}
+
+impl Op for Parallel<'_> {
+    const NAME: &'static str = "affine.parallel";
+    const FORMAT: &'static str = "";
+
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        let (lo, hi) = {
+            let alias = |n: &str| p.alias(n).map(String::from);
+            (map_body(&self.lower_bounds_map, &alias), map_body(&self.upper_bounds_map, &alias))
+        };
+        // A `Map` borrows the body it was read from, so the texts have to outlive it.
+        let (Some(lo_text), Some(hi_text), Some(steps), Some(entry)) = (lo, hi, ints_of(&self.steps), self.region.blocks.first()) else {
+            return self.print_generic(p);
+        };
+        let (Ok(lm), Ok(hm)) = (Map::try_from(lo_text.as_str()), Map::try_from(hi_text.as_str())) else {
+            return self.print_generic(p);
+        };
+        let ivs = entry.args.len();
+        let inputs = |m: &Map<'_>| m.dims.len() + m.syms.as_ref().map_or(0, Vec::len);
+        let split = inputs(&lm);
+        let shaped = lm.results.len() == ivs
+            && hm.results.len() == ivs
+            && steps.len() == ivs
+            && self.reductions == Attribute::Array(Vec::new())
+            && self.results.is_empty()
+            && ones(&self.lower_bounds_groups, ivs)
+            && ones(&self.upper_bounds_groups, ivs)
+            && split + inputs(&hm) == self.map_operands.len();
+        if !shaped {
+            return self.print_generic(p);
+        }
+        let (lt, ht) = (indices::texts(&self.map_operands[..split]), indices::texts(&self.map_operands[split..]));
+        let (lows, highs) = (indices::write(&lm, &lt), indices::write(&hm, &ht));
+        // As for the memory ops, the printed bounds alone do not say how map and operands were
+        // paired; print the custom form only where reading them back gives this op again.
+        if indices::read(&lows) != Some((lo_text.clone(), lt)) || indices::read(&highs) != Some((hi_text.clone(), ht)) {
+            return self.print_generic(p);
+        }
+        p.op_name(Self::NAME)?;
+        let names = entry.args.iter().map(|x| format!("%{}", x.name)).collect::<Vec<_>>().join(", ");
+        write!(p, " ({names}) = ({lows}) to ({highs})")?;
+        if steps.iter().any(|s| *s != 1) {
+            write!(p, " step ({})", steps.iter().map(|s| format!("{s}")).collect::<Vec<_>>().join(", "))?;
+        }
+        p.write_char(' ')?;
+        p.region_body(&self.region, "affine.yield")?;
+        p.attr_dict("", &self.attrs, &[])
+    }
+
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let ivs = read_names(p)?;
+        p.expect("=")?;
+        let (lower_bounds_map, lower_ops) = read_bounds(p)?;
+        p.expect_lit("to")?;
+        let (upper_bounds_map, upper_ops) = read_bounds(p)?;
+        let steps = match p.eat_kw("step") {
+            true => read_names(p)?.iter().map(|s| s.parse::<i64>().unwrap_or(1)).collect(),
+            false => alloc::vec![1; ivs.len()],
+        };
+        let mut region = p.region()?;
+        close_region(&mut region);
+        if let Some(b) = region.blocks.first_mut() {
+            // The header named these, so the generic form gives the block a label as well.
+            b.label.get_or_insert(Str::Borrowed("bb0"));
+            b.args = ivs.iter().map(|n| BlockArg { name: Str::Owned(n.clone()), ty: Type::Index, loc: None }).collect();
+        }
+        let mut map_operands = lower_ops;
+        map_operands.extend(upper_ops);
+        let op = Parallel {
+            map_operands,
+            reductions: Attribute::Array(Vec::new()),
+            lower_bounds_map,
+            lower_bounds_groups: ones_attr(ivs.len()),
+            upper_bounds_map,
+            upper_bounds_groups: ones_attr(ivs.len()),
+            steps: ints_attr(&steps),
+            region,
+            map_operands_ty: Type::Index,
+            results: Vec::new(),
+            attrs: p.opt_dict()?,
+            loc: p.opt_loc()?,
+        };
+        Self::owned(&op, p)
+    }
+}
+
+/// `(%i, %j)` or `(3, 2)`: the comma-separated words inside parentheses, sigils stripped.
+fn read_names(p: &mut Parser<'_, '_>) -> R<Vec<String>> {
+    p.expect("(")?;
+    let mut out = Vec::new();
+    while !p.eat(")") {
+        let word = match p.at(b'%') {
+            true => String::from(p.sigil('%')?),
+            false => format!("{}", p.attr()?.int().or_else(|e| p.err(e.0))?),
+        };
+        out.push(word);
+        p.eat(",");
+    }
+    Ok(out)
+}
+
+/// `(0, %i + 1)`: one bound per induction variable, as a map and the values it names.
+fn read_bounds<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a>>)> {
+    // `group` starts where the cursor is, so the space before `(` has to go first.
+    p.ws();
+    let group = p.group()?;
+    let inner = group.get(1..group.len() - 1).unwrap_or_default();
+    let Some((body, names)) = indices::read(inner) else { return p.err("affine.parallel: a bound list") };
+    let named = p.alias_named(&format!("affine_map<{body}>")).map(String::from);
+    let mut values = Vec::new();
+    for n in &names {
+        match value_of(n) {
+            Some(v) => values.push(v),
+            None => return p.err("affine.parallel: a bound operand"),
+        }
+    }
+    Ok((indices::attr(&body, named), values))
 }

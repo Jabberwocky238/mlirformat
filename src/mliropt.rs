@@ -74,7 +74,8 @@ impl MlirOpt {
             .inject(affine_ops::Load::template())
             .inject(affine_ops::Store::template())
             .inject(affine_ops::For::template())
-            .inject(affine_ops::If::template());
+            .inject(affine_ops::If::template())
+            .inject(affine_ops::Parallel::template());
         opt
     }
 
