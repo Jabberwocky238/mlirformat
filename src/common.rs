@@ -517,6 +517,22 @@ impl Field {
     }
 }
 
+impl Module<'_> {
+    /// The attribute aliases the module defines, each as `(name, the attribute's text)`. An op
+    /// whose custom form has to look inside an alias — an `affine` memory op and its `#map` —
+    /// reads it back from here, through [`Printer::alias`](crate::Printer::alias) or
+    /// [`Parser::alias`](crate::Parser::alias).
+    pub fn aliases(&self) -> Vec<(String, String)> {
+        self.items
+            .iter()
+            .filter_map(|i| match i {
+                Item::AttrAlias { name, value } => Some((String::from(&**name), alloc::format!("{value}"))),
+                _ => None,
+            })
+            .collect()
+    }
+}
+
 // ---- assembly formats --------------------------------------------------------------------
 
 /// One element of an ODS-style assembly format.

@@ -76,7 +76,7 @@ impl Fixtures {
 
     /// ⭐ Every op of every generic fixture (nested ones too), on all cores: `f(file, op, visible,
     /// anonymized custom output)`; the `Some`s are collected (order: by file, then by op).
-    pub fn map<T: Send>(f: impl Fn(&Path, &Operation<'_>, bool, &str) -> Option<T> + Sync) -> Vec<T> {
+    pub fn map<T: Send>(f: impl Fn(&Path, &Operation<'_>, bool, &str, &[(String, String)]) -> Option<T> + Sync) -> Vec<T> {
         let files = Self::files();
         let next = AtomicUsize::new(0);
         let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
@@ -93,8 +93,12 @@ impl Fixtures {
                             let mut out = Vec::new();
                             for chunk in src.split("// -----") {
                                 let m = Module::try_from(chunk.trim_start_matches('-')).unwrap();
+                                // An op's custom form may have to look inside an alias the module
+                                // defines (an `affine` memory op and its `#map`), so judging it
+                                // one op at a time still needs the module's table.
+                                let aliases = m.aliases();
                                 let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
-                                Self::walk(&ops, true, &mut |op, visible| out.extend(f(path, op, visible, &custom)));
+                                Self::walk(&ops, true, &mut |op, visible| out.extend(f(path, op, visible, &custom, &aliases)));
                             }
                             done.push((i, out));
                         }
@@ -124,8 +128,8 @@ impl Fixtures {
     /// ⭐ One generated dialect (`opt` registers it alone) against `mlir-opt`: prints its tally,
     /// fails on a custom form that `mlir-opt` does not print or that does not parse back.
     pub fn check_dialect(opt: &MlirOpt, ns: &str) {
-        let verdicts = Self::map(|path, op, visible, custom| {
-            (op.name.split_once('.').map(|(n, _)| n) == Some(ns)).then(|| (path.file_name().unwrap().to_string_lossy().into_owned(), Self::judge(opt, op, visible, custom)))
+        let verdicts = Self::map(|path, op, visible, custom, aliases| {
+            (op.name.split_once('.').map(|(n, _)| n) == Some(ns)).then(|| (path.file_name().unwrap().to_string_lossy().into_owned(), Self::judge(opt, op, visible, custom, aliases)))
         });
         let mut tally: BTreeMap<&str, usize> = BTreeMap::new();
         let mut failures = Vec::new();
@@ -151,17 +155,17 @@ impl Fixtures {
     }
 
     /// ⭐ Judges `op` printed with `opt` against `mlir-opt`'s custom output of its file.
-    pub fn judge(opt: &MlirOpt, op: &Operation<'_>, visible: bool, custom: &str) -> Verdict {
+    pub fn judge(opt: &MlirOpt, op: &Operation<'_>, visible: bool, custom: &str, aliases: &[(String, String)]) -> Verdict {
         if opt.template(&op.name).is_none() {
             return Verdict::Unknown;
         }
-        let text = opt.show(op).to_string();
+        let text = opt.show_in(aliases, op).to_string();
         // Result names are mlir-opt's choice (`%low, %high` vs `%36:2`): compare from the op name on.
         let body = if op.results.is_empty() { text.as_str() } else { text.split_once(" = ").map_or(text.as_str(), |(_, b)| b) };
         if body.starts_with('"') {
             return Verdict::Generic;
         }
-        match opt.parse_op(&text) {
+        match opt.parse_op_in(aliases, &text) {
             Ok(back) if back == *op => {}
             Ok(_) => return Verdict::Broken(format!("reparses differently: {text}")),
             Err(e) => return Verdict::Broken(format!("{e}: {text}")),

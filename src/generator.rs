@@ -39,6 +39,8 @@ pub struct Printer<'p, 'd> {
     opt: &'d MlirOpt,
     /// Dialect whose op names print without their prefix (`return` in `func.func`).
     default_ns: Option<&'static str>,
+    /// The enclosing module's attribute aliases; empty when printing an op on its own.
+    aliases: Vec<(String, String)>,
 }
 
 impl Write for Printer<'_, '_> {
@@ -49,12 +51,12 @@ impl Write for Printer<'_, '_> {
 
 impl<'p, 'd> Printer<'p, 'd> {
     pub fn new(out: &'p mut dyn Write, opt: &'d MlirOpt) -> Self {
-        Self { out, indent: 0, opt, default_ns: Some("builtin") }
+        Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new() }
     }
 
     /// A printer into `out` in the same state (indentation, default dialect, dialects).
     pub fn fork<'q>(&self, out: &'q mut dyn Write) -> Printer<'q, 'd> {
-        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns }
+        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone() }
     }
 
     /// Prints with `f` into `out`, no dialects registered.
@@ -81,7 +83,20 @@ impl<'p, 'd> Printer<'p, 'd> {
         write!(self.out, "\n{:1$}", "", self.indent)
     }
 
+    /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
+    pub fn alias(&self, name: &str) -> Option<&str> {
+        self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
+    }
+
+    /// Prints with the module's aliases already in scope, for one op out of a module.
+    pub fn write_in(out: &mut dyn Write, opt: &MlirOpt, aliases: &[(String, String)], f: impl FnOnce(&mut Printer<'_, '_>) -> fmt::Result) -> fmt::Result {
+        let mut p = Printer::new(out, opt);
+        p.aliases = aliases.to_vec();
+        f(&mut p)
+    }
+
     pub fn module(&mut self, m: &Module<'_>) -> fmt::Result {
+        self.aliases = m.aliases();
         for item in &m.items {
             match item {
                 Item::AttrAlias { name, value } => write!(self, "#{name} = {value}")?,
@@ -213,6 +228,16 @@ pub struct Shown<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x T);
 impl<T: Emit + ?Sized> Display for Shown<'_, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.1.emit(&mut Printer::new(f, self.0))
+    }
+}
+
+/// Like [`Shown`], but with a module's attribute aliases in scope, so an op printed on its own
+/// can still read one (`opt.show_in(&m.aliases(), &op)`).
+pub struct ShownIn<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x [(String, String)], pub &'x T);
+
+impl<T: Emit + ?Sized> Display for ShownIn<'_, T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Printer::write_in(f, self.0, self.1, |p| self.2.emit(p))
     }
 }
 

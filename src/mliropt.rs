@@ -13,12 +13,13 @@
 //! ```
 
 use alloc::collections::BTreeMap;
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
 pub use crate::dialects::{affine, arith, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
-pub use crate::generator::{Emit, Printer, Sep, Shown, Spacer};
+pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R};
 
 /// The parameter hook of a registered dialect.
@@ -126,6 +127,16 @@ impl MlirOpt {
     /// Text → one op.
     pub fn parse_op<'a>(&self, src: &'a str) -> R<Operation<'a>> {
         Parser::new(src, self).all(Parser::op)
+    }
+
+    /// Like [`parse_op`](Self::parse_op), with a module's attribute aliases in scope.
+    pub fn parse_op_in<'a>(&self, aliases: &[(String, String)], src: &'a str) -> R<Operation<'a>> {
+        Parser::new(src, self).with_aliases(aliases).all(Parser::op)
+    }
+
+    /// Like [`show`](Self::show), with a module's attribute aliases in scope.
+    pub fn show_in<'x, T: Emit + ?Sized>(&'x self, aliases: &'x [(String, String)], x: &'x T) -> ShownIn<'x, T> {
+        ShownIn(self, aliases, x)
     }
 
     /// Module / op → text, ops in the table in custom form: `opt.show(&m).to_string()`.

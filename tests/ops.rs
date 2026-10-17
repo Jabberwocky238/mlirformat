@@ -13,7 +13,7 @@ use mlirformat::*;
 fn upstream_ops_match_mlir_opt() {
     let opt = MlirOpt::upstream();
     let (mut hits, mut declined, mut failures) = (BTreeMap::<String, usize>::new(), Vec::new(), Vec::new());
-    let verdicts = Fixtures::map(|path, op, visible, custom| Some((path.display().to_string(), op.name.to_string(), op.to_string(), Fixtures::judge(&opt, op, visible, custom))));
+    let verdicts = Fixtures::map(|path, op, visible, custom, aliases| Some((path.display().to_string(), op.name.to_string(), op.to_string(), Fixtures::judge(&opt, op, visible, custom, aliases))));
     for (path, name, text, verdict) in verdicts {
         match verdict {
             Verdict::Unknown => {}

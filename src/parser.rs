@@ -27,6 +27,8 @@ pub struct Parser<'a, 'd> {
     default_ns: Option<&'static str>,
     /// The next attribute is parsed without its `: type` suffix.
     bare: bool,
+    /// Attribute aliases seen so far, so an op's custom form can look inside one.
+    aliases: Vec<(String, String)>,
 }
 
 /// `TryFrom<&str>` entry points (no dialects): parse the whole input as one node.
@@ -68,12 +70,25 @@ const fn closer(c: u8) -> u8 {
 
 impl<'a, 'd> Parser<'a, 'd> {
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
-        Self { src, pos: 0, opt, default_ns: None, bare: false }
+        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new() }
     }
 
     /// Parses all of `src` with `f`, no dialects registered.
     pub fn read<T>(src: &'a str, f: impl FnOnce(&mut Parser<'a, '_>) -> R<T>) -> R<T> {
         Parser::new(src, &MlirOpt::new()).all(f)
+    }
+
+    /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
+    pub fn alias(&self, name: &str) -> Option<&str> {
+        self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
+    }
+
+    /// The same parser with a module's attribute aliases already in scope, for an op read on
+    /// its own out of a module.
+    #[must_use]
+    pub fn with_aliases(mut self, aliases: &[(String, String)]) -> Self {
+        self.aliases = aliases.to_vec();
+        self
     }
 
     /// The op name of a typed op's custom form: `name` itself or its short form.
@@ -605,9 +620,11 @@ impl<'a, 'd> Parser<'a, 'd> {
             let item = match self.peek() {
                 None => return Ok(Module { items }),
                 Some(b'#') => {
-                    let name = self.sigil('#')?.into();
+                    let name: Str<'a> = self.sigil('#')?.into();
                     self.expect("=")?;
-                    Item::AttrAlias { name, value: self.attr()? }
+                    let value = self.attr()?;
+                    self.aliases.push((String::from(&*name), alloc::format!("{value}")));
+                    Item::AttrAlias { name, value }
                 }
                 Some(b'!') => {
                     let name = self.sigil('!')?.into();
@@ -779,7 +796,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
-        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false };
+        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone() };
         loop {
             if p.sigil('%').is_err() {
                 return false;
@@ -809,7 +826,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if !(tail.is_empty() || tail.starts_with("//")) || line_end == rest.len() {
             return false;
         }
-        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false };
+        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone() };
         probe.ws();
         match probe.peek() {
             Some(b'%' | b'^' | b'}') => true,

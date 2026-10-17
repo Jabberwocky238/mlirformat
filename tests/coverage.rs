@@ -64,7 +64,7 @@ fn percent(part: usize, whole: usize) -> f64 {
 #[test]
 fn op_coverage() {
     let opt = MlirOpt::upstream();
-    let seen = Fixtures::map(|_, op, _, _| {
+    let seen = Fixtures::map(|_, op, _, _, _| {
         let seen = match opt.template(&op.name) {
             None => Seen::Missing,
             Some(template) => {
