@@ -80,9 +80,7 @@ pub struct EmptyOp<'a> {
 }
 
 /// `tensor.expand_shape`: operation to produce a tensor with a higher rank
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("tensor.expand_shape", generic, results(result))]
+#[mlir::op("tensor.expand_shape", format = "$src $reassociation `output_shape` custom<DynamicIndexList>($output_shape, $static_output_shape) attr-dict `:` type($src) `into` type($result)", results(result))]
 pub struct ExpandShapeOp<'a> {
     #[slot(src_ty, name = "src")]
     pub src: Value<'a>,
@@ -116,9 +114,7 @@ pub struct ExtractOp<'a> {
 }
 
 /// `tensor.extract_slice`: extract slice operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("tensor.extract_slice", generic, results(result))]
+#[mlir::op("tensor.extract_slice", format = "$source `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct ExtractSliceOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -209,9 +205,7 @@ pub struct InsertOp<'a> {
 }
 
 /// `tensor.insert_slice`: insert_slice operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("tensor.insert_slice", generic, results(result))]
+#[mlir::op("tensor.insert_slice", format = "$source `into` $dest `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `into` type($dest)", results(result))]
 pub struct InsertSliceOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -242,9 +236,7 @@ pub struct InsertSliceOp<'a> {
 }
 
 /// `tensor.pad`: tensor pad operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("tensor.pad", generic, results(result))]
+#[mlir::op("tensor.pad", format = "$source (`nofold` $nofold^)? `low` `` custom<DynamicIndexList>($low, $static_low) `high` `` custom<DynamicIndexList>($high, $static_high) $region attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct PadOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -271,9 +263,7 @@ pub struct PadOp<'a> {
 }
 
 /// `tensor.parallel_insert_slice`: Specify the tensor slice update of a single thread of a parent     InParallelOpInterface op.
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("tensor.parallel_insert_slice", generic)]
+#[mlir::op("tensor.parallel_insert_slice", format = "$source `into` $dest `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `into` type($dest)")]
 pub struct ParallelInsertSliceOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,

@@ -1329,6 +1329,9 @@ impl<'a> Read<'a> {
     }
 }
 
+/// `ShapedType::kDynamic`: the item is in the value list, not the integer list.
+pub(crate) const SENTINEL: &str = "-9223372036854775808";
+
 /// Words that start an attribute, not a user enum case.
 const ATTR_WORDS: &[&str] = &["true", "false", "unit", "dense", "dense_resource", "array", "affine_map", "affine_set", "sparse", "strided", "distinct", "opaque", "loc"];
 
@@ -1414,6 +1417,35 @@ impl Format<'_> {
                         Role::Attrs | Role::Loc => continue,
                     };
                     r.set(&f, c);
+                }
+                Elem::Custom { parts, .. } => self.read(parts, r, p)?,
+                // One list, two fields: a static item goes to `integers`, a `%value` goes to
+                // `values` and leaves the sentinel behind in its place.
+                Elem::Zip { integers, values } => {
+                    let (ints, vals) = (field(p, integers)?, field(p, values)?);
+                    let (mut statics, mut ops, mut types) = (Vec::new(), Vec::new(), Vec::new());
+                    while !p.at(b']') && !p.at(b')') {
+                        if p.at(b'%') {
+                            ops.push(p.value()?);
+                            statics.push(Str::Borrowed(SENTINEL));
+                            types.push(if p.eat(":") { p.ty()? } else { Type::Index });
+                        } else {
+                            let lit = p.nonempty("a list item", |c| c.is_ascii_digit() || c == b'-')?;
+                            statics.push(Str::Owned(String::from(lit)));
+                        }
+                        if !p.eat(",") {
+                            break;
+                        }
+                    }
+                    let ty = Type::Integer { signedness: Signedness::Signless, width: 64 };
+                    r.set(&ints, Content::Attr(Attribute::DenseArray { ty, values: statics }));
+                    r.set(&vals, content(p, Content::of(&ops))?);
+                    if let Role::Operand { ty } = vals.role
+                        && let Ok(t) = self.field(ty)
+                        && t.variadic
+                    {
+                        r.bind(t.name, types);
+                    }
                 }
                 Elem::TypeOf(n) => {
                     let var = ty_var(p, n)?;

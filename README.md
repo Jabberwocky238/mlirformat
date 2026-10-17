@@ -61,6 +61,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Dialects
+
+Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `builtin`, `cf`,
+`complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`, `vector`. The
+first eight are written by hand; the rest are generated from ODS by `mlirformat tblgen`. An op
+whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
+MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.
+
+### Custom directives
+
+ODS keeps a `custom<X>(...)` directive's syntax out of the `.td` and leaves it to a hand-written
+`parseX` / `printX` pair in C++, so the `.td` alone never says what the syntax is. `src/syntax.rs`
+declares those directives instead, once each and in one direction only:
+
+```rust
+syntax! {
+    /// `[%a, 7, 42]`
+    DynamicIndexList($values, $integers) = "[" zip($integers, $values) "]";
+}
+```
+
+Names are shared across dialects, so one rule covers every op that calls it. The name never
+reaches run time: `mlirformat tblgen` asks whether a directive is declared before it keeps a
+format, and the format tokenizer expands the call site into plain elements.
+
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per

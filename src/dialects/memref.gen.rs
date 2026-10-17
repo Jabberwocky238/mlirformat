@@ -271,9 +271,7 @@ pub struct DmaWaitOp<'a> {
 }
 
 /// `memref.expand_shape`: operation to produce a memref with a higher rank.
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("memref.expand_shape", generic, results(result))]
+#[mlir::op("memref.expand_shape", format = "$src $reassociation `output_shape` custom<DynamicIndexList>($output_shape, $static_output_shape) attr-dict `:` type($src) `into` type($result)", results(result))]
 pub struct ExpandShapeOp<'a> {
     #[slot(src_ty, name = "src")]
     pub src: Value<'a>,
@@ -410,9 +408,7 @@ pub struct ReallocOp<'a> {
 }
 
 /// `memref.reinterpret_cast`: memref reinterpret cast operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("memref.reinterpret_cast", generic, results(result))]
+#[mlir::op("memref.reinterpret_cast", format = "$source `to` `offset` `` `:` custom<DynamicIndexList>($offsets, $static_offsets) `` `,` `sizes` `` `:` custom<DynamicIndexList>($sizes, $static_sizes) `` `,` `strides` `` `:` custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct ReinterpretCastOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -511,9 +507,7 @@ pub struct ViewOp<'a> {
 }
 
 /// `memref.subview`: memref subview operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("memref.subview", generic, results(result))]
+#[mlir::op("memref.subview", format = "$source `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct SubViewOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,

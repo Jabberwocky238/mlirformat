@@ -139,9 +139,7 @@ pub struct ExpandLoadOp<'a> {
 }
 
 /// `vector.extract`: extract operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("vector.extract", generic, results(result))]
+#[mlir::op("vector.extract", format = "$source `` custom<DynamicIndexList>($dynamic_position, $static_position) attr-dict `:` type($result) `from` type($source)", results(result))]
 pub struct ExtractOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -228,9 +226,7 @@ pub struct GatherOp<'a> {
 }
 
 /// `vector.insert`: insert operation
-///
-/// Generic form only (directive `custom<DynamicIndexList>`).
-#[mlir::op("vector.insert", generic, results(result))]
+#[mlir::op("vector.insert", format = "$valueToStore `,` $dest custom<DynamicIndexList>($dynamic_position, $static_position) attr-dict `:` type($valueToStore) `into` type($dest)", results(result))]
 pub struct InsertOp<'a> {
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
@@ -484,7 +480,9 @@ pub struct ScanOp<'a> {
 }
 
 /// `vector.scatter`: scatters elements from a vector into memory or ranked tensor as defined by an index vector     and a mask vector
-#[mlir::op("vector.scatter", format = "$base `[` $offsets `]` `[` $indices `]` `,` $mask `,` $valueToStore attr-dict `:` type($base) `,` type($indices) `,` type($mask) `,` type($valueToStore) (`->` type($result)^)?", results(result))]
+///
+/// Generic form only (Vector_ScatterOp: format: unexpected `^)?`).
+#[mlir::op("vector.scatter", generic, results(result))]
 pub struct ScatterOp<'a> {
     #[slot(base_ty, name = "base")]
     pub base: Value<'a>,

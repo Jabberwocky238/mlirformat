@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{arith, builtin, cf, complex, func, index, math, ub};
+pub use crate::dialects::{affine, arith, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, Spacer};
 pub use crate::parser::{Parser, R};
 
@@ -44,10 +44,27 @@ impl MlirOpt {
         Self { dialects: BTreeMap::new(), ops: BTreeMap::new() }
     }
 
-    /// The upstream dialects this crate describes: `arith`, `builtin`, `cf`, `complex`, `func`, `index`, `math`, `ub`.
+    /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
+    /// `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`,
+    /// `vector`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
-        opt.register::<arith::Arith>().register::<func::Func>().register::<cf::Cf>().register::<builtin::Builtin>().register::<math::Math>().register::<index::Index>().register::<ub::Ub>().register::<complex::Complex>();
+        opt.register::<arith::Arith>()
+            .register::<func::Func>()
+            .register::<cf::Cf>()
+            .register::<builtin::Builtin>()
+            .register::<math::Math>()
+            .register::<index::Index>()
+            .register::<ub::Ub>()
+            .register::<complex::Complex>()
+            .register::<affine::Affine>()
+            .register::<r#async::Async>()
+            .register::<gpu::Gpu>()
+            .register::<memref::Memref>()
+            .register::<pdl::Pdl>()
+            .register::<scf::Scf>()
+            .register::<tensor::Tensor>()
+            .register::<vector::Vector>();
         opt
     }
 
@@ -120,7 +137,7 @@ impl MlirOpt {
 impl Template {
     /// ⭐ The blueprint of typed op `O` (what `O::template()` returns).
     pub fn of<O: Op + 'static>() -> Self {
-        Self { name: O::NAME, parse: Self::parse_as::<O>, print: Self::print_as::<O> }
+        Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O> }
     }
 
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {

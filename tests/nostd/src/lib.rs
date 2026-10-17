@@ -7,5 +7,5 @@ extern crate alloc;
 
 #[path = "../../generated/cf.gen.rs"]
 pub mod cf;
-#[path = "../../generated/scf.gen.rs"]
-pub mod scf;
+#[path = "../../generated/llvm.gen.rs"]
+pub mod llvm;

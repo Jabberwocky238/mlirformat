@@ -37,6 +37,7 @@ use syn::{Error, ItemEnum, ItemStruct, parse_macro_input};
 
 mod dialect;
 mod op;
+mod syntax;
 
 #[proc_macro_attribute]
 pub fn op(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -50,4 +51,12 @@ pub fn dialect(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as dialect::DialectArgs);
     let item = parse_macro_input!(item as ItemEnum);
     dialect::expand(args, item).unwrap_or_else(Error::into_compile_error).into()
+}
+
+/// `syntax!`: the ODS `custom<X>` directives, as rules the format interpreter reads and writes
+/// from. Crate internal: `mlirformat::syntax` is its only caller.
+#[proc_macro]
+pub fn syntax(input: TokenStream) -> TokenStream {
+    let rules = parse_macro_input!(input as syntax::Rules);
+    rules.expand().unwrap_or_else(Error::into_compile_error).into()
 }

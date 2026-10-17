@@ -819,7 +819,36 @@ impl Format<'_> {
                             (_, None) => {}
                         },
                         Role::Successor => write!(p, "^{}", v.get::<String>(f)?).map_err(io)?,
-                        Role::Region => p.region(&v.get(f)?, false).map_err(io)?,
+                        // ODS prints a region variable with its entry block's arguments
+                        // (`OpFormatGen.cpp`: `printEntryBlockArgs=true`); an op that binds
+                        // those arguments in its header writes its own form by hand instead.
+                        Role::Region => p.region(&v.get(f)?, true).map_err(io)?,
+                    }
+                }
+                // ODS spaces a whole directive as one element; inside, the parts are tight.
+                Elem::Custom { parts, .. } => {
+                    s.elem(p).map_err(io)?;
+                    self.write(parts, v, &mut Spacer::default(), p)?;
+                }
+                // The integer list drives: each item is its own static value, except where the
+                // sentinel says the item is the next operand instead.
+                Elem::Zip { integers, values } => {
+                    s.elem(p).map_err(io)?;
+                    let items = match v.prop(self.field(integers)?)? {
+                        Some(Attribute::DenseArray { values, .. }) => values,
+                        Some(Attribute::Array(a)) => a.into_iter().map(|x| Str::Owned(x.untyped().to_string())).collect(),
+                        _ => return Err(format!("`{integers}`: a zipped list needs an integer array").into()),
+                    };
+                    let mut ops = v.get::<Vec<Value<'static>>>(self.field(values)?)?.into_iter();
+                    for (k, item) in items.iter().enumerate() {
+                        if k > 0 {
+                            p.write_str(", ").map_err(io)?;
+                        }
+                        match (&**item == crate::parser::SENTINEL, ops.next()) {
+                            (true, Some(d)) => write!(p, "{d}").map_err(io)?,
+                            (true, None) => return Err(format!("`{values}`: too few values for `{integers}`").into()),
+                            (false, _) => p.write_str(item).map_err(io)?,
+                        }
                     }
                 }
                 Elem::TypeOf(n) => {

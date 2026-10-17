@@ -424,13 +424,26 @@ impl Records {
                     &rest[end..]
                 }
                 ' ' | '(' | ')' | '?' | '^' | ',' => &rest[1..],
+                // A directive we have a rule for: step over the name so its arguments are
+                // still checked as fields; `Elem::check` below settles the argument count.
+                _ if rest.starts_with("custom<") => {
+                    let after = &rest["custom<".len()..];
+                    match after.split_once('>') {
+                        Some((name, tail)) if mlirformat::syntax::known(name) => tail,
+                        Some((name, _)) => return (None, Some(format!("directive `custom<{name}>`"))),
+                        None => return (None, Some("`custom<` without its `>`".into())),
+                    }
+                }
                 _ => match ["type(", "functional-type(", "qualified(", "attr-dict"].iter().find(|w| rest.starts_with(**w) && !rest.starts_with("attr-dict-with-keyword")) {
                     Some(w) => &rest[w.len()..],
                     None => return (None, Some(format!("directive `{}`", rest.split([' ', '(']).next().unwrap_or(rest)))),
                 },
             };
         }
-        (Some(format), None)
+        match mlirformat::Elem::check(&format, op) {
+            Ok(()) => (Some(format), None),
+            Err(e) => (None, Some(e.to_string())),
+        }
     }
 }
 

@@ -18,7 +18,7 @@ pub struct AffineApplyOp<'a> {
 
 /// `affine.delinearize_index`: delinearize an index
 ///
-/// Generic form only (directive `custom<DynamicIndexList>`).
+/// Generic form only (directive `"{}",`).
 #[mlir::op("affine.delinearize_index", generic, results(multi_index))]
 pub struct AffineDelinearizeIndexOp<'a> {
     #[slot(linear_index_ty, name = "linear_index")]
@@ -81,7 +81,7 @@ pub struct AffineIfOp<'a> {
 
 /// `affine.linearize_index`: linearize an index
 ///
-/// Generic form only (directive `custom<DynamicIndexList>`).
+/// Generic form only (directive `"{}",`).
 #[mlir::op("affine.linearize_index", generic, results(linear_index))]
 pub struct AffineLinearizeIndexOp<'a> {
     #[slot(multi_index_ty, name = "multi_index")]

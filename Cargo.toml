@@ -42,18 +42,8 @@ serde_json = "1"
 
 # Generated dialects, one test crate each so they build in parallel (`--features gen-tests`).
 [[test]]
-name = "gen_affine"
-path = "tests/generated/affine.rs"
-required-features = ["gen-tests"]
-
-[[test]]
 name = "gen_arith"
 path = "tests/generated/arith.rs"
-required-features = ["gen-tests"]
-
-[[test]]
-name = "gen_async"
-path = "tests/generated/async.rs"
 required-features = ["gen-tests"]
 
 [[test]]
@@ -77,11 +67,6 @@ path = "tests/generated/func.rs"
 required-features = ["gen-tests"]
 
 [[test]]
-name = "gen_gpu"
-path = "tests/generated/gpu.rs"
-required-features = ["gen-tests"]
-
-[[test]]
 name = "gen_index"
 path = "tests/generated/index.rs"
 required-features = ["gen-tests"]
@@ -102,23 +87,8 @@ path = "tests/generated/math.rs"
 required-features = ["gen-tests"]
 
 [[test]]
-name = "gen_memref"
-path = "tests/generated/memref.rs"
-required-features = ["gen-tests"]
-
-[[test]]
-name = "gen_scf"
-path = "tests/generated/scf.rs"
-required-features = ["gen-tests"]
-
-[[test]]
 name = "gen_shape"
 path = "tests/generated/shape.rs"
-required-features = ["gen-tests"]
-
-[[test]]
-name = "gen_tensor"
-path = "tests/generated/tensor.rs"
 required-features = ["gen-tests"]
 
 [[test]]
@@ -131,7 +101,3 @@ name = "gen_ub"
 path = "tests/generated/ub.rs"
 required-features = ["gen-tests"]
 
-[[test]]
-name = "gen_vector"
-path = "tests/generated/vector.rs"
-required-features = ["gen-tests"]

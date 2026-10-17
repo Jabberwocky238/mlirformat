@@ -55,6 +55,8 @@ mod dialects;
 mod generator;
 mod mliropt;
 mod parser;
+/// The ODS `custom<X>` directives (`mlirformat tblgen` asks `known` before keeping a format).
+pub mod syntax;
 
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;

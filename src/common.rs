@@ -299,6 +299,9 @@ pub trait Op: Serialize + DeserializeOwned {
 #[derive(Clone, Copy)]
 pub struct Template {
     pub name: &'static str,
+    /// Whether the typed op has a custom assembly format; `false` ⇒ it only ever prints generic
+    /// (ODS syntax the format engine cannot express, e.g. a C++ `print` / `parse`).
+    pub custom: bool,
     /// Custom form (after the name) → op.
     pub parse: for<'a> fn(&mut Parser<'a, '_>) -> R<Operation<'a>>,
     /// Op → custom form; `None` when the op does not fit the typed op (it then prints generic).
@@ -509,6 +512,7 @@ impl Field {
 /// functional-type($a, $b)   `(types of a) -> types of b`
 /// attr-dict                 discardable attributes and the properties the format does not spell
 /// ( ... $x^ ... )?          optional group, present when anchor `x` is (non-empty / true / not default)
+/// custom<X>($a, $b)         a directive declared in [`crate::syntax`], expanded here and now
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Elem<'f> {
@@ -518,6 +522,13 @@ pub enum Elem<'f> {
     FnType(&'f str, &'f str),
     AttrDict,
     Group { anchor: &'f str, elems: Vec<Elem<'f>> },
+    /// One list, two co-indexed fields: `integers` holds each static item, and the `kDynamic`
+    /// sentinel wherever the item is the next operand of `values` instead. ODS has no way to
+    /// say this, which is why upstream drops to C++ for it — see [`crate::syntax`].
+    Zip { integers: &'f str, values: &'f str },
+    /// What a `custom<X>(...)` call site stands for. It stays one element, because that is what
+    /// ODS spaces it as: the parts inside are written tight, however they are declared.
+    Custom { name: &'f str, parts: Vec<Elem<'f>> },
 }
 
 /// A tokenized assembly format with its op's schema.
@@ -590,6 +601,12 @@ impl<'f> Elem<'f> {
         let mut out = Vec::new();
         loop {
             rest = rest.trim_start();
+            if let Some(after) = rest.strip_prefix("custom<") {
+                let (elem, tail) = Self::custom(after, op)?;
+                out.push(elem);
+                rest = tail;
+                continue;
+            }
             let (elem, tail) = match rest.chars().next() {
                 None | Some(')') => return Ok((out, rest)),
                 Some('`') => {
@@ -632,7 +649,7 @@ impl<'f> Elem<'f> {
     fn flatten<'x>(elems: &'x [Self], out: &mut Vec<&'x Self>) {
         for e in elems {
             match e {
-                Self::Group { elems, .. } => Self::flatten(elems, out),
+                Self::Group { elems, .. } | Self::Custom { parts: elems, .. } => Self::flatten(elems, out),
                 e => out.push(e),
             }
         }
@@ -642,9 +659,74 @@ impl<'f> Elem<'f> {
         for e in elems {
             match e {
                 Self::Var(n) => out.push(n),
-                Self::Group { elems, .. } => Self::names(elems, out),
+                // Both halves are spelled by the list, so neither goes through `attr-dict`.
+                Self::Zip { integers, values } => out.extend([integers, values]),
+                Self::Group { elems, .. } | Self::Custom { parts: elems, .. } => Self::names(elems, out),
                 _ => {}
             }
         }
+    }
+
+    /// Tokenizes without a schema: what `mlirformat tblgen` asks before it keeps a format, so
+    /// an unknown directive or a wrong argument count makes the op generic instead of broken.
+    pub fn check(src: &'f str, op: &str) -> Result<(), Error> {
+        let (_, rest) = Self::list(src, op)?;
+        if rest.trim().is_empty() { Ok(()) } else { Err(Error(format!("{op}: format: unexpected `{rest}`"))) }
+    }
+
+    /// `custom<Name>(a, b)`, past the `custom<` ⇒ what the rule stands for, and the rest.
+    fn custom(after: &'f str, op: &str) -> Result<(Self, &'f str), Error> {
+        let bad = |m: String| Error(format!("{op}: format: {m}"));
+        let (name, tail) = after.split_once('>').ok_or_else(|| bad("`custom<` without its `>`".into()))?;
+        let tail = tail.trim_start().strip_prefix('(').ok_or_else(|| bad(format!("`custom<{name}>` without `(`")))?;
+        let end = Self::close(tail).ok_or_else(|| bad(format!("`custom<{name}>(` without `)`")))?;
+        let mut args = Vec::new();
+        for piece in Self::pieces(&tail[..end]) {
+            let (mut elems, rest) = Self::list(piece, op)?;
+            match (elems.pop(), elems.is_empty() && rest.trim().is_empty()) {
+                (Some(e), true) => args.push(e),
+                _ => return Err(bad(format!("`custom<{name}>`: `{piece}` is not one element"))),
+            }
+        }
+        let parts = crate::syntax::expand(name, &args).ok_or_else(|| bad(format!("`custom<{name}>`: no such directive")))??;
+        Ok((Self::Custom { name, parts }, &tail[end + 1..]))
+    }
+
+    /// Where the `)` closing the paren we are inside sits; literals may hold parens of their own.
+    fn close(s: &str) -> Option<usize> {
+        let (mut depth, mut lit) = (0i32, false);
+        for (i, c) in s.char_indices() {
+            match c {
+                '`' => lit = !lit,
+                _ if lit => {}
+                '(' => depth += 1,
+                ')' if depth == 0 => return Some(i),
+                ')' => depth -= 1,
+                _ => {}
+            }
+        }
+        None
+    }
+
+    /// The argument list's top-level pieces.
+    fn pieces(s: &'f str) -> Vec<&'f str> {
+        let (mut out, mut depth, mut lit, mut start) = (Vec::new(), 0i32, false, 0usize);
+        for (i, c) in s.char_indices() {
+            match c {
+                '`' => lit = !lit,
+                _ if lit => {}
+                '(' => depth += 1,
+                ')' => depth -= 1,
+                ',' if depth == 0 => {
+                    out.push(&s[start..i]);
+                    start = i + 1;
+                }
+                _ => {}
+            }
+        }
+        if !s[start..].trim().is_empty() || !out.is_empty() {
+            out.push(&s[start..]);
+        }
+        out
     }
 }
