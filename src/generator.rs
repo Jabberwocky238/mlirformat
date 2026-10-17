@@ -199,7 +199,12 @@ impl<'p, 'd> Printer<'p, 'd> {
     /// terminator when that terminator carries nothing (`affine.for %i = 0 to 10 { ... }` writes
     /// neither `^bb0(%i: index)` nor `affine.yield`). A terminator with operands is still written.
     pub fn region_body(&mut self, r: &Region<'_>, terminator: &str) -> fmt::Result {
-        self.blocks_eliding(r, false, Some(terminator))
+        // Like `region`, the body sets no default dialect: an op inside it that happens to be of
+        // the enclosing dialect must still print its full name, or it will not read back.
+        let saved = self.default_ns.take();
+        let done = self.blocks_eliding(r, false, Some(terminator));
+        self.default_ns = saved;
+        done
     }
 
     fn blocks(&mut self, r: &Region<'_>, entry_label: bool) -> fmt::Result {
