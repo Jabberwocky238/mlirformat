@@ -31,19 +31,31 @@ pub struct Parser<'a, 'd> {
     aliases: Vec<(String, String)>,
 }
 
-/// `TryFrom<&str>` entry points (no dialects): parse the whole input as one node.
+/// IR nodes a [`Parser`] reads whole — the dual of [`Emit`](crate::Emit), which writes them.
+/// Together they say what a node is: something the text has a shape for in both directions.
+pub trait Read<'a>: Sized {
+    fn read(p: &mut Parser<'a, '_>) -> R<Self>;
+}
+
+/// [`Read`] and the `TryFrom<&str>` entry point (no dialects: the whole input is one node).
 macro_rules! entry {
     ($($ty:ident => $m:ident),* $(,)?) => {$(
+        impl<'a> Read<'a> for $ty<'a> {
+            fn read(p: &mut Parser<'a, '_>) -> R<Self> {
+                p.$m()
+            }
+        }
+
         impl<'a> TryFrom<&'a str> for $ty<'a> {
             type Error = ParseError;
             fn try_from(src: &'a str) -> R<Self> {
-                Parser::read(src, |p| p.$m())
+                Parser::read(src, |p| Self::read(p))
             }
         }
     )*};
 }
 
-entry!(Module => module, Operation => op, Type => ty, Attribute => attr);
+entry!(Module => module, Operation => op, Type => ty, Attribute => attr, Region => region);
 
 const fn is_id(c: u8) -> bool {
     c.is_ascii_alphanumeric() || matches!(c, b'_' | b'$' | b'.')
@@ -1336,13 +1348,13 @@ impl<'a> Operation<'a> {
 
 /// Fields read so far.
 #[derive(Default)]
-struct Read<'a> {
+struct Slots<'a> {
     fields: Vec<(&'static str, Content)>,
     /// Type variables bound by the text: (name, types).
     types: Vec<(&'static str, Vec<Type<'a>>)>,
 }
 
-impl<'a> Read<'a> {
+impl<'a> Slots<'a> {
     fn set(&mut self, f: &Field, v: Content) {
         self.fields.push((f.key, v));
     }
@@ -1369,13 +1381,13 @@ const ATTR_WORDS: &[&str] = &["true", "false", "unit", "dense", "dense_resource"
 impl Format<'_> {
     /// ⭐ Parses the custom form after the op name into `O`.
     pub fn parse<O: DeserializeOwned>(&self, p: &mut Parser<'_, '_>) -> R<O> {
-        let mut r = Read::default();
+        let mut r = Slots::default();
         self.read(&self.elems, &mut r, p)?;
         let loc = p.opt_loc()?;
         self.finish(r, loc).or_else(|e| p.err(e.0))
     }
 
-    fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Read<'a>, p: &mut Parser<'a, '_>) -> R<()> {
+    fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
         let field = |p: &Parser<'a, '_>, n: &str| self.field(n).copied().or_else(|e| p.err(e.0));
         let ty_var = |p: &Parser<'a, '_>, n: &str| self.type_var(n).copied().or_else(|e| p.err(e.0));
         let content = |p: &Parser<'a, '_>, c: Result<Content, Error>| c.or_else(|e| p.err(e.0));
@@ -1553,7 +1565,7 @@ impl Format<'_> {
     }
 
     /// Fills defaults and inferred types, then builds the struct.
-    fn finish<O: DeserializeOwned>(&self, mut r: Read<'_>, loc: Option<Str<'_>>) -> Result<O, Error> {
+    fn finish<O: DeserializeOwned>(&self, mut r: Slots<'_>, loc: Option<Str<'_>>) -> Result<O, Error> {
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
             if r.get(f).is_none()
                 && let Some(d) = f.default_attr()

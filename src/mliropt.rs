@@ -20,7 +20,7 @@ use core::fmt;
 pub use crate::common::*;
 pub use crate::dialects::{affine, affine_ops, arith, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
-pub use crate::parser::{Parser, R};
+pub use crate::parser::{Parser, R, Read};
 
 /// The parameter hook of a registered dialect.
 type Params = for<'a> fn(SymKind, &str, &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>>;
