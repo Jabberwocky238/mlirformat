@@ -67,6 +67,30 @@ impl Fixtures {
         }
     }
 
+    /// 两个 op 的调试写法里第一处不同，连同它所在的字段名 —— 失败归类就靠它。
+    fn first_diff(a: &Operation<'_>, b: &Operation<'_>) -> String {
+        // 回读成了原文 ⇒ 印得出、却解析不回去。这是和「某个字段算错」完全不同的毛病，
+        // 单列出来，别混在字段差异里。
+        if b.raw.is_some() && a.raw.is_none() {
+            return format!("{} 的自定义形式解析不回去（退回原文）", a.name);
+        }
+        let (x, y) = (format!("{a:#?}"), format!("{b:#?}"));
+        let mut field = String::from("?");
+        for (p, q) in x.lines().zip(y.lines()) {
+            // 记住最近一个 `名字: ` 开头的行，作为差异所在的字段。
+            if let Some((name, _)) = p.trim().split_once(": ")
+                && !name.is_empty()
+                && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+            {
+                field = String::from(name);
+            }
+            if p != q {
+                return format!("{field} | 原 {} | 回 {}", p.trim(), q.trim());
+            }
+        }
+        format!("{field} | 行数不同 {} vs {}", x.lines().count(), y.lines().count())
+    }
+
     /// Does `op` say nothing beyond being there? Whether such a terminator is written at all is
     /// its parent's choice, so its own text says nothing about matching `mlir-opt`.
     fn bare(op: &Operation<'_>) -> bool {
@@ -173,7 +197,9 @@ impl Fixtures {
         }
         match opt.parse_op_in(aliases, &text) {
             Ok(back) if back == *op => {}
-            Ok(_) => return Verdict::Broken(format!("reparses differently: {text}")),
+            // ⭐ 报出**第一处不同的字段**，不是光说「往返不一致」—— 这样几百条失败能按
+            // 字段归类，一眼看出是同一个毛病还是几种。
+            Ok(back) => return Verdict::Broken(format!("往返不一致 [{}]: {text}", Self::first_diff(op, &back))),
             Err(e) => return Verdict::Broken(format!("{e}: {text}")),
         }
         if !visible || text.contains('\n') {
