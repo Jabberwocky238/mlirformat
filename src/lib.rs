@@ -50,6 +50,8 @@ macro_rules! keywords {
     )*};
 }
 
+/// The affine expression sub-language inside `affine_map<...>` and `affine_set<...>`.
+pub mod affine_expr;
 mod common;
 mod dialects;
 mod generator;
