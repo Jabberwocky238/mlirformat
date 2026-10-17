@@ -59,12 +59,18 @@ impl Fixtures {
     }
 
     /// Ops with whether they are visible in custom form: `mlir-opt` elides linalg named ops' bodies.
-    fn walk<'x, 'a>(ops: &'x [Operation<'a>], visible: bool, f: &mut impl FnMut(&'x Operation<'a>, bool)) {
+    fn walk<'x, 'a>(ops: &'x [Operation<'a>], parent: Option<&'x Operation<'a>>, visible: bool, f: &mut impl FnMut(&'x Operation<'a>, Option<&'x Operation<'a>>, bool)) {
         for op in ops {
-            f(op, visible);
+            f(op, parent, visible);
             let inner = visible && !op.name.starts_with("linalg.");
-            op.regions.iter().flat_map(|r| &r.blocks).for_each(|b| Self::walk(&b.ops, inner, f));
+            op.regions.iter().flat_map(|r| &r.blocks).for_each(|b| Self::walk(&b.ops, Some(op), inner, f));
         }
+    }
+
+    /// Does `op` say nothing beyond being there? Whether such a terminator is written at all is
+    /// its parent's choice, so its own text says nothing about matching `mlir-opt`.
+    fn bare(op: &Operation<'_>) -> bool {
+        op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
     }
 
     /// The generic fixture files, sorted.
@@ -76,7 +82,7 @@ impl Fixtures {
 
     /// ⭐ Every op of every generic fixture (nested ones too), on all cores: `f(file, op, visible,
     /// anonymized custom output)`; the `Some`s are collected (order: by file, then by op).
-    pub fn map<T: Send>(f: impl Fn(&Path, &Operation<'_>, bool, &str, &[(String, String)]) -> Option<T> + Sync) -> Vec<T> {
+    pub fn map<T: Send>(f: impl Fn(&Path, &Operation<'_>, Option<&Operation<'_>>, bool, &str, &[(String, String)]) -> Option<T> + Sync) -> Vec<T> {
         let files = Self::files();
         let next = AtomicUsize::new(0);
         let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
@@ -98,7 +104,7 @@ impl Fixtures {
                                 // one op at a time still needs the module's table.
                                 let aliases = m.aliases();
                                 let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
-                                Self::walk(&ops, true, &mut |op, visible| out.extend(f(path, op, visible, &custom, &aliases)));
+                                Self::walk(&ops, None, true, &mut |op, parent, visible| out.extend(f(path, op, parent, visible, &custom, &aliases)));
                             }
                             done.push((i, out));
                         }
@@ -120,7 +126,7 @@ impl Fixtures {
             for chunk in src.split("// -----") {
                 let m = Module::try_from(chunk.trim_start_matches('-')).unwrap();
                 let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
-                Self::walk(&ops, true, &mut |op, visible| f(&path, op, visible, &custom));
+                Self::walk(&ops, None, true, &mut |op, _, visible| f(&path, op, visible, &custom));
             }
         }
     }
@@ -128,8 +134,8 @@ impl Fixtures {
     /// ⭐ One generated dialect (`opt` registers it alone) against `mlir-opt`: prints its tally,
     /// fails on a custom form that `mlir-opt` does not print or that does not parse back.
     pub fn check_dialect(opt: &MlirOpt, ns: &str) {
-        let verdicts = Self::map(|path, op, visible, custom, aliases| {
-            (op.name.split_once('.').map(|(n, _)| n) == Some(ns)).then(|| (path.file_name().unwrap().to_string_lossy().into_owned(), Self::judge(opt, op, visible, custom, aliases)))
+        let verdicts = Self::map(|path, op, parent, visible, custom, aliases| {
+            (op.name.split_once('.').map(|(n, _)| n) == Some(ns)).then(|| (path.file_name().unwrap().to_string_lossy().into_owned(), Self::judge(opt, op, parent, visible, custom, aliases)))
         });
         let mut tally: BTreeMap<&str, usize> = BTreeMap::new();
         let mut failures = Vec::new();
@@ -155,7 +161,7 @@ impl Fixtures {
     }
 
     /// ⭐ Judges `op` printed with `opt` against `mlir-opt`'s custom output of its file.
-    pub fn judge(opt: &MlirOpt, op: &Operation<'_>, visible: bool, custom: &str, aliases: &[(String, String)]) -> Verdict {
+    pub fn judge(opt: &MlirOpt, op: &Operation<'_>, parent: Option<&Operation<'_>>, visible: bool, custom: &str, aliases: &[(String, String)]) -> Verdict {
         if opt.template(&op.name).is_none() {
             return Verdict::Unknown;
         }
@@ -171,6 +177,11 @@ impl Fixtures {
             Err(e) => return Verdict::Broken(format!("{e}: {text}")),
         }
         if !visible || text.contains('\n') {
+            return Verdict::Reparsed;
+        }
+        // A bare terminator its parent writes nothing for is not rendered on its own, here or by
+        // mlir-opt; judging its text against the file would only ever report the omission.
+        if Self::bare(op) && parent.is_some_and(|par| !opt.show_in(aliases, par).to_string().contains(&*op.name)) {
             return Verdict::Reparsed;
         }
         // Inside its own dialect's regions an op prints without its prefix (`return`).
