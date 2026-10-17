@@ -79,6 +79,8 @@ pub enum Expr<'a> {
     Const(i64),
     Neg(Box<Expr<'a>>),
     Bin(Op, Box<Expr<'a>>, Box<Expr<'a>>),
+    /// `symbol(...)`: marks its operand as a symbol rather than a dimension.
+    Symbol(Box<Expr<'a>>),
 }
 
 impl<'a> Expr<'a> {
@@ -106,6 +108,11 @@ impl<'a> Expr<'a> {
         match self {
             Self::Id(n) => f.write_str(args.iter().find(|(name, _)| name == n).map_or(*n, |(_, text)| text))?,
             Self::Const(v) => write!(f, "{v}")?,
+            Self::Symbol(e) => {
+                f.write_str("symbol(")?;
+                e.write(f, args, 0)?;
+                f.write_char(')')?;
+            }
             Self::Neg(e) => {
                 f.write_char('-')?;
                 e.write(f, args, 3)?;
@@ -263,6 +270,13 @@ impl<'a> Cur<'a> {
             return Ok(e);
         }
         let w = self.word();
+        // `symbol(x)` says `x` is a symbol, not a dimension; it is one term, not two.
+        if w == "symbol" && self.rest().starts_with('(') {
+            self.expect("(")?;
+            let e = self.expr()?;
+            self.expect(")")?;
+            return Ok(Expr::Symbol(Box::new(e)));
+        }
         match (w.is_empty(), w.starts_with(|c: char| c.is_ascii_digit())) {
             (true, _) => Err(Error(alloc::format!("affine: expected a term at `{}`", self.rest()))),
             (_, true) => w.parse().map(Expr::Const).map_err(|_| Error(alloc::format!("affine: bad number `{w}`"))),

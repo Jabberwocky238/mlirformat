@@ -83,6 +83,12 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
     }
 
+    /// Which alias spells `text`, if one does — the way back from an attribute an op rebuilt
+    /// out of its custom form to the `#map` the module already names it by.
+    pub fn alias_named(&self, text: &str) -> Option<&str> {
+        self.aliases.iter().find(|(_, v)| v == text).map(|(n, _)| &**n)
+    }
+
     /// The same parser with a module's attribute aliases already in scope, for an op read on
     /// its own out of a module.
     #[must_use]

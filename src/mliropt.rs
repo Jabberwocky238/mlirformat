@@ -68,7 +68,11 @@ impl MlirOpt {
             .register::<vector::Vector>();
         // Hand-written forms for ops ODS describes in C++; injected by name over the generated
         // templates, so the generated files stay exactly as `mlirformat tblgen` wrote them.
-        opt.inject(affine_ops::Apply::template()).inject(affine_ops::Min::template()).inject(affine_ops::Max::template());
+        opt.inject(affine_ops::Apply::template())
+            .inject(affine_ops::Min::template())
+            .inject(affine_ops::Max::template())
+            .inject(affine_ops::Load::template())
+            .inject(affine_ops::Store::template());
         opt
     }
 
