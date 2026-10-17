@@ -7,7 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Attribute, Content, Dim, Op, Parser, Printer, R, Shaped, ShapedKind, Str, Type, Value, mlir};
+use crate::{Attribute, Dim, Op, Parser, Printer, R, Shaped, ShapedKind, Str, Type, Value, mlir};
 
 #[mlir::op("cf.br", format = "$dest (`(` $destOperands^ `:` type($destOperands) `)`)? attr-dict")]
 pub struct Br<'a> {
@@ -243,7 +243,7 @@ impl Op for Switch<'_> {
             attrs: p.opt_dict()?,
             loc: p.opt_loc()?,
         };
-        Content::convert(&op).or_else(|e| p.err(e.0))
+        Self::owned(&op, p)
     }
 }
 

@@ -6,7 +6,7 @@ use core::fmt::{self, Write};
 use alloc::borrow::Cow;
 use alloc::format;
 
-use crate::{Attribute, Content, Extended, Op, Parser, Printer, R, Type, Value, mlir};
+use crate::{Attribute, Extended, Op, Parser, Printer, R, Type, Value, mlir};
 
 /// `lhs, rhs` on `index`.
 macro_rules! binops {
@@ -119,7 +119,7 @@ impl Op for CmpOp<'_> {
         p.expect(")")?;
         let pred = Attribute::Extended { ext: Extended { name: Cow::Borrowed("index"), body: Some(Cow::Owned(format!("<cmp_predicate {predicate}>"))), params: alloc::vec::Vec::new() }, ty: None };
         let op = CmpOp { pred, lhs, rhs, ty: Type::Index, result: Type::I1, attrs: p.opt_dict()?, loc: p.opt_loc()? };
-        Content::convert(&op).or_else(|e| p.err(e.0))
+        Self::owned(&op, p)
     }
 }
 

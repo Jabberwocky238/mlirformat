@@ -100,7 +100,7 @@ macro_rules! call_ops {
                         p.attr_dict("", &self.attrs, &[])
                     }
                     // No readable map: the generic form says the same thing and always works.
-                    None => p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?),
+                    None => self.print_generic(p),
                 }
             }
 
@@ -116,7 +116,7 @@ macro_rules! call_ops {
                     loc: p.opt_loc()?,
                 };
                 // The struct borrows the parser's text; hand back one that owns it.
-                Content::convert(&op).or_else(|e| p.err(e.0))
+                Self::owned(&op, p)
             }
         }
     )*};
@@ -241,7 +241,7 @@ macro_rules! memory_ops {
                     .and_then(|b| Map::try_from(b).ok())
                     .filter(|m| m.syms.as_ref().is_none_or(Vec::is_empty) && m.dims.len() == self.indices.len());
                 let Some(map) = shown else {
-                    return p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?);
+                    return self.print_generic(p);
                 };
                 let texts = indices::texts(&self.indices);
                 let list = indices::write(&map, &texts);
@@ -252,7 +252,7 @@ macro_rules! memory_ops {
                 // against the map's text as the op holds it, not its tidied form: a body written
                 // `(d0-1)` has to come back spelled that way or the attribute is not the same.
                 if indices::read(&list) != Some((body.clone().unwrap_or_default(), texts)) {
-                    return p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?);
+                    return self.print_generic(p);
                 }
                 p.op_name(Self::NAME)?;
                 p.write_char(' ')?;
@@ -287,7 +287,7 @@ macro_rules! memory_ops {
                     }
                 }
                 let op = $ty { $($value,)? memref, indices, map, memref_ty: memref_ty.clone(), indices_ty: Type::Index, result, attrs, loc: p.opt_loc()? };
-                Content::convert(&op).or_else(|e| p.err(e.0))
+                Self::owned(&op, p)
             }
         }
     )*};
@@ -409,7 +409,7 @@ impl Op for For<'_> {
         let entry = self.region.blocks.first();
         let shaped = entry.filter(|b| b.args.len() == 1 + self.inits.len() && self.results.len() == self.inits.len());
         let (Some((lo, hi)), Some(entry), Some(step)) = (bounds, shaped, self.step_of()) else {
-            return p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?);
+            return self.print_generic(p);
         };
         p.op_name(Self::NAME)?;
         write!(p, " %{} = ", entry.args[0].name)?;
@@ -494,7 +494,7 @@ impl Op for For<'_> {
             attrs,
             loc: p.opt_loc()?,
         };
-        Content::convert(&op).or_else(|e| p.err(e.0))
+        Self::owned(&op, p)
     }
 }
 

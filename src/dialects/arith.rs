@@ -4,7 +4,7 @@ use core::fmt::{self, Write};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Attribute, Content, Op, Parser, Printer, R, Type, Value, mlir};
+use crate::{Attribute, Op, Parser, Printer, R, Type, Value, mlir};
 
 /// `lhs, rhs : T` binary ops without properties.
 macro_rules! binops {
@@ -197,7 +197,7 @@ impl Op for Select<'_> {
         let first = p.ty()?;
         let (condition_ty, result) = if p.eat(",") { (first, p.ty()?) } else { (Type::I1, first) };
         let op = Select { condition, true_value, false_value, condition_ty, result, attrs, loc: p.opt_loc()? };
-        Content::convert(&op).or_else(|e| p.err(e.0))
+        Self::owned(&op, p)
     }
 }
 

@@ -5,7 +5,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Attribute, BlockArg, Content, FunctionType, NamedAttr, Op, Parser, Printer, R, Region, Type, Value, mlir};
+use crate::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parser, Printer, R, Region, Type, Value, mlir};
 
 #[mlir::op("func.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct Return<'a> {
@@ -159,7 +159,7 @@ impl Op for FuncOp<'_> {
             attrs,
             loc: p.opt_loc()?,
         };
-        Content::convert(&op).or_else(|e| p.err(e.0))
+        Self::owned(&op, p)
     }
 }
 
@@ -212,7 +212,7 @@ impl Op for CallIndirect<'_> {
         let ty = p.fn_ty()?;
         let (arg_types, results) = (ty.inputs.clone(), ty.results.clone());
         let op = CallIndirect { callee, callee_operands, callee_ty: Type::Function(ty), arg_types, results, attrs, loc: p.opt_loc()? };
-        Content::convert(&op).or_else(|e| p.err(e.0))
+        Self::owned(&op, p)
     }
 }
 

@@ -270,10 +270,25 @@ pub trait Op: Serialize + DeserializeOwned {
     /// generic, typed conversions still work.
     const CUSTOM: bool = true;
 
+    /// This op written generically. A hand-written [`print`](Self::print) ends here whenever the
+    /// custom form cannot say what the op holds — the generic form always can, and is still
+    /// valid MLIR.
+    fn print_generic(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?)
+    }
+
+    /// Hands back an op that owns its text. A hand-written [`parse`](Self::parse) builds its op
+    /// out of pieces borrowed from the parser; those borrows end with the call, so the op it
+    /// returns has to be a copy. It takes the borrowed op as an argument rather than `self`
+    /// precisely because the two differ in lifetime.
+    fn owned<B: Serialize>(borrowed: &B, p: &mut Parser<'_, '_>) -> R<Self> {
+        Content::convert(borrowed).or_else(|e| p.err(e.0))
+    }
+
     /// Prints the custom form (op name included), or the generic form without one.
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         if !Self::CUSTOM {
-            return p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?);
+            return self.print_generic(p);
         }
         Format::of::<Self>().map_err(|_| fmt::Error)?.print(self, p)
     }
