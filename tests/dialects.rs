@@ -9,6 +9,7 @@ mod common;
 
 use common::Fixtures;
 use mlirformat::affine_ops::{Apply, For, If, Load, Max, Min, Parallel, Store};
+use mlirformat::scf_hand::For as ScfFor;
 use mlirformat::{MlirOpt, Op};
 
 /// One test per dialect: `opt` registers it alone, so only its own custom forms are judged.
@@ -20,7 +21,7 @@ macro_rules! dialects {
             opt.register::<$dialect>();
             // Hand-written forms for ops ODS describes in C++, as `MlirOpt::upstream` injects
             // them; they are named `affine.*`, so they change nothing for the other dialects.
-            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template());
+            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template());
             Fixtures::check_dialect(&opt, $ns);
         }
     )*};

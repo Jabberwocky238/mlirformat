@@ -15,6 +15,7 @@ pub mod math;
 pub mod ub;
 
 pub mod affine_ops;
+pub mod scf_ops;
 #[path = "affine.gen.rs"]
 pub mod affine;
 #[path = "async.gen.rs"]

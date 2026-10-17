@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, arith, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
+pub use crate::dialects::{affine, affine_ops, arith, scf_ops as scf_hand, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R, Read};
 
@@ -75,7 +75,8 @@ impl MlirOpt {
             .inject(affine_ops::Store::template())
             .inject(affine_ops::For::template())
             .inject(affine_ops::If::template())
-            .inject(affine_ops::Parallel::template());
+            .inject(affine_ops::Parallel::template())
+            .inject(scf_hand::For::template());
         opt
     }
 
