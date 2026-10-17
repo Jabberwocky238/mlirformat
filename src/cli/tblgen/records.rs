@@ -346,11 +346,21 @@ impl Records {
                 "SameOperandsAndResultType" => (0..groups.len()).collect(),
                 "SameTypeOperands" => (0..groups.len()).filter(|&i| !groups[i].result).collect(),
                 _ if self.is_a(t, "AllTypesMatch") => self.field(t, "values").and_then(Json::as_array).into_iter().flatten().filter_map(|v| index(v.as_str()?)).collect(),
+                // `vector.from_elements`：各操作数的类型就是那个形状类型的元素类型。
+                // ⛔ 它派生自 `PredOpTrait` 而不是 `TypesMatchWith`，所以要单独认。
+                _ if self.is_a(t, "ShapedTypeMatchesElementCountAndTypes") => {
+                    if let (Some(shaped), Some(elements)) = (self.text(t, "shaped").and_then(index), self.text(t, "elements").and_then(index)) {
+                        infer.insert(elements, format!("el = {}", groups[shaped].name));
+                    }
+                    Vec::new()
+                }
                 _ if self.is_a(t, "TypesMatchWith") => {
                     let (Some(lhs), Some(rhs)) = (self.text(t, "lhs").and_then(index), self.text(t, "rhs").and_then(index)) else { continue };
                     let transformer = self.text(t, "transformer").unwrap_or("");
+                    // `::llvm::cast<Type>($_self)` 就是恒等（`OptionalTypesMatchWith` 这么写）。
+                    let plain = transformer.trim().strip_prefix("::llvm::cast<Type>(").and_then(|r| r.strip_suffix(')')).unwrap_or(transformer).trim();
                     match () {
-                        _ if transformer.trim() == "$_self" => vec![lhs, rhs],
+                        _ if plain == "$_self" => vec![lhs, rhs],
                         _ if transformer.contains("getI1SameShape") => {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()

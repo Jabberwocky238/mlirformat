@@ -190,7 +190,7 @@ pub struct FMAOp<'a> {
 pub struct FromElementsOp<'a> {
     #[slot(elements_ty, name = "elements")]
     pub elements: Vec<Value<'a>>,
-    #[dtype(name = "elements_ty")]
+    #[dtype(name = "elements_ty", el = dest)]
     pub elements_ty: Vec<Type<'a>>,
     #[dtype(name = "dest")]
     pub dest: Type<'a>,
@@ -418,7 +418,7 @@ pub struct PrintOp<'a> {
 pub struct ReductionOp<'a> {
     #[slot(vector_ty, name = "vector")]
     pub vector: Value<'a>,
-    #[slot(acc_ty, name = "acc")]
+    #[slot(dest, name = "acc")]
     pub acc: Vec<Value<'a>>,
     #[attr(name = "kind", dialect = "vector.kind")]
     pub kind: Attribute<'a>,
@@ -426,8 +426,6 @@ pub struct ReductionOp<'a> {
     pub fastmath: Attribute<'a>,
     #[dtype(name = "vector_ty")]
     pub vector_ty: Type<'a>,
-    #[dtype(name = "acc_ty")]
-    pub acc_ty: Vec<Type<'a>>,
     #[dtype(name = "dest")]
     pub dest: Type<'a>,
 }
@@ -575,7 +573,7 @@ pub struct ToElementsOp<'a> {
     pub source: Value<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
-    #[dtype(name = "elements")]
+    #[dtype(name = "elements", el = source_ty)]
     pub elements: Vec<Type<'a>>,
 }
 
