@@ -7,7 +7,7 @@
 //! (`map = #map`), so printing needs the module's alias table — see [`Printer::alias`].
 //! Without it, or with a map we cannot read, the op prints generic, which is still valid MLIR.
 
-use crate::affine_expr::Map;
+use crate::affine_expr::{Map, Set};
 use crate::mlir;
 use crate::common::{Attribute, Block, BlockArg, Content, Extended, Op, Operation, Region, Shaped, Str, Type, Value};
 use crate::generator::{Printer, Sep};
@@ -17,14 +17,19 @@ use alloc::format;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-/// The body of an `affine_map<...>` the attribute stands for, written inline or behind an alias.
-fn map_body(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
+/// The body of the `kind<...>` an attribute stands for, written inline or behind an alias.
+fn body_of(attr: &Attribute<'_>, kind: &str, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
     let text = match attr {
-        Attribute::Builtin { name, body, .. } if name == "affine_map" => String::from(&**body),
-        Attribute::Extended { ext, .. } if ext.body.is_none() && ext.params.is_empty() => alias(&ext.name)?.strip_prefix("affine_map").map(String::from)?,
+        Attribute::Builtin { name, body, .. } if name == kind => String::from(&**body),
+        Attribute::Extended { ext, .. } if ext.body.is_none() && ext.params.is_empty() => alias(&ext.name)?.strip_prefix(kind).map(String::from)?,
         _ => return None,
     };
     Some(String::from(text.strip_prefix('<')?.strip_suffix('>')?))
+}
+
+/// The body of the `affine_map<...>` an attribute stands for.
+fn map_body(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
+    body_of(attr, "affine_map", alias)
 }
 
 /// How many of the op's operands the map takes as dimensions; the rest are its symbols.
@@ -514,4 +519,103 @@ fn read_bound<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a
     let c = p.attr()?.int().or_else(|e| p.err(e.0))?;
     let named = |t: &str| p.alias_named(t).map(String::from);
     Ok((bound::of_constant(i64::try_from(c).unwrap_or_default(), &named), Vec::new()))
+}
+
+
+/// `affine.if #set(%i)[%n] -> types { then } else { else }`.
+///
+/// The condition is an integer set, applied to the operands exactly as a map is in
+/// `affine.apply`; both regions leave out their `affine.yield` when it carries nothing, and an
+/// absent `else` is a region with no block at all.
+#[mlir::op("affine.if", custom, results(results))]
+pub struct If<'a> {
+    #[slot(args_ty, name = "args")]
+    pub args: Vec<Value<'a>>,
+    #[attr(name = "condition")]
+    pub condition: Attribute<'a>,
+    #[region(name = "thenRegion")]
+    pub then_region: Region<'a>,
+    #[region(name = "elseRegion")]
+    pub else_region: Region<'a>,
+    #[dtype(name = "args_ty", is = index)]
+    pub args_ty: Type<'a>,
+    #[dtype(name = "results")]
+    pub results: Vec<Type<'a>>,
+}
+
+/// Puts back what a region's custom form leaves out: the block itself when the body held nothing
+/// but the terminator, and the terminator when it carried nothing.
+fn close_region(r: &mut Region<'_>) {
+    if r.blocks.is_empty() {
+        r.blocks.push(Block { label: None, args: Vec::new(), ops: Vec::new() });
+    }
+    if let Some(b) = r.blocks.last_mut()
+        && !b.ops.last().is_some_and(|op| op.name == "affine.yield")
+    {
+        b.ops.push(Operation { name: Str::Borrowed("affine.yield"), ..Operation::default() });
+    }
+}
+
+impl Op for If<'_> {
+    const NAME: &'static str = "affine.if";
+    const FORMAT: &'static str = "";
+
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        let body = {
+            let alias = |n: &str| p.alias(n).map(String::from);
+            body_of(&self.condition, "affine_set", &alias)
+        };
+        let shaped = body
+            .as_deref()
+            .and_then(|b| Set::try_from(b).ok())
+            .filter(|s| s.dims.len() + s.syms.as_ref().map_or(0, Vec::len) == self.args.len());
+        let Some(set) = shaped else {
+            return self.print_generic(p);
+        };
+        p.op_name(Self::NAME)?;
+        write_call(p, &self.condition, &self.args, set.dims.len())?;
+        match &*self.results {
+            [] => {}
+            // One result is written bare, several in parentheses.
+            [t] => write!(p, " -> {t}")?,
+            ts => write!(p, " -> ({})", Sep(ts, ", "))?,
+        }
+        p.write_char(' ')?;
+        p.region_body(&self.then_region, "affine.yield")?;
+        if !self.else_region.blocks.is_empty() {
+            p.write_str(" else ")?;
+            p.region_body(&self.else_region, "affine.yield")?;
+        }
+        p.attr_dict("", &self.attrs, &[])
+    }
+
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let condition = p.attr()?;
+        let args = read_call(p)?;
+        let results = match p.eat("->") {
+            true => p.results_ty()?,
+            false => Vec::new(),
+        };
+        let mut then_region = p.region()?;
+        close_region(&mut then_region);
+        let else_region = match p.eat_kw("else") {
+            true => {
+                let mut r = p.region()?;
+                close_region(&mut r);
+                r
+            }
+            false => Region { blocks: Vec::new() },
+        };
+        let op = If {
+            args,
+            condition,
+            then_region,
+            else_region,
+            args_ty: Type::Index,
+            results,
+            attrs: p.opt_dict()?,
+            loc: p.opt_loc()?,
+        };
+        Self::owned(&op, p)
+    }
 }
