@@ -72,7 +72,8 @@ impl MlirOpt {
             .inject(affine_ops::Min::template())
             .inject(affine_ops::Max::template())
             .inject(affine_ops::Load::template())
-            .inject(affine_ops::Store::template());
+            .inject(affine_ops::Store::template())
+            .inject(affine_ops::For::template());
         opt
     }
 

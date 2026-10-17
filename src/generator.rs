@@ -194,7 +194,24 @@ impl<'p, 'd> Printer<'p, 'd> {
         done
     }
 
+    /// `{ blocks }` the way an op that spells its body's shape in its own header writes it: no
+    /// entry block label, because the header already names its arguments, and no trailing
+    /// terminator when that terminator carries nothing (`affine.for %i = 0 to 10 { ... }` writes
+    /// neither `^bb0(%i: index)` nor `affine.yield`). A terminator with operands is still written.
+    pub fn region_body(&mut self, r: &Region<'_>, terminator: &str) -> fmt::Result {
+        self.blocks_eliding(r, false, Some(terminator))
+    }
+
     fn blocks(&mut self, r: &Region<'_>, entry_label: bool) -> fmt::Result {
+        self.blocks_eliding(r, entry_label, None)
+    }
+
+    /// Does `op` say nothing beyond being there? Such a terminator is implied by its region.
+    fn bare_terminator(op: &Operation<'_>, name: &str) -> bool {
+        op.name == name && op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
+    }
+
+    fn blocks_eliding(&mut self, r: &Region<'_>, entry_label: bool, elide: Option<&str>) -> fmt::Result {
         self.write_char('{')?;
         for (i, b) in r.blocks.iter().enumerate() {
             if let Some(label) = b.label.as_ref().filter(|_| i > 0 || entry_label) {
@@ -206,7 +223,11 @@ impl<'p, 'd> Printer<'p, 'd> {
                 self.write_char(':')?;
             }
             self.indent += 2;
-            for op in &b.ops {
+            let last = b.ops.len().saturating_sub(1);
+            for (k, op) in b.ops.iter().enumerate() {
+                if k == last && elide.is_some_and(|t| Self::bare_terminator(op, t)) {
+                    break;
+                }
                 self.nl()?;
                 self.op(op)?;
             }
