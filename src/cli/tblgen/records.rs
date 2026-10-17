@@ -135,7 +135,11 @@ impl Records {
         args.into_iter().flatten().filter_map(|a| Some((self.unwrap_arg(Self::def_of(a.get(0)?)?), a.get(1)?.as_str()?))).collect()
     }
 
-    /// The MLIR spelling of a buildable type (`$_builder.getIntegerType(32)` ⇒ `i32`).
+    /// The MLIR spelling of a buildable type (`$_builder.getIntegerType(32)` ⇒ `i32`，
+    /// `$_builder.getType<::mlir::pdl::TypeType>()` ⇒ `!pdl.type`)。
+    ///
+    /// ⭐ 这决定了一个结果类型能不能写进**描述**里。写不进去，解析时就填不出结果类型，
+    /// 整条退回原文 —— pdl 整个方言的 `matched` 为 0 就是这么来的。
     fn buildable(&self, constraint: &str) -> Option<String> {
         let call = self.text(constraint, "builderCall").filter(|c| !c.is_empty())?;
         let inner = |p: &str| call.split_once(p).and_then(|(_, r)| r.split_once(')')).map(|(n, _)| n.trim());
@@ -147,6 +151,14 @@ impl Records {
             _ if call.contains("getF32Type") || call.contains("Float32Type>") => "f32".into(),
             _ if call.contains("getF64Type") || call.contains("Float64Type>") => "f64".into(),
             _ if call.contains("getBF16Type") || call.contains("BFloat16Type>") => "bf16".into(),
+            // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
+            // ⛔ 只认 `getType<…>()` 这种**无参**构造 —— 带参数的类型光靠助记符拼不出写法
+            // （`!pdl.range<T>` 还要那个 T）。
+            _ if call.trim_end().ends_with(">()") => {
+                let mnemonic = self.text(constraint, "mnemonic").filter(|m| !m.is_empty())?;
+                let dialect = self.field(constraint, "dialect").and_then(Self::def_of)?;
+                format!("!{}.{mnemonic}", self.text(dialect, "name")?)
+            }
             _ => return None,
         })
     }
@@ -374,7 +386,8 @@ impl Records {
                 let (kind, target) = r.split_once(" = ").unwrap_or((r, ""));
                 format!("{kind} = {}", Self::ident(&var_name(target)))
             });
-            rule.or_else(|| class_fixed(c).map(|t| format!("is = {t}")))
+            // 方言类型（`!pdl.type`）不是合法的 Rust 标识符，加引号走字符串那条路。
+            rule.or_else(|| class_fixed(c).map(|t| if t.starts_with('!') { format!("is = {t:?}") } else { format!("is = {t}") }))
         };
         let mut fields = Vec::new();
         for (i, g) in groups.iter().enumerate().filter(|(_, g)| !g.result) {

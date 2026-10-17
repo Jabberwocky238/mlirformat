@@ -62,10 +62,6 @@ impl<'a> FuncOp<'a> {
     }
 }
 
-impl Op for FuncOp<'_> {
-    const NAME: &'static str = "func.func";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for FuncOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -191,10 +187,6 @@ pub struct CallIndirect<'a> {
     pub results: Vec<Type<'a>>,
 }
 
-impl Op for CallIndirect<'_> {
-    const NAME: &'static str = "func.call_indirect";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for CallIndirect<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {

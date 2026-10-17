@@ -171,10 +171,6 @@ pub struct Select<'a> {
     pub result: Type<'a>,
 }
 
-impl Op for Select<'_> {
-    const NAME: &'static str = "arith.select";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for Select<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {

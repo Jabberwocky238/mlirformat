@@ -41,7 +41,7 @@ impl Parse for OpArgs {
 /// A field's role as written.
 enum Kind {
     Slot(Ident),
-    /// `(rule, argument)`: `i1`, `i1 = x`, `of = x`.
+    /// `(rule, argument)`: `i1`, `i1 = x`, `of = x`；`is` 的写法另走 [`Marked::fixed`]。
     DType(Option<(String, Option<Ident>)>),
     Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String> },
     Region,
@@ -51,6 +51,9 @@ enum Kind {
 struct Marked {
     ident: Ident,
     name: String,
+    /// `#[dtype(is = …)]` 里那个固定类型的写法。标识符（`index`）或字符串
+    /// （`"!pdl.type"` —— 方言类型不是合法的 Rust 标识符，只能这么写）。
+    fixed: Option<String>,
     kind: Kind,
     variadic: bool,
     unit: bool,
@@ -84,6 +87,7 @@ impl Marked {
         let ident = f.ident.clone().ok_or_else(|| Error::new_spanned(&*f, "#[mlir::op] needs named fields"))?;
         let mut found = None;
         let mut name = None;
+        let mut fixed: Option<String> = None;
         for a in &f.attrs {
             let Some(marker) = ["slot", "dtype", "attr", "region", "successor"].into_iter().find(|m| a.path().is_ident(m)) else { continue };
             let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense) = (None, None, None, None, None, None);
@@ -94,7 +98,13 @@ impl Marked {
                     match (marker, key.as_str()) {
                         (_, "name") => name = Some(value(&m)?),
                         ("slot", _) => ty_var = m.path.get_ident().cloned(),
-                        ("dtype", "i1" | "of" | "eq" | "is" | "el") => {
+                        // `is = index` 与 `is = "!pdl.type"` 都认：方言类型不是合法标识符。
+                        ("dtype", "is") => {
+                            let v = m.value()?;
+                            fixed = Some(if v.peek(LitStr) { v.parse::<LitStr>()?.value() } else { v.parse::<Ident>()?.to_string() });
+                            rule = Some((key, None));
+                        }
+                        ("dtype", "i1" | "of" | "eq" | "el") => {
                             let arg = if m.input.peek(Token![=]) { Some(m.value()?.parse::<Ident>()?) } else { None };
                             rule = Some((key, arg));
                         }
@@ -124,6 +134,7 @@ impl Marked {
         Ok(Self {
             name: name.unwrap_or_else(|| camel(&ident)),
             ident,
+            fixed,
             kind,
             variadic: seg.as_deref() == Some("Vec"),
             unit: seg.as_deref() == Some("bool"),
@@ -146,11 +157,11 @@ impl OpArgs {
                 Kind::Slot(t) => format!("%{}{star}:{}", m.name, mlir_name(t)?),
                 Kind::DType(rule) => {
                     let result = self.results.iter().position(|r| *r == m.ident).map_or(String::new(), |k| format!("={k}"));
-                    let infer = match rule {
-                        None => String::new(),
-                        Some((r, None)) => format!("~{r}"),
-                        Some((r, Some(x))) if r == "is" => format!("~is:{x}"),
-                        Some((r, Some(x))) => format!("~{r}:{}", mlir_name(x)?),
+                    let infer = match (rule, &m.fixed) {
+                        (Some((r, _)), Some(ty)) if r == "is" => format!("~is:{ty}"),
+                        (None, _) => String::new(),
+                        (Some((r, None)), _) => format!("~{r}"),
+                        (Some((r, Some(x))), _) => format!("~{r}:{}", mlir_name(x)?),
                     };
                     format!("!{}{star}{result}{infer}", m.name)
                 }
@@ -209,7 +220,14 @@ impl OpArgs {
 
                 #dual
             },
-            (_, true) => quote!(),
+            // ⛔ `custom`：只挡住 `Print` / `Parse`，`Op` 照常生成。逃生口是关于**两个方向**
+            // 的，不是关于这个 op 是谁 —— 名字和「有自定义形式」这两件事没有理由也手写。
+            (_, true) => quote! {
+                impl #ig ::mlirformat::Op for #ty #tg #wc {
+                    const NAME: &'static str = #name;
+                    const FORMAT: &'static str = "";
+                }
+            },
             (Some(format), false) => quote! {
                 impl #ig ::mlirformat::Op for #ty #tg #wc {
                     const NAME: &'static str = #name;

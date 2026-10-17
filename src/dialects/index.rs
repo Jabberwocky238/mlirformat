@@ -96,10 +96,6 @@ impl CmpOp<'_> {
     }
 }
 
-impl Op for CmpOp<'_> {
-    const NAME: &'static str = "index.cmp";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for CmpOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {

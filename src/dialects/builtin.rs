@@ -17,10 +17,6 @@ pub struct ModuleOp<'a> {
     pub body: Region<'a>,
 }
 
-impl Op for ModuleOp<'_> {
-    const NAME: &'static str = "builtin.module";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for ModuleOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {

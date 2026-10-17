@@ -91,10 +91,6 @@ macro_rules! call_ops {
             pub result: Type<'a>,
         }
 
-        impl Op for $ty<'_> {
-            const NAME: &'static str = $name;
-            const FORMAT: &'static str = "";
-        }
 
         impl Print for $ty<'_> {
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -234,10 +230,6 @@ macro_rules! memory_ops {
             pub result: Type<'a>,
         }
 
-        impl Op for $ty<'_> {
-            const NAME: &'static str = $name;
-            const FORMAT: &'static str = "";
-        }
 
         impl Print for $ty<'_> {
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -408,10 +400,6 @@ impl For<'_> {
     }
 }
 
-impl Op for For<'_> {
-    const NAME: &'static str = "affine.for";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for For<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -568,10 +556,6 @@ fn close_region(r: &mut Region<'_>) {
     }
 }
 
-impl Op for If<'_> {
-    const NAME: &'static str = "affine.if";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for If<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -693,10 +677,6 @@ fn ints_of(attr: &Attribute<'_>) -> Option<Vec<i64>> {
     }
 }
 
-impl Op for Parallel<'_> {
-    const NAME: &'static str = "affine.parallel";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for Parallel<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {

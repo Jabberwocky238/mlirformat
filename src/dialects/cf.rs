@@ -168,10 +168,6 @@ impl<'a> Switch<'a> {
     }
 }
 
-impl Op for Switch<'_> {
-    const NAME: &'static str = "cf.switch";
-    const FORMAT: &'static str = "";
-}
 
 impl Print for Switch<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {

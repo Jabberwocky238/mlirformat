@@ -12,7 +12,7 @@ pub struct AddToGroupOp<'a> {
     pub group: Value<'a>,
     #[dtype(name = "operand_ty")]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "group_ty")]
+    #[dtype(name = "group_ty", is = "!async.group")]
     pub group_ty: Type<'a>,
     #[dtype(name = "rank", is = index)]
     pub rank: Type<'a>,
@@ -23,7 +23,7 @@ pub struct AddToGroupOp<'a> {
 pub struct AwaitAllOp<'a> {
     #[slot(operand_ty, name = "operand")]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype(name = "operand_ty", is = "!async.group")]
     pub operand_ty: Type<'a>,
 }
 
@@ -62,9 +62,9 @@ pub struct CallOp<'a> {
 pub struct CoroBeginOp<'a> {
     #[slot(id_ty, name = "id")]
     pub id: Value<'a>,
-    #[dtype(name = "id_ty")]
+    #[dtype(name = "id_ty", is = "!async.coro.id")]
     pub id_ty: Type<'a>,
-    #[dtype(name = "handle")]
+    #[dtype(name = "handle", is = "!async.coro.handle")]
     pub handle: Type<'a>,
 }
 
@@ -73,7 +73,7 @@ pub struct CoroBeginOp<'a> {
 pub struct CoroEndOp<'a> {
     #[slot(handle_ty, name = "handle")]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
@@ -84,16 +84,16 @@ pub struct CoroFreeOp<'a> {
     pub id: Value<'a>,
     #[slot(handle_ty, name = "handle")]
     pub handle: Value<'a>,
-    #[dtype(name = "id_ty")]
+    #[dtype(name = "id_ty", is = "!async.coro.id")]
     pub id_ty: Type<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
 /// `async.coro.id`: returns a switched-resume coroutine identifier
 #[mlir::op("async.coro.id", format = "attr-dict", results(id))]
 pub struct CoroIdOp<'a> {
-    #[dtype(name = "id")]
+    #[dtype(name = "id", is = "!async.coro.id")]
     pub id: Type<'a>,
 }
 
@@ -102,9 +102,9 @@ pub struct CoroIdOp<'a> {
 pub struct CoroSaveOp<'a> {
     #[slot(handle_ty, name = "handle")]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
-    #[dtype(name = "state")]
+    #[dtype(name = "state", is = "!async.coro.state")]
     pub state: Type<'a>,
 }
 
@@ -119,7 +119,7 @@ pub struct CoroSuspendOp<'a> {
     pub resume_dest: Str<'a>,
     #[successor(name = "cleanupDest")]
     pub cleanup_dest: Str<'a>,
-    #[dtype(name = "state_ty")]
+    #[dtype(name = "state_ty", is = "!async.coro.state")]
     pub state_ty: Type<'a>,
 }
 
@@ -130,7 +130,7 @@ pub struct CreateGroupOp<'a> {
     pub size: Value<'a>,
     #[dtype(name = "size_ty", is = index)]
     pub size_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!async.group")]
     pub result: Type<'a>,
 }
 
@@ -145,11 +145,11 @@ pub struct ExecuteOp<'a> {
     pub body_operands: Vec<Value<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
-    #[dtype(name = "dependencies_ty")]
-    pub dependencies_ty: Vec<Type<'a>>,
+    #[dtype(name = "dependencies_ty", is = "!async.token")]
+    pub dependencies_ty: Type<'a>,
     #[dtype(name = "bodyOperands_ty")]
     pub body_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "token")]
+    #[dtype(name = "token", is = "!async.token")]
     pub token: Type<'a>,
     #[dtype(name = "bodyResults")]
     pub body_results: Vec<Type<'a>>,
@@ -203,7 +203,7 @@ pub struct RuntimeAddToGroupOp<'a> {
     pub group: Value<'a>,
     #[dtype(name = "operand_ty")]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "group_ty")]
+    #[dtype(name = "group_ty", is = "!async.group")]
     pub group_ty: Type<'a>,
     #[dtype(name = "rank", is = index)]
     pub rank: Type<'a>,
@@ -218,7 +218,7 @@ pub struct RuntimeAwaitAndResumeOp<'a> {
     pub handle: Value<'a>,
     #[dtype(name = "operand_ty")]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
@@ -238,7 +238,7 @@ pub struct RuntimeCreateGroupOp<'a> {
     pub size: Value<'a>,
     #[dtype(name = "size_ty", is = index)]
     pub size_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!async.group")]
     pub result: Type<'a>,
 }
 
@@ -294,7 +294,7 @@ pub struct RuntimeNumWorkerThreadsOp<'a> {
 pub struct RuntimeResumeOp<'a> {
     #[slot(handle_ty, name = "handle")]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 

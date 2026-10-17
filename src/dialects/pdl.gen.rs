@@ -44,9 +44,9 @@ pub struct AttributeOp<'a> {
     pub value_type: Vec<Value<'a>>,
     #[attr(name = "value")]
     pub value: Option<Attribute<'a>>,
-    #[dtype(name = "valueType_ty")]
-    pub value_type_ty: Vec<Type<'a>>,
-    #[dtype(name = "attr")]
+    #[dtype(name = "valueType_ty", is = "!pdl.type")]
+    pub value_type_ty: Type<'a>,
+    #[dtype(name = "attr", is = "!pdl.attribute")]
     pub attr: Type<'a>,
 }
 
@@ -55,7 +55,7 @@ pub struct AttributeOp<'a> {
 pub struct EraseOp<'a> {
     #[slot(op_value_ty, name = "opValue")]
     pub op_value: Value<'a>,
-    #[dtype(name = "opValue_ty")]
+    #[dtype(name = "opValue_ty", is = "!pdl.operation")]
     pub op_value_ty: Type<'a>,
 }
 
@@ -64,9 +64,9 @@ pub struct EraseOp<'a> {
 pub struct OperandOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[dtype(name = "valueType_ty")]
-    pub value_type_ty: Vec<Type<'a>>,
-    #[dtype(name = "value")]
+    #[dtype(name = "valueType_ty", is = "!pdl.type")]
+    pub value_type_ty: Type<'a>,
+    #[dtype(name = "value", is = "!pdl.value")]
     pub value: Type<'a>,
 }
 
@@ -98,11 +98,11 @@ pub struct OperationOp<'a> {
     pub attribute_value_names: Attribute<'a>,
     #[dtype(name = "operandValues_ty")]
     pub operand_values_ty: Vec<Type<'a>>,
-    #[dtype(name = "attributeValues_ty")]
-    pub attribute_values_ty: Vec<Type<'a>>,
+    #[dtype(name = "attributeValues_ty", is = "!pdl.attribute")]
+    pub attribute_values_ty: Type<'a>,
     #[dtype(name = "typeValues_ty")]
     pub type_values_ty: Vec<Type<'a>>,
-    #[dtype(name = "op")]
+    #[dtype(name = "op", is = "!pdl.operation")]
     pub op: Type<'a>,
 }
 
@@ -141,10 +141,10 @@ pub struct ReplaceOp<'a> {
     pub repl_operation: Vec<Value<'a>>,
     #[slot(repl_values_ty, name = "replValues")]
     pub repl_values: Vec<Value<'a>>,
-    #[dtype(name = "opValue_ty")]
+    #[dtype(name = "opValue_ty", is = "!pdl.operation")]
     pub op_value_ty: Type<'a>,
-    #[dtype(name = "replOperation_ty")]
-    pub repl_operation_ty: Vec<Type<'a>>,
+    #[dtype(name = "replOperation_ty", is = "!pdl.operation")]
+    pub repl_operation_ty: Type<'a>,
     #[dtype(name = "replValues_ty")]
     pub repl_values_ty: Vec<Type<'a>>,
 }
@@ -156,9 +156,9 @@ pub struct ResultOp<'a> {
     pub parent: Value<'a>,
     #[attr(name = "index")]
     pub index: Attribute<'a>,
-    #[dtype(name = "parent_ty")]
+    #[dtype(name = "parent_ty", is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
-    #[dtype(name = "val")]
+    #[dtype(name = "val", is = "!pdl.value")]
     pub val: Type<'a>,
 }
 
@@ -171,7 +171,7 @@ pub struct ResultsOp<'a> {
     pub parent: Value<'a>,
     #[attr(name = "index")]
     pub index: Option<Attribute<'a>>,
-    #[dtype(name = "parent_ty")]
+    #[dtype(name = "parent_ty", is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
     #[dtype(name = "val")]
     pub val: Type<'a>,
@@ -190,8 +190,8 @@ pub struct RewriteOp<'a> {
     pub name: Option<Attribute<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
-    #[dtype(name = "root_ty")]
-    pub root_ty: Vec<Type<'a>>,
+    #[dtype(name = "root_ty", is = "!pdl.operation")]
+    pub root_ty: Type<'a>,
     #[dtype(name = "externalArgs_ty")]
     pub external_args_ty: Vec<Type<'a>>,
 }
@@ -201,7 +201,7 @@ pub struct RewriteOp<'a> {
 pub struct TypeOp<'a> {
     #[attr(name = "constantType")]
     pub constant_type: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!pdl.type")]
     pub result: Type<'a>,
 }
 
