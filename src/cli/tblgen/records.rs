@@ -261,7 +261,26 @@ impl Records {
             };
         }
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
+        if let Some(el) = Self::dense_array(base).or_else(|| Self::dense_array(constraint)) {
+            return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
+        }
         (format!("#[attr({name})]"), ty.into())
+    }
+
+    /// `DenseI64ArrayAttr` ⇒ `i64`. The custom form prints such an attribute as a bare list, so
+    /// its element type only survives a round trip if the declaration carries it.
+    fn dense_array(def: &str) -> Option<&'static str> {
+        let el = def.strip_prefix("Dense")?.strip_suffix("ArrayAttr")?;
+        Some(match el {
+            "Bool" => "i1",
+            "I8" => "i8",
+            "I16" => "i16",
+            "I32" => "i32",
+            "I64" => "i64",
+            "F32" => "f32",
+            "F64" => "f64",
+            _ => return None,
+        })
     }
 
     /// ⭐ One op.

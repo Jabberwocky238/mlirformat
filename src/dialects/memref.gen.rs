@@ -279,7 +279,7 @@ pub struct ExpandShapeOp<'a> {
     pub output_shape: Vec<Value<'a>>,
     #[attr(name = "reassociation")]
     pub reassociation: Attribute<'a>,
-    #[attr(name = "static_output_shape")]
+    #[attr(name = "static_output_shape", dense = "i64")]
     pub static_output_shape: Attribute<'a>,
     #[dtype(name = "src_ty")]
     pub src_ty: Type<'a>,
@@ -418,11 +418,11 @@ pub struct ReinterpretCastOp<'a> {
     pub sizes: Vec<Value<'a>>,
     #[slot(strides_ty, name = "strides")]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets")]
+    #[attr(name = "static_offsets", dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes")]
+    #[attr(name = "static_sizes", dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides")]
+    #[attr(name = "static_strides", dense = "i64")]
     pub static_strides: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -517,11 +517,11 @@ pub struct SubViewOp<'a> {
     pub sizes: Vec<Value<'a>>,
     #[slot(strides_ty, name = "strides")]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets")]
+    #[attr(name = "static_offsets", dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes")]
+    #[attr(name = "static_sizes", dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides")]
+    #[attr(name = "static_strides", dense = "i64")]
     pub static_strides: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,

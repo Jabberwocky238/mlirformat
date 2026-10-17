@@ -88,7 +88,7 @@ pub struct ExpandShapeOp<'a> {
     pub output_shape: Vec<Value<'a>>,
     #[attr(name = "reassociation")]
     pub reassociation: Attribute<'a>,
-    #[attr(name = "static_output_shape")]
+    #[attr(name = "static_output_shape", dense = "i64")]
     pub static_output_shape: Attribute<'a>,
     #[dtype(name = "src_ty")]
     pub src_ty: Type<'a>,
@@ -124,11 +124,11 @@ pub struct ExtractSliceOp<'a> {
     pub sizes: Vec<Value<'a>>,
     #[slot(strides_ty, name = "strides")]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets")]
+    #[attr(name = "static_offsets", dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes")]
+    #[attr(name = "static_sizes", dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides")]
+    #[attr(name = "static_strides", dense = "i64")]
     pub static_strides: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -162,7 +162,7 @@ pub struct GatherOp<'a> {
     pub source: Value<'a>,
     #[slot(indices_ty, name = "indices")]
     pub indices: Value<'a>,
-    #[attr(name = "gather_dims")]
+    #[attr(name = "gather_dims", dense = "i64")]
     pub gather_dims: Attribute<'a>,
     #[attr(name = "unique")]
     pub unique: bool,
@@ -217,11 +217,11 @@ pub struct InsertSliceOp<'a> {
     pub sizes: Vec<Value<'a>>,
     #[slot(strides_ty, name = "strides")]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets")]
+    #[attr(name = "static_offsets", dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes")]
+    #[attr(name = "static_sizes", dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides")]
+    #[attr(name = "static_strides", dense = "i64")]
     pub static_strides: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -244,9 +244,9 @@ pub struct PadOp<'a> {
     pub low: Vec<Value<'a>>,
     #[slot(high_ty, name = "high")]
     pub high: Vec<Value<'a>>,
-    #[attr(name = "static_low")]
+    #[attr(name = "static_low", dense = "i64")]
     pub static_low: Attribute<'a>,
-    #[attr(name = "static_high")]
+    #[attr(name = "static_high", dense = "i64")]
     pub static_high: Attribute<'a>,
     #[attr(name = "nofold")]
     pub nofold: bool,
@@ -275,11 +275,11 @@ pub struct ParallelInsertSliceOp<'a> {
     pub sizes: Vec<Value<'a>>,
     #[slot(strides_ty, name = "strides")]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets")]
+    #[attr(name = "static_offsets", dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes")]
+    #[attr(name = "static_sizes", dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides")]
+    #[attr(name = "static_strides", dense = "i64")]
     pub static_strides: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -330,7 +330,7 @@ pub struct ScatterOp<'a> {
     pub dest: Value<'a>,
     #[slot(indices_ty, name = "indices")]
     pub indices: Value<'a>,
-    #[attr(name = "scatter_dims")]
+    #[attr(name = "scatter_dims", dense = "i64")]
     pub scatter_dims: Attribute<'a>,
     #[attr(name = "unique")]
     pub unique: bool,

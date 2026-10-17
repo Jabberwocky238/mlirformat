@@ -25,7 +25,7 @@ pub struct AffineDelinearizeIndexOp<'a> {
     pub linear_index: Value<'a>,
     #[slot(dynamic_basis_ty, name = "dynamic_basis")]
     pub dynamic_basis: Vec<Value<'a>>,
-    #[attr(name = "static_basis")]
+    #[attr(name = "static_basis", dense = "i64")]
     pub static_basis: Attribute<'a>,
     #[dtype(name = "linear_index_ty", is = index)]
     pub linear_index_ty: Type<'a>,
@@ -88,7 +88,7 @@ pub struct AffineLinearizeIndexOp<'a> {
     pub multi_index: Vec<Value<'a>>,
     #[slot(dynamic_basis_ty, name = "dynamic_basis")]
     pub dynamic_basis: Vec<Value<'a>>,
-    #[attr(name = "static_basis")]
+    #[attr(name = "static_basis", dense = "i64")]
     pub static_basis: Attribute<'a>,
     #[attr(name = "disjoint")]
     pub disjoint: bool,

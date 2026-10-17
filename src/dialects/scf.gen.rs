@@ -65,11 +65,11 @@ pub struct ForallOp<'a> {
     pub dynamic_step: Vec<Value<'a>>,
     #[slot(outputs_ty, name = "outputs")]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "staticLowerBound")]
+    #[attr(name = "staticLowerBound", dense = "i64")]
     pub static_lower_bound: Attribute<'a>,
-    #[attr(name = "staticUpperBound")]
+    #[attr(name = "staticUpperBound", dense = "i64")]
     pub static_upper_bound: Attribute<'a>,
-    #[attr(name = "staticStep")]
+    #[attr(name = "staticStep", dense = "i64")]
     pub static_step: Attribute<'a>,
     #[attr(name = "mapping")]
     pub mapping: Option<Attribute<'a>>,
@@ -120,7 +120,7 @@ pub struct InParallelOp<'a> {
 pub struct IndexSwitchOp<'a> {
     #[slot(arg_ty, name = "arg")]
     pub arg: Value<'a>,
-    #[attr(name = "cases")]
+    #[attr(name = "cases", dense = "i64")]
     pub cases: Attribute<'a>,
     #[region(name = "defaultRegion")]
     pub default_region: Region<'a>,

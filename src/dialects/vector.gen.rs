@@ -60,7 +60,7 @@ pub struct CompressStoreOp<'a> {
 /// Generic form only (directive `results)`).
 #[mlir::op("vector.constant_mask", generic)]
 pub struct ConstantMaskOp<'a> {
-    #[attr(name = "mask_dim_sizes")]
+    #[attr(name = "mask_dim_sizes", dense = "i64")]
     pub mask_dim_sizes: Attribute<'a>,
 }
 
@@ -145,7 +145,7 @@ pub struct ExtractOp<'a> {
     pub source: Value<'a>,
     #[slot(dynamic_position_ty, name = "dynamic_position")]
     pub dynamic_position: Vec<Value<'a>>,
-    #[attr(name = "static_position")]
+    #[attr(name = "static_position", dense = "i64")]
     pub static_position: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -234,7 +234,7 @@ pub struct InsertOp<'a> {
     pub dest: Value<'a>,
     #[slot(dynamic_position_ty, name = "dynamic_position")]
     pub dynamic_position: Vec<Value<'a>>,
-    #[attr(name = "static_position")]
+    #[attr(name = "static_position", dense = "i64")]
     pub static_position: Attribute<'a>,
     #[dtype(name = "valueToStore_ty")]
     pub value_to_store_ty: Type<'a>,
@@ -369,7 +369,7 @@ pub struct MultiDimReductionOp<'a> {
     pub acc: Value<'a>,
     #[attr(name = "kind", dialect = "vector.kind")]
     pub kind: Attribute<'a>,
-    #[attr(name = "reduction_dims")]
+    #[attr(name = "reduction_dims", dense = "i64")]
     pub reduction_dims: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -530,7 +530,7 @@ pub struct ShuffleOp<'a> {
     pub v1: Value<'a>,
     #[slot(v2_ty, name = "v2")]
     pub v2: Value<'a>,
-    #[attr(name = "mask")]
+    #[attr(name = "mask", dense = "i64")]
     pub mask: Attribute<'a>,
     #[dtype(name = "v1_ty")]
     pub v1_ty: Type<'a>,
@@ -642,7 +642,7 @@ pub struct TransferWriteOp<'a> {
 pub struct TransposeOp<'a> {
     #[slot(vector_ty, name = "vector")]
     pub vector: Value<'a>,
-    #[attr(name = "permutation")]
+    #[attr(name = "permutation", dense = "i64")]
     pub permutation: Attribute<'a>,
     #[dtype(name = "vector_ty")]
     pub vector_ty: Type<'a>,

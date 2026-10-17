@@ -1405,6 +1405,11 @@ impl Format<'_> {
                                 _ => {
                                     p.seek(save);
                                     let a = if self.before_colon(n) { p.bare_attr()? } else { p.attr()? };
+                                    // A dense array printed as a bare list: put its type back.
+                                    let a = match (f.dense_ty(), a) {
+                                        (Some(ty), Attribute::Array(xs)) => Attribute::DenseArray { ty, values: xs.into_iter().map(|x| Str::Owned(format!("{}", x.untyped()))).collect() },
+                                        (_, a) => a,
+                                    };
                                     owned(p, Some(&a))?
                                 }
                             }
@@ -1498,7 +1503,8 @@ impl Format<'_> {
     /// Does an optional group start here? Decided by its first element.
     fn group_ahead(&self, elems: &[Elem<'_>], p: &mut Parser<'_, '_>) -> Result<bool, Error> {
         let save = p.pos();
-        let hit = match elems.first() {
+        // An empty literal only suppresses a space; it is not syntax, so it cannot decide a group.
+        let hit = match elems.iter().find(|e| !matches!(e, Elem::Lit(l) if l.trim().is_empty())) {
             Some(Elem::Lit(l)) => p.eat_lit(l),
             Some(Elem::Var(n)) => match self.field(n)?.role {
                 Role::Operand { .. } => p.at(b'%'),

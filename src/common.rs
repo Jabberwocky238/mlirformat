@@ -405,7 +405,7 @@ pub enum Infer {
 pub enum Role {
     Operand { ty: &'static str },
     Type { result: Option<usize>, infer: Option<Infer> },
-    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str> },
+    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str> },
     Region,
     Successor,
     Attrs,
@@ -463,8 +463,9 @@ impl TryFrom<&'static str> for Field {
                 let (head, default) = split(rest, '|');
                 let (head, dialect) = split(head, '@');
                 let (name, int) = split(head, ':');
+                let (name, dense) = split(name, '&');
                 let (name, unit) = name.strip_suffix('?').map_or((name, false), |n| (n, true));
-                (name, false, Role::Prop { unit, int, dialect, default })
+                (name, false, Role::Prop { unit, int, dialect, default, dense })
             }
             b'^' => {
                 let (name, variadic) = star(rest);
@@ -493,6 +494,21 @@ impl Schema {
 }
 
 impl Field {
+    /// The element type of a dense array property, which the custom form does not print.
+    pub fn dense_ty(&self) -> Option<Type<'static>> {
+        let Role::Prop { dense: Some(el), .. } = self.role else { return None };
+        Some(match el {
+            "i1" => Type::Integer { signedness: Signedness::Signless, width: 1 },
+            "i8" => Type::Integer { signedness: Signedness::Signless, width: 8 },
+            "i16" => Type::Integer { signedness: Signedness::Signless, width: 16 },
+            "i32" => Type::Integer { signedness: Signedness::Signless, width: 32 },
+            "i64" => Type::Integer { signedness: Signedness::Signless, width: 64 },
+            "f32" => Type::Float(FloatKind::F32),
+            "f64" => Type::Float(FloatKind::F64),
+            _ => return None,
+        })
+    }
+
     /// A property's default value (`#dialect.attr<default>`).
     pub fn default_attr(&self) -> Option<Attribute<'static>> {
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
