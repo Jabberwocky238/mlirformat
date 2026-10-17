@@ -94,7 +94,9 @@ macro_rules! call_ops {
                 match dims_of(&self.map, &alias, self.map_operands.len()) {
                     Some(dims) => {
                         p.op_name(Self::NAME)?;
-                        write_call(p, &self.map, &self.map_operands, dims)
+                        write_call(p, &self.map, &self.map_operands, dims)?;
+                        // The op's own discardable attributes still have to be written.
+                        p.attr_dict("", &self.attrs, &[])
                     }
                     // No readable map: the generic form says the same thing and always works.
                     None => p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?),
