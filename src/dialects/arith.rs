@@ -4,7 +4,7 @@ use core::fmt::{self, Write};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Attribute, Op, Parser, Printer, R, Type, Value, mlir};
+use crate::{Attribute, Op, Parse, Print, Parser, Printer, R, Type, Value, mlir};
 
 /// `lhs, rhs : T` binary ops without properties.
 macro_rules! binops {
@@ -174,7 +174,9 @@ pub struct Select<'a> {
 impl Op for Select<'_> {
     const NAME: &'static str = "arith.select";
     const FORMAT: &'static str = "";
+}
 
+impl Print for Select<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         p.op_name(Self::NAME)?;
         write!(p, " {}, {}, {}", self.condition, self.true_value, self.false_value)?;
@@ -185,7 +187,9 @@ impl Op for Select<'_> {
         }
         p.loc(&self.loc)
     }
+}
 
+impl Parse for Select<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let condition = p.value()?;
         p.expect(",")?;

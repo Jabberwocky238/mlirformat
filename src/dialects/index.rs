@@ -6,7 +6,7 @@ use core::fmt::{self, Write};
 use alloc::borrow::Cow;
 use alloc::format;
 
-use crate::{Attribute, Extended, Op, Parser, Printer, R, Type, Value, mlir};
+use crate::{Attribute, Extended, Op, Parse, Print, Parser, Printer, R, Type, Value, mlir};
 
 /// `lhs, rhs` on `index`.
 macro_rules! binops {
@@ -99,7 +99,9 @@ impl CmpOp<'_> {
 impl Op for CmpOp<'_> {
     const NAME: &'static str = "index.cmp";
     const FORMAT: &'static str = "";
+}
 
+impl Print for CmpOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         if self.ty != Type::Index || self.result != Type::I1 {
             return Err(fmt::Error);
@@ -109,7 +111,9 @@ impl Op for CmpOp<'_> {
         p.attr_dict("", &self.attrs, &[])?;
         p.loc(&self.loc)
     }
+}
 
+impl Parse for CmpOp<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let predicate = p.ident()?;
         p.expect("(")?;

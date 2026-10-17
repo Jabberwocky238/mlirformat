@@ -4,7 +4,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Block, Content, NamedAttr, Op, Parser, Printer, R, Region, Type, Value, mlir};
+use crate::{Block, Content, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type, Value, mlir};
 
 /// `module @name attributes {...} { ... }`: hand-written syntax.
 #[mlir::op("builtin.module", custom)]
@@ -20,7 +20,9 @@ pub struct ModuleOp<'a> {
 impl Op for ModuleOp<'_> {
     const NAME: &'static str = "builtin.module";
     const FORMAT: &'static str = "";
+}
 
+impl Print for ModuleOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         p.op_name(Self::NAME)?;
         if let Some(v) = &self.sym_visibility {
@@ -35,7 +37,9 @@ impl Op for ModuleOp<'_> {
         p.region_in(Some("builtin"), &self.body, false)?;
         p.loc(&self.loc)
     }
+}
 
+impl Parse for ModuleOp<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let sym_visibility = ["private", "public", "nested"].into_iter().find(|v| p.eat_kw(v)).map(String::from);
         let sym_name = if p.at(b'@') { Some(p.sym_name()?) } else { None };

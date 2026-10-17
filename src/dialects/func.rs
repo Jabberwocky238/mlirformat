@@ -5,7 +5,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parser, Printer, R, Region, Type, Value, mlir};
+use crate::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type, Value, mlir};
 
 #[mlir::op("func.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct Return<'a> {
@@ -65,7 +65,9 @@ impl<'a> FuncOp<'a> {
 impl Op for FuncOp<'_> {
     const NAME: &'static str = "func.func";
     const FORMAT: &'static str = "";
+}
 
+impl Print for FuncOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let Type::Function(ty) = &self.function_type else { return Err(fmt::Error) };
         p.op_name(Self::NAME)?;
@@ -110,7 +112,9 @@ impl Op for FuncOp<'_> {
         }
         p.loc(&self.loc)
     }
+}
 
+impl Parse for FuncOp<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let sym_visibility = ["private", "public", "nested"].into_iter().find(|v| p.eat_kw(v)).map(String::from);
         let sym_name = p.sym_name()?;
@@ -190,7 +194,9 @@ pub struct CallIndirect<'a> {
 impl Op for CallIndirect<'_> {
     const NAME: &'static str = "func.call_indirect";
     const FORMAT: &'static str = "";
+}
 
+impl Print for CallIndirect<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         p.op_name(Self::NAME)?;
         write!(p, " {}(", self.callee)?;
@@ -202,7 +208,9 @@ impl Op for CallIndirect<'_> {
         write!(p, " : {}", self.callee_ty)?;
         p.loc(&self.loc)
     }
+}
 
+impl Parse for CallIndirect<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let callee = p.value()?;
         p.expect("(")?;

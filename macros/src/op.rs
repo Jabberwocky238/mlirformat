@@ -183,6 +183,22 @@ impl OpArgs {
         let ty = &item.ident;
         let name = &self.name;
         let (ig, tg, wc) = item.generics.split_for_impl();
+        // ⭐ 一条格式串同时给出两侧：`Print` 与 `Parse` 都从 `FORMAT` 来，法则
+        // `parse(print(x)) == x` 因此自动成立。写 `custom` 的自己实现这两个 trait，
+        // 也就自己担保这条法则。
+        let dual = quote! {
+            impl #ig ::mlirformat::Print for #ty #tg #wc {
+                fn print(&self, p: &mut ::mlirformat::Printer<'_, '_>) -> ::core::fmt::Result {
+                    ::mlirformat::Op::print_by_format(self, p)
+                }
+            }
+
+            impl #ig ::mlirformat::Parse for #ty #tg #wc {
+                fn parse(p: &mut ::mlirformat::Parser<'_, '_>) -> ::mlirformat::R<Self> {
+                    <Self as ::mlirformat::Op>::parse_by_format(p)
+                }
+            }
+        };
         let op_impl = match (&self.format, self.custom) {
             _ if self.generic => quote! {
                 impl #ig ::mlirformat::Op for #ty #tg #wc {
@@ -190,6 +206,8 @@ impl OpArgs {
                     const FORMAT: &'static str = "";
                     const CUSTOM: bool = false;
                 }
+
+                #dual
             },
             (_, true) => quote!(),
             (Some(format), false) => quote! {
@@ -197,6 +215,8 @@ impl OpArgs {
                     const NAME: &'static str = #name;
                     const FORMAT: &'static str = #format;
                 }
+
+                #dual
             },
             (None, false) => return Err(Error::new(name.span(), "missing `format = \"...\"` (or `custom` / `generic`)")),
         };
@@ -226,14 +246,14 @@ impl OpArgs {
                 fn try_from(src: &str) -> ::mlirformat::R<Self> {
                     ::mlirformat::Parser::read(src, |p| {
                         p.op_name(<Self as ::mlirformat::Op>::NAME)?;
-                        <Self as ::mlirformat::Op>::parse(p)
+                        <Self as ::mlirformat::Parse>::parse(p)
                     })
                 }
             }
 
             impl #ig ::core::fmt::Display for #ty #tg #wc {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                    ::mlirformat::Printer::write(f, |p| ::mlirformat::Op::print(self, p))
+                    ::mlirformat::Printer::write(f, |p| ::mlirformat::Print::print(self, p))
                 }
             }
         })

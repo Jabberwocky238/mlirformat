@@ -261,7 +261,25 @@ impl SymKind {
 /// ⭐ A typed op: a struct written with `#[mlir::op]`, a typed view of [`Operation`]. Conversions
 /// go through serde; the custom form follows [`Op::FORMAT`] unless `print` / `parse` are written
 /// by hand (`func.func`, `builtin.module`).
-pub trait Op: Serialize + DeserializeOwned {
+/// ⭐ 写出自定义形式 —— 和 [`Parse`] 对偶，一如 `From` 之于 `Into`。
+pub trait Print {
+    /// 写出自定义形式，op 名在内。
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result;
+}
+
+/// ⭐ 从自定义形式读回 —— 和 [`Print`] 对偶。
+///
+/// **这一对的法则是 `parse(print(x)) == x`。** `#[mlir::op(format = "…")]` 由**一条格式串**
+/// 同时生成两侧，法则因此自动成立——这正是「实现 `From` 就白得 `Into`」的那个形状。
+/// 写 `custom` 的 op 自己写两侧，就脱离了这条保证：两个函数可以互相说谎，法则只能靠
+/// `tests/dialects.rs` 拿 `mlir-opt` 的真实输出去守。⛔ 所以 `custom` 是逃生口，不是选项，
+/// 能用格式串说清的就别手写。
+pub trait Parse: Sized {
+    /// 读 op 名之后的那一截。
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self>;
+}
+
+pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// Fully qualified name, e.g. `"arith.addi"`.
     const NAME: &'static str;
     /// ODS-style assembly format (see [`Elem`]).
@@ -285,16 +303,16 @@ pub trait Op: Serialize + DeserializeOwned {
         Content::convert(borrowed).or_else(|e| p.err(e.0))
     }
 
-    /// Prints the custom form (op name included), or the generic form without one.
-    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+    /// 照 [`FORMAT`](Self::FORMAT) 写出去 —— `#[mlir::op]` 生成的 [`Print`] 走这里。
+    fn print_by_format(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         if !Self::CUSTOM {
             return self.print_generic(p);
         }
         Format::of::<Self>().map_err(|_| fmt::Error)?.print(self, p)
     }
 
-    /// Parses the custom form after the op name.
-    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+    /// 照 [`FORMAT`](Self::FORMAT) 读回来 —— `#[mlir::op]` 生成的 [`Parse`] 走这里。
+    fn parse_by_format(p: &mut Parser<'_, '_>) -> R<Self> {
         if !Self::CUSTOM {
             return p.err(format!("`{}` has no custom form", Self::NAME));
         }

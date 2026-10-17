@@ -9,7 +9,7 @@
 
 use crate::affine_expr::{Map, Set};
 use crate::mlir;
-use crate::common::{Attribute, Block, BlockArg, Content, Dim, Extended, Op, Operation, Region, Shaped, ShapedKind, Signedness, Str, Type, Value};
+use crate::common::{Attribute, Block, BlockArg, Content, Dim, Extended, Op, Parse, Print, Operation, Region, Shaped, ShapedKind, Signedness, Str, Type, Value};
 use crate::generator::{Printer, Sep};
 use crate::parser::{Parser, R};
 use alloc::string::String;
@@ -94,7 +94,9 @@ macro_rules! call_ops {
         impl Op for $ty<'_> {
             const NAME: &'static str = $name;
             const FORMAT: &'static str = "";
+        }
 
+        impl Print for $ty<'_> {
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
                 let alias = |n: &str| p.alias(n).map(String::from);
                 match dims_of(&self.map, &alias, self.map_operands.len()) {
@@ -108,7 +110,9 @@ macro_rules! call_ops {
                     None => self.print_generic(p),
                 }
             }
+        }
 
+        impl Parse for $ty<'_> {
             fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
                 let map = p.attr()?;
                 let map_operands = read_call(p)?;
@@ -233,7 +237,9 @@ macro_rules! memory_ops {
         impl Op for $ty<'_> {
             const NAME: &'static str = $name;
             const FORMAT: &'static str = "";
+        }
 
+        impl Print for $ty<'_> {
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
                 let body = {
                     let alias = |n: &str| p.alias(n).map(String::from);
@@ -266,7 +272,9 @@ macro_rules! memory_ops {
                 p.attr_dict("", &self.attrs, &[])?;
                 write!(p, " : {}", self.memref_ty)
             }
+        }
 
+        impl Parse for $ty<'_> {
             fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
                 $(let $value = {
                     let v = p.value()?;
@@ -403,7 +411,9 @@ impl For<'_> {
 impl Op for For<'_> {
     const NAME: &'static str = "affine.for";
     const FORMAT: &'static str = "";
+}
 
+impl Print for For<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let bounds = {
             let alias = |n: &str| p.alias(n).map(String::from);
@@ -437,7 +447,9 @@ impl Op for For<'_> {
         p.region_body(&self.region, "affine.yield")?;
         p.attr_dict("", &self.attrs, &[])
     }
+}
 
+impl Parse for For<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let iv = String::from(p.sigil('%')?);
         p.expect("=")?;
@@ -559,7 +571,9 @@ fn close_region(r: &mut Region<'_>) {
 impl Op for If<'_> {
     const NAME: &'static str = "affine.if";
     const FORMAT: &'static str = "";
+}
 
+impl Print for If<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let body = {
             let alias = |n: &str| p.alias(n).map(String::from);
@@ -588,7 +602,9 @@ impl Op for If<'_> {
         }
         p.attr_dict("", &self.attrs, &[])
     }
+}
 
+impl Parse for If<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let condition = p.attr()?;
         let args = read_call(p)?;
@@ -680,7 +696,9 @@ fn ints_of(attr: &Attribute<'_>) -> Option<Vec<i64>> {
 impl Op for Parallel<'_> {
     const NAME: &'static str = "affine.parallel";
     const FORMAT: &'static str = "";
+}
 
+impl Print for Parallel<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let (lo, hi) = {
             let alias = |n: &str| p.alias(n).map(String::from);
@@ -724,7 +742,9 @@ impl Op for Parallel<'_> {
         p.region_body(&self.region, "affine.yield")?;
         p.attr_dict("", &self.attrs, &[])
     }
+}
 
+impl Parse for Parallel<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let ivs = read_names(p)?;
         p.expect("=")?;

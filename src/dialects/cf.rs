@@ -7,7 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Attribute, Dim, Op, Parser, Printer, R, Shaped, ShapedKind, Str, Type, Value, mlir};
+use crate::{Attribute, Dim, Op, Parse, Print, Parser, Printer, R, Shaped, ShapedKind, Str, Type, Value, mlir};
 
 #[mlir::op("cf.br", format = "$dest (`(` $destOperands^ `:` type($destOperands) `)`)? attr-dict")]
 pub struct Br<'a> {
@@ -171,7 +171,9 @@ impl<'a> Switch<'a> {
 impl Op for Switch<'_> {
     const NAME: &'static str = "cf.switch";
     const FORMAT: &'static str = "";
+}
 
+impl Print for Switch<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let (values, segments) = (self.values().ok_or(fmt::Error)?, self.segments().ok_or(fmt::Error)?);
         if values.len() != segments.len() || values.len() != self.case_destinations.len() {
@@ -201,7 +203,9 @@ impl Op for Switch<'_> {
         p.attr_dict("", &self.attrs, &[])?;
         p.loc(&self.loc)
     }
+}
 
+impl Parse for Switch<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let flag = p.value()?;
         p.expect(":")?;
