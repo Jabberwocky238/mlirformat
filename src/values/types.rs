@@ -1,11 +1,54 @@
 //! Methods on types and attributes, named as MLIR names them: what a shaped type holds, and
 //! the builtin types and attributes built from values.
 
+use alloc::borrow::Cow;
+use alloc::format;
 use alloc::vec::Vec;
 
 use crate::{Attribute, Dim, Extended, FloatKind, Shaped, ShapedKind, Signedness, Type};
 
+impl Dim {
+    /// `ShapedType::kDynamic`: a `?` dim as an integer.
+    pub const DYNAMIC: i64 = i64::MIN;
+}
+
+impl From<i64> for Dim {
+    /// [`Dim::DYNAMIC`] is `?`.
+    fn from(n: i64) -> Self {
+        if n == Dim::DYNAMIC { Dim::Dynamic } else { Dim::Static(n) }
+    }
+}
+
+impl From<&Dim> for i64 {
+    /// `?` is [`Dim::DYNAMIC`]; a scalable dim is its base size.
+    fn from(d: &Dim) -> Self {
+        match d {
+            Dim::Static(n) | Dim::Scalable(n) => *n,
+            Dim::Dynamic => Dim::DYNAMIC,
+        }
+    }
+}
+
 impl<'a> Type<'a> {
+    /// `RankedTensorType::get(dims, elem)` ([`Dim::DYNAMIC`] is `?`).
+    pub fn tensor(dims: &[i64], elem: Type<'a>) -> Type<'a> {
+        Type::Shaped(Shaped { kind: ShapedKind::Tensor, shape: Some(dims.iter().map(|d| Dim::from(*d)).collect()), elem: elem.into(), extras: Vec::new() })
+    }
+
+    /// `VectorType::get(shape, elem, scalable)`; `scalable` may be shorter than `shape`.
+    pub fn vector(shape: &[i64], scalable: &[bool], elem: Type<'a>) -> Type<'a> {
+        let dims = shape.iter().zip(scalable.iter().chain(core::iter::repeat(&false))).map(|(n, s)| if *s { Dim::Scalable(*n) } else { Dim::Static(*n) }).collect();
+        Type::Shaped(Shaped { kind: ShapedKind::Vector, shape: Some(dims), elem: elem.into(), extras: Vec::new() })
+    }
+
+    /// `getShape` of a ranked shaped type ([`Dim::DYNAMIC`] for `?`).
+    pub fn dims(&self) -> Option<Vec<i64>> {
+        match self {
+            Type::Shaped(s) => s.dims(),
+            _ => None,
+        }
+    }
+
     /// `getElementTypeOrSelf`: the element type of a shaped type, or the type itself.
     pub fn element_type(&self) -> &Type<'a> {
         match self {
@@ -70,9 +113,47 @@ impl<'a> Type<'a> {
     }
 }
 
-impl Attribute<'_> {
+impl Shaped<'_> {
+    /// `getShape` when ranked ([`Dim::DYNAMIC`] for `?`).
+    pub fn dims(&self) -> Option<Vec<i64>> {
+        Some(self.shape.as_ref()?.iter().map(i64::from).collect())
+    }
+}
+
+impl<'a> Attribute<'a> {
     /// `#ub.poison`.
     pub fn is_poison(&self) -> bool {
         matches!(self, Attribute::Extended { ext: Extended { name, .. }, .. } if name == "ub.poison")
+    }
+
+    /// `IntegerAttr::get(ty, v)`; for `i1`, a `BoolAttr`.
+    pub fn integer(v: i128, ty: Type<'a>) -> Attribute<'a> {
+        match ty {
+            Type::Integer { width: 1, .. } => Attribute::Bool(v != 0),
+            _ => Attribute::Int { lit: Cow::Owned(format!("{v}")), ty: Some(ty) },
+        }
+    }
+
+    /// `getIndexAttr(v)`: `v : index`.
+    pub fn index(v: i64) -> Attribute<'a> {
+        Attribute::Int { lit: Cow::Owned(format!("{v}")), ty: Some(Type::Index) }
+    }
+
+    /// `getDenseI64ArrayAttr`: `array<i64: ...>`.
+    pub fn dense_i64(v: &[i64]) -> Attribute<'a> {
+        Attribute::DenseArray { ty: Type::int(64), values: v.iter().map(|x| Cow::Owned(format!("{x}"))).collect() }
+    }
+
+    /// `getDenseI32ArrayAttr`: `array<i32: ...>` (of sizes or counts as well).
+    pub fn dense_i32<T: core::fmt::Display>(v: &[T]) -> Attribute<'a> {
+        Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Cow::Owned(format!("{x}"))).collect() }
+    }
+
+    /// `DenseI64ArrayAttr::asArrayRef` (any integer `array<..>`); `None` for another attribute.
+    pub fn dense_values(&self) -> Option<Vec<i64>> {
+        match self {
+            Attribute::DenseArray { values, .. } => Some(values.iter().map(|v| v.parse().unwrap_or(0)).collect()),
+            _ => None,
+        }
     }
 }
