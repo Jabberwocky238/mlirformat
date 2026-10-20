@@ -61,11 +61,14 @@ mod parser;
 pub mod syntax;
 /// What ODS says about each op: traits, interfaces, memory effects (`scripts/traits.py`).
 mod traits;
+/// What attribute and type text means as values.
+mod values;
 
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
 pub use traits::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos, OpRegistry, Trait};
+pub use values::*;
 
 #[doc(hidden)]
 pub use {alloc::vec as __vec, alloc::vec::Vec as __Vec, serde as __serde};
