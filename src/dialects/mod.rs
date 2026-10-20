@@ -22,6 +22,8 @@ pub mod affine;
 pub mod bufferization;
 #[path = "async.gen.rs"]
 pub mod r#async;
+#[path = "emitc.gen.rs"]
+pub mod emitc;
 #[path = "gpu.gen.rs"]
 pub mod gpu;
 #[path = "llvm.gen.rs"]

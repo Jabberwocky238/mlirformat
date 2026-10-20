@@ -437,7 +437,8 @@ pub enum Infer {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     Operand { ty: &'static str },
-    Type { result: Option<usize>, infer: Option<Infer> },
+    /// `strip`: a dialect type `type($x)` prints without its `!ns.name` (`<f32>`), unless `qualified`.
+    Type { result: Option<usize>, infer: Option<Infer>, strip: Option<&'static str> },
     Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool, bits: Option<&'static str> },
     Region,
     Successor,
@@ -478,6 +479,7 @@ impl TryFrom<&'static str> for Field {
             }
             b'!' => {
                 let (head, infer) = split(rest, '~');
+                let (head, strip) = split(head, '@');
                 let (head, result) = split(head, '=');
                 let (name, variadic) = star(head);
                 let infer = match infer.map(|i| split(i, ':')) {
@@ -490,7 +492,7 @@ impl TryFrom<&'static str> for Field {
                     Some(("el", Some(var))) => Some(Infer::ElemOf(var)),
                     Some(_) => return Err(bad()),
                 };
-                (name, variadic, Role::Type { result: result.map(str::parse).transpose().map_err(|_| bad())?, infer })
+                (name, variadic, Role::Type { result: result.map(str::parse).transpose().map_err(|_| bad())?, infer, strip })
             }
             b'#' => {
                 // `%`: a bit enum, last since its separator may be a `|`.
@@ -634,7 +636,8 @@ impl Module<'_> {
 pub enum Elem<'f> {
     Lit(&'f str),
     Var(&'f str),
-    TypeOf(&'f str),
+    /// `type($x)`; `true` inside `qualified(...)`.
+    TypeOf(&'f str, bool),
     FnType(&'f str, &'f str),
     AttrDict,
     Group { anchor: &'f str, elems: Vec<Elem<'f>> },
@@ -744,12 +747,13 @@ impl<'f> Elem<'f> {
                 _ if rest.starts_with("qualified(") => {
                     let (mut inner, tail) = Self::list(&rest["qualified(".len()..], op)?;
                     let (Some(elem), true) = (inner.pop(), inner.is_empty()) else { return Err(bad("`qualified(...)` takes one element".into())) };
+                    let elem = if let Self::TypeOf(n, _) = elem { Self::TypeOf(n, true) } else { elem };
                     (elem, close(tail, ')')?)
                 }
                 _ if rest.starts_with("type(") => {
                     let (name, tail) = var(&rest["type(".len()..])?;
                     let tail = close(tail, ')')?;
-                    (Self::TypeOf(name), tail.strip_prefix('^').unwrap_or(tail))
+                    (Self::TypeOf(name, false), tail.strip_prefix('^').unwrap_or(tail))
                 }
                 _ if rest.starts_with("functional-type(") => {
                     let (a, tail) = var(&rest["functional-type(".len()..])?;

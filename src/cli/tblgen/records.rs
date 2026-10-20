@@ -81,6 +81,8 @@ struct Group {
     result: bool,
     /// MLIR type of a buildable constraint (`i1`, `index`).
     fixed: Option<String>,
+    /// One dialect type (`EmitC_LValueType` ⇒ `emitc.lvalue`): `type($x)` prints it stripped.
+    strip: Option<String>,
 }
 
 const KEYWORDS: &[&str] = &[
@@ -265,6 +267,14 @@ impl Records {
         Some((format!("{mnemonic}/{sep}/{}", cases.join(";")), self.field(info, "bitwidth").and_then(Json::as_u64).unwrap_or(32), default))
     }
 
+    /// The dialect type a type constraint is exactly (`Arg<EmitC_LValueType, ..>` ⇒ `emitc.lvalue`),
+    /// when it is written `<...>`.
+    fn type_def(&self, constraint: &str) -> Option<String> {
+        let c = self.field(constraint, "constraint").and_then(Self::def_of).unwrap_or(constraint);
+        let c = self.field(c, "baseType").and_then(Self::def_of).unwrap_or(c);
+        (self.is_a(c, "TypeDef") && self.text(c, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`"))).then(|| self.text(c, "typeName").map(String::from)).flatten()
+    }
+
     /// The value of an integer enum's case `symbol`.
     fn case_value(&self, attr: &str, symbol: &str) -> Option<i64> {
         let cases = self.field(attr, "enumerants")?.as_array()?;
@@ -376,7 +386,7 @@ impl Records {
             if self.is_a(constraint, "TypeConstraint") {
                 let variadic = self.is_a(constraint, "Variadic") || self.is_a(constraint, "Optional") || self.is_a(constraint, "VariadicOfVariadic");
                 let base = self.field(constraint, "baseType").and_then(Self::def_of).unwrap_or(constraint);
-                groups.push(Group { name: ods.into(), variadic, result: false, fixed: self.buildable(base) });
+                groups.push(Group { name: ods.into(), variadic, result: false, fixed: self.buildable(base), strip: self.type_def(constraint) });
                 operand_names.push(ods);
             } else {
                 let (marker, ty) = self.property(constraint, ods, dialect);
@@ -387,7 +397,7 @@ impl Records {
         for (constraint, ods) in self.dag(op, "results") {
             let variadic = self.is_a(constraint, "Variadic") || self.is_a(constraint, "Optional");
             let base = self.field(constraint, "baseType").and_then(Self::def_of).unwrap_or(constraint);
-            groups.push(Group { name: ods.into(), variadic, result: true, fixed: self.buildable(base) });
+            groups.push(Group { name: ods.into(), variadic, result: true, fixed: self.buildable(base), strip: self.type_def(constraint) });
             results.push(ods);
         }
         // Type variable classes (union-find over the groups).
@@ -456,6 +466,14 @@ impl Records {
             var_of.entry(classes[i]).or_insert_with(|| (Self::ident(&format!("{}_ty", g.name)), format!("{}_ty", g.name)));
         }
         let class_variadic = |c: usize| groups.iter().enumerate().filter(|(i, _)| classes[*i] == c).all(|(_, g)| g.variadic && g.fixed.is_none());
+        let class_strip = |c: usize| {
+            let mut members = groups.iter().enumerate().filter(|(i, _)| classes[*i] == c).map(|(_, g)| g.strip.as_deref());
+            let first = members.next().flatten();
+            match first {
+                Some(d) if members.all(|s| s == Some(d)) => format!(", strip = {d:?}"),
+                _ => String::new(),
+            }
+        };
         let class_fixed = |c: usize| groups.iter().enumerate().filter(|(i, _)| classes[*i] == c).find_map(|(_, g)| g.fixed.clone());
         // Names the inference rules point at are groups; they mean those groups' variables.
         let var_name = |n: &str| index(n).map(|i| var_of[&classes[i]].1.clone()).unwrap_or_default();
@@ -494,14 +512,14 @@ impl Records {
             if g.result {
                 let (marker, ty) = if var == Self::ident(&g.name) {
                     emitted.insert(c);
-                    let infer = class_infer(c).map_or_else(String::new, |r| format!(", {r}"));
+                    let infer = class_infer(c).map_or_else(String::new, |r| format!(", {r}")) + &class_strip(c);
                     (format!("#[dtype(name = {:?}{infer})]", g.name), if class_variadic(c) { "Vec<Type<'a>>" } else { "Type<'a>" })
                 } else {
                     (format!("#[dtype(name = {:?}, eq = {var})]", g.name), if g.variadic { "Vec<Type<'a>>" } else { "Type<'a>" })
                 };
                 fields.push(GenField { marker, ident: Self::ident(&g.name), ty: ty.into() });
             } else if !groups.iter().enumerate().any(|(j, h)| h.result && classes[j] == c) && emitted.insert(c) {
-                let infer = class_infer(c).map_or_else(String::new, |r| format!(", {r}"));
+                let infer = class_infer(c).map_or_else(String::new, |r| format!(", {r}")) + &class_strip(c);
                 let ty = if class_variadic(c) { "Vec<Type<'a>>" } else { "Type<'a>" };
                 fields.push(GenField { marker: format!("#[dtype(name = {ods:?}{infer})]"), ident: var, ty: ty.into() });
             }
@@ -553,8 +571,10 @@ impl Records {
         // A result type the format neither spells nor infers comes from C++ (`inferReturnTypes`:
         // `llvm.cmpxchg`'s `!llvm.struct<(T, i1)>`).
         for r in results {
-            let own = format!("#[dtype(name = {r:?})]");
-            if fields.iter().any(|f| f.marker == own) && !format.contains(&format!("${r}")) && !format.contains("results") {
+            // Its own variable with no rule (`strip` decides only how it prints).
+            let own = format!("#[dtype(name = {r:?}");
+            let ruleless = |m: &str| m.strip_prefix(&own).is_some_and(|rest| rest == ")]" || (rest.starts_with(", strip = ") && rest.matches(" = ").count() == 1));
+            if fields.iter().any(|f| ruleless(&f.marker)) && !format.contains(&format!("${r}")) && !format.contains("results") {
                 return (None, Some(format!("result type `{r}` inferred in C++")));
             }
         }

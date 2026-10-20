@@ -913,9 +913,20 @@ impl Format<'_> {
                         }
                     }
                 }
-                Elem::TypeOf(n) => {
+                Elem::TypeOf(n, qualified) => {
                     s.elem(p).map_err(io)?;
-                    write!(p, "{}", Sep(&v.types(self.type_var(n)?)?, ", ")).map_err(io)?;
+                    let f = self.type_var(n)?;
+                    let ts = v.types(f)?;
+                    match f.role {
+                        Role::Type { strip: Some(d), .. } if !*qualified => {
+                            let shown: Vec<String> = ts.iter().map(|t| {
+                                let full = t.to_string();
+                                full.strip_prefix('!').and_then(|r| r.strip_prefix(d)).filter(|r| r.starts_with('<')).map_or(full.clone(), String::from)
+                            }).collect();
+                            write!(p, "{}", Sep(&shown, ", ")).map_err(io)?;
+                        }
+                        _ => write!(p, "{}", Sep(&ts, ", ")).map_err(io)?,
+                    }
                 }
                 Elem::FnType(a, b) => {
                     s.elem(p).map_err(io)?;

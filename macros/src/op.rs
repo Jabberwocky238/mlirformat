@@ -42,7 +42,7 @@ impl Parse for OpArgs {
 enum Kind {
     Slot(Ident),
     /// `(rule, argument)`: `i1`, `i1 = x`, `of = x`；`is` 的写法另走 [`Marked::fixed`]。
-    DType(Option<(String, Option<Ident>)>),
+    DType(Option<(String, Option<Ident>)>, Option<String>),
     Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String>, symbol: bool, bits: Option<String> },
     Region,
     Successor,
@@ -90,7 +90,7 @@ impl Marked {
         let mut fixed: Option<String> = None;
         for a in &f.attrs {
             let Some(marker) = ["slot", "dtype", "attr", "region", "successor"].into_iter().find(|m| a.path().is_ident(m)) else { continue };
-            let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense, mut symbol, mut bits) = (None, None, None, None, None, None, false, None);
+            let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense, mut symbol, mut bits, mut strip) = (None, None, None, None, None, None, false, None, None);
             if !matches!(a.meta, Meta::Path(_)) {
                 a.parse_nested_meta(|m| {
                     let key = m.path.get_ident().map(Ident::to_string).unwrap_or_default();
@@ -108,6 +108,7 @@ impl Marked {
                             let arg = if m.input.peek(Token![=]) { Some(m.value()?.parse::<Ident>()?) } else { None };
                             rule = Some((key, arg));
                         }
+                        ("dtype", "strip") => strip = Some(value(&m)?),
                         ("attr", "int") => int = Some(value(&m)?),
                         ("attr", "dialect") => dialect = Some(value(&m)?),
                         ("attr", "default") => default = Some(value(&m)?),
@@ -121,7 +122,7 @@ impl Marked {
             }
             let kind = match marker {
                 "slot" => Kind::Slot(ty_var.ok_or_else(|| Error::new_spanned(a, "`#[slot(T)]` needs its type variable"))?),
-                "dtype" => Kind::DType(rule),
+                "dtype" => Kind::DType(rule, strip),
                 "attr" => Kind::Prop { int, dialect, default, dense, symbol, bits },
                 "region" => Kind::Region,
                 _ => Kind::Successor,
@@ -157,7 +158,7 @@ impl OpArgs {
             let star = if m.variadic { "*" } else { "" };
             let key = match &m.kind {
                 Kind::Slot(t) => format!("%{}{star}:{}", m.name, mlir_name(t)?),
-                Kind::DType(rule) => {
+                Kind::DType(rule, strip) => {
                     let result = self.results.iter().position(|r| *r == m.ident).map_or(String::new(), |k| format!("={k}"));
                     let infer = match (rule, &m.fixed) {
                         (Some((r, _)), Some(ty)) if r == "is" => format!("~is:{ty}"),
@@ -165,7 +166,8 @@ impl OpArgs {
                         (Some((r, None)), _) => format!("~{r}"),
                         (Some((r, Some(x))), _) => format!("~{r}:{}", mlir_name(x)?),
                     };
-                    format!("!{}{star}{result}{infer}", m.name)
+                    let strip = strip.as_ref().map_or(String::new(), |d| format!("@{d}"));
+                    format!("!{}{star}{result}{strip}{infer}", m.name)
                 }
                 Kind::Prop { int, dialect, default, dense, symbol, bits } => {
                     let unit = if m.unit { "?" } else { "" };
@@ -185,7 +187,7 @@ impl OpArgs {
                 f.attrs.push(parse_quote!(#[serde(default)]));
             }
         }
-        if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(_)))) {
+        if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(..)))) {
             return Err(Error::new(r.span(), format!("`{r}` is not a #[dtype] field")));
         }
         let lt = item.generics.lifetimes().next().map_or(quote!('static), |l| {

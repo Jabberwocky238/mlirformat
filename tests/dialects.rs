@@ -31,6 +31,7 @@ dialects! {
     affine: "affine" => mlirformat::affine::Affine,
     r#async: "async" => mlirformat::r#async::Async,
     bufferization: "bufferization" => mlirformat::bufferization::Bufferization,
+    emitc: "emitc" => mlirformat::emitc::Emitc,
     gpu: "gpu" => mlirformat::gpu::Gpu,
     linalg: "linalg" => mlirformat::linalg::Linalg,
     llvm: "llvm" => mlirformat::llvm::Llvm,

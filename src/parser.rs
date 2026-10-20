@@ -381,6 +381,18 @@ impl<'a, 'd> Parser<'a, 'd> {
     /// Lets the owning dialect structure an extended type/attribute body.
     fn extended(&mut self, kind: SymKind) -> R<Extended<'a>> {
         let name = self.sigil(kind.sigil())?;
+        self.extended_body(kind, name)
+    }
+
+    /// A dialect type printed stripped (`<f32>` for `!emitc.lvalue<f32>`): ODS's `type($x)` of
+    /// one dialect type.
+    pub fn stripped_ty(&mut self, name: &'a str) -> R<Type<'a>> {
+        self.ws();
+        self.extended_body(SymKind::Type, name).map(Type::Extended)
+    }
+
+    /// What follows the name `name` of a dialect type / attribute.
+    fn extended_body(&mut self, kind: SymKind, name: &'a str) -> R<Extended<'a>> {
         let start = self.pos;
         // A dialect type / attribute body is angle bracketed (`#ns.name<...>`) and an alias has
         // none at all. Whatever follows belongs to the reader: `affine.apply #map(%i)` puts the
@@ -1527,9 +1539,12 @@ impl Format<'_> {
                         r.bind(t.name, types);
                     }
                 }
-                Elem::TypeOf(n) => {
+                Elem::TypeOf(n, qualified) => {
                     let var = ty_var(p, n)?;
-                    let ts = self.types(&var, p)?;
+                    let ts = match var.role {
+                        Role::Type { strip: Some(d), .. } if !*qualified && { p.ws(); p.at(b'<') } => vec![p.stripped_ty(d)?],
+                        _ => self.types(&var, p)?,
+                    };
                     r.bind(var.name, ts);
                 }
                 Elem::FnType(a, b) => {

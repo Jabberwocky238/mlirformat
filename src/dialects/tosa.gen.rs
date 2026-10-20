@@ -42,11 +42,11 @@ pub struct AddShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -80,7 +80,7 @@ pub struct ApplyScaleOp<'a> {
 pub struct ArgMaxOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Attribute<'a>,
@@ -303,7 +303,7 @@ pub struct ClzOp<'a> {
 pub struct ConcatOp<'a> {
     #[slot(input1_ty, name = "input1")]
     pub input1: Vec<Value<'a>>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Vec<Type<'a>>,
@@ -318,9 +318,9 @@ pub struct ConcatOp<'a> {
 pub struct ConcatShapeOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Vec<Value<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype(name = "input_ty", strip = "tosa.shape")]
     pub input_ty: Vec<Type<'a>>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -342,7 +342,7 @@ pub struct ConstOp<'a> {
 pub struct ConstShapeOp<'a> {
     #[attr(name = "values")]
     pub values: Attribute<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -502,11 +502,11 @@ pub struct DepthwiseConv2DOp<'a> {
 pub struct DimOp<'a> {
     #[slot(input1_ty, name = "input1")]
     pub input1: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -519,11 +519,11 @@ pub struct DivCeilShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -536,11 +536,11 @@ pub struct DivFloorShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -581,9 +581,9 @@ pub struct ErfOp<'a> {
 pub struct Exp2ShapeOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype(name = "input_ty", strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -745,9 +745,9 @@ pub struct IntDivOp<'a> {
 pub struct Log2CeilShapeOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype(name = "input_ty", strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -758,9 +758,9 @@ pub struct Log2CeilShapeOp<'a> {
 pub struct Log2FloorShapeOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype(name = "input_ty", strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -957,11 +957,11 @@ pub struct MaxShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -993,11 +993,11 @@ pub struct MinShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1029,11 +1029,11 @@ pub struct ModShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1067,11 +1067,11 @@ pub struct MulShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1109,7 +1109,7 @@ pub struct PadOp<'a> {
     pub pad_const: Value<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "padding_ty")]
+    #[dtype(name = "padding_ty", strip = "tosa.shape")]
     pub padding_ty: Type<'a>,
     #[dtype(name = "pad_const_ty")]
     pub pad_const_ty: Type<'a>,
@@ -1171,7 +1171,7 @@ pub struct ReciprocalOp<'a> {
 pub struct ReduceAllOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
@@ -1186,7 +1186,7 @@ pub struct ReduceAllOp<'a> {
 pub struct ReduceAnyOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
@@ -1201,7 +1201,7 @@ pub struct ReduceAnyOp<'a> {
 pub struct ReduceMaxOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Attribute<'a>,
@@ -1218,7 +1218,7 @@ pub struct ReduceMaxOp<'a> {
 pub struct ReduceMinOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Attribute<'a>,
@@ -1235,7 +1235,7 @@ pub struct ReduceMinOp<'a> {
 pub struct ReduceProductOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
@@ -1250,7 +1250,7 @@ pub struct ReduceProductOp<'a> {
 pub struct ReduceSumOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
@@ -1308,7 +1308,7 @@ pub struct ReshapeOp<'a> {
     pub shape: Value<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype(name = "shape_ty", strip = "tosa.shape")]
     pub shape_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,
@@ -1348,7 +1348,7 @@ pub struct ResizeOp<'a> {
 pub struct ReverseOp<'a> {
     #[slot(input1_ty, name = "input1")]
     pub input1: Value<'a>,
-    #[attr(name = "axis")]
+    #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
@@ -1450,9 +1450,9 @@ pub struct SliceOp<'a> {
     pub size: Value<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "start_ty")]
+    #[dtype(name = "start_ty", strip = "tosa.shape")]
     pub start_ty: Type<'a>,
-    #[dtype(name = "size_ty")]
+    #[dtype(name = "size_ty", strip = "tosa.shape")]
     pub size_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,
@@ -1469,13 +1469,13 @@ pub struct SliceShapeOp<'a> {
     pub start: Value<'a>,
     #[slot(size_ty, name = "size")]
     pub size: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype(name = "input_ty", strip = "tosa.shape")]
     pub input_ty: Type<'a>,
     #[dtype(name = "start_ty")]
     pub start_ty: Type<'a>,
     #[dtype(name = "size_ty")]
     pub size_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1505,11 +1505,11 @@ pub struct SubShapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype(name = "input1_ty", strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype(name = "input2_ty", strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype(name = "output", strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1554,7 +1554,7 @@ pub struct TileOp<'a> {
     pub multiples: Value<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "multiples_ty")]
+    #[dtype(name = "multiples_ty", strip = "tosa.shape")]
     pub multiples_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,

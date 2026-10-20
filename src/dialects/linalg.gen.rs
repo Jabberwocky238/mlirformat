@@ -1128,7 +1128,9 @@ pub struct IndexOp<'a> {
 }
 
 /// `linalg.pack`: linalg.pack operation
-#[mlir::op("linalg.pack", format = "$source (`padding_value` `(` $padding_value^ `:` type($padding_value) `)`)? (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
+///
+/// Generic form only (result type `result` inferred in C++).
+#[mlir::op("linalg.pack", generic, results(result))]
 pub struct PackOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -1172,7 +1174,9 @@ pub struct SoftmaxOp<'a> {
 }
 
 /// `linalg.unpack`: linalg.unpack operation
-#[mlir::op("linalg.unpack", format = "$source (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
+///
+/// Generic form only (result type `result` inferred in C++).
+#[mlir::op("linalg.unpack", generic, results(result))]
 pub struct UnPackOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
