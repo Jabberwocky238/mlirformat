@@ -24,7 +24,7 @@ pub struct Args {
     /// Print the resolved records as `llvm-tblgen --dump-json` would (byte for byte) instead of generating (one `.td` only).
     #[arg(long)]
     dump_json: bool,
-    /// Only this dialect (namespace, e.g. `arith`).
+    /// Only this dialect (namespace, e.g. `arith`), with its ops from every file the `.td` includes
     #[arg(long)]
     dialect: Option<String>,
     /// A dialect's type / attribute parameter hook, `<namespace>=<path>`
@@ -69,7 +69,7 @@ impl Args {
         }
         .map_err(|e| e.to_string())?;
         let source = td.file_name().map_or_else(String::new, |f| f.to_string_lossy().into_owned());
-        let dialects: Vec<_> = records.dialects().into_iter().filter(|d| self.dialect.as_ref().is_none_or(|n| *n == d.name)).collect();
+        let dialects: Vec<_> = records.dialects(self.dialect.as_deref()).into_iter().filter(|d| !d.ops.is_empty()).collect();
         if dialects.is_empty() {
             return Err("no dialect with ops defined in it".into());
         }

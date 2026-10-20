@@ -164,13 +164,17 @@ impl Records {
     }
 
     /// ⭐ The dialects with ops defined in this file.
-    pub fn dialects(&self) -> Vec<GenDialect> {
+    /// `only`: that dialect, with its ops from every file (a wrapper `.td` that includes them).
+    pub fn dialects(&self, only: Option<&str>) -> Vec<GenDialect> {
         let ops: Vec<&str> = self.all.get("!instanceof").and_then(|i| i.get("Op")).and_then(Json::as_array).into_iter().flatten().filter_map(Json::as_str).collect();
         let here = |op: &&str| self.field(op, "!locs").and_then(Json::as_array).and_then(|l| l.first()).and_then(Json::as_str).is_some_and(|l| l.starts_with(&format!("{}:", self.file)));
         let ns = |op: &str| self.field(op, "opDialect").and_then(Self::def_of).and_then(|d| self.text(d, "name"));
         // A dialect with ops in `td` takes its ops from every file `td` includes too
         // (`TosaOps.td` includes `TosaShapeOps.td` and `TosaUtilOps.td`).
-        let mut by_dialect: BTreeMap<String, Vec<&str>> = ops.iter().copied().filter(here).filter_map(ns).map(|n| (n.into(), Vec::new())).collect();
+        let mut by_dialect: BTreeMap<String, Vec<&str>> = match only {
+            Some(n) => [(n.into(), Vec::new())].into(),
+            None => ops.iter().copied().filter(here).filter_map(ns).map(|n| (n.into(), Vec::new())).collect(),
+        };
         for op in ops {
             if let Some(list) = ns(op).and_then(|n| by_dialect.get_mut(n)) {
                 list.push(op);
@@ -279,11 +283,20 @@ impl Records {
         if let Some(el) = Self::dense_array(base).or_else(|| Self::dense_array(constraint)) {
             return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
         }
+        // `I64Attr`: the custom form leaves the integer's type out (`linalg.index 0`).
+        if let Some(width) = Self::int_attr(base).or_else(|| Self::int_attr(constraint)) {
+            return (format!("#[attr({name}, int = \"i{width}\")]"), ty.into());
+        }
         // A `SymbolNameAttr` prints as `@name`, a `StrAttr` as `"name"`.
         if self.is_a(base, "SymbolNameAttr") || self.is_a(constraint, "SymbolNameAttr") {
             return (format!("#[attr({name}, symbol)]"), ty.into());
         }
         (format!("#[attr({name})]"), ty.into())
+    }
+
+    /// `I64Attr` ⇒ 64: a signless integer attribute of a fixed width.
+    fn int_attr(def: &str) -> Option<u32> {
+        def.strip_prefix('I')?.strip_suffix("Attr")?.parse().ok().filter(|w| [1, 8, 16, 32, 64].contains(w))
     }
 
     /// `DenseI64ArrayAttr` ⇒ `i64`. The custom form prints such an attribute as a bare list, so

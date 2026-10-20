@@ -1451,10 +1451,12 @@ impl Format<'_> {
                                 Ok(word) if !ATTR_WORDS.contains(&word) && !p.rest().starts_with(['<', '(', '[']) => Content::Str(word.into()),
                                 _ => {
                                     p.seek(save);
-                                    let a = if self.before_colon(n) { p.bare_attr()? } else { p.attr()? };
+                                    let a = if self.before_colon(n) || matches!(f.role, Role::Prop { int: Some(_), .. }) { p.bare_attr()? } else { p.attr()? };
                                     // A dense array printed as a bare list: put its type back.
                                     let a = match (f.dense_ty(), a) {
                                         (Some(ty), Attribute::Array(xs)) => Attribute::DenseArray { ty, values: xs.into_iter().map(|x| Str::Owned(format!("{}", x.untyped()))).collect() },
+                                        // An integer of a declared width: so is its type.
+                                        (_, Attribute::Int { lit, ty: None }) if let Role::Prop { int: Some(t), .. } = f.role => Attribute::Int { lit, ty: Type::try_from(t).ok() },
                                         (_, a) => a,
                                     };
                                     owned(p, Some(&a))?

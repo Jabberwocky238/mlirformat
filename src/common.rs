@@ -686,7 +686,8 @@ impl<'f> Elem<'f> {
                 }
                 Some('(') => {
                     let (elems, tail) = Self::list(&rest[1..], op)?;
-                    let anchor = rest[1..].find('^').and_then(|c| rest[1..=c].rfind('$').map(|s| &rest[s + 2..=c])).ok_or_else(|| bad("a group needs an anchor `$x^`".into()))?;
+                    // `$x^`, or `type($x)^`: the anchor is `x`.
+                    let anchor = rest[1..].find('^').map(|c| rest[1..=c].strip_suffix(')').unwrap_or(&rest[1..=c])).and_then(|pre| pre.rfind('$').map(|s| &pre[s + 1..])).ok_or_else(|| bad("a group needs an anchor `$x^`".into()))?;
                     (Self::Group { anchor, elems }, tail.strip_prefix(")?").ok_or_else(|| bad("a group must end with `)?`".into()))?)
                 }
                 _ if rest.starts_with("attr-dict") => (Self::AttrDict, &rest["attr-dict".len()..]),
@@ -698,7 +699,8 @@ impl<'f> Elem<'f> {
                 }
                 _ if rest.starts_with("type(") => {
                     let (name, tail) = var(&rest["type(".len()..])?;
-                    (Self::TypeOf(name), close(tail, ')')?)
+                    let tail = close(tail, ')')?;
+                    (Self::TypeOf(name), tail.strip_prefix('^').unwrap_or(tail))
                 }
                 _ if rest.starts_with("functional-type(") => {
                     let (a, tail) = var(&rest["functional-type(".len()..])?;

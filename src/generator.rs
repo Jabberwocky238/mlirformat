@@ -860,7 +860,7 @@ impl Format<'_> {
                             Some(a) => write!(p, "{a}").map_err(io)?,
                             None => {}
                         },
-                        Role::Prop { dialect, .. } => match (v.raw(f), v.prop(f)?) {
+                        Role::Prop { dialect, int, .. } => match (v.raw(f), v.prop(f)?) {
                             // A user enum prints its case name.
                             (Some(Content::Variant(e, _, case, _)), _) if !matches!(*e, "Attribute" | "Type") => p.write_str(case).map_err(io)?,
                             // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).
@@ -870,7 +870,8 @@ impl Format<'_> {
                             (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
                             // A dense array prints as a list: `[30, 70]`.
                             (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(&values, ", ")).map_err(io)?,
-                            (_, Some(a)) if self.before_colon(n) => write!(p, "{}", a.untyped()).map_err(io)?,
+                            // Before a `:`, or of a buildable type (`I64Attr`): ODS leaves the type out.
+                            (_, Some(a)) if self.before_colon(n) || int.is_some() => write!(p, "{}", a.untyped()).map_err(io)?,
                             (_, Some(a)) => write!(p, "{a}").map_err(io)?,
                             (_, None) => {}
                         },

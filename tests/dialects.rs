@@ -32,6 +32,7 @@ dialects! {
     r#async: "async" => mlirformat::r#async::Async,
     bufferization: "bufferization" => mlirformat::bufferization::Bufferization,
     gpu: "gpu" => mlirformat::gpu::Gpu,
+    linalg: "linalg" => mlirformat::linalg::Linalg,
     memref: "memref" => mlirformat::memref::Memref,
     pdl: "pdl" => mlirformat::pdl::Pdl,
     scf: "scf" => mlirformat::scf::Scf,

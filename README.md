@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Dialects
 
 Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
-`builtin`, `cf`, `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `shape`,
+`builtin`, `cf`, `complex`, `func`, `gpu`, `index`, `linalg`, `math`, `memref`, `pdl`, `scf`, `shape`,
 `tensor`, `tosa`, `ub`, `vector`. The
 first eight are written by hand; the rest are generated from ODS by `mlirformat tblgen`. An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
@@ -114,6 +114,14 @@ every MLIR dialect `.td` that `llvm-tblgen` accepts on its own). Several `.td` f
 ```sh
 mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
     -I $LLVM/mlir/include -o src/dialects
+```
+
+A dialect whose ops upstream splits over several files is generated from a wrapper that includes
+them, with `--dialect` (`scripts/td/Linalg.td`):
+
+```sh
+mlirformat tblgen --dialect linalg scripts/td/Linalg.td \
+    -I $LLVM/mlir/include -I $LLVM_BUILD/tools/mlir/include -o src/dialects
 ```
 
 ## License
