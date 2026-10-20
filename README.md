@@ -118,6 +118,8 @@ mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
     -I $LLVM/mlir/include -o src/dialects
 ```
 
+`scripts/regen-dialects.sh` regenerates every one of them (`LLVM=… LLVM_BUILD=…`).
+
 A dialect whose ops upstream splits over several files is generated from a wrapper that includes
 them, with `--dialect` (`scripts/td/Linalg.td`, `scripts/td/LLVM.td`):
 
