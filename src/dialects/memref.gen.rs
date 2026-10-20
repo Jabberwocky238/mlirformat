@@ -384,18 +384,20 @@ pub struct PrefetchOp<'a> {
 }
 
 /// `memref.rank`: rank operation
-#[mlir::op("memref.rank", format = "$memref attr-dict `:` type($memref)")]
+#[mlir::op("memref.rank", format = "$memref attr-dict `:` type($memref)", results(result))]
 pub struct RankOp<'a> {
     #[slot(memref_ty, name = "memref")]
     pub memref: Value<'a>,
     #[dtype(name = "memref_ty")]
     pub memref_ty: Type<'a>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `memref.realloc`: memory reallocation operation
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("memref.realloc", generic)]
+#[mlir::op("memref.realloc", generic, results(result))]
 pub struct ReallocOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -407,6 +409,8 @@ pub struct ReallocOp<'a> {
     pub source_ty: Type<'a>,
     #[dtype(name = "dynamicResultSize_ty", is = index)]
     pub dynamic_result_size_ty: Type<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `memref.reinterpret_cast`: memref reinterpret cast operation
@@ -479,7 +483,7 @@ pub struct StoreOp<'a> {
 /// `memref.transpose`: `transpose` produces a new strided memref (metadata-only)
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("memref.transpose", generic)]
+#[mlir::op("memref.transpose", generic, results(result))]
 pub struct TransposeOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
@@ -487,12 +491,14 @@ pub struct TransposeOp<'a> {
     pub permutation: Attribute<'a>,
     #[dtype(name = "in_ty")]
     pub in_ty: Type<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `memref.view`: memref view operation
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("memref.view", generic)]
+#[mlir::op("memref.view", generic, results(result))]
 pub struct ViewOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -506,6 +512,8 @@ pub struct ViewOp<'a> {
     pub byte_shift_ty: Type<'a>,
     #[dtype(name = "sizes_ty", is = index)]
     pub sizes_ty: Type<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `memref.subview`: memref subview operation

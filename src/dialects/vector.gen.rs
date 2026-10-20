@@ -58,16 +58,18 @@ pub struct CompressStoreOp<'a> {
 /// `vector.constant_mask`: creates a constant vector mask
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("vector.constant_mask", generic)]
+#[mlir::op("vector.constant_mask", generic, results(result))]
 pub struct ConstantMaskOp<'a> {
     #[attr(name = "mask_dim_sizes", dense = "i64")]
     pub mask_dim_sizes: Attribute<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `vector.contract`: vector contraction operation
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.contract", generic)]
+#[mlir::op("vector.contract", generic, results(result))]
 pub struct ContractionOp<'a> {
     #[slot(lhs_ty, name = "lhs")]
     pub lhs: Value<'a>,
@@ -87,17 +89,21 @@ pub struct ContractionOp<'a> {
     pub rhs_ty: Type<'a>,
     #[dtype(name = "acc_ty")]
     pub acc_ty: Type<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `vector.create_mask`: creates a vector mask
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("vector.create_mask", generic)]
+#[mlir::op("vector.create_mask", generic, results(result))]
 pub struct CreateMaskOp<'a> {
     #[slot(operands_ty, name = "operands")]
     pub operands: Vec<Value<'a>>,
     #[dtype(name = "operands_ty", is = index)]
     pub operands_ty: Type<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `vector.deinterleave`: constructs two vectors by deinterleaving an input vector
@@ -158,7 +164,7 @@ pub struct ExtractOp<'a> {
 /// `vector.extract_strided_slice`: extract_strided_slice operation
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("vector.extract_strided_slice", generic)]
+#[mlir::op("vector.extract_strided_slice", generic, results(result))]
 pub struct ExtractStridedSliceOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -170,6 +176,8 @@ pub struct ExtractStridedSliceOp<'a> {
     pub strides: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `vector.fma`: vector fused multiply-add
@@ -380,7 +388,7 @@ pub struct MultiDimReductionOp<'a> {
 /// `vector.outerproduct`: vector outerproduct with optional fused add
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.outerproduct", generic)]
+#[mlir::op("vector.outerproduct", generic, results(result))]
 pub struct OuterProductOp<'a> {
     #[slot(lhs_ty, name = "lhs")]
     pub lhs: Value<'a>,
@@ -396,6 +404,8 @@ pub struct OuterProductOp<'a> {
     pub rhs_ty: Type<'a>,
     #[dtype(name = "acc_ty")]
     pub acc_ty: Vec<Type<'a>>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `vector.print`: print operation (for testing and debugging)

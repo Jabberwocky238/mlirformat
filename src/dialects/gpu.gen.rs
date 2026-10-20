@@ -10,7 +10,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct AllReduceOp<'a> {
     #[slot(result, name = "value")]
     pub value: Value<'a>,
-    #[attr(name = "op")]
+    #[attr(name = "op", dialect = "gpu<all_reduce_op")]
     pub op: Option<Attribute<'a>>,
     #[attr(name = "uniform")]
     pub uniform: bool,
@@ -55,7 +55,7 @@ pub struct BarrierOp<'a> {
 /// Generic form only (directive `custom<OffloadingHandler>`).
 #[mlir::op("gpu.binary", generic)]
 pub struct BinaryOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "offloadingHandler")]
     pub offloading_handler: Option<Attribute<'a>>,
@@ -63,52 +63,64 @@ pub struct BinaryOp<'a> {
     pub objects: Attribute<'a>,
 }
 
-#[mlir::op("gpu.block_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.block_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct BlockDimOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
-#[mlir::op("gpu.block_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.block_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct BlockIdOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
-#[mlir::op("gpu.cluster_block_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.cluster_block_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterBlockIdOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
-#[mlir::op("gpu.cluster_dim_blocks", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.cluster_dim_blocks", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterDimBlocksOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
-#[mlir::op("gpu.cluster_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.cluster_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterDimOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
-#[mlir::op("gpu.cluster_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.cluster_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterIdOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `gpu.create_2to4_spmat`: Create sparse matrix with 2:4 sparsity operation
@@ -124,7 +136,7 @@ pub struct Create2To4SpMatOp<'a> {
     pub cols: Value<'a>,
     #[slot(memref_ty, name = "memref")]
     pub memref: Value<'a>,
-    #[attr(name = "pruneFlag")]
+    #[attr(name = "pruneFlag", dialect = "gpu<prune_2to4_spmat_flag")]
     pub prune_flag: Attribute<'a>,
     #[dtype(name = "asyncDependencies_ty")]
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -450,7 +462,7 @@ pub struct GPUFuncOp<'a> {
 /// Generic form only (directive `attr-dict-with-keyword`).
 #[mlir::op("gpu.module", generic)]
 pub struct GPUModuleOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "targets")]
     pub targets: Option<Attribute<'a>>,
@@ -460,20 +472,24 @@ pub struct GPUModuleOp<'a> {
     pub body_region: Region<'a>,
 }
 
-#[mlir::op("gpu.global_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.global_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct GlobalIdOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
-#[mlir::op("gpu.grid_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.grid_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct GridDimOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `gpu.host_register`: Registers a memref for access from device.
@@ -689,9 +705,9 @@ pub struct ReturnOp<'a> {
 pub struct RotateOp<'a> {
     #[slot(rotate_result, name = "value")]
     pub value: Value<'a>,
-    #[attr(name = "offset")]
+    #[attr(name = "offset", int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(name = "width")]
+    #[attr(name = "width", int = "i32")]
     pub width: Attribute<'a>,
     #[dtype(name = "rotateResult")]
     pub rotate_result: Type<'a>,
@@ -712,9 +728,9 @@ pub struct SDDMMBufferSizeOp<'a> {
     pub dnmat_b: Value<'a>,
     #[slot(spmat_c_ty, name = "spmatC")]
     pub spmat_c: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB")]
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -747,9 +763,9 @@ pub struct SDDMMOp<'a> {
     pub spmat_c: Value<'a>,
     #[slot(buffer_ty, name = "buffer")]
     pub buffer: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB")]
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -814,7 +830,7 @@ pub struct ShuffleOp<'a> {
     pub offset: Value<'a>,
     #[slot(width_ty, name = "width")]
     pub width: Value<'a>,
-    #[attr(name = "mode")]
+    #[attr(name = "mode", dialect = "gpu<shuffle_mode")]
     pub mode: Attribute<'a>,
     #[dtype(name = "offset_ty", is = i32)]
     pub offset_ty: Type<'a>,
@@ -841,9 +857,9 @@ pub struct SpGEMMCopyOp<'a> {
     pub spmat_b: Value<'a>,
     #[slot(spmat_c_ty, name = "spmatC")]
     pub spmat_c: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB")]
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -912,13 +928,13 @@ pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
     pub buffer_sz: Value<'a>,
     #[slot(buffer_ty, name = "buffer")]
     pub buffer: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB")]
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[attr(name = "kind")]
+    #[attr(name = "kind", dialect = "gpu<spgemm_work_estimation_or_compute_kind")]
     pub kind: Attribute<'a>,
     #[dtype(name = "asyncDependencies_ty")]
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -953,9 +969,9 @@ pub struct SpMMBufferSizeOp<'a> {
     pub dnmat_b: Value<'a>,
     #[slot(dnmat_c_ty, name = "dnmatC")]
     pub dnmat_c: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB")]
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -988,9 +1004,9 @@ pub struct SpMMOp<'a> {
     pub dnmat_c: Value<'a>,
     #[slot(buffers_ty, name = "buffers")]
     pub buffers: Vec<Value<'a>>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB")]
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -1021,7 +1037,7 @@ pub struct SpMVBufferSizeOp<'a> {
     pub dn_x: Value<'a>,
     #[slot(dn_y_ty, name = "dnY")]
     pub dn_y: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -1054,7 +1070,7 @@ pub struct SpMVOp<'a> {
     pub dn_y: Value<'a>,
     #[slot(buffer_ty, name = "buffer")]
     pub buffer: Value<'a>,
-    #[attr(name = "modeA")]
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
@@ -1102,7 +1118,7 @@ pub struct SubgroupBroadcastOp<'a> {
     pub src: Value<'a>,
     #[slot(lane_ty, name = "lane")]
     pub lane: Vec<Value<'a>>,
-    #[attr(name = "broadcast_type")]
+    #[attr(name = "broadcast_type", dialect = "gpu<broadcast")]
     pub broadcast_type: Attribute<'a>,
     #[dtype(name = "lane_ty", is = i32)]
     pub lane_ty: Type<'a>,
@@ -1155,7 +1171,7 @@ pub struct SubgroupMmaConstantMatrixOp<'a> {
 pub struct SubgroupMmaElementwiseOp<'a> {
     #[slot(args_ty, name = "args")]
     pub args: Vec<Value<'a>>,
-    #[attr(name = "opType")]
+    #[attr(name = "opType", dialect = "gpu<mma_element_wise")]
     pub op_type: Attribute<'a>,
     #[dtype(name = "args_ty")]
     pub args_ty: Vec<Type<'a>>,
@@ -1244,14 +1260,14 @@ pub struct SubgroupMmaStoreMatrixOp<'a> {
 pub struct SubgroupReduceOp<'a> {
     #[slot(result, name = "value")]
     pub value: Value<'a>,
-    #[attr(name = "op")]
+    #[attr(name = "op", dialect = "gpu<all_reduce_op")]
     pub op: Attribute<'a>,
     #[attr(name = "uniform")]
     pub uniform: bool,
-    #[attr(name = "cluster_size")]
+    #[attr(name = "cluster_size", int = "i32")]
     pub cluster_size: Option<Attribute<'a>>,
-    #[attr(name = "cluster_stride")]
-    pub cluster_stride: Option<Attribute<'a>>,
+    #[attr(name = "cluster_stride", int = "i32", default = "1")]
+    pub cluster_stride: Attribute<'a>,
     #[dtype(name = "result")]
     pub result: Type<'a>,
 }
@@ -1269,12 +1285,14 @@ pub struct SubgroupSizeOp<'a> {
 pub struct TerminatorOp<'a> {
 }
 
-#[mlir::op("gpu.thread_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict")]
+#[mlir::op("gpu.thread_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ThreadIdOp<'a> {
-    #[attr(name = "dimension")]
+    #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
     #[attr(name = "upper_bound")]
     pub upper_bound: Option<Attribute<'a>>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `gpu.wait`: Wait for async gpu ops to complete.
@@ -1299,7 +1317,7 @@ pub struct WarpExecuteOnLane0Op<'a> {
     pub laneid: Value<'a>,
     #[slot(args_ty, name = "args")]
     pub args: Vec<Value<'a>>,
-    #[attr(name = "warp_size")]
+    #[attr(name = "warp_size", int = "i64")]
     pub warp_size: Attribute<'a>,
     #[region(name = "warpRegion")]
     pub warp_region: Region<'a>,

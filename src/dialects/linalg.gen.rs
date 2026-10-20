@@ -1901,7 +1901,7 @@ pub struct ReciprocalOp<'a> {
 /// `linalg.reduce`: Reduce operator
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.reduce", generic)]
+#[mlir::op("linalg.reduce", generic, results(result))]
 pub struct ReduceOp<'a> {
     #[slot(inputs_ty, name = "inputs")]
     pub inputs: Vec<Value<'a>>,
@@ -1915,6 +1915,8 @@ pub struct ReduceOp<'a> {
     pub inputs_ty: Vec<Type<'a>>,
     #[dtype(name = "inits_ty")]
     pub inits_ty: Vec<Type<'a>>,
+    #[dtype(name = "result")]
+    pub result: Vec<Type<'a>>,
 }
 
 /// `linalg.round`: Applies round(x) elementwise.

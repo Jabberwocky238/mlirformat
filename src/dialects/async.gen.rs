@@ -43,7 +43,7 @@ pub struct AwaitOp<'a> {
 /// `async.call`: async call operation
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("async.call", generic)]
+#[mlir::op("async.call", generic, results(result))]
 pub struct CallOp<'a> {
     #[slot(operands_ty, name = "operands")]
     pub operands: Vec<Value<'a>>,
@@ -55,6 +55,8 @@ pub struct CallOp<'a> {
     pub res_attrs: Option<Attribute<'a>>,
     #[dtype(name = "operands_ty")]
     pub operands_ty: Vec<Type<'a>>,
+    #[dtype(name = "result")]
+    pub result: Vec<Type<'a>>,
 }
 
 /// `async.coro.begin`: returns a handle to the coroutine
@@ -160,7 +162,7 @@ pub struct ExecuteOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("async.func", generic)]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "function_type")]
     pub function_type: Attribute<'a>,
@@ -188,7 +190,7 @@ pub struct ReturnOp<'a> {
 pub struct RuntimeAddRefOp<'a> {
     #[slot(operand_ty, name = "operand")]
     pub operand: Value<'a>,
-    #[attr(name = "count")]
+    #[attr(name = "count", int = "i64")]
     pub count: Attribute<'a>,
     #[dtype(name = "operand_ty")]
     pub operand_ty: Type<'a>,
@@ -254,7 +256,7 @@ pub struct RuntimeCreateOp<'a> {
 pub struct RuntimeDropRefOp<'a> {
     #[slot(operand_ty, name = "operand")]
     pub operand: Value<'a>,
-    #[attr(name = "count")]
+    #[attr(name = "count", int = "i64")]
     pub count: Attribute<'a>,
     #[dtype(name = "operand_ty")]
     pub operand_ty: Type<'a>,
@@ -272,7 +274,9 @@ pub struct RuntimeIsErrorOp<'a> {
 }
 
 /// `async.runtime.load`: loads the value from the runtime async.value
-#[mlir::op("async.runtime.load", format = "$storage attr-dict `:` type($storage)", results(result))]
+///
+/// Generic form only (result type `result` inferred in C++).
+#[mlir::op("async.runtime.load", generic, results(result))]
 pub struct RuntimeLoadOp<'a> {
     #[slot(storage_ty, name = "storage")]
     pub storage: Value<'a>,

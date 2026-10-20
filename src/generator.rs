@@ -932,6 +932,15 @@ impl Format<'_> {
                                 write!(p, "{}", a.untyped()).map_err(io)?;
                             }
                             (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
+                            // `#gpu<dim x>` ⇒ ` x`: the attribute's own printer puts a space before
+                            // its case, so `mlir-opt` shows two (`gpu.thread_id  x`).
+                            (_, Some(Attribute::Extended { ref ext, .. }))
+                                if let Some((ns, m)) = f.keyword_dialect()
+                                    && ext.name == ns
+                                    && let Some(case) = ext.body.as_deref().and_then(|b| b.strip_prefix('<')?.strip_prefix(m)?.strip_prefix(' ')?.strip_suffix('>')) =>
+                            {
+                                write!(p, " {case}").map_err(io)?
+                            }
                             // A dense array prints as a list: `[30, 70]`.
                             (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(&values, ", ")).map_err(io)?,
                             // Before a `:`, or of a buildable type (`I64Attr`): ODS leaves the type out.

@@ -4,16 +4,14 @@
 use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
 /// `pdl.apply_native_constraint`: Apply a native constraint to a set of provided entities
-///
-/// Generic form only (PDL_ApplyNativeConstraintOp: format: unexpected `^ )? attr-dict`).
-#[mlir::op("pdl.apply_native_constraint", generic, results(results))]
+#[mlir::op("pdl.apply_native_constraint", format = "$name `(` $args `:` type($args) `)` (`:` type($results)^ )? attr-dict", results(results))]
 pub struct ApplyNativeConstraintOp<'a> {
     #[slot(args_ty, name = "args")]
     pub args: Vec<Value<'a>>,
     #[attr(name = "name")]
     pub name: Attribute<'a>,
-    #[attr(name = "isNegated")]
-    pub is_negated: Option<Attribute<'a>>,
+    #[attr(name = "isNegated", default = "false")]
+    pub is_negated: Attribute<'a>,
     #[dtype(name = "args_ty")]
     pub args_ty: Vec<Type<'a>>,
     #[dtype(name = "results")]
@@ -21,9 +19,7 @@ pub struct ApplyNativeConstraintOp<'a> {
 }
 
 /// `pdl.apply_native_rewrite`: Apply a native rewrite method inside of pdl.rewrite region
-///
-/// Generic form only (PDL_ApplyNativeRewriteOp: format: unexpected `^)? attr-dict`).
-#[mlir::op("pdl.apply_native_rewrite", generic, results(results))]
+#[mlir::op("pdl.apply_native_rewrite", format = "$name (`(` $args^ `:` type($args) `)`)? (`:` type($results)^)? attr-dict", results(results))]
 pub struct ApplyNativeRewriteOp<'a> {
     #[slot(args_ty, name = "args")]
     pub args: Vec<Value<'a>>,
@@ -111,9 +107,9 @@ pub struct OperationOp<'a> {
 /// Generic form only (directive `attr-dict-with-keyword`).
 #[mlir::op("pdl.pattern", generic)]
 pub struct PatternOp<'a> {
-    #[attr(name = "benefit")]
+    #[attr(name = "benefit", int = "i16")]
     pub benefit: Attribute<'a>,
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Option<Attribute<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
@@ -154,7 +150,7 @@ pub struct ReplaceOp<'a> {
 pub struct ResultOp<'a> {
     #[slot(parent_ty, name = "parent")]
     pub parent: Value<'a>,
-    #[attr(name = "index")]
+    #[attr(name = "index", int = "i32")]
     pub index: Attribute<'a>,
     #[dtype(name = "parent_ty", is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
@@ -169,7 +165,7 @@ pub struct ResultOp<'a> {
 pub struct ResultsOp<'a> {
     #[slot(parent_ty, name = "parent")]
     pub parent: Value<'a>,
-    #[attr(name = "index")]
+    #[attr(name = "index", int = "i32")]
     pub index: Option<Attribute<'a>>,
     #[dtype(name = "parent_ty", is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
@@ -206,7 +202,9 @@ pub struct TypeOp<'a> {
 }
 
 /// `pdl.types`: Define a range of type handles within a pattern
-#[mlir::op("pdl.types", format = "attr-dict (`:` $constantTypes^)?", results(result))]
+///
+/// Generic form only (result type `result` inferred in C++).
+#[mlir::op("pdl.types", generic, results(result))]
 pub struct TypesOp<'a> {
     #[attr(name = "constantTypes")]
     pub constant_types: Option<Attribute<'a>>,

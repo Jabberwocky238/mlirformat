@@ -1789,8 +1789,12 @@ pub struct LShrOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("llvm.landingpad", generic, results(res))]
 pub struct LandingpadOp<'a> {
+    #[slot(operand_ty, name = "operand")]
+    pub operand: Vec<Value<'a>>,
     #[attr(name = "cleanup")]
     pub cleanup: bool,
+    #[dtype(name = "operand_ty")]
+    pub operand_ty: Vec<Type<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2517,6 +2521,14 @@ pub struct SAddSat<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("llvm.intr.sadd.with.overflow", generic, results(res))]
 pub struct SAddWithOverflowOp<'a> {
+    #[slot(operand0_ty, name = "operand0")]
+    pub operand0: Value<'a>,
+    #[slot(operand1_ty, name = "operand1")]
+    pub operand1: Value<'a>,
+    #[dtype(name = "operand0_ty")]
+    pub operand0_ty: Type<'a>,
+    #[dtype(name = "operand1_ty")]
+    pub operand1_ty: Type<'a>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2595,6 +2607,14 @@ pub struct SMinOp<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("llvm.intr.smul.with.overflow", generic, results(res))]
 pub struct SMulWithOverflowOp<'a> {
+    #[slot(operand0_ty, name = "operand0")]
+    pub operand0: Value<'a>,
+    #[slot(operand1_ty, name = "operand1")]
+    pub operand1: Value<'a>,
+    #[dtype(name = "operand0_ty")]
+    pub operand0_ty: Type<'a>,
+    #[dtype(name = "operand1_ty")]
+    pub operand1_ty: Type<'a>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2645,6 +2665,14 @@ pub struct SSubSat<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("llvm.intr.ssub.with.overflow", generic, results(res))]
 pub struct SSubWithOverflowOp<'a> {
+    #[slot(operand0_ty, name = "operand0")]
+    pub operand0: Value<'a>,
+    #[slot(operand1_ty, name = "operand1")]
+    pub operand1: Value<'a>,
+    #[dtype(name = "operand0_ty")]
+    pub operand0_ty: Type<'a>,
+    #[dtype(name = "operand1_ty")]
+    pub operand1_ty: Type<'a>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2914,6 +2942,14 @@ pub struct UAddSat<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("llvm.intr.uadd.with.overflow", generic, results(res))]
 pub struct UAddWithOverflowOp<'a> {
+    #[slot(operand0_ty, name = "operand0")]
+    pub operand0: Value<'a>,
+    #[slot(operand1_ty, name = "operand1")]
+    pub operand1: Value<'a>,
+    #[dtype(name = "operand0_ty")]
+    pub operand0_ty: Type<'a>,
+    #[dtype(name = "operand1_ty")]
+    pub operand1_ty: Type<'a>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2992,6 +3028,14 @@ pub struct UMinOp<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("llvm.intr.umul.with.overflow", generic, results(res))]
 pub struct UMulWithOverflowOp<'a> {
+    #[slot(operand0_ty, name = "operand0")]
+    pub operand0: Value<'a>,
+    #[slot(operand1_ty, name = "operand1")]
+    pub operand1: Value<'a>,
+    #[dtype(name = "operand0_ty")]
+    pub operand0_ty: Type<'a>,
+    #[dtype(name = "operand1_ty")]
+    pub operand1_ty: Type<'a>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -3034,6 +3078,14 @@ pub struct USubSat<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("llvm.intr.usub.with.overflow", generic, results(res))]
 pub struct USubWithOverflowOp<'a> {
+    #[slot(operand0_ty, name = "operand0")]
+    pub operand0: Value<'a>,
+    #[slot(operand1_ty, name = "operand1")]
+    pub operand1: Value<'a>,
+    #[dtype(name = "operand0_ty")]
+    pub operand0_ty: Type<'a>,
+    #[dtype(name = "operand1_ty")]
+    pub operand1_ty: Type<'a>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }

@@ -19,12 +19,14 @@ pub struct ConditionOp<'a> {
 /// `scf.execute_region`: operation that executes its region exactly once
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.execute_region", generic)]
+#[mlir::op("scf.execute_region", generic, results(result))]
 pub struct ExecuteRegionOp<'a> {
     #[attr(name = "no_inline")]
     pub no_inline: bool,
     #[region(name = "region")]
     pub region: Region<'a>,
+    #[dtype(name = "result")]
+    pub result: Vec<Type<'a>>,
 }
 
 /// `scf.for`: for operation

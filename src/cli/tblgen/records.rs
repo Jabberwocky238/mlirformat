@@ -134,7 +134,8 @@ impl Records {
     /// `(constraint, name)` pairs of a dag field (`arguments`, `results`, `regions`, `successors`).
     fn dag<'x>(&'x self, op: &str, key: &str) -> Vec<(&'x str, &'x str)> {
         let args = self.field(op, key).and_then(|d| d.get("args")).and_then(Json::as_array);
-        args.into_iter().flatten().filter_map(|a| Some((self.unwrap_arg(Self::def_of(a.get(0)?)?), a.get(1)?.as_str()?))).collect()
+        // An unnamed one (`outs Index`) comes back as `""`.
+        args.into_iter().flatten().filter_map(|a| Some((self.unwrap_arg(Self::def_of(a.get(0)?)?), a.get(1).and_then(Json::as_str).unwrap_or("")))).collect()
     }
 
     /// The MLIR spelling of a buildable type (`$_builder.getIntegerType(32)` ⇒ `i32`，
@@ -283,8 +284,11 @@ impl Records {
 
     /// A dialect enum attribute spelled `#ns.mnemonic<case>` ⇒ (`ns.mnemonic`, its enum's cases by symbol).
     fn dialect_enum(&self, attr: &str) -> Option<(String, BTreeMap<String, String>)> {
-        (self.is_a(attr, "EnumAttr") && self.text(attr, "assemblyFormat").is_some_and(|f| f.split_whitespace().collect::<String>() == "`<`$value`>`")).then_some(())?;
+        let format = self.text(attr, "assemblyFormat").map(|f| f.split_whitespace().collect::<String>());
+        (self.is_a(attr, "EnumAttr") && matches!(format.as_deref(), Some("`<`$value`>`" | "$value"))).then_some(())?;
         let name = self.text(attr, "attrName")?.to_string();
+        // `$value`: stored `#gpu<dim x>`, spelled `x` ⇒ `gpu<dim`.
+        let name = if format.as_deref() == Some("$value") { name.replacen('.', "<", 1) } else { name };
         let info = self.field(attr, "enum").and_then(Self::def_of)?;
         let cases = self.field(info, "enumerants").and_then(Json::as_array).into_iter().flatten().filter_map(|c| {
             let c = Self::def_of(c)?;
@@ -347,7 +351,7 @@ impl Records {
                 .and_then(|v| v.rsplit("::").next())
                 // `{}`: a bit enum with nothing set, its `none` case.
                 .and_then(|symbol| if symbol == "{}" { cases.values().find(|c| *c == "none") } else { cases.get(symbol) })
-                .map(|case| format!(", default = \"<{case}>\""));
+                .map(|case| if attr.contains('<') { format!(", default = {case:?}") } else { format!(", default = \"<{case}>\"") });
             return match default {
                 Some(default) => (format!("#[attr({name}, dialect = {attr:?}{default})]"), "Attribute<'a>".into()),
                 None if optional || defaulted => (format!("#[attr({name}, dialect = {attr:?})]"), "Option<Attribute<'a>>".into()),
@@ -411,7 +415,15 @@ impl Records {
         let mut groups: Vec<Group> = Vec::new();
         let mut props: Vec<GenField> = Vec::new();
         let mut operand_names = Vec::new();
-        for (constraint, ods) in self.dag(op, "arguments") {
+        let ins = self.dag(op, "arguments");
+        let unnamed_ins = ins.iter().filter(|(_, n)| n.is_empty()).count();
+        let named: Vec<String> = ins.iter().enumerate().map(|(k, (_, n))| match *n {
+            "" if unnamed_ins == 1 => String::from("operand"),
+            "" => format!("operand{k}"),
+            n => String::from(n),
+        }).collect();
+        for ((constraint, _), ods) in ins.into_iter().zip(&named) {
+            let ods = ods.as_str();
             if self.is_a(constraint, "TypeConstraint") {
                 let variadic = self.is_a(constraint, "Variadic") || self.is_a(constraint, "Optional") || self.is_a(constraint, "VariadicOfVariadic");
                 let base = self.field(constraint, "baseType").and_then(Self::def_of).unwrap_or(constraint);
@@ -422,11 +434,19 @@ impl Records {
                 props.push(GenField { marker, ident: Self::ident(ods), ty });
             }
         }
-        let mut results = Vec::new();
-        for (constraint, ods) in self.dag(op, "results") {
+        let mut results: Vec<String> = Vec::new();
+        let outs = self.dag(op, "results");
+        let unnamed = outs.len();
+        for (k, (constraint, ods)) in outs.into_iter().enumerate() {
+            // ODS calls an unnamed result by its position; the op needs a field for it all the same.
+            let ods = match ods {
+                "" if unnamed == 1 => String::from("result"),
+                "" => format!("result{k}"),
+                n => String::from(n),
+            };
             let variadic = self.is_a(constraint, "Variadic") || self.is_a(constraint, "Optional");
             let base = self.field(constraint, "baseType").and_then(Self::def_of).unwrap_or(constraint);
-            groups.push(Group { name: ods.into(), variadic, result: true, fixed: self.buildable(base), strip: self.type_def(constraint) });
+            groups.push(Group { name: ods.clone(), variadic, result: true, fixed: self.buildable(base), strip: self.type_def(constraint) });
             results.push(ods);
         }
         // Type variable classes (union-find over the groups).
@@ -558,7 +578,7 @@ impl Records {
     }
 
     /// The assembly format if the runtime format engine can read it, else why not.
-    fn format(&self, op: &str, fields: &[GenField], results: &[&str]) -> (Option<String>, Option<String>) {
+    fn format(&self, op: &str, fields: &[GenField], results: &[String]) -> (Option<String>, Option<String>) {
         if self.field(op, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) {
             return (None, Some("custom C++ syntax".into()));
         }

@@ -550,6 +550,13 @@ impl Field {
         })
     }
 
+    /// A dialect enum spelled by its bare case (`gpu<dim` ⇒ `x` for `#gpu<dim x>`): the
+    /// namespace and the mnemonic.
+    pub fn keyword_dialect(&self) -> Option<(&'static str, &'static str)> {
+        let Role::Prop { dialect: Some(d), .. } = self.role else { return None };
+        d.split_once('<')
+    }
+
     /// A bit enum property's cases (`overflow<nsw, nuw>`).
     pub fn bit_enum(&self) -> Option<BitEnum> {
         let Role::Prop { bits: Some(b), .. } = self.role else { return None };
@@ -567,6 +574,9 @@ impl Field {
             _ => {}
         }
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
+        if let Some((ns, mnemonic)) = self.keyword_dialect() {
+            return Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body: Some(Cow::Owned(format!("<{mnemonic} {body}>"))), params: Vec::new() }, ty: None });
+        }
         let body = (!body.is_empty()).then_some(Cow::Borrowed(body));
         Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
     }

@@ -34,9 +34,9 @@ pub struct AnyOp<'a> {
 pub struct AssumingAllOp<'a> {
     #[slot(inputs_ty, name = "inputs")]
     pub inputs: Vec<Value<'a>>,
-    #[dtype(name = "inputs_ty")]
-    pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype(name = "inputs_ty", is = "!shape.witness")]
+    pub inputs_ty: Type<'a>,
+    #[dtype(name = "result", is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -49,7 +49,7 @@ pub struct AssumingOp<'a> {
     pub witness: Value<'a>,
     #[region(name = "doRegion")]
     pub do_region: Region<'a>,
-    #[dtype(name = "witness_ty")]
+    #[dtype(name = "witness_ty", is = "!shape.witness")]
     pub witness_ty: Type<'a>,
     #[dtype(name = "results")]
     pub results: Vec<Type<'a>>,
@@ -108,7 +108,7 @@ pub struct ConstShapeOp<'a> {
 pub struct ConstSizeOp<'a> {
     #[attr(name = "value")]
     pub value: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.size")]
     pub result: Type<'a>,
 }
 
@@ -117,7 +117,7 @@ pub struct ConstSizeOp<'a> {
 pub struct ConstWitnessOp<'a> {
     #[attr(name = "passing")]
     pub passing: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -128,7 +128,7 @@ pub struct CstrBroadcastableOp<'a> {
     pub shapes: Vec<Value<'a>>,
     #[dtype(name = "shapes_ty")]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -139,7 +139,7 @@ pub struct CstrEqOp<'a> {
     pub shapes: Vec<Value<'a>>,
     #[dtype(name = "shapes_ty")]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -152,7 +152,7 @@ pub struct CstrRequireOp<'a> {
     pub msg: Attribute<'a>,
     #[dtype(name = "pred_ty", is = i1)]
     pub pred_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -206,7 +206,7 @@ pub struct FromExtentTensorOp<'a> {
     pub input: Value<'a>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.shape")]
     pub result: Type<'a>,
 }
 
@@ -217,7 +217,7 @@ pub struct FromExtentsOp<'a> {
     pub extents: Vec<Value<'a>>,
     #[dtype(name = "extents_ty")]
     pub extents_ty: Vec<Type<'a>>,
-    #[dtype(name = "shape")]
+    #[dtype(name = "shape", is = "!shape.shape")]
     pub shape: Type<'a>,
 }
 
@@ -226,7 +226,7 @@ pub struct FromExtentsOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("shape.func", generic)]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "function_type")]
     pub function_type: Attribute<'a>,
@@ -245,7 +245,7 @@ pub struct FuncOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("shape.function_library", generic)]
 pub struct FunctionLibraryOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "sym_visibility")]
     pub sym_visibility: Option<Attribute<'a>>,
@@ -277,7 +277,7 @@ pub struct IndexToSizeOp<'a> {
     pub arg: Value<'a>,
     #[dtype(name = "arg_ty", is = index)]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.size")]
     pub result: Type<'a>,
 }
 
@@ -483,7 +483,7 @@ pub struct ValueAsShapeOp<'a> {
 pub struct ValueOfOp<'a> {
     #[slot(arg_ty, name = "arg")]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype(name = "arg_ty", is = "!shape.value_shape")]
     pub arg_ty: Type<'a>,
     #[dtype(name = "result")]
     pub result: Type<'a>,
@@ -502,7 +502,7 @@ pub struct WithOp<'a> {
     pub operand_ty: Type<'a>,
     #[dtype(name = "shape_ty")]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!shape.value_shape")]
     pub result: Type<'a>,
 }
 

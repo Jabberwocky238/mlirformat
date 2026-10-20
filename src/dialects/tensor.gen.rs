@@ -45,7 +45,7 @@ pub struct CollapseShapeOp<'a> {
 pub struct ConcatOp<'a> {
     #[slot(inputs_ty, name = "inputs")]
     pub inputs: Vec<Value<'a>>,
-    #[attr(name = "dim")]
+    #[attr(name = "dim", int = "i64")]
     pub dim: Attribute<'a>,
     #[dtype(name = "inputs_ty")]
     pub inputs_ty: Vec<Type<'a>>,
@@ -294,12 +294,14 @@ pub struct ParallelInsertSliceOp<'a> {
 }
 
 /// `tensor.rank`: rank operation
-#[mlir::op("tensor.rank", format = "$tensor attr-dict `:` type($tensor)")]
+#[mlir::op("tensor.rank", format = "$tensor attr-dict `:` type($tensor)", results(result))]
 pub struct RankOp<'a> {
     #[slot(tensor_ty, name = "tensor")]
     pub tensor: Value<'a>,
     #[dtype(name = "tensor_ty")]
     pub tensor_ty: Type<'a>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `tensor.reshape`: tensor reshape operation

@@ -6,7 +6,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// `affine.apply`: affine apply operation
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.apply", generic)]
+#[mlir::op("affine.apply", generic, results(result))]
 pub struct AffineApplyOp<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
     pub map_operands: Vec<Value<'a>>,
@@ -14,6 +14,8 @@ pub struct AffineApplyOp<'a> {
     pub map: Attribute<'a>,
     #[dtype(name = "mapOperands_ty", is = index)]
     pub map_operands_ty: Type<'a>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `affine.delinearize_index`: delinearize an index
@@ -69,12 +71,16 @@ pub struct AffineForOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("affine.if", generic, results(results))]
 pub struct AffineIfOp<'a> {
+    #[slot(operand_ty, name = "operand")]
+    pub operand: Vec<Value<'a>>,
     #[attr(name = "condition")]
     pub condition: Attribute<'a>,
     #[region(name = "thenRegion")]
     pub then_region: Region<'a>,
     #[region(name = "elseRegion")]
     pub else_region: Region<'a>,
+    #[dtype(name = "operand_ty")]
+    pub operand_ty: Vec<Type<'a>>,
     #[dtype(name = "results")]
     pub results: Vec<Type<'a>>,
 }
@@ -122,7 +128,7 @@ pub struct AffineLoadOp<'a> {
 /// `affine.max`: max operation
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.max", generic)]
+#[mlir::op("affine.max", generic, results(result))]
 pub struct AffineMaxOp<'a> {
     #[slot(operands_ty, name = "operands")]
     pub operands: Vec<Value<'a>>,
@@ -130,12 +136,14 @@ pub struct AffineMaxOp<'a> {
     pub map: Attribute<'a>,
     #[dtype(name = "operands_ty", is = index)]
     pub operands_ty: Type<'a>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `affine.min`: min operation
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.min", generic)]
+#[mlir::op("affine.min", generic, results(result))]
 pub struct AffineMinOp<'a> {
     #[slot(operands_ty, name = "operands")]
     pub operands: Vec<Value<'a>>,
@@ -143,6 +151,8 @@ pub struct AffineMinOp<'a> {
     pub map: Attribute<'a>,
     #[dtype(name = "operands_ty", is = index)]
     pub operands_ty: Type<'a>,
+    #[dtype(name = "result", is = index)]
+    pub result: Type<'a>,
 }
 
 /// `affine.parallel`: multi-index parallel band operation
@@ -183,7 +193,7 @@ pub struct AffinePrefetchOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "isWrite")]
     pub is_write: Attribute<'a>,
-    #[attr(name = "localityHint")]
+    #[attr(name = "localityHint", int = "i32")]
     pub locality_hint: Attribute<'a>,
     #[attr(name = "isDataCache")]
     pub is_data_cache: Attribute<'a>,

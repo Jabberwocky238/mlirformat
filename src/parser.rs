@@ -1477,6 +1477,11 @@ impl Format<'_> {
                             let a = p.attr()?;
                             owned(p, Some(&a))?
                         }
+                        Role::Prop { dialect: Some(_), .. } if let Some((ns, m)) = f.keyword_dialect() => {
+                            p.ws();
+                            let body = Some(Cow::Owned(format!("<{m} {}>", p.ident()?)));
+                            Content::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body, params: Vec::new() }, ty: None })
+                        }
                         Role::Prop { dialect: Some(d), .. } => {
                             p.ws();
                             let body = Some(Cow::Owned(p.group()?.into()));
@@ -1605,6 +1610,7 @@ impl Format<'_> {
                 Role::Successor => p.at(b'^'),
                 Role::Region => p.at(b'{'),
                 Role::Prop { symbol: true, .. } => p.at(b'@'),
+                Role::Prop { dialect: Some(d), .. } if d.contains('<') => p.at(b'#') || p.ident().is_ok_and(|w| !self.literal(w)),
                 Role::Prop { dialect: Some(_), .. } => p.at(b'<') || p.at(b'#'),
                 // An enum keyword: any word the format does not spell as a literal.
                 Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w)),
