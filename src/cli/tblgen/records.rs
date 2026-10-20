@@ -293,12 +293,33 @@ impl Records {
         Some((name, cases.collect()))
     }
 
+    /// A C++ attribute wrapping one enum, spelled by its `AttrDef` as `#ns.mnemonic<case>`
+    /// (`Linkage` ⇒ `LinkageAttr` ⇒ `#llvm.linkage<external>`) ⇒ like [`Self::dialect_enum`].
+    fn wrapped_enum(&self, attr: &str) -> Option<(String, BTreeMap<String, String>)> {
+        (self.is_a(attr, "DialectAttr") && !self.is_a(attr, "AttrDef")).then_some(())?;
+        let def = self.text(attr, "storageType")?.rsplit("::").next()?;
+        (self.is_a(def, "AttrDef") && self.text(def, "assemblyFormat").is_some_and(|f| f.split_whitespace().count() == 3 && f.starts_with("`<` $"))).then_some(())?;
+        let enum_name = self.text(attr, "returnType")?.rsplit("::").next()?;
+        let infos = self.all.get("!instanceof").and_then(|i| i.get("EnumInfo")).and_then(Json::as_array)?;
+        let info = infos.iter().filter_map(Json::as_str).find(|e| self.text(e, "className") == Some(enum_name))?;
+        let cases = self.field(info, "enumerants").and_then(Json::as_array).into_iter().flatten().filter_map(|c| {
+            let c = Self::def_of(c)?;
+            Some((self.text(c, "symbol")?.to_string(), self.text(c, "str")?.to_string()))
+        });
+        Some((self.text(def, "attrName")?.to_string(), cases.collect()))
+    }
+
     /// A property field: (marker, Rust type).
     fn property(&self, constraint: &str, ods: &str, dialect: &mut GenDialect) -> (String, String) {
         let unit = |c: &str| self.is_a(c, "UnitAttr") || self.is_a(c, "UnitProp");
         let base = self.field(constraint, "baseAttr").and_then(Self::def_of).unwrap_or(constraint);
+        // The constraint and what it wraps (`DefaultValuedAttr<ConfinedAttr<I32Attr, ..>, "0">`).
+        let chain: Vec<&str> = core::iter::successors(Some(constraint), |c| self.field(c, "baseAttr").and_then(Self::def_of)).collect();
         let optional = self.field(constraint, "isOptional").and_then(Json::as_i64) == Some(1) || self.is_a(constraint, "OptionalAttr");
         let defaulted = self.is_a(constraint, "DefaultValuedAttr") || self.is_a(constraint, "DefaultValuedOptionalAttr");
+        // Only a `DefaultValuedAttr` is filled in when absent; a `DefaultValuedOptionalAttr`'s
+        // default is for its getter alone (`memref.load` parses without `nontemporal`).
+        let filled = defaulted && !self.is_a(constraint, "DefaultValuedOptionalAttr");
         let name = format!("name = {ods:?}");
         if unit(constraint) || unit(base) {
             return (format!("#[attr({name})]"), "bool".into());
@@ -312,15 +333,15 @@ impl Records {
         if let Some((rust, cases, width)) = self.int_enum(base) {
             dialect.enums.insert(rust.clone(), cases);
             // `DefaultValuedAttr<AtomicOrdering, "AtomicOrdering::not_atomic">`: the case's value.
-            let default = defaulted.then(|| self.text(constraint, "defaultValue")).flatten().and_then(|v| self.case_value(base, v.rsplit("::").next()?));
+            let default = filled.then(|| self.text(constraint, "defaultValue")).flatten().and_then(|v| self.case_value(base, v.rsplit("::").next()?));
             return match default {
                 Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), rust),
                 None if optional || defaulted => (format!("#[attr({name}, int = \"i{width}\")]"), format!("Option<{rust}>")),
                 None => (format!("#[attr({name}, int = \"i{width}\")]"), rust),
             };
         }
-        if let Some((attr, cases)) = self.dialect_enum(base) {
-            let default = defaulted
+        if let Some((attr, cases)) = self.dialect_enum(base).or_else(|| self.wrapped_enum(base)) {
+            let default = filled
                 .then(|| self.text(constraint, "defaultValue"))
                 .flatten()
                 .and_then(|v| v.rsplit("::").next())
@@ -341,9 +362,17 @@ impl Records {
         if let Some(el) = Self::dense_array(base).or_else(|| Self::dense_array(constraint)) {
             return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
         }
+        let default = filled.then(|| self.text(constraint, "defaultValue")).flatten();
         // `I64Attr`: the custom form leaves the integer's type out (`linalg.index 0`).
-        if let Some(width) = Self::int_attr(base).or_else(|| Self::int_attr(constraint)) {
-            return (format!("#[attr({name}, int = \"i{width}\")]"), ty.into());
+        if let Some(width) = chain.iter().find_map(|c| Self::int_attr(c)) {
+            return match default.filter(|v| v.parse::<i64>().is_ok()) {
+                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), "Attribute<'a>".into()),
+                None => (format!("#[attr({name}, int = \"i{width}\")]"), ty.into()),
+            };
+        }
+        // `DefaultValuedAttr<BoolAttr, "false">`.
+        if chain.iter().any(|c| self.is_a(c, "BoolAttr")) && let Some(v) = default.filter(|v| matches!(*v, "true" | "false")) {
+            return (format!("#[attr({name}, default = \"{v}\")]"), "Attribute<'a>".into());
         }
         // A `SymbolNameAttr` prints as `@name`, a `StrAttr` as `"name"`.
         if self.is_a(base, "SymbolNameAttr") || self.is_a(constraint, "SymbolNameAttr") {
@@ -574,7 +603,10 @@ impl Records {
             // Its own variable with no rule (`strip` decides only how it prints).
             let own = format!("#[dtype(name = {r:?}");
             let ruleless = |m: &str| m.strip_prefix(&own).is_some_and(|rest| rest == ")]" || (rest.starts_with(", strip = ") && rest.matches(" = ").count() == 1));
-            if fields.iter().any(|f| ruleless(&f.marker)) && !format.contains(&format!("${r}")) && !format.contains("results") {
+            // An operand sharing the variable may spell it: `vector.fma ... : type($lhs)`.
+            let slot = format!("#[slot({}, name = \"", Self::ident(r));
+            let shared = fields.iter().filter_map(|f| f.marker.strip_prefix(&slot)?.split('"').next()).any(|o| format.contains(&format!("type(${o})")));
+            if fields.iter().any(|f| ruleless(&f.marker)) && !shared && !format.contains(&format!("${r}")) && !format.contains("results") {
                 return (None, Some(format!("result type `{r}` inferred in C++")));
             }
         }

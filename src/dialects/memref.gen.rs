@@ -45,7 +45,7 @@ pub enum AtomicRMWKind {
 pub struct AssumeAlignmentOp<'a> {
     #[slot(result, name = "memref")]
     pub memref: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i32")]
     pub alignment: Attribute<'a>,
     #[dtype(name = "result")]
     pub result: Type<'a>,
@@ -92,7 +92,9 @@ pub struct CopyOp<'a> {
 }
 
 /// `memref.distinct_objects`: assumption that acesses to specific memrefs will never alias
-#[mlir::op("memref.distinct_objects", format = "$operands attr-dict `:` type($operands)", results(results))]
+///
+/// Generic form only (result type `results` inferred in C++).
+#[mlir::op("memref.distinct_objects", generic, results(results))]
 pub struct DistinctObjectsOp<'a> {
     #[slot(operands_ty, name = "operands")]
     pub operands: Vec<Value<'a>>,
@@ -130,7 +132,7 @@ pub struct LoadOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "nontemporal")]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "memref_ty")]
     pub memref_ty: Type<'a>,
@@ -147,7 +149,7 @@ pub struct AllocOp<'a> {
     pub dynamic_sizes: Vec<Value<'a>>,
     #[slot(symbol_operands_ty, name = "symbolOperands")]
     pub symbol_operands: Vec<Value<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "dynamicSizes_ty", is = index)]
     pub dynamic_sizes_ty: Type<'a>,
@@ -164,7 +166,7 @@ pub struct AllocaOp<'a> {
     pub dynamic_sizes: Vec<Value<'a>>,
     #[slot(symbol_operands_ty, name = "symbolOperands")]
     pub symbol_operands: Vec<Value<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "dynamicSizes_ty", is = index)]
     pub dynamic_sizes_ty: Type<'a>,
@@ -335,7 +337,7 @@ pub struct GetGlobalOp<'a> {
 /// Generic form only (directive `custom<GlobalMemrefOpTypeAndInitialValue>`).
 #[mlir::op("memref.global", generic)]
 pub struct GlobalOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "sym_visibility")]
     pub sym_visibility: Option<Attribute<'a>>,
@@ -345,7 +347,7 @@ pub struct GlobalOp<'a> {
     pub initial_value: Option<Attribute<'a>>,
     #[attr(name = "constant")]
     pub constant: bool,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
 }
 
@@ -371,7 +373,7 @@ pub struct PrefetchOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "isWrite")]
     pub is_write: Attribute<'a>,
-    #[attr(name = "localityHint")]
+    #[attr(name = "localityHint", int = "i32")]
     pub locality_hint: Attribute<'a>,
     #[attr(name = "isDataCache")]
     pub is_data_cache: Attribute<'a>,
@@ -399,7 +401,7 @@ pub struct ReallocOp<'a> {
     pub source: Value<'a>,
     #[slot(dynamic_result_size_ty, name = "dynamicResultSize")]
     pub dynamic_result_size: Vec<Value<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -464,7 +466,7 @@ pub struct StoreOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "nontemporal")]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "value_ty", el = memref_ty)]
     pub value_ty: Type<'a>,

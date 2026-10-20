@@ -298,7 +298,7 @@ pub struct AliasOp<'a> {
     pub alias_type: Attribute<'a>,
     #[attr(name = "sym_name")]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "linkage")]
+    #[attr(name = "linkage", dialect = "llvm.linkage")]
     pub linkage: Attribute<'a>,
     #[attr(name = "dso_local")]
     pub dso_local: bool,
@@ -416,9 +416,7 @@ pub struct AtomicCmpXchgOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.atomicrmw", generic, results(res))]
+#[mlir::op("llvm.atomicrmw", format = "(`volatile` $volatile_^)? $bin_op $ptr `,` $val (`syncscope` `(` $syncscope^ `)`)? $ordering attr-dict `:` qualified(type($ptr)) `,` type($val)", results(res))]
 pub struct AtomicRMWOp<'a> {
     #[slot(ptr_ty, name = "ptr")]
     pub ptr: Value<'a>,
@@ -549,10 +547,10 @@ pub struct CallOp<'a> {
     pub callee: Option<Attribute<'a>>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Attribute<'a>,
-    #[attr(name = "CConv")]
-    pub c_conv: Option<Attribute<'a>>,
-    #[attr(name = "TailCallKind")]
-    pub tail_call_kind: Option<Attribute<'a>>,
+    #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
+    pub c_conv: Attribute<'a>,
+    #[attr(name = "TailCallKind", dialect = "llvm.tailcallkind", default = "<none>")]
+    pub tail_call_kind: Attribute<'a>,
     #[attr(name = "memory_effects", dialect = "llvm.memory_effects")]
     pub memory_effects: Option<Attribute<'a>>,
     #[attr(name = "convergent")]
@@ -1016,9 +1014,7 @@ pub struct ExpOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.intr.expect", generic, results(res))]
+#[mlir::op("llvm.intr.expect", format = "$val `,` $expected attr-dict `:` type($val)", results(res))]
 pub struct ExpectOp<'a> {
     #[slot(res, name = "val")]
     pub val: Value<'a>,
@@ -1028,9 +1024,7 @@ pub struct ExpectOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.intr.expect.with.probability", generic, results(res))]
+#[mlir::op("llvm.intr.expect.with.probability", format = "$val `,` $expected `,` $prob attr-dict `:` type($val)", results(res))]
 pub struct ExpectWithProbabilityOp<'a> {
     #[slot(res, name = "val")]
     pub val: Value<'a>,
@@ -1302,9 +1296,7 @@ pub struct FractionExpOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.freeze", generic, results(res))]
+#[mlir::op("llvm.freeze", format = "$val attr-dict `:` type($val)", results(res))]
 pub struct FreezeOp<'a> {
     #[slot(res, name = "val")]
     pub val: Value<'a>,
@@ -1409,7 +1401,7 @@ pub struct GlobalOp<'a> {
     pub constant: bool,
     #[attr(name = "sym_name")]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "linkage")]
+    #[attr(name = "linkage", dialect = "llvm.linkage")]
     pub linkage: Attribute<'a>,
     #[attr(name = "dso_local")]
     pub dso_local: bool,
@@ -1421,8 +1413,8 @@ pub struct GlobalOp<'a> {
     pub value: Option<Attribute<'a>>,
     #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "addr_space")]
-    pub addr_space: Option<Attribute<'a>>,
+    #[attr(name = "addr_space", int = "i32", default = "0")]
+    pub addr_space: Attribute<'a>,
     #[attr(name = "unnamed_addr", int = "i64")]
     pub unnamed_addr: Option<UnnamedAddr>,
     #[attr(name = "section")]
@@ -1468,12 +1460,12 @@ pub struct IFuncOp<'a> {
     pub resolver: Attribute<'a>,
     #[attr(name = "resolver_type")]
     pub resolver_type: Attribute<'a>,
-    #[attr(name = "linkage")]
+    #[attr(name = "linkage", dialect = "llvm.linkage")]
     pub linkage: Attribute<'a>,
     #[attr(name = "dso_local")]
     pub dso_local: bool,
-    #[attr(name = "address_space")]
-    pub address_space: Option<Attribute<'a>>,
+    #[attr(name = "address_space", int = "i32", default = "0")]
+    pub address_space: Attribute<'a>,
     #[attr(name = "unnamed_addr", int = "i64", default = "0")]
     pub unnamed_addr: UnnamedAddr,
     #[attr(name = "visibility_", int = "i64", default = "0")]
@@ -1512,8 +1504,8 @@ pub struct InlineAsmOp<'a> {
     pub has_side_effects: bool,
     #[attr(name = "is_align_stack")]
     pub is_align_stack: bool,
-    #[attr(name = "tail_call_kind")]
-    pub tail_call_kind: Option<Attribute<'a>>,
+    #[attr(name = "tail_call_kind", dialect = "llvm.tailcallkind", default = "<none>")]
+    pub tail_call_kind: Attribute<'a>,
     #[attr(name = "asm_dialect")]
     pub asm_dialect: Option<Attribute<'a>>,
     #[attr(name = "operand_attrs")]
@@ -1525,9 +1517,7 @@ pub struct InlineAsmOp<'a> {
 }
 
 /// `llvm.insertelement`: Insert an element into an LLVM vector.
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.insertelement", generic, results(res))]
+#[mlir::op("llvm.insertelement", format = "$value `,` $vector `[` $position `:` type($position) `]` attr-dict `:` type($vector)", results(res))]
 pub struct InsertElementOp<'a> {
     #[slot(res, name = "vector")]
     pub vector: Value<'a>,
@@ -1620,8 +1610,8 @@ pub struct InvokeOp<'a> {
     pub res_attrs: Option<Attribute<'a>>,
     #[attr(name = "branch_weights", dense = "i32")]
     pub branch_weights: Option<Attribute<'a>>,
-    #[attr(name = "CConv")]
-    pub c_conv: Option<Attribute<'a>>,
+    #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
+    pub c_conv: Attribute<'a>,
     #[attr(name = "op_bundle_sizes", dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
     #[attr(name = "op_bundle_tags")]
@@ -1679,12 +1669,12 @@ pub struct LLVMFuncOp<'a> {
     pub sym_visibility: Option<Attribute<'a>>,
     #[attr(name = "function_type")]
     pub function_type: Attribute<'a>,
-    #[attr(name = "linkage")]
-    pub linkage: Option<Attribute<'a>>,
+    #[attr(name = "linkage", dialect = "llvm.linkage", default = "<external>")]
+    pub linkage: Attribute<'a>,
     #[attr(name = "dso_local")]
     pub dso_local: bool,
-    #[attr(name = "CConv")]
-    pub c_conv: Option<Attribute<'a>>,
+    #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
+    pub c_conv: Attribute<'a>,
     #[attr(name = "comdat")]
     pub comdat: Option<Attribute<'a>>,
     #[attr(name = "convergent")]
@@ -1805,9 +1795,7 @@ pub struct LandingpadOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.intr.launder.invariant.group", generic, results(res))]
+#[mlir::op("llvm.intr.launder.invariant.group", format = "$ptr attr-dict `:` qualified(type($ptr))", results(res))]
 pub struct LaunderInvariantGroupOp<'a> {
     #[slot(res, name = "ptr")]
     pub ptr: Value<'a>,
@@ -2621,9 +2609,7 @@ pub struct SRemOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.intr.ssa.copy", generic, results(res))]
+#[mlir::op("llvm.intr.ssa.copy", format = "$operand attr-dict `:` type($operand)", results(res))]
 pub struct SSACopyOp<'a> {
     #[slot(res, name = "operand")]
     pub operand: Value<'a>,
@@ -2812,9 +2798,7 @@ pub struct StoreOp<'a> {
     pub addr_ty: Type<'a>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.intr.strip.invariant.group", generic, results(res))]
+#[mlir::op("llvm.intr.strip.invariant.group", format = "$ptr attr-dict `:` qualified(type($ptr))", results(res))]
 pub struct StripInvariantGroupOp<'a> {
     #[slot(res, name = "ptr")]
     pub ptr: Value<'a>,

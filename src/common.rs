@@ -339,6 +339,8 @@ pub struct Template {
     pub parse: for<'a> fn(&mut Parser<'a, '_>) -> R<Operation<'a>>,
     /// Op → custom form; `None` when the op does not fit the typed op (it then prints generic).
     pub print: fn(&Operation<'_>, &mut Printer<'_, '_>) -> Option<fmt::Result>,
+    /// The properties the op declares a default for, with it (what an ODS builder sets).
+    pub defaults: fn() -> Vec<NamedAttr<'static>>,
 }
 
 /// ⭐ A dialect: a namespace and its op table. `#[mlir::dialect]` writes one from an enum of
@@ -559,8 +561,10 @@ impl Field {
 
     /// A property's default value (`#dialect.attr<default>`, or an integer `0 : i64`).
     pub fn default_attr(&self) -> Option<Attribute<'static>> {
-        if let Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } = self.role {
-            return Some(Attribute::Int { lit: Cow::Borrowed(v), ty: Type::try_from(t).ok() });
+        match self.role {
+            Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } => return Some(Attribute::Int { lit: Cow::Borrowed(v), ty: Type::try_from(t).ok() }),
+            Role::Prop { int: None, default: Some(v @ ("true" | "false")), dialect: None, .. } => return Some(Attribute::Bool(v == "true")),
+            _ => {}
         }
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
         let body = (!body.is_empty()).then_some(Cow::Borrowed(body));

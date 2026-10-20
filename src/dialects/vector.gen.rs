@@ -43,7 +43,7 @@ pub struct CompressStoreOp<'a> {
     pub mask: Value<'a>,
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -124,7 +124,7 @@ pub struct ExpandLoadOp<'a> {
     pub mask: Value<'a>,
     #[slot(pass_thru_ty, name = "pass_thru")]
     pub pass_thru: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -209,7 +209,7 @@ pub struct GatherOp<'a> {
     pub mask: Value<'a>,
     #[slot(pass_thru_ty, name = "pass_thru")]
     pub pass_thru: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -283,7 +283,7 @@ pub struct LoadOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "nontemporal")]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -323,7 +323,7 @@ pub struct MaskedLoadOp<'a> {
     pub mask: Value<'a>,
     #[slot(pass_thru_ty, name = "pass_thru")]
     pub pass_thru: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -348,7 +348,7 @@ pub struct MaskedStoreOp<'a> {
     pub mask: Value<'a>,
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -435,7 +435,7 @@ pub struct ReductionOp<'a> {
 pub struct ScalableExtractOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
-    #[attr(name = "pos")]
+    #[attr(name = "pos", int = "i64")]
     pub pos: Attribute<'a>,
     #[dtype(name = "source_ty")]
     pub source_ty: Type<'a>,
@@ -450,7 +450,7 @@ pub struct ScalableInsertOp<'a> {
     pub value_to_store: Value<'a>,
     #[slot(result, name = "dest")]
     pub dest: Value<'a>,
-    #[attr(name = "pos")]
+    #[attr(name = "pos", int = "i64")]
     pub pos: Attribute<'a>,
     #[dtype(name = "valueToStore_ty")]
     pub value_to_store_ty: Type<'a>,
@@ -467,7 +467,7 @@ pub struct ScanOp<'a> {
     pub initial_value: Value<'a>,
     #[attr(name = "kind", dialect = "vector.kind")]
     pub kind: Attribute<'a>,
-    #[attr(name = "reduction_dim")]
+    #[attr(name = "reduction_dim", int = "i64")]
     pub reduction_dim: Attribute<'a>,
     #[attr(name = "inclusive")]
     pub inclusive: Attribute<'a>,
@@ -478,9 +478,7 @@ pub struct ScanOp<'a> {
 }
 
 /// `vector.scatter`: scatters elements from a vector into memory or ranked tensor as defined by an index vector     and a mask vector
-///
-/// Generic form only (Vector_ScatterOp: format: unexpected `^)?`).
-#[mlir::op("vector.scatter", generic, results(result))]
+#[mlir::op("vector.scatter", format = "$base `[` $offsets `]` `[` $indices `]` `,` $mask `,` $valueToStore attr-dict `:` type($base) `,` type($indices) `,` type($mask) `,` type($valueToStore) (`->` type($result)^)?", results(result))]
 pub struct ScatterOp<'a> {
     #[slot(base_ty, name = "base")]
     pub base: Value<'a>,
@@ -492,7 +490,7 @@ pub struct ScatterOp<'a> {
     pub mask: Value<'a>,
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
@@ -556,7 +554,7 @@ pub struct StoreOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "nontemporal")]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment")]
+    #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(name = "valueToStore_ty")]
     pub value_to_store_ty: Type<'a>,

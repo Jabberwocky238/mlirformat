@@ -6,6 +6,7 @@
 //! or a dialect outside the table) has no traits and unknown effects, as `mlir-opt` treats it.
 
 use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::vec::Vec;
 
 /// Declares [`Trait`]: one variant per native trait and interface name found in ODS.
 macro_rules! traits {
@@ -82,6 +83,11 @@ pub trait OpRegistry {
 
     /// Whether dialect `ns` is registered.
     fn knows_dialect(&self, ns: &str) -> bool;
+
+    /// The default-valued properties of op `op`, with their defaults (what its ODS builders set).
+    fn defaults(&self, _op: &str) -> Vec<crate::NamedAttr<'static>> {
+        Vec::new()
+    }
 
     /// Whether op `op`'s dialect is registered (its ops may still be unregistered).
     fn knows_dialect_of(&self, op: &str) -> bool {

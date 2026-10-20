@@ -63,8 +63,8 @@ pub struct BatchMatmulOp<'a> {
     pub outputs: Vec<Value<'a>>,
     #[attr(name = "indexing_maps")]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn", default = "<cast_signed>")]
-    pub cast: Attribute<'a>,
+    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    pub cast: Option<Attribute<'a>>,
     #[region(name = "region")]
     pub region: Region<'a>,
     #[dtype(name = "inputs_ty")]
@@ -124,8 +124,8 @@ pub struct BatchReduceMatmulOp<'a> {
     pub outputs: Vec<Value<'a>>,
     #[attr(name = "indexing_maps")]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn", default = "<cast_signed>")]
-    pub cast: Attribute<'a>,
+    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    pub cast: Option<Attribute<'a>>,
     #[region(name = "region")]
     pub region: Region<'a>,
     #[dtype(name = "inputs_ty")]
@@ -206,8 +206,8 @@ pub struct ContractOp<'a> {
     pub outputs: Vec<Value<'a>>,
     #[attr(name = "indexing_maps")]
     pub indexing_maps: Attribute<'a>,
-    #[attr(name = "cast", dialect = "linalg.type_fn", default = "<cast_signed>")]
-    pub cast: Attribute<'a>,
+    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    pub cast: Option<Attribute<'a>>,
     #[region(name = "combiner")]
     pub combiner: Region<'a>,
     #[dtype(name = "inputs_ty")]
@@ -652,8 +652,8 @@ pub struct CopyOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty, name = "outputs")]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn", default = "<cast_signed>")]
-    pub cast: Attribute<'a>,
+    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    pub cast: Option<Attribute<'a>>,
     #[region(name = "region")]
     pub region: Region<'a>,
     #[dtype(name = "inputs_ty")]
@@ -1128,9 +1128,7 @@ pub struct IndexOp<'a> {
 }
 
 /// `linalg.pack`: linalg.pack operation
-///
-/// Generic form only (result type `result` inferred in C++).
-#[mlir::op("linalg.pack", generic, results(result))]
+#[mlir::op("linalg.pack", format = "$source (`padding_value` `(` $padding_value^ `:` type($padding_value) `)`)? (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
 pub struct PackOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -1174,9 +1172,7 @@ pub struct SoftmaxOp<'a> {
 }
 
 /// `linalg.unpack`: linalg.unpack operation
-///
-/// Generic form only (result type `result` inferred in C++).
-#[mlir::op("linalg.unpack", generic, results(result))]
+#[mlir::op("linalg.unpack", format = "$source (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
 pub struct UnPackOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Value<'a>,
@@ -1309,8 +1305,8 @@ pub struct MatmulOp<'a> {
     pub outputs: Vec<Value<'a>>,
     #[attr(name = "indexing_maps")]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn", default = "<cast_signed>")]
-    pub cast: Attribute<'a>,
+    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    pub cast: Option<Attribute<'a>>,
     #[region(name = "region")]
     pub region: Region<'a>,
     #[dtype(name = "inputs_ty")]

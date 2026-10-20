@@ -49,6 +49,10 @@ impl crate::OpRegistry for MlirOpt {
     fn knows_dialect(&self, ns: &str) -> bool {
         self.infos.knows_dialect(ns)
     }
+
+    fn defaults(&self, op: &str) -> Vec<NamedAttr<'static>> {
+        self.template(op).map_or_else(Vec::new, |t| (t.defaults)())
+    }
 }
 
 impl MlirOpt {
@@ -183,7 +187,12 @@ impl MlirOpt {
 impl Template {
     /// ⭐ The blueprint of typed op `O` (what `O::template()` returns).
     pub fn of<O: Op + 'static>() -> Self {
-        Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O> }
+        Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O>, defaults: Self::defaults_of::<O> }
+    }
+
+    fn defaults_of<O: Op>() -> Vec<NamedAttr<'static>> {
+        let Ok(schema) = Schema::of::<O>() else { return Vec::new() };
+        schema.of_role(|r| matches!(r, Role::Prop { .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
     }
 
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
