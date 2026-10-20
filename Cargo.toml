@@ -82,11 +82,6 @@ path = "tests/generated/math.rs"
 required-features = ["gen-tests"]
 
 [[test]]
-name = "gen_tosa"
-path = "tests/generated/tosa.rs"
-required-features = ["gen-tests"]
-
-[[test]]
 name = "gen_ub"
 path = "tests/generated/ub.rs"
 required-features = ["gen-tests"]

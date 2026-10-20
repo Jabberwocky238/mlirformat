@@ -438,7 +438,7 @@ pub enum Infer {
 pub enum Role {
     Operand { ty: &'static str },
     Type { result: Option<usize>, infer: Option<Infer> },
-    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str> },
+    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool },
     Region,
     Successor,
     Attrs,
@@ -497,8 +497,10 @@ impl TryFrom<&'static str> for Field {
                 let (head, dialect) = split(head, '@');
                 let (name, int) = split(head, ':');
                 let (name, dense) = split(name, '&');
+                // `$`: a `SymbolNameAttr`, a string the custom form spells `@name`.
+                let (name, symbol) = name.strip_suffix('$').map_or((name, false), |n| (n, true));
                 let (name, unit) = name.strip_suffix('?').map_or((name, false), |n| (n, true));
-                (name, false, Role::Prop { unit, int, dialect, default, dense })
+                (name, false, Role::Prop { unit, int, dialect, default, dense, symbol })
             }
             b'^' => {
                 let (name, variadic) = star(rest);

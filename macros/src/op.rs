@@ -43,7 +43,7 @@ enum Kind {
     Slot(Ident),
     /// `(rule, argument)`: `i1`, `i1 = x`, `of = x`；`is` 的写法另走 [`Marked::fixed`]。
     DType(Option<(String, Option<Ident>)>),
-    Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String> },
+    Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String>, symbol: bool },
     Region,
     Successor,
 }
@@ -90,7 +90,7 @@ impl Marked {
         let mut fixed: Option<String> = None;
         for a in &f.attrs {
             let Some(marker) = ["slot", "dtype", "attr", "region", "successor"].into_iter().find(|m| a.path().is_ident(m)) else { continue };
-            let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense) = (None, None, None, None, None, None);
+            let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense, mut symbol) = (None, None, None, None, None, None, false);
             if !matches!(a.meta, Meta::Path(_)) {
                 a.parse_nested_meta(|m| {
                     let key = m.path.get_ident().map(Ident::to_string).unwrap_or_default();
@@ -112,6 +112,7 @@ impl Marked {
                         ("attr", "dialect") => dialect = Some(value(&m)?),
                         ("attr", "default") => default = Some(value(&m)?),
                         ("attr", "dense") => dense = Some(value(&m)?),
+                        ("attr", "symbol") => symbol = true,
                         _ => return Err(m.error(format!("unknown `#[{marker}(...)]` option"))),
                     }
                     Ok(())
@@ -120,7 +121,7 @@ impl Marked {
             let kind = match marker {
                 "slot" => Kind::Slot(ty_var.ok_or_else(|| Error::new_spanned(a, "`#[slot(T)]` needs its type variable"))?),
                 "dtype" => Kind::DType(rule),
-                "attr" => Kind::Prop { int, dialect, default, dense },
+                "attr" => Kind::Prop { int, dialect, default, dense, symbol },
                 "region" => Kind::Region,
                 _ => Kind::Successor,
             };
@@ -165,13 +166,14 @@ impl OpArgs {
                     };
                     format!("!{}{star}{result}{infer}", m.name)
                 }
-                Kind::Prop { int, dialect, default, dense } => {
+                Kind::Prop { int, dialect, default, dense, symbol } => {
                     let unit = if m.unit { "?" } else { "" };
                     let dense = dense.as_ref().map_or(String::new(), |e| format!("&{e}"));
                     let int = int.as_ref().map_or(String::new(), |t| format!(":{t}"));
                     let dialect = dialect.as_ref().map_or(String::new(), |d| format!("@{d}"));
                     let default = default.as_ref().map_or(String::new(), |d| format!("|{d}"));
-                    format!("#{}{unit}{dense}{int}{dialect}{default}", m.name)
+                    let symbol = if *symbol { "$" } else { "" };
+                    format!("#{}{unit}{symbol}{dense}{int}{dialect}{default}", m.name)
                 }
                 Kind::Region => format!("^{}{star}", m.name),
                 Kind::Successor => format!(">{}{star}", m.name),

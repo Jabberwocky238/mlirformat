@@ -855,6 +855,11 @@ impl Format<'_> {
                         }
                         Role::Type { .. } => write!(p, "{}", Sep(&v.types(f)?, ", ")).map_err(io)?,
                         Role::Prop { unit: true, .. } | Role::Attrs | Role::Loc => {}
+                        Role::Prop { symbol: true, .. } => match v.prop(f)? {
+                            Some(a @ Attribute::Str { .. }) => p.sym_name(&a.text()?).map_err(io)?,
+                            Some(a) => write!(p, "{a}").map_err(io)?,
+                            None => {}
+                        },
                         Role::Prop { dialect, .. } => match (v.raw(f), v.prop(f)?) {
                             // A user enum prints its case name.
                             (Some(Content::Variant(e, _, case, _)), _) if !matches!(*e, "Attribute" | "Type") => p.write_str(case).map_err(io)?,

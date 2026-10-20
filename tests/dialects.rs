@@ -37,5 +37,6 @@ dialects! {
     scf: "scf" => mlirformat::scf::Scf,
     shape: "shape" => mlirformat::shape::Shape,
     tensor: "tensor" => mlirformat::tensor::Tensor,
+    tosa: "tosa" => mlirformat::tosa::Tosa,
     vector: "vector" => mlirformat::vector::Vector,
 }

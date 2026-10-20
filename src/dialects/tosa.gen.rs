@@ -33,6 +33,46 @@ pub struct AddOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.add_shape`: Elementwise addition of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.add_shape", generic, results(output))]
+pub struct AddShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.apply_scale`: Rescale scalar operator for Tosa tensor operators
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("tosa.apply_scale", generic, results(output))]
+pub struct ApplyScaleOp<'a> {
+    #[slot(value_ty, name = "value")]
+    pub value: Value<'a>,
+    #[slot(multiplier_ty, name = "multiplier")]
+    pub multiplier: Value<'a>,
+    #[slot(shift_ty, name = "shift")]
+    pub shift: Value<'a>,
+    #[attr(name = "rounding_mode", dialect = "tosa.rounding_mode")]
+    pub rounding_mode: Attribute<'a>,
+    #[dtype(name = "value_ty")]
+    pub value_ty: Type<'a>,
+    #[dtype(name = "multiplier_ty")]
+    pub multiplier_ty: Type<'a>,
+    #[dtype(name = "shift_ty")]
+    pub shift_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
 /// `tosa.argmax`: Perform argmax on the input.
 ///
 /// Generic form only (custom C++ syntax).
@@ -80,11 +120,11 @@ pub struct AvgPool2dOp<'a> {
     pub input_zp: Value<'a>,
     #[slot(output_zp_ty, name = "output_zp")]
     pub output_zp: Value<'a>,
-    #[attr(name = "kernel")]
+    #[attr(name = "kernel", dense = "i64")]
     pub kernel: Attribute<'a>,
-    #[attr(name = "stride")]
+    #[attr(name = "stride", dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "pad")]
+    #[attr(name = "pad", dense = "i64")]
     pub pad: Attribute<'a>,
     #[attr(name = "acc_type")]
     pub acc_type: Attribute<'a>,
@@ -271,11 +311,35 @@ pub struct ConcatOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.concat_shape`: Concatenates a list of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.concat_shape", generic, results(output))]
+pub struct ConcatShapeOp<'a> {
+    #[slot(input_ty, name = "input")]
+    pub input: Vec<Value<'a>>,
+    #[dtype(name = "input_ty")]
+    pub input_ty: Vec<Type<'a>>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
 /// `tosa.const`: Constant operator.
 ///
 /// Generic form only (no assembly format).
 #[mlir::op("tosa.const", generic, results(output))]
 pub struct ConstOp<'a> {
+    #[attr(name = "values")]
+    pub values: Attribute<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.const_shape`: Constant Shape operator.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.const_shape", generic, results(output))]
+pub struct ConstShapeOp<'a> {
     #[attr(name = "values")]
     pub values: Attribute<'a>,
     #[dtype(name = "output")]
@@ -297,11 +361,11 @@ pub struct Conv2DOp<'a> {
     pub input_zp: Value<'a>,
     #[slot(weight_zp_ty, name = "weight_zp")]
     pub weight_zp: Value<'a>,
-    #[attr(name = "pad")]
+    #[attr(name = "pad", dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "stride")]
+    #[attr(name = "stride", dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "dilation")]
+    #[attr(name = "dilation", dense = "i64")]
     pub dilation: Attribute<'a>,
     #[attr(name = "acc_type")]
     pub acc_type: Attribute<'a>,
@@ -336,11 +400,11 @@ pub struct Conv3DOp<'a> {
     pub input_zp: Value<'a>,
     #[slot(weight_zp_ty, name = "weight_zp")]
     pub weight_zp: Value<'a>,
-    #[attr(name = "pad")]
+    #[attr(name = "pad", dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "stride")]
+    #[attr(name = "stride", dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "dilation")]
+    #[attr(name = "dilation", dense = "i64")]
     pub dilation: Attribute<'a>,
     #[attr(name = "acc_type")]
     pub acc_type: Attribute<'a>,
@@ -407,11 +471,11 @@ pub struct DepthwiseConv2DOp<'a> {
     pub input_zp: Value<'a>,
     #[slot(weight_zp_ty, name = "weight_zp")]
     pub weight_zp: Value<'a>,
-    #[attr(name = "pad")]
+    #[attr(name = "pad", dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "stride")]
+    #[attr(name = "stride", dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "dilation")]
+    #[attr(name = "dilation", dense = "i64")]
     pub dilation: Attribute<'a>,
     #[attr(name = "acc_type")]
     pub acc_type: Attribute<'a>,
@@ -427,6 +491,55 @@ pub struct DepthwiseConv2DOp<'a> {
     pub input_zp_ty: Type<'a>,
     #[dtype(name = "weight_zp_ty")]
     pub weight_zp_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.dim`: Extract size of dimension from input tensor.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.dim", generic, results(output))]
+pub struct DimOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[attr(name = "axis")]
+    pub axis: Attribute<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.div_ceil_shape`: Elementwise ceiling divide of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.div_ceil_shape", generic, results(output))]
+pub struct DivCeilShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.div_floor_shape`: Elementwise floor divide of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.div_floor_shape", generic, results(output))]
+pub struct DivFloorShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,
 }
@@ -453,6 +566,19 @@ pub struct EqualOp<'a> {
 /// Generic form only (directive `operands`).
 #[mlir::op("tosa.erf", generic, results(output))]
 pub struct ErfOp<'a> {
+    #[slot(input_ty, name = "input")]
+    pub input: Value<'a>,
+    #[dtype(name = "input_ty")]
+    pub input_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.exp2_shape`: Elementwise base-2 exponential of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.exp2_shape", generic, results(output))]
+pub struct Exp2ShapeOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
     #[dtype(name = "input_ty")]
@@ -608,6 +734,32 @@ pub struct IntDivOp<'a> {
     pub input1_ty: Type<'a>,
     #[dtype(name = "input2_ty")]
     pub input2_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.log2_ceil_shape`: Elementwise ceil base-2 logarithm of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.log2_ceil_shape", generic, results(output))]
+pub struct Log2CeilShapeOp<'a> {
+    #[slot(input_ty, name = "input")]
+    pub input: Value<'a>,
+    #[dtype(name = "input_ty")]
+    pub input_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.log2_floor_shape`: Elementwise floor base-2 logarithm of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.log2_floor_shape", generic, results(output))]
+pub struct Log2FloorShapeOp<'a> {
+    #[slot(input_ty, name = "input")]
+    pub input: Value<'a>,
+    #[dtype(name = "input_ty")]
+    pub input_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,
 }
@@ -782,16 +934,33 @@ pub struct MatmulTBlockScaledOp<'a> {
 pub struct MaxPool2dOp<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
-    #[attr(name = "kernel")]
+    #[attr(name = "kernel", dense = "i64")]
     pub kernel: Attribute<'a>,
-    #[attr(name = "stride")]
+    #[attr(name = "stride", dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "pad")]
+    #[attr(name = "pad", dense = "i64")]
     pub pad: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Attribute<'a>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.max_shape`: Elementwise maximum of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.max_shape", generic, results(output))]
+pub struct MaxShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,
 }
@@ -807,6 +976,23 @@ pub struct MaximumOp<'a> {
     pub input2: Value<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Attribute<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.min_shape`: Elementwise minimum of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.min_shape", generic, results(output))]
+pub struct MinShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
     #[dtype(name = "input2_ty")]
@@ -834,6 +1020,23 @@ pub struct MinimumOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.mod_shape`: Elementwise modulo of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.mod_shape", generic, results(output))]
+pub struct ModShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
 /// `tosa.mul`: Multiplication operator.
 ///
 /// Generic form only (directive `operands`).
@@ -851,6 +1054,23 @@ pub struct MulOp<'a> {
     pub input2_ty: Type<'a>,
     #[dtype(name = "shift_ty")]
     pub shift_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.mul_shape`: Elementwise multiplication of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.mul_shape", generic, results(output))]
+pub struct MulShapeOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
     #[dtype(name = "output")]
     pub output: Type<'a>,
 }
@@ -1238,11 +1458,49 @@ pub struct SliceOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.slice_shape`: Extract slice of a shape.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.slice_shape", generic, results(output))]
+pub struct SliceShapeOp<'a> {
+    #[slot(input_ty, name = "input")]
+    pub input: Value<'a>,
+    #[slot(start_ty, name = "start")]
+    pub start: Value<'a>,
+    #[slot(size_ty, name = "size")]
+    pub size: Value<'a>,
+    #[dtype(name = "input_ty")]
+    pub input_ty: Type<'a>,
+    #[dtype(name = "start_ty")]
+    pub start_ty: Type<'a>,
+    #[dtype(name = "size_ty")]
+    pub size_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
 /// `tosa.sub`: Elementwise subtraction operator.
 ///
 /// Generic form only (directive `operands`).
 #[mlir::op("tosa.sub", generic, results(output))]
 pub struct SubOp<'a> {
+    #[slot(input1_ty, name = "input1")]
+    pub input1: Value<'a>,
+    #[slot(input2_ty, name = "input2")]
+    pub input2: Value<'a>,
+    #[dtype(name = "input1_ty")]
+    pub input1_ty: Type<'a>,
+    #[dtype(name = "input2_ty")]
+    pub input2_ty: Type<'a>,
+    #[dtype(name = "output")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.sub_shape`: Elementwise subtraction of shapes.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.sub_shape", generic, results(output))]
+pub struct SubShapeOp<'a> {
     #[slot(input1_ty, name = "input1")]
     pub input1: Value<'a>,
     #[slot(input2_ty, name = "input2")]
@@ -1317,9 +1575,9 @@ pub struct TransposeConv2DOp<'a> {
     pub input_zp: Value<'a>,
     #[slot(weight_zp_ty, name = "weight_zp")]
     pub weight_zp: Value<'a>,
-    #[attr(name = "out_pad")]
+    #[attr(name = "out_pad", dense = "i64")]
     pub out_pad: Attribute<'a>,
-    #[attr(name = "stride")]
+    #[attr(name = "stride", dense = "i64")]
     pub stride: Attribute<'a>,
     #[attr(name = "acc_type")]
     pub acc_type: Attribute<'a>,
@@ -1346,7 +1604,7 @@ pub struct TransposeConv2DOp<'a> {
 pub struct TransposeOp<'a> {
     #[slot(input1_ty, name = "input1")]
     pub input1: Value<'a>,
-    #[attr(name = "perms")]
+    #[attr(name = "perms", dense = "i32")]
     pub perms: Attribute<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
@@ -1359,7 +1617,7 @@ pub struct TransposeOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("tosa.variable", generic)]
 pub struct VariableOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "var_shape")]
     pub var_shape: Attribute<'a>,
@@ -1372,7 +1630,7 @@ pub struct VariableOp<'a> {
 /// `tosa.variable_read`: read_buffer operator
 #[mlir::op("tosa.variable_read", format = "$name attr-dict `:` type($output1)", results(output1))]
 pub struct VariableReadOp<'a> {
-    #[attr(name = "name")]
+    #[attr(name = "name", symbol)]
     pub name: Attribute<'a>,
     #[dtype(name = "output1")]
     pub output1: Type<'a>,
@@ -1383,7 +1641,7 @@ pub struct VariableReadOp<'a> {
 pub struct VariableWriteOp<'a> {
     #[slot(input1_ty, name = "input1")]
     pub input1: Value<'a>,
-    #[attr(name = "name")]
+    #[attr(name = "name", symbol)]
     pub name: Attribute<'a>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
@@ -1406,11 +1664,22 @@ pub struct WhileOp<'a> {
     pub output_list: Vec<Type<'a>>,
 }
 
+/// `tosa.yield`: yield operator
+#[mlir::op("tosa.yield", format = "$inputs attr-dict `:` type($inputs)")]
+pub struct YieldOp<'a> {
+    #[slot(inputs_ty, name = "inputs")]
+    pub inputs: Vec<Value<'a>>,
+    #[dtype(name = "inputs_ty")]
+    pub inputs_ty: Vec<Type<'a>>,
+}
+
 /// The `tosa` dialect.
 #[mlir::dialect("tosa")]
 pub enum Tosa<'a> {
     Abs(AbsOp<'a>),
     Add(AddOp<'a>),
+    AddShape(AddShapeOp<'a>),
+    ApplyScale(ApplyScaleOp<'a>),
     ArgMax(ArgMaxOp<'a>),
     ArithmeticRightShift(ArithmeticRightShiftOp<'a>),
     AvgPool2d(AvgPool2dOp<'a>),
@@ -1425,14 +1694,20 @@ pub enum Tosa<'a> {
     Clamp(ClampOp<'a>),
     Clz(ClzOp<'a>),
     Concat(ConcatOp<'a>),
+    ConcatShape(ConcatShapeOp<'a>),
     Const(ConstOp<'a>),
+    ConstShape(ConstShapeOp<'a>),
     Conv2D(Conv2DOp<'a>),
     Conv3D(Conv3DOp<'a>),
     Cos(CosOp<'a>),
     Custom(CustomOp<'a>),
     DepthwiseConv2D(DepthwiseConv2DOp<'a>),
+    Dim(DimOp<'a>),
+    DivCeilShape(DivCeilShapeOp<'a>),
+    DivFloorShape(DivFloorShapeOp<'a>),
     Equal(EqualOp<'a>),
     Erf(ErfOp<'a>),
+    Exp2Shape(Exp2ShapeOp<'a>),
     Exp(ExpOp<'a>),
     FFT2d(FFT2dOp<'a>),
     Floor(FloorOp<'a>),
@@ -1442,6 +1717,8 @@ pub enum Tosa<'a> {
     Identity(IdentityOp<'a>),
     If(IfOp<'a>),
     IntDiv(IntDivOp<'a>),
+    Log2CeilShape(Log2CeilShapeOp<'a>),
+    Log2FloorShape(Log2FloorShapeOp<'a>),
     Log(LogOp<'a>),
     LogicalAnd(LogicalAndOp<'a>),
     LogicalLeftShift(LogicalLeftShiftOp<'a>),
@@ -1452,9 +1729,13 @@ pub enum Tosa<'a> {
     MatMul(MatMulOp<'a>),
     MatmulTBlockScaled(MatmulTBlockScaledOp<'a>),
     MaxPool2d(MaxPool2dOp<'a>),
+    MaxShape(MaxShapeOp<'a>),
     Maximum(MaximumOp<'a>),
+    MinShape(MinShapeOp<'a>),
     Minimum(MinimumOp<'a>),
+    ModShape(ModShapeOp<'a>),
     Mul(MulOp<'a>),
+    MulShape(MulShapeOp<'a>),
     Negate(NegateOp<'a>),
     Pad(PadOp<'a>),
     Pow(PowOp<'a>),
@@ -1476,7 +1757,9 @@ pub enum Tosa<'a> {
     Sigmoid(SigmoidOp<'a>),
     Sin(SinOp<'a>),
     Slice(SliceOp<'a>),
+    SliceShape(SliceShapeOp<'a>),
     Sub(SubOp<'a>),
+    SubShape(SubShapeOp<'a>),
     Table(TableOp<'a>),
     Tanh(TanhOp<'a>),
     Tile(TileOp<'a>),
@@ -1486,4 +1769,5 @@ pub enum Tosa<'a> {
     VariableRead(VariableReadOp<'a>),
     VariableWrite(VariableWriteOp<'a>),
     While(WhileOp<'a>),
+    Yield(YieldOp<'a>),
 }

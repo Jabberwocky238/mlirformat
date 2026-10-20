@@ -167,11 +167,14 @@ impl Records {
     pub fn dialects(&self) -> Vec<GenDialect> {
         let ops: Vec<&str> = self.all.get("!instanceof").and_then(|i| i.get("Op")).and_then(Json::as_array).into_iter().flatten().filter_map(Json::as_str).collect();
         let here = |op: &&str| self.field(op, "!locs").and_then(Json::as_array).and_then(|l| l.first()).and_then(Json::as_str).is_some_and(|l| l.starts_with(&format!("{}:", self.file)));
-        let mut by_dialect: BTreeMap<String, Vec<&str>> = BTreeMap::new();
-        for op in ops.into_iter().filter(here) {
-            let Some(dialect) = self.field(op, "opDialect").and_then(Self::def_of) else { continue };
-            let Some(ns) = self.text(dialect, "name") else { continue };
-            by_dialect.entry(ns.into()).or_default().push(op);
+        let ns = |op: &str| self.field(op, "opDialect").and_then(Self::def_of).and_then(|d| self.text(d, "name"));
+        // A dialect with ops in `td` takes its ops from every file `td` includes too
+        // (`TosaOps.td` includes `TosaShapeOps.td` and `TosaUtilOps.td`).
+        let mut by_dialect: BTreeMap<String, Vec<&str>> = ops.iter().copied().filter(here).filter_map(ns).map(|n| (n.into(), Vec::new())).collect();
+        for op in ops {
+            if let Some(list) = ns(op).and_then(|n| by_dialect.get_mut(n)) {
+                list.push(op);
+            }
         }
         by_dialect
             .into_iter()
@@ -275,6 +278,10 @@ impl Records {
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
         if let Some(el) = Self::dense_array(base).or_else(|| Self::dense_array(constraint)) {
             return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
+        }
+        // A `SymbolNameAttr` prints as `@name`, a `StrAttr` as `"name"`.
+        if self.is_a(base, "SymbolNameAttr") || self.is_a(constraint, "SymbolNameAttr") {
+            return (format!("#[attr({name}, symbol)]"), ty.into());
         }
         (format!("#[attr({name})]"), ty.into())
     }

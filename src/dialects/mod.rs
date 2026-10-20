@@ -34,5 +34,7 @@ pub mod scf;
 pub mod shape;
 #[path = "tensor.gen.rs"]
 pub mod tensor;
+#[path = "tosa.gen.rs"]
+pub mod tosa;
 #[path = "vector.gen.rs"]
 pub mod vector;
