@@ -3,7 +3,7 @@
 
 use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum AtomicBinOp {
     #[serde(rename = "xchg")]
@@ -50,7 +50,7 @@ pub enum AtomicBinOp {
     Fminimum,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum AtomicOrdering {
     #[serde(rename = "not_atomic")]
@@ -72,7 +72,7 @@ pub enum AtomicOrdering {
     SeqCst,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum Comdat {
     #[serde(rename = "any")]
@@ -87,7 +87,7 @@ pub enum Comdat {
     Samesize,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum FCmpPredicate {
     #[serde(rename = "_false")]
@@ -124,7 +124,7 @@ pub enum FCmpPredicate {
     True,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum FPExceptionBehavior {
     #[serde(rename = "ignore")]
@@ -135,7 +135,7 @@ pub enum FPExceptionBehavior {
     Strict,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum ICmpPredicate {
     #[serde(rename = "eq")]
@@ -160,7 +160,7 @@ pub enum ICmpPredicate {
     Uge,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum UnnamedAddr {
     #[serde(rename = "")]
@@ -171,7 +171,7 @@ pub enum UnnamedAddr {
     UnnamedAddr,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum Visibility {
     #[serde(rename = "")]
@@ -189,7 +189,7 @@ pub struct ACosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -213,7 +213,7 @@ pub struct ASinOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -227,7 +227,7 @@ pub struct ATan2Op<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -239,7 +239,7 @@ pub struct ATanOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -265,7 +265,7 @@ pub struct AddOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
-    pub overflow_flags: Attribute<'a>,
+    pub overflow_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -307,7 +307,7 @@ pub struct AliasOp<'a> {
     #[attr(name = "unnamed_addr", int = "i64")]
     pub unnamed_addr: Option<UnnamedAddr>,
     #[attr(name = "visibility_", int = "i64", default = "0")]
-    pub visibility_: Visibility,
+    pub visibility_: Option<Visibility>,
     #[region(name = "initializer")]
     pub initializer: Region<'a>,
 }
@@ -515,7 +515,7 @@ pub struct CallIntrinsicOp<'a> {
     #[attr(name = "intrin")]
     pub intrin: Attribute<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[attr(name = "op_bundle_sizes", dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
     #[attr(name = "op_bundle_tags")]
@@ -546,11 +546,11 @@ pub struct CallOp<'a> {
     #[attr(name = "callee")]
     pub callee: Option<Attribute<'a>>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
-    pub c_conv: Attribute<'a>,
+    pub c_conv: Option<Attribute<'a>>,
     #[attr(name = "TailCallKind", dialect = "llvm.tailcallkind", default = "<none>")]
-    pub tail_call_kind: Attribute<'a>,
+    pub tail_call_kind: Option<Attribute<'a>>,
     #[attr(name = "memory_effects", dialect = "llvm.memory_effects")]
     pub memory_effects: Option<Attribute<'a>>,
     #[attr(name = "convergent")]
@@ -711,7 +711,7 @@ pub struct CopySignOp<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -865,7 +865,7 @@ pub struct CosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -877,7 +877,7 @@ pub struct CoshOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -985,7 +985,7 @@ pub struct Exp10Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -997,7 +997,7 @@ pub struct Exp2Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1009,7 +1009,7 @@ pub struct ExpOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1073,7 +1073,7 @@ pub struct FAbsOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1085,7 +1085,7 @@ pub struct FAddOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1097,7 +1097,7 @@ pub struct FCeilOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1113,7 +1113,7 @@ pub struct FCmpOp<'a> {
     #[attr(name = "predicate", int = "i64")]
     pub predicate: FCmpPredicate,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "lhs_ty")]
     pub lhs_ty: Type<'a>,
     #[dtype(name = "res", i1 = lhs_ty)]
@@ -1127,7 +1127,7 @@ pub struct FDivOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1139,7 +1139,7 @@ pub struct FFloorOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1155,7 +1155,7 @@ pub struct FMAOp<'a> {
     #[slot(res, name = "c")]
     pub c: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1171,7 +1171,7 @@ pub struct FMulAddOp<'a> {
     #[slot(res, name = "c")]
     pub c: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1183,7 +1183,7 @@ pub struct FMulOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1193,7 +1193,7 @@ pub struct FNegOp<'a> {
     #[slot(res, name = "operand")]
     pub operand: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1245,7 +1245,7 @@ pub struct FRemOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1257,7 +1257,7 @@ pub struct FSubOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1269,7 +1269,7 @@ pub struct FTruncOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1289,7 +1289,7 @@ pub struct FractionExpOp<'a> {
     #[slot(val_ty, name = "val")]
     pub val: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "val_ty")]
     pub val_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -1345,7 +1345,7 @@ pub struct GEPOp<'a> {
     #[attr(name = "elem_type")]
     pub elem_type: Attribute<'a>,
     #[attr(name = "noWrapFlags", int = "i32", default = "0", bits = "/|/none=0;inbounds_flag=1;nusw=2;nuw=4;inbounds=3")]
-    pub no_wrap_flags: Attribute<'a>,
+    pub no_wrap_flags: Option<Attribute<'a>>,
     #[dtype(name = "base_ty")]
     pub base_ty: Type<'a>,
     #[dtype(name = "dynamicIndices_ty")]
@@ -1414,7 +1414,7 @@ pub struct GlobalOp<'a> {
     #[attr(name = "alignment", int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[attr(name = "addr_space", int = "i32", default = "0")]
-    pub addr_space: Attribute<'a>,
+    pub addr_space: Option<Attribute<'a>>,
     #[attr(name = "unnamed_addr", int = "i64")]
     pub unnamed_addr: Option<UnnamedAddr>,
     #[attr(name = "section")]
@@ -1424,7 +1424,7 @@ pub struct GlobalOp<'a> {
     #[attr(name = "dbg_exprs")]
     pub dbg_exprs: Option<Attribute<'a>>,
     #[attr(name = "visibility_", int = "i64", default = "0")]
-    pub visibility_: Visibility,
+    pub visibility_: Option<Visibility>,
     #[attr(name = "target_specific_attrs")]
     pub target_specific_attrs: Option<Attribute<'a>>,
     #[region(name = "initializer")]
@@ -1465,11 +1465,11 @@ pub struct IFuncOp<'a> {
     #[attr(name = "dso_local")]
     pub dso_local: bool,
     #[attr(name = "address_space", int = "i32", default = "0")]
-    pub address_space: Attribute<'a>,
+    pub address_space: Option<Attribute<'a>>,
     #[attr(name = "unnamed_addr", int = "i64", default = "0")]
-    pub unnamed_addr: UnnamedAddr,
+    pub unnamed_addr: Option<UnnamedAddr>,
     #[attr(name = "visibility_", int = "i64", default = "0")]
-    pub visibility_: Visibility,
+    pub visibility_: Option<Visibility>,
 }
 
 ///
@@ -1505,7 +1505,7 @@ pub struct InlineAsmOp<'a> {
     #[attr(name = "is_align_stack")]
     pub is_align_stack: bool,
     #[attr(name = "tail_call_kind", dialect = "llvm.tailcallkind", default = "<none>")]
-    pub tail_call_kind: Attribute<'a>,
+    pub tail_call_kind: Option<Attribute<'a>>,
     #[attr(name = "asm_dialect")]
     pub asm_dialect: Option<Attribute<'a>>,
     #[attr(name = "operand_attrs")]
@@ -1611,7 +1611,7 @@ pub struct InvokeOp<'a> {
     #[attr(name = "branch_weights", dense = "i32")]
     pub branch_weights: Option<Attribute<'a>>,
     #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
-    pub c_conv: Attribute<'a>,
+    pub c_conv: Option<Attribute<'a>>,
     #[attr(name = "op_bundle_sizes", dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
     #[attr(name = "op_bundle_tags")]
@@ -1670,11 +1670,11 @@ pub struct LLVMFuncOp<'a> {
     #[attr(name = "function_type")]
     pub function_type: Attribute<'a>,
     #[attr(name = "linkage", dialect = "llvm.linkage", default = "<external>")]
-    pub linkage: Attribute<'a>,
+    pub linkage: Option<Attribute<'a>>,
     #[attr(name = "dso_local")]
     pub dso_local: bool,
     #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
-    pub c_conv: Attribute<'a>,
+    pub c_conv: Option<Attribute<'a>>,
     #[attr(name = "comdat")]
     pub comdat: Option<Attribute<'a>>,
     #[attr(name = "convergent")]
@@ -1694,7 +1694,7 @@ pub struct LLVMFuncOp<'a> {
     #[attr(name = "memory_effects", dialect = "llvm.memory_effects")]
     pub memory_effects: Option<Attribute<'a>>,
     #[attr(name = "visibility_", int = "i64", default = "0")]
-    pub visibility_: Visibility,
+    pub visibility_: Option<Visibility>,
     #[attr(name = "arm_streaming")]
     pub arm_streaming: bool,
     #[attr(name = "arm_locally_streaming")]
@@ -1863,7 +1863,7 @@ pub struct LoadExpOp<'a> {
     #[slot(power_ty, name = "power")]
     pub power: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "val_ty")]
     pub val_ty: Type<'a>,
     #[dtype(name = "power_ty")]
@@ -1887,7 +1887,7 @@ pub struct LoadOp<'a> {
     #[attr(name = "invariantGroup")]
     pub invariant_group: bool,
     #[attr(name = "ordering", int = "i64", default = "0")]
-    pub ordering: AtomicOrdering,
+    pub ordering: Option<AtomicOrdering>,
     #[attr(name = "syncscope")]
     pub syncscope: Option<Attribute<'a>>,
     #[attr(name = "dereferenceable", dialect = "llvm.dereferenceable")]
@@ -1913,7 +1913,7 @@ pub struct Log10Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1925,7 +1925,7 @@ pub struct Log2Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -1937,7 +1937,7 @@ pub struct LogOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2093,7 +2093,7 @@ pub struct MaxNumOp<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2107,7 +2107,7 @@ pub struct MaximumOp<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2277,7 +2277,7 @@ pub struct MinNumOp<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2291,7 +2291,7 @@ pub struct MinimumOp<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2310,7 +2310,7 @@ pub struct MulOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
-    pub overflow_flags: Attribute<'a>,
+    pub overflow_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2322,7 +2322,7 @@ pub struct NearbyintOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2368,7 +2368,7 @@ pub struct PowIOp<'a> {
     #[slot(power_ty, name = "power")]
     pub power: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "val_ty")]
     pub val_ty: Type<'a>,
     #[dtype(name = "power_ty")]
@@ -2386,7 +2386,7 @@ pub struct PowOp<'a> {
     #[slot(res, name = "b")]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2476,7 +2476,7 @@ pub struct RintOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2488,7 +2488,7 @@ pub struct RoundEvenOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2500,7 +2500,7 @@ pub struct RoundOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2688,7 +2688,7 @@ pub struct SelectOp<'a> {
     #[slot(res, name = "falseValue")]
     pub false_value: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "condition_ty")]
     pub condition_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -2702,7 +2702,7 @@ pub struct ShlOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
-    pub overflow_flags: Attribute<'a>,
+    pub overflow_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2731,7 +2731,7 @@ pub struct SinOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2743,7 +2743,7 @@ pub struct SincosOp<'a> {
     #[slot(val_ty, name = "val")]
     pub val: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "val_ty")]
     pub val_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -2757,7 +2757,7 @@ pub struct SinhOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2769,7 +2769,7 @@ pub struct SqrtOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2809,7 +2809,7 @@ pub struct StoreOp<'a> {
     #[attr(name = "invariantGroup")]
     pub invariant_group: bool,
     #[attr(name = "ordering", int = "i64", default = "0")]
-    pub ordering: AtomicOrdering,
+    pub ordering: Option<AtomicOrdering>,
     #[attr(name = "syncscope")]
     pub syncscope: Option<Attribute<'a>>,
     #[attr(name = "access_groups")]
@@ -2841,7 +2841,7 @@ pub struct SubOp<'a> {
     #[slot(res, name = "rhs")]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
-    pub overflow_flags: Attribute<'a>,
+    pub overflow_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2881,7 +2881,7 @@ pub struct TanOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2893,7 +2893,7 @@ pub struct TanhOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "res")]
     pub res: Type<'a>,
 }
@@ -2919,7 +2919,7 @@ pub struct TruncOp<'a> {
     #[slot(arg_ty, name = "arg")]
     pub arg: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
-    pub overflow_flags: Attribute<'a>,
+    pub overflow_flags: Option<Attribute<'a>>,
     #[dtype(name = "arg_ty")]
     pub arg_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -4642,7 +4642,7 @@ pub struct vector_reduce_fadd<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "start_value_ty")]
     pub start_value_ty: Type<'a>,
     #[dtype(name = "input_ty")]
@@ -4658,7 +4658,7 @@ pub struct vector_reduce_fmax<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "in_ty")]
     pub in_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -4672,7 +4672,7 @@ pub struct vector_reduce_fmaximum<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "in_ty")]
     pub in_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -4686,7 +4686,7 @@ pub struct vector_reduce_fmin<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "in_ty")]
     pub in_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -4700,7 +4700,7 @@ pub struct vector_reduce_fminimum<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "in_ty")]
     pub in_ty: Type<'a>,
     #[dtype(name = "res")]
@@ -4716,7 +4716,7 @@ pub struct vector_reduce_fmul<'a> {
     #[slot(input_ty, name = "input")]
     pub input: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
-    pub fastmath_flags: Attribute<'a>,
+    pub fastmath_flags: Option<Attribute<'a>>,
     #[dtype(name = "start_value_ty")]
     pub start_value_ty: Type<'a>,
     #[dtype(name = "input_ty")]

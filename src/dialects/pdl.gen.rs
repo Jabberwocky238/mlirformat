@@ -11,7 +11,7 @@ pub struct ApplyNativeConstraintOp<'a> {
     #[attr(name = "name")]
     pub name: Attribute<'a>,
     #[attr(name = "isNegated", default = "false")]
-    pub is_negated: Attribute<'a>,
+    pub is_negated: Option<Attribute<'a>>,
     #[dtype(name = "args_ty")]
     pub args_ty: Vec<Type<'a>>,
     #[dtype(name = "results")]

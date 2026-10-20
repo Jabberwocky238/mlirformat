@@ -6,7 +6,7 @@ use crate::{Attribute, Type, mlir};
 #[mlir::op("ub.poison", format = "attr-dict (`<` $value^ `>`)? `:` type($result)", results(result))]
 pub struct PoisonOp<'a> {
     #[attr(dialect = "ub.poison", default = "")]
-    pub value: Attribute<'a>,
+    pub value: Option<Attribute<'a>>,
     #[dtype]
     pub result: Type<'a>,
 }

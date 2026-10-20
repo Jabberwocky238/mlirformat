@@ -8,8 +8,9 @@
 //! type vars    one per class of SameOperandsAndResultType / SameTypeOperands / AllTypesMatch /
 //!              TypesMatchWith; unspelled ones inferred: i1 like (`getI1SameShape`), element type,
 //!              a buildable type (`I1`, `Index`, …)
-//! properties   UnitAttr ⇒ bool; integer enums ⇒ a Rust enum; dialect enum attrs (`#arith.overflow<…>`)
-//!              ⇒ #[attr(dialect, default)]; the rest ⇒ Attribute (Option when optional)
+//! properties   UnitAttr ⇒ bool; integer enums ⇒ a Rust enum (`TryFrom<i64>` by case value); dialect
+//!              enum attrs (`#arith.overflow<…>`) ⇒ #[attr(dialect, default)]; the rest ⇒ Attribute;
+//!              Option when optional or defaulted (`None`: the default)
 //! regions / successors   #[region] / #[successor], variadic ⇒ Vec
 //! assemblyFormat         kept as is; C++ syntax or unsupported directives ⇒ `generic`
 //! ```
@@ -349,7 +350,7 @@ impl Records {
         }
         if let Some((bits, width, default)) = self.bit_enum_prop(constraint) {
             return match default {
-                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\", bits = {bits:?})]"), "Attribute<'a>".into()),
+                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\", bits = {bits:?})]"), "Option<Attribute<'a>>".into()),
                 None => (format!("#[attr({name}, int = \"i{width}\", bits = {bits:?})]"), "Attribute<'a>".into()),
             };
         }
@@ -358,7 +359,7 @@ impl Records {
             // `DefaultValuedAttr<AtomicOrdering, "AtomicOrdering::not_atomic">`: the case's value.
             let default = filled.then(|| self.text(constraint, "defaultValue")).flatten().and_then(|v| self.case_value(base, v.rsplit("::").next()?));
             return match default {
-                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), rust),
+                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), format!("Option<{rust}>")),
                 None if optional || defaulted => (format!("#[attr({name}, int = \"i{width}\")]"), format!("Option<{rust}>")),
                 None => (format!("#[attr({name}, int = \"i{width}\")]"), rust),
             };
@@ -372,7 +373,7 @@ impl Records {
                 .and_then(|symbol| if symbol == "{}" { cases.values().find(|c| *c == "none") } else { cases.get(symbol) })
                 .map(|case| if attr.contains('<') { format!(", default = {case:?}") } else { format!(", default = \"<{case}>\"") });
             return match default {
-                Some(default) => (format!("#[attr({name}, dialect = {attr:?}{default})]"), "Attribute<'a>".into()),
+                Some(default) => (format!("#[attr({name}, dialect = {attr:?}{default})]"), "Option<Attribute<'a>>".into()),
                 None if optional || defaulted => (format!("#[attr({name}, dialect = {attr:?})]"), "Option<Attribute<'a>>".into()),
                 None => (format!("#[attr({name}, dialect = {attr:?})]"), "Attribute<'a>".into()),
             };
@@ -389,13 +390,13 @@ impl Records {
         // `I64Attr`: the custom form leaves the integer's type out (`linalg.index 0`).
         if let Some(width) = chain.iter().find_map(|c| Self::int_attr(c)) {
             return match default.filter(|v| v.parse::<i64>().is_ok()) {
-                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), "Attribute<'a>".into()),
+                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), "Option<Attribute<'a>>".into()),
                 None => (format!("#[attr({name}, int = \"i{width}\")]"), ty.into()),
             };
         }
         // `DefaultValuedAttr<BoolAttr, "false">`.
         if chain.iter().any(|c| self.is_a(c, "BoolAttr")) && let Some(v) = default.filter(|v| matches!(*v, "true" | "false")) {
-            return (format!("#[attr({name}, default = \"{v}\")]"), "Attribute<'a>".into());
+            return (format!("#[attr({name}, default = \"{v}\")]"), "Option<Attribute<'a>>".into());
         }
         // A `SymbolNameAttr` prints as `@name`, a `StrAttr` as `"name"`.
         if self.is_a(base, "SymbolNameAttr") || self.is_a(constraint, "SymbolNameAttr") {
@@ -671,7 +672,7 @@ impl GenDialect {
         // `__Vec as Vec`: the file also compiles in `no_std` crates (no `Vec` in their prelude).
         let _ = writeln!(out, "use mlirformat::{{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec}};\n");
         for (name, cases) in &self.enums {
-            let _ = writeln!(out, "#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]");
+            let _ = writeln!(out, "#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]");
             let _ = writeln!(out, "#[serde(crate = \"mlirformat::__serde\")]\npub enum {name} {{");
             let mut next = 0;
             for (keyword, value) in cases {

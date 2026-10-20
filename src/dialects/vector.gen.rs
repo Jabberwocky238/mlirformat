@@ -82,7 +82,7 @@ pub struct ContractionOp<'a> {
     #[attr(name = "iterator_types")]
     pub iterator_types: Attribute<'a>,
     #[attr(name = "kind", dialect = "vector.kind", default = "<add>")]
-    pub kind: Attribute<'a>,
+    pub kind: Option<Attribute<'a>>,
     #[dtype(name = "lhs_ty")]
     pub lhs_ty: Type<'a>,
     #[dtype(name = "rhs_ty")]
@@ -397,7 +397,7 @@ pub struct OuterProductOp<'a> {
     #[slot(acc_ty, name = "acc")]
     pub acc: Vec<Value<'a>>,
     #[attr(name = "kind", dialect = "vector.kind", default = "<add>")]
-    pub kind: Attribute<'a>,
+    pub kind: Option<Attribute<'a>>,
     #[dtype(name = "lhs_ty")]
     pub lhs_ty: Type<'a>,
     #[dtype(name = "rhs_ty")]
@@ -416,7 +416,7 @@ pub struct PrintOp<'a> {
     #[slot(source_ty, name = "source")]
     pub source: Vec<Value<'a>>,
     #[attr(name = "punctuation", dialect = "vector.punctuation", default = "<newline>")]
-    pub punctuation: Attribute<'a>,
+    pub punctuation: Option<Attribute<'a>>,
     #[attr(name = "stringLiteral")]
     pub string_literal: Option<Attribute<'a>>,
     #[dtype(name = "source_ty")]
@@ -433,7 +433,7 @@ pub struct ReductionOp<'a> {
     #[attr(name = "kind", dialect = "vector.kind")]
     pub kind: Attribute<'a>,
     #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype(name = "vector_ty")]
     pub vector_ty: Type<'a>,
     #[dtype(name = "dest")]

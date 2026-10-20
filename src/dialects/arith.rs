@@ -31,7 +31,7 @@ macro_rules! flagged {
             #[slot(result)]
             pub rhs: Value<'a>,
             #[attr(dialect = $attr, default = "<none>")]
-            pub $field: Attribute<'a>,
+            pub $field: Option<Attribute<'a>>,
             #[dtype]
             pub result: Type<'a>,
         }
@@ -74,7 +74,7 @@ macro_rules! casts {
 macro_rules! predicates {
     ($($(#[$m:meta])* $ty:ident { $($case:ident $(= $kw:literal)?),* $(,)? })*) => {$(
         $(#[$m])*
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, mlir::Cases)]
         #[allow(non_camel_case_types)]
         pub enum $ty { $($(#[serde(rename = $kw)])? $case),* }
     )*};
@@ -115,7 +115,7 @@ predicates! {
 }
 
 /// `arith.truncf` rounding modes (`i32` case values).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, mlir::Cases)]
 #[allow(non_camel_case_types)]
 pub enum RoundingMode {
     to_nearest_even,
@@ -206,7 +206,7 @@ pub struct NegF<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype]
     pub result: Type<'a>,
 }
@@ -234,7 +234,7 @@ pub struct CmpF<'a> {
     #[slot(ty)]
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype]
     pub ty: Type<'a>,
     #[dtype(i1 = ty)]
@@ -254,7 +254,7 @@ pub struct TruncI<'a> {
     #[slot(in_ty, name = "in")]
     pub input: Value<'a>,
     #[attr(dialect = "arith.overflow", default = "<none>")]
-    pub overflow_flags: Attribute<'a>,
+    pub overflow_flags: Option<Attribute<'a>>,
     #[dtype]
     pub in_ty: Type<'a>,
     #[dtype]

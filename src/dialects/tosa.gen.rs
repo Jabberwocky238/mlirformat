@@ -83,7 +83,7 @@ pub struct ArgMaxOp<'a> {
     #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
     #[dtype(name = "output")]
@@ -276,7 +276,7 @@ pub struct ClampOp<'a> {
     #[attr(name = "max_val")]
     pub max_val: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
     #[dtype(name = "output")]
@@ -941,7 +941,7 @@ pub struct MaxPool2dOp<'a> {
     #[attr(name = "pad", dense = "i64")]
     pub pad: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
     #[dtype(name = "output")]
@@ -975,7 +975,7 @@ pub struct MaximumOp<'a> {
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
     #[dtype(name = "input2_ty")]
@@ -1011,7 +1011,7 @@ pub struct MinimumOp<'a> {
     #[slot(input2_ty, name = "input2")]
     pub input2: Value<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input1_ty")]
     pub input1_ty: Type<'a>,
     #[dtype(name = "input2_ty")]
@@ -1204,7 +1204,7 @@ pub struct ReduceMaxOp<'a> {
     #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
     #[dtype(name = "output")]
@@ -1221,7 +1221,7 @@ pub struct ReduceMinOp<'a> {
     #[attr(name = "axis", int = "i32")]
     pub axis: Attribute<'a>,
     #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
-    pub nan_mode: Attribute<'a>,
+    pub nan_mode: Option<Attribute<'a>>,
     #[dtype(name = "input_ty")]
     pub input_ty: Type<'a>,
     #[dtype(name = "output")]

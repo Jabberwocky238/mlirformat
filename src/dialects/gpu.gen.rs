@@ -1267,7 +1267,7 @@ pub struct SubgroupReduceOp<'a> {
     #[attr(name = "cluster_size", int = "i32")]
     pub cluster_size: Option<Attribute<'a>>,
     #[attr(name = "cluster_stride", int = "i32", default = "1")]
-    pub cluster_stride: Attribute<'a>,
+    pub cluster_stride: Option<Attribute<'a>>,
     #[dtype(name = "result")]
     pub result: Type<'a>,
 }

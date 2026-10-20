@@ -10,7 +10,7 @@ macro_rules! unary_f {
             #[slot(result)]
             pub operand: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
-            pub fastmath: Attribute<'a>,
+            pub fastmath: Option<Attribute<'a>>,
             #[dtype]
             pub result: Type<'a>,
         }
@@ -27,7 +27,7 @@ macro_rules! binary_f {
             #[slot(result)]
             pub rhs: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
-            pub fastmath: Attribute<'a>,
+            pub fastmath: Option<Attribute<'a>>,
             #[dtype]
             pub result: Type<'a>,
         }
@@ -55,7 +55,7 @@ macro_rules! classify {
             #[slot(ty)]
             pub operand: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
-            pub fastmath: Attribute<'a>,
+            pub fastmath: Option<Attribute<'a>>,
             #[dtype]
             pub ty: Type<'a>,
             #[dtype(i1 = ty)]
@@ -97,7 +97,7 @@ pub struct FPowIOp<'a> {
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype]
     pub result: Type<'a>,
     #[dtype]
@@ -113,7 +113,7 @@ pub struct FmaOp<'a> {
     #[slot(result)]
     pub c: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype]
     pub result: Type<'a>,
 }
@@ -124,7 +124,7 @@ pub struct SincosOp<'a> {
     #[slot(sin)]
     pub operand: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype]
     pub sin: Type<'a>,
     #[dtype(eq = sin)]
@@ -141,7 +141,7 @@ pub struct ClampFOp<'a> {
     #[slot(result)]
     pub max: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Attribute<'a>,
+    pub fastmath: Option<Attribute<'a>>,
     #[dtype]
     pub result: Type<'a>,
 }

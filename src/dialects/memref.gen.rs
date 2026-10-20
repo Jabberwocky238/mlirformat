@@ -3,7 +3,7 @@
 
 use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
 pub enum AtomicRMWKind {
     #[serde(rename = "addf")]

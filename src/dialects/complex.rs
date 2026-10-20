@@ -10,7 +10,7 @@ macro_rules! unary {
             #[slot(ty)]
             pub complex: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
-            pub fastmath: Attribute<'a>,
+            pub fastmath: Option<Attribute<'a>>,
             #[dtype]
             pub ty: Type<'a>,
         }
@@ -25,7 +25,7 @@ macro_rules! part {
             #[slot(ty)]
             pub complex: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
-            pub fastmath: Attribute<'a>,
+            pub fastmath: Option<Attribute<'a>>,
             #[dtype]
             pub ty: Type<'a>,
             #[dtype(el = ty)]
@@ -44,7 +44,7 @@ macro_rules! binary {
             #[slot(result)]
             pub rhs: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
-            pub fastmath: Attribute<'a>,
+            pub fastmath: Option<Attribute<'a>>,
             #[dtype]
             pub result: Type<'a>,
         }
