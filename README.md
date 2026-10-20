@@ -61,6 +61,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+### Field markers
+
+Each field of a `#[mlir::op]` struct says its MLIR role (a `Vec` field is variadic; the MLIR name
+is the lowerCamelCase field name unless `name = "..."`):
+
+| marker | the field is |
+|---|---|
+| `#[slot(T)]` | an operand, typed by type variable `T` |
+| `#[dtype]`, `#[dtype(i1)]`, `#[dtype(i1 = x)]`, `#[dtype(of = attr)]`, `#[dtype(eq = x)]`, `#[dtype(is = index)]`, `#[dtype(el = x)]` | a type variable (results by `results(...)`), and how the custom form infers it when unspelled |
+| `#[attr]`, `#[attr(int = "i32")]`, `#[attr(dialect = "arith.overflow", default = "<none>")]`, `dense = "i64"`, `symbol`, `bits = ...` | a property: `bool` is a unit attribute, an enum a case typed `int` |
+| `#[region]`, `#[successor]` | a region, a successor |
+
+A property with a declared `default` is an `Option`: `None` leaves it absent, and whoever builds
+the op fills the default (`#arith.overflow<none>`, `0 : i32`) — the same op as one built by name.
+Parsing fills the default and printing drops it, so a round trip keeps it as written.
+
+Op options: `format = "..."` (the ODS assembly format), `results(a, b)`, `generic` (no custom
+form), `custom` (`Print` / `Parse` written by hand). `attrs` (discardable attributes) and `loc`
+fields are added.
+
+`#[derive(mlir::Cases)]` on an integer enum gives `TryFrom<i64>` by case value (the variant's
+position; the hidden `__N` variants filling gaps take none) — `CmpIPredicate::try_from(2)` is
+`slt`. Every enum `mlirformat tblgen` generates derives it.
+
 ## Dialects
 
 Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
