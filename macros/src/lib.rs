@@ -50,7 +50,7 @@ pub fn op(args: TokenStream, item: TokenStream) -> TokenStream {
 pub fn dialect(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as dialect::DialectArgs);
     let item = parse_macro_input!(item as ItemEnum);
-    dialect::expand(args, item).unwrap_or_else(Error::into_compile_error).into()
+    args.expand(item).unwrap_or_else(Error::into_compile_error).into()
 }
 
 /// `syntax!`: the ODS `custom<X>` directives, as rules the format interpreter reads and writes
