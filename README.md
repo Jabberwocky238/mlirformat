@@ -48,6 +48,7 @@ pub enum Demo<'a> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // custom form ⇄ struct ⇄ generic op
     let op = Max::try_from("demo.max %a, %b : i32")?;
+    assert_eq!(Max::new(op.lhs.clone(), op.rhs.clone(), op.result.clone()), op); // `new`: the declared fields, in order
     let generic = Operation::try_from(&op)?;
     assert_eq!(generic.to_string(), r#""demo.max"(%a, %b) : (i32, i32) -> i32"#);
     assert_eq!(Max::try_from(&generic)?, op);

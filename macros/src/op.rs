@@ -190,6 +190,11 @@ impl OpArgs {
             let l = &l.lifetime;
             quote!(#l)
         });
+        // `new`: every declared field, in order; no discardable attributes, no location.
+        let (args, idents): (Vec<_>, Vec<_>) = named.named.iter().map(|f| {
+            let (id, t) = (&f.ident, &f.ty);
+            (quote!(#id: #t), quote!(#id))
+        }).unzip();
         named.named.push(parse_quote!(#[serde(rename = "{}", default)] pub attrs: ::mlirformat::__Vec<::mlirformat::NamedAttr<#lt>>));
         named.named.push(parse_quote!(#[serde(rename = "@", default)] pub loc: ::core::option::Option<::mlirformat::Str<#lt>>));
 
@@ -246,6 +251,13 @@ impl OpArgs {
             #item
 
             #op_impl
+
+            impl #ig #ty #tg #wc {
+                #[allow(clippy::too_many_arguments)]
+                pub fn new(#(#args),*) -> Self {
+                    Self { #(#idents,)* attrs: ::mlirformat::__Vec::new(), loc: ::core::option::Option::None }
+                }
+            }
 
             impl #ig ::core::convert::TryFrom<&::mlirformat::Operation<'_>> for #ty #tg #wc {
                 type Error = ::mlirformat::Error;
