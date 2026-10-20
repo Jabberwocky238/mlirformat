@@ -63,8 +63,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Dialects
 
-Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `builtin`, `cf`,
-`complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`, `vector`. The
+Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
+`builtin`, `cf`, `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `shape`,
+`tensor`, `ub`, `vector`. The
 first eight are written by hand; the rest are generated from ODS by `mlirformat tblgen`. An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
 MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.

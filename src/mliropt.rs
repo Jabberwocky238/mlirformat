@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, arith, scf_ops as scf_hand, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, tensor, ub, vector};
+pub use crate::dialects::{affine, affine_ops, arith, bufferization, scf_ops as scf_hand, builtin, cf, complex, func, gpu, index, math, memref, pdl, r#async, scf, shape, tensor, ub, vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R, Read};
 
@@ -78,10 +78,12 @@ impl MlirOpt {
             .register::<complex::Complex>()
             .register::<affine::Affine>()
             .register::<r#async::Async>()
+            .register::<bufferization::Bufferization>()
             .register::<gpu::Gpu>()
             .register::<memref::Memref>()
             .register::<pdl::Pdl>()
             .register::<scf::Scf>()
+            .register::<shape::Shape>()
             .register::<tensor::Tensor>()
             .register::<vector::Vector>();
         // Hand-written forms for ops ODS describes in C++; injected by name over the generated

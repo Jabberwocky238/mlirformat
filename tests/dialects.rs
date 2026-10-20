@@ -30,10 +30,12 @@ macro_rules! dialects {
 dialects! {
     affine: "affine" => mlirformat::affine::Affine,
     r#async: "async" => mlirformat::r#async::Async,
+    bufferization: "bufferization" => mlirformat::bufferization::Bufferization,
     gpu: "gpu" => mlirformat::gpu::Gpu,
     memref: "memref" => mlirformat::memref::Memref,
     pdl: "pdl" => mlirformat::pdl::Pdl,
     scf: "scf" => mlirformat::scf::Scf,
+    shape: "shape" => mlirformat::shape::Shape,
     tensor: "tensor" => mlirformat::tensor::Tensor,
     vector: "vector" => mlirformat::vector::Vector,
 }

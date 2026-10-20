@@ -47,11 +47,6 @@ path = "tests/generated/arith.rs"
 required-features = ["gen-tests"]
 
 [[test]]
-name = "gen_bufferization"
-path = "tests/generated/bufferization.rs"
-required-features = ["gen-tests"]
-
-[[test]]
 name = "gen_cf"
 path = "tests/generated/cf.rs"
 required-features = ["gen-tests"]
@@ -84,11 +79,6 @@ required-features = ["gen-tests"]
 [[test]]
 name = "gen_math"
 path = "tests/generated/math.rs"
-required-features = ["gen-tests"]
-
-[[test]]
-name = "gen_shape"
-path = "tests/generated/shape.rs"
 required-features = ["gen-tests"]
 
 [[test]]

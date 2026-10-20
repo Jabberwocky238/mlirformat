@@ -18,6 +18,8 @@ pub mod affine_ops;
 pub mod scf_ops;
 #[path = "affine.gen.rs"]
 pub mod affine;
+#[path = "bufferization.gen.rs"]
+pub mod bufferization;
 #[path = "async.gen.rs"]
 pub mod r#async;
 #[path = "gpu.gen.rs"]
@@ -28,6 +30,8 @@ pub mod memref;
 pub mod pdl;
 #[path = "scf.gen.rs"]
 pub mod scf;
+#[path = "shape.gen.rs"]
+pub mod shape;
 #[path = "tensor.gen.rs"]
 pub mod tensor;
 #[path = "vector.gen.rs"]
