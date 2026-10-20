@@ -59,10 +59,13 @@ mod mliropt;
 mod parser;
 /// The ODS `custom<X>` directives (`mlirformat tblgen` asks `known` before keeping a format).
 pub mod syntax;
+/// What ODS says about each op: traits, interfaces, memory effects (`scripts/traits.py`).
+mod traits;
 
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
+pub use traits::{DIALECTS, Effect, EffectKind, EffectOn, Effects, OPS, OpInfo, Trait};
 
 #[doc(hidden)]
 pub use {alloc::vec as __vec, alloc::vec::Vec as __Vec, serde as __serde};

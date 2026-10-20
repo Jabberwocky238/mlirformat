@@ -86,6 +86,17 @@ Names are shared across dialects, so one rule covers every op that calls it. The
 reaches run time: `mlirformat tblgen` asks whether a directive is declared before it keeps a
 format, and the format tokenizer expands the call site into plain elements.
 
+### Op traits
+
+`OpInfo::of("memref.load")` gives what ODS says about every upstream op (not only the dialects
+above): its native traits and interfaces (`Trait::Pure`, `Trait::RegionBranchOpInterface`, …), its
+memory effects, and its inherent attributes; `DIALECTS` lists the dialects `mlir-opt` registers.
+The table (`src/traits.gen.rs`) is generated from llvm-project's ODS by `scripts/traits.py`:
+
+```sh
+python3 scripts/traits.py --llvm $LLVM --mlirformat target/release/mlirformat -I $LLVM_BUILD/tools/mlir/include
+```
+
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
