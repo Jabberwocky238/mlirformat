@@ -104,6 +104,32 @@ from llvm-project's ODS by `scripts/traits.py`:
 python3 scripts/traits.py --llvm $LLVM --mlirformat target/release/mlirformat -I $LLVM_BUILD/tools/mlir/include
 ```
 
+## Value layer
+
+Attributes and types keep their text (`Attribute::Builtin { name, body }`, a dialect type's
+body in `Extended`), so the text round trip stays exact. `src/values/` says what that text means
+as values, in both directions, for whoever computes with the IR (folds, rewrites, lowerings):
+
+| what | as | MLIR |
+|---|---|---|
+| numbers | `ApInt`, `ApFloat` (and MLIR's float printing) | `APInt`, `APFloat` |
+| constants | `Const` ⇄ `Attribute` (`TryFrom` / `From`), elements as `Scalar` | `IntegerAttr`, `FloatAttr`, `BoolAttr`, `DenseElementsAttr` |
+| memref layouts | `StridedLayout` ⇄ `Attribute`; `Shaped::layout` / `strided` / `memory_space` | `StridedLayoutAttr` |
+| affine maps and sets | `AffineMap`, `IntegerSet`, `AffineExpr` ⇄ `Attribute` | `AffineMap`, `IntegerSet`, `AffineExpr` |
+| quantized types | `UniformQuantized` ⇄ `Type`, `storage_type` | `quant::UniformQuantizedType` |
+
+Builtin types and attributes are read and built through methods named as MLIR names them:
+`Type::element_type`, `element_count`, `shape`, `dims`, `with_element`, `bit_width`,
+`Type::tensor(dims, elem)`, `Type::vector(shape, scalable, elem)`; `Attribute::integer`,
+`index`, `dense_i64`, `dense_i32`, `dense_values`, `is_poison`, `is_layout`. A `?` dim is
+`Dim::DYNAMIC` (`ShapedType::kDynamic`), and `Dim` ⇄ `i64` through `From`.
+
+Affine text has one parser, `affine_expr`, which keeps an expression as written (`Map`, `Set`)
+so that the `affine` ops' custom forms print back exactly. `AffineMap` / `IntegerSet` are the
+canonical form built from it through MLIR's simplifying constructors (`AffineMap::try_from(&map)`,
+`AffineMap::parse(text)`): that is the form to fold, compose and simplify, and it prints what
+`mlir-opt` prints for a map it built.
+
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per

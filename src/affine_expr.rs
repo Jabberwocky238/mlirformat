@@ -10,6 +10,9 @@
 //! The tree is kept as written, not normalised: MLIR stores `a - b` as `a + b * -1` and prints the
 //! subtraction back, so a tool that converts text to text and back has no reason to take the
 //! detour, and keeping the surface form is what makes the round trip exact.
+//!
+//! The canonical form, for folding and simplifying, is [`AffineMap`](crate::AffineMap) /
+//! [`IntegerSet`](crate::IntegerSet), built from this one.
 
 use crate::common::Error;
 use alloc::boxed::Box;
