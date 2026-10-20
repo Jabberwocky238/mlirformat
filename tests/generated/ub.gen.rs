@@ -18,8 +18,9 @@ pub struct UnreachableOp<'a> {
 }
 
 /// The `ub` dialect.
-#[mlir::dialect("ub")]
-pub enum Ub<'a> {
-    Poison(PoisonOp<'a>),
-    Unreachable(UnreachableOp<'a>),
-}
+#[mlir::dialect(
+    "ub",
+    ops = [PoisonOp, UnreachableOp],
+    materializer
+)]
+pub struct UbDialect;

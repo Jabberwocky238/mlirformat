@@ -29,11 +29,12 @@
 //! `results(a, b)`, `custom` (no `Op` impl: `print` / `parse` written by hand), `generic` (no custom
 //! form: always printed generic).
 //!
-//! `#[mlir::dialect("ns", params = f)]`: `f` structures `!ns.x<...>` / `#ns.x<...>` bodies
-//! (`Dialect::parse_params`).
+//! `#[mlir::dialect("ns", ops = [A, B], ..)]` on a unit struct: the dialect, its op structs and
+//! its traits (`dependents = [..]`, `materializer`, `canonicalizer`); `params = f` structures
+//! `!ns.x<...>` / `#ns.x<...>` bodies (`Dialect::parse_params`).
 
 use proc_macro::TokenStream;
-use syn::{Error, ItemEnum, ItemStruct, parse_macro_input};
+use syn::{Error, ItemStruct, parse_macro_input};
 
 mod dialect;
 mod op;
@@ -49,7 +50,7 @@ pub fn op(args: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn dialect(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as dialect::DialectArgs);
-    let item = parse_macro_input!(item as ItemEnum);
+    let item = parse_macro_input!(item as ItemStruct);
     args.expand(item).unwrap_or_else(Error::into_compile_error).into()
 }
 

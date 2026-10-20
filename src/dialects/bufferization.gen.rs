@@ -115,13 +115,9 @@ pub struct ToTensorOp<'a> {
 }
 
 /// The `bufferization` dialect.
-#[mlir::dialect("bufferization")]
-pub enum Bufferization<'a> {
-    AllocTensor(AllocTensorOp<'a>),
-    Clone(CloneOp<'a>),
-    Dealloc(DeallocOp<'a>),
-    DeallocTensor(DeallocTensorOp<'a>),
-    MaterializeInDestination(MaterializeInDestinationOp<'a>),
-    ToBuffer(ToBufferOp<'a>),
-    ToTensor(ToTensorOp<'a>),
-}
+#[mlir::dialect(
+    "bufferization",
+    ops = [AllocTensorOp, CloneOp, DeallocOp, DeallocTensorOp, MaterializeInDestinationOp, ToBufferOp, ToTensorOp],
+    dependents = ["affine", "memref", "tensor", "arith"]
+)]
+pub struct BufferizationDialect;

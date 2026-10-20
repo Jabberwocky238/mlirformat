@@ -101,7 +101,7 @@ pub struct CmpOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty, name = "rhs")]
     pub rhs: Value<'a>,
-    #[attr(name = "pred")]
+    #[attr(name = "pred", dialect = "index<cmp_predicate")]
     pub pred: Attribute<'a>,
     #[dtype(name = "lhs_ty", is = index)]
     pub lhs_ty: Type<'a>,
@@ -368,32 +368,9 @@ pub struct XOrOp<'a> {
 }
 
 /// The `index` dialect.
-#[mlir::dialect("index")]
-pub enum Index<'a> {
-    Add(AddOp<'a>),
-    And(AndOp<'a>),
-    BoolConstant(BoolConstantOp<'a>),
-    CastS(CastSOp<'a>),
-    CastU(CastUOp<'a>),
-    CeilDivS(CeilDivSOp<'a>),
-    CeilDivU(CeilDivUOp<'a>),
-    Cmp(CmpOp<'a>),
-    Constant(ConstantOp<'a>),
-    DivS(DivSOp<'a>),
-    DivU(DivUOp<'a>),
-    FloorDivS(FloorDivSOp<'a>),
-    MaxS(MaxSOp<'a>),
-    MaxU(MaxUOp<'a>),
-    MinS(MinSOp<'a>),
-    MinU(MinUOp<'a>),
-    Mul(MulOp<'a>),
-    Or(OrOp<'a>),
-    RemS(RemSOp<'a>),
-    RemU(RemUOp<'a>),
-    Shl(ShlOp<'a>),
-    ShrS(ShrSOp<'a>),
-    ShrU(ShrUOp<'a>),
-    SizeOf(SizeOfOp<'a>),
-    Sub(SubOp<'a>),
-    XOr(XOrOp<'a>),
-}
+#[mlir::dialect(
+    "index",
+    ops = [AddOp, AndOp, BoolConstantOp, CastSOp, CastUOp, CeilDivSOp, CeilDivUOp, CmpOp, ConstantOp, DivSOp, DivUOp, FloorDivSOp, MaxSOp, MaxUOp, MinSOp, MinUOp, MulOp, OrOp, RemSOp, RemUOp, ShlOp, ShrSOp, ShrUOp, SizeOfOp, SubOp, XOrOp],
+    materializer
+)]
+pub struct IndexDialect;

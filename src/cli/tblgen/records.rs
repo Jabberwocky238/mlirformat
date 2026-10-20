@@ -1,5 +1,5 @@
 //! ⭐ The records behind `mlirformat tblgen`: MLIR ODS (`.td`) → `<dialect>.gen.rs`, one `#[mlir::op]` struct per op and a
-//! `#[mlir::dialect]` enum. TableGen itself resolves the records (`--dump-json`, classes,
+//! `#[mlir::dialect]` struct listing them. TableGen itself resolves the records (`--dump-json`, classes,
 //! `let`s and multiclasses included); this file only reads them.
 //!
 //! ```text
@@ -50,6 +50,11 @@ pub struct GenDialect {
     pub ops: Vec<GenOp>,
     /// Integer enums the ops use: name ⇒ cases `(keyword, value)`.
     pub enums: BTreeMap<String, Vec<(String, i64)>>,
+    /// What the `Dialect` record declares: `dependentDialects` (as namespaces),
+    /// `hasConstantMaterializer`, `hasCanonicalizer`.
+    pub dependents: Vec<String>,
+    pub materializer: bool,
+    pub canonicalizer: bool,
 }
 
 /// One op to generate.
@@ -189,7 +194,21 @@ impl Records {
         by_dialect
             .into_iter()
             .map(|(name, ops)| {
-                let mut d = GenDialect { name, ops: Vec::new(), enums: BTreeMap::new() };
+                let record = ops.first().and_then(|op| self.field(op, "opDialect")).and_then(Self::def_of);
+                let flag = |f: &str| record.and_then(|r| self.field(r, f)).and_then(Json::as_i64) == Some(1);
+                // `arith::ArithDialect` ⇒ `arith`, `LLVM::LLVMDialect` ⇒ `llvm`.
+                let dependents = record
+                    .and_then(|r| self.field(r, "dependentDialects"))
+                    .and_then(Json::as_array)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|d| {
+                        let path = d.as_str()?.trim_start_matches("::");
+                        Some(path.strip_prefix("mlir::").unwrap_or(path).split("::").next()?.to_ascii_lowercase())
+                    })
+                    .collect();
+                let (materializer, canonicalizer) = (flag("hasConstantMaterializer"), flag("hasCanonicalizer"));
+                let mut d = GenDialect { name, ops: Vec::new(), enums: BTreeMap::new(), dependents, materializer, canonicalizer };
                 for op in ops {
                     let one = self.op(op, &mut d);
                     d.ops.push(one);
@@ -680,12 +699,23 @@ impl GenDialect {
             }
             let _ = writeln!(out, "}}\n");
         }
-        let params = params.map_or_else(String::new, |path| format!(", params = {path}"));
-        let _ = writeln!(out, "/// The `{}` dialect.\n#[mlir::dialect({:?}{params})]\npub enum {}<'a> {{", self.name, self.name, Records::camel(&self.name));
-        for op in &self.ops {
-            let _ = writeln!(out, "    {}({}<'a>),", op.rust.strip_suffix("Op").filter(|v| !v.is_empty()).unwrap_or(&op.rust), op.rust);
+        let mut args = format!("{:?}", self.name);
+        let ops: Vec<&str> = self.ops.iter().map(|o| o.rust.as_str()).collect();
+        let _ = write!(args, ",\n    ops = [{}]", ops.join(", "));
+        if let Some(path) = params {
+            let _ = write!(args, ",\n    params = {path}");
         }
-        let _ = writeln!(out, "}}");
+        if !self.dependents.is_empty() {
+            let deps: Vec<String> = self.dependents.iter().map(|d| format!("{d:?}")).collect();
+            let _ = write!(args, ",\n    dependents = [{}]", deps.join(", "));
+        }
+        if self.materializer {
+            args.push_str(",\n    materializer");
+        }
+        if self.canonicalizer {
+            args.push_str(",\n    canonicalizer");
+        }
+        let _ = writeln!(out, "/// The `{}` dialect.\n#[mlir::dialect(\n    {args}\n)]\npub struct {}Dialect;", self.name, Records::camel(&self.name));
         out
     }
 }

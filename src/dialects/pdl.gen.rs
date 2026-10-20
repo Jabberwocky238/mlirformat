@@ -213,21 +213,8 @@ pub struct TypesOp<'a> {
 }
 
 /// The `pdl` dialect.
-#[mlir::dialect("pdl")]
-pub enum Pdl<'a> {
-    ApplyNativeConstraint(ApplyNativeConstraintOp<'a>),
-    ApplyNativeRewrite(ApplyNativeRewriteOp<'a>),
-    Attribute(AttributeOp<'a>),
-    Erase(EraseOp<'a>),
-    Operand(OperandOp<'a>),
-    Operands(OperandsOp<'a>),
-    Operation(OperationOp<'a>),
-    Pattern(PatternOp<'a>),
-    Range(RangeOp<'a>),
-    Replace(ReplaceOp<'a>),
-    Result(ResultOp<'a>),
-    Results(ResultsOp<'a>),
-    Rewrite(RewriteOp<'a>),
-    Type(TypeOp<'a>),
-    Types(TypesOp<'a>),
-}
+#[mlir::dialect(
+    "pdl",
+    ops = [ApplyNativeConstraintOp, ApplyNativeRewriteOp, AttributeOp, EraseOp, OperandOp, OperandsOp, OperationOp, PatternOp, RangeOp, ReplaceOp, ResultOp, ResultsOp, RewriteOp, TypeOp, TypesOp]
+)]
+pub struct PdlDialect;

@@ -276,20 +276,10 @@ pub struct AffineYieldOp<'a> {
 }
 
 /// The `affine` dialect.
-#[mlir::dialect("affine")]
-pub enum Affine<'a> {
-    AffineApply(AffineApplyOp<'a>),
-    AffineDelinearizeIndex(AffineDelinearizeIndexOp<'a>),
-    AffineFor(AffineForOp<'a>),
-    AffineIf(AffineIfOp<'a>),
-    AffineLinearizeIndex(AffineLinearizeIndexOp<'a>),
-    AffineLoad(AffineLoadOp<'a>),
-    AffineMax(AffineMaxOp<'a>),
-    AffineMin(AffineMinOp<'a>),
-    AffineParallel(AffineParallelOp<'a>),
-    AffinePrefetch(AffinePrefetchOp<'a>),
-    AffineStore(AffineStoreOp<'a>),
-    AffineVectorLoad(AffineVectorLoadOp<'a>),
-    AffineVectorStore(AffineVectorStoreOp<'a>),
-    AffineYield(AffineYieldOp<'a>),
-}
+#[mlir::dialect(
+    "affine",
+    ops = [AffineApplyOp, AffineDelinearizeIndexOp, AffineForOp, AffineIfOp, AffineLinearizeIndexOp, AffineLoadOp, AffineMaxOp, AffineMinOp, AffineParallelOp, AffinePrefetchOp, AffineStoreOp, AffineVectorLoadOp, AffineVectorStoreOp, AffineYieldOp],
+    dependents = ["arith", "ub"],
+    materializer
+)]
+pub struct AffineDialect;

@@ -124,11 +124,9 @@ impl Parse for CmpOp<'_> {
 }
 
 /// The `index` dialect.
-#[mlir::dialect("index")]
-pub enum Index<'a> {
-    Add(AddOp<'a>), Sub(SubOp<'a>), Mul(MulOp<'a>), DivS(DivSOp<'a>), DivU(DivUOp<'a>), CeilDivS(CeilDivSOp<'a>),
-    CeilDivU(CeilDivUOp<'a>), FloorDivS(FloorDivSOp<'a>), RemS(RemSOp<'a>), RemU(RemUOp<'a>), MaxS(MaxSOp<'a>),
-    MaxU(MaxUOp<'a>), MinS(MinSOp<'a>), MinU(MinUOp<'a>), Shl(ShlOp<'a>), ShrS(ShrSOp<'a>), ShrU(ShrUOp<'a>),
-    And(AndOp<'a>), Or(OrOp<'a>), XOr(XOrOp<'a>), CastS(CastSOp<'a>), CastU(CastUOp<'a>), Constant(ConstantOp<'a>),
-    BoolConstant(BoolConstantOp<'a>), SizeOf(SizeOfOp<'a>), Cmp(CmpOp<'a>),
-}
+#[mlir::dialect(
+    "index",
+    ops = [AddOp, SubOp, MulOp, DivSOp, DivUOp, CeilDivSOp, CeilDivUOp, FloorDivSOp, RemSOp, RemUOp, MaxSOp, MaxUOp, MinSOp, MinUOp, ShlOp, ShrSOp, ShrUOp, AndOp, OrOp, XOrOp, CastSOp, CastUOp, ConstantOp, BoolConstantOp, SizeOfOp, CmpOp],
+    materializer
+)]
+pub struct IndexDialect;

@@ -336,19 +336,9 @@ pub struct ScalingTruncF<'a> {
 }
 
 /// The `arith` dialect.
-#[mlir::dialect("arith")]
-pub enum Arith<'a> {
-    AndI(AndI<'a>), OrI(OrI<'a>), XOrI(XOrI<'a>),
-    MaxSI(MaxSI<'a>), MaxUI(MaxUI<'a>), MinSI(MinSI<'a>), MinUI(MinUI<'a>),
-    DivSI(DivSI<'a>), DivUI(DivUI<'a>), RemSI(RemSI<'a>), RemUI(RemUI<'a>),
-    CeilDivSI(CeilDivSI<'a>), CeilDivUI(CeilDivUI<'a>), FloorDivSI(FloorDivSI<'a>), ShRSI(ShRSI<'a>), ShRUI(ShRUI<'a>),
-    AddI(AddI<'a>), SubI(SubI<'a>), MulI(MulI<'a>), ShLI(ShLI<'a>),
-    AddF(AddF<'a>), SubF(SubF<'a>), MulF(MulF<'a>), DivF(DivF<'a>), RemF(RemF<'a>),
-    MaximumF(MaximumF<'a>), MinimumF(MinimumF<'a>), MaxNumF(MaxNumF<'a>), MinNumF(MinNumF<'a>),
-    IndexCast(IndexCast<'a>), IndexCastUI(IndexCastUI<'a>), ExtSI(ExtSI<'a>), ExtUI(ExtUI<'a>),
-    SIToFP(SIToFP<'a>), UIToFP(UIToFP<'a>), FPToSI(FPToSI<'a>), FPToUI(FPToUI<'a>), Bitcast(Bitcast<'a>),
-    NegF(NegF<'a>), CmpI(CmpI<'a>), CmpF(CmpF<'a>), Constant(Constant<'a>),
-    ExtF(ExtF<'a>), TruncF(TruncF<'a>), Select(Select<'a>), TruncI(TruncI<'a>),
-    MulSIExtended(MulSIExtended<'a>), MulUIExtended(MulUIExtended<'a>), AddUIExtended(AddUIExtended<'a>),
-    ScalingExtF(ScalingExtF<'a>), ScalingTruncF(ScalingTruncF<'a>),
-}
+#[mlir::dialect(
+    "arith",
+    ops = [AndI, OrI, XOrI, MaxSI, MaxUI, MinSI, MinUI, DivSI, DivUI, RemSI, RemUI, CeilDivSI, CeilDivUI, FloorDivSI, ShRSI, ShRUI, AddI, SubI, MulI, ShLI, AddF, SubF, MulF, DivF, RemF, MaximumF, MinimumF, MaxNumF, MinNumF, IndexCast, IndexCastUI, ExtSI, ExtUI, SIToFP, UIToFP, FPToSI, FPToUI, Bitcast, NegF, CmpI, CmpF, Constant, ExtF, TruncF, Select, TruncI, MulSIExtended, MulUIExtended, AddUIExtended, ScalingExtF, ScalingTruncF],
+    materializer
+)]
+pub struct ArithDialect;

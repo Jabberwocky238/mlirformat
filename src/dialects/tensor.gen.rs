@@ -371,27 +371,11 @@ pub struct YieldOp<'a> {
 }
 
 /// The `tensor` dialect.
-#[mlir::dialect("tensor")]
-pub enum Tensor<'a> {
-    Bitcast(BitcastOp<'a>),
-    Cast(CastOp<'a>),
-    CollapseShape(CollapseShapeOp<'a>),
-    Concat(ConcatOp<'a>),
-    Dim(DimOp<'a>),
-    Empty(EmptyOp<'a>),
-    ExpandShape(ExpandShapeOp<'a>),
-    Extract(ExtractOp<'a>),
-    ExtractSlice(ExtractSliceOp<'a>),
-    FromElements(FromElementsOp<'a>),
-    Gather(GatherOp<'a>),
-    Generate(GenerateOp<'a>),
-    Insert(InsertOp<'a>),
-    InsertSlice(InsertSliceOp<'a>),
-    Pad(PadOp<'a>),
-    ParallelInsertSlice(ParallelInsertSliceOp<'a>),
-    Rank(RankOp<'a>),
-    Reshape(ReshapeOp<'a>),
-    Scatter(ScatterOp<'a>),
-    Splat(SplatOp<'a>),
-    Yield(YieldOp<'a>),
-}
+#[mlir::dialect(
+    "tensor",
+    ops = [BitcastOp, CastOp, CollapseShapeOp, ConcatOp, DimOp, EmptyOp, ExpandShapeOp, ExtractOp, ExtractSliceOp, FromElementsOp, GatherOp, GenerateOp, InsertOp, InsertSliceOp, PadOp, ParallelInsertSliceOp, RankOp, ReshapeOp, ScatterOp, SplatOp, YieldOp],
+    dependents = ["affine", "arith", "complex"],
+    materializer,
+    canonicalizer
+)]
+pub struct TensorDialect;

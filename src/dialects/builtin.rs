@@ -65,8 +65,8 @@ pub struct UnrealizedConversionCast<'a> {
 }
 
 /// The `builtin` dialect.
-#[mlir::dialect("builtin")]
-pub enum Builtin<'a> {
-    Module(ModuleOp<'a>),
-    UnrealizedConversionCast(UnrealizedConversionCast<'a>),
-}
+#[mlir::dialect(
+    "builtin",
+    ops = [ModuleOp, UnrealizedConversionCast]
+)]
+pub struct BuiltinDialect;

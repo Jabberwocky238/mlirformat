@@ -147,15 +147,10 @@ pub struct ClampFOp<'a> {
 }
 
 /// The `math` dialect.
-#[mlir::dialect("math")]
-pub enum Math<'a> {
-    AbsF(AbsF<'a>), Acos(AcosOp<'a>), Acosh(AcoshOp<'a>), Asin(AsinOp<'a>), Asinh(AsinhOp<'a>), Atan(AtanOp<'a>),
-    Atanh(AtanhOp<'a>), Cbrt(CbrtOp<'a>), Ceil(CeilOp<'a>), Cos(CosOp<'a>), Cosh(CoshOp<'a>), Erf(ErfOp<'a>),
-    Erfc(ErfcOp<'a>), Exp(ExpOp<'a>), Exp2(Exp2Op<'a>), ExpM1(ExpM1Op<'a>), Floor(FloorOp<'a>), Log(LogOp<'a>),
-    Log10(Log10Op<'a>), Log1p(Log1pOp<'a>), Log2(Log2Op<'a>), Round(RoundOp<'a>), RoundEven(RoundEvenOp<'a>),
-    Rsqrt(RsqrtOp<'a>), Sin(SinOp<'a>), Sinh(SinhOp<'a>), Sqrt(SqrtOp<'a>), Tan(TanOp<'a>), Tanh(TanhOp<'a>),
-    Trunc(TruncOp<'a>), Atan2(Atan2Op<'a>), CopySign(CopySignOp<'a>), PowF(PowFOp<'a>), AbsI(AbsIOp<'a>),
-    Ctlz(CountLeadingZerosOp<'a>), Cttz(CountTrailingZerosOp<'a>), CtPop(CtPopOp<'a>), IsFinite(IsFiniteOp<'a>),
-    IsInf(IsInfOp<'a>), IsNaN(IsNaNOp<'a>), IsNormal(IsNormalOp<'a>), IPowI(IPowIOp<'a>), FPowI(FPowIOp<'a>),
-    Fma(FmaOp<'a>), Sincos(SincosOp<'a>), ClampF(ClampFOp<'a>),
-}
+#[mlir::dialect(
+    "math",
+    ops = [AbsF, AcosOp, AcoshOp, AsinOp, AsinhOp, AtanOp, AtanhOp, CbrtOp, CeilOp, CosOp, CoshOp, ErfOp, ErfcOp, ExpOp, Exp2Op, ExpM1Op, FloorOp, LogOp, Log10Op, Log1pOp, Log2Op, RoundOp, RoundEvenOp, RsqrtOp, SinOp, SinhOp, SqrtOp, TanOp, TanhOp, TruncOp, Atan2Op, CopySignOp, PowFOp, AbsIOp, CountLeadingZerosOp, CountTrailingZerosOp, CtPopOp, IsFiniteOp, IsInfOp, IsNaNOp, IsNormalOp, IPowIOp, FPowIOp, FmaOp, SincosOp, ClampFOp],
+    dependents = ["arith"],
+    materializer
+)]
+pub struct MathDialect;

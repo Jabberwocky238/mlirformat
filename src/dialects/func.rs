@@ -217,11 +217,9 @@ impl Parse for CallIndirect<'_> {
 }
 
 /// The `func` dialect.
-#[mlir::dialect("func")]
-pub enum Func<'a> {
-    Func(FuncOp<'a>),
-    Return(Return<'a>),
-    Call(Call<'a>),
-    Constant(Constant<'a>),
-    CallIndirect(CallIndirect<'a>),
-}
+#[mlir::dialect(
+    "func",
+    ops = [FuncOp, Return, Call, Constant, CallIndirect],
+    materializer
+)]
+pub struct FuncDialect;

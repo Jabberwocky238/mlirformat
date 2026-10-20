@@ -67,7 +67,7 @@ mod values;
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
-pub use traits::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos, OpRegistry, Trait};
+pub use traits::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos, Trait};
 pub use values::*;
 
 #[doc(hidden)]

@@ -343,35 +343,8 @@ pub struct YieldOp<'a> {
 }
 
 /// The `async` dialect.
-#[mlir::dialect("async")]
-pub enum Async<'a> {
-    AddToGroup(AddToGroupOp<'a>),
-    AwaitAll(AwaitAllOp<'a>),
-    Await(AwaitOp<'a>),
-    Call(CallOp<'a>),
-    CoroBegin(CoroBeginOp<'a>),
-    CoroEnd(CoroEndOp<'a>),
-    CoroFree(CoroFreeOp<'a>),
-    CoroId(CoroIdOp<'a>),
-    CoroSave(CoroSaveOp<'a>),
-    CoroSuspend(CoroSuspendOp<'a>),
-    CreateGroup(CreateGroupOp<'a>),
-    Execute(ExecuteOp<'a>),
-    Func(FuncOp<'a>),
-    Return(ReturnOp<'a>),
-    RuntimeAddRef(RuntimeAddRefOp<'a>),
-    RuntimeAddToGroup(RuntimeAddToGroupOp<'a>),
-    RuntimeAwaitAndResume(RuntimeAwaitAndResumeOp<'a>),
-    RuntimeAwait(RuntimeAwaitOp<'a>),
-    RuntimeCreateGroup(RuntimeCreateGroupOp<'a>),
-    RuntimeCreate(RuntimeCreateOp<'a>),
-    RuntimeDropRef(RuntimeDropRefOp<'a>),
-    RuntimeIsError(RuntimeIsErrorOp<'a>),
-    RuntimeLoad(RuntimeLoadOp<'a>),
-    RuntimeNumWorkerThreads(RuntimeNumWorkerThreadsOp<'a>),
-    RuntimeResume(RuntimeResumeOp<'a>),
-    RuntimeSetAvailable(RuntimeSetAvailableOp<'a>),
-    RuntimeSetError(RuntimeSetErrorOp<'a>),
-    RuntimeStore(RuntimeStoreOp<'a>),
-    Yield(YieldOp<'a>),
-}
+#[mlir::dialect(
+    "async",
+    ops = [AddToGroupOp, AwaitAllOp, AwaitOp, CallOp, CoroBeginOp, CoroEndOp, CoroFreeOp, CoroIdOp, CoroSaveOp, CoroSuspendOp, CreateGroupOp, ExecuteOp, FuncOp, ReturnOp, RuntimeAddRefOp, RuntimeAddToGroupOp, RuntimeAwaitAndResumeOp, RuntimeAwaitOp, RuntimeCreateGroupOp, RuntimeCreateOp, RuntimeDropRefOp, RuntimeIsErrorOp, RuntimeLoadOp, RuntimeNumWorkerThreadsOp, RuntimeResumeOp, RuntimeSetAvailableOp, RuntimeSetErrorOp, RuntimeStoreOp, YieldOp]
+)]
+pub struct AsyncDialect;

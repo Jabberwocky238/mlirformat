@@ -9,6 +9,6 @@ mod cf;
 #[test]
 fn cf_matches_mlir_opt() {
     let mut opt = mlirformat::MlirOpt::new();
-    opt.register::<cf::Cf>();
+    opt.load(cf::CfDialect);
     common::Fixtures::check_dialect(&opt, "cf");
 }

@@ -399,10 +399,11 @@ impl<'a, 'd> Parser<'a, 'd> {
         // op's operand list right after the alias, and it is not part of the attribute.
         let body = (self.peek() == Some(b'<')).then(|| self.group()).transpose()?;
         let mut params = Vec::new();
-        if let (Some(_), Some(parse)) = (body, name.split_once('.').and_then(|(ns, _)| self.opt.params(ns))) {
+        let opt = self.opt;
+        if let (Some(_), Some(dialect)) = (body, name.split_once('.').and_then(|(ns, _)| opt.dialect(ns))) {
             let end = self.pos;
             self.pos = start;
-            match parse(kind, name, self) {
+            match dialect.parse_params(kind, name, self) {
                 Some(r) => {
                     params = r?;
                     if self.pos != end {

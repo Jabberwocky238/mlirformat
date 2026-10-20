@@ -9,6 +9,6 @@ mod math;
 #[test]
 fn math_matches_mlir_opt() {
     let mut opt = mlirformat::MlirOpt::new();
-    opt.register::<math::Math>();
+    opt.load(math::MathDialect);
     common::Fixtures::check_dialect(&opt, "math");
 }

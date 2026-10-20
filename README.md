@@ -39,11 +39,10 @@ pub struct Max<'a> {
     pub result: Type<'a>,
 }
 
-// A dialect: an enum of ops with `#[mlir::dialect]`.
-#[mlir::dialect("demo")]
-pub enum Demo<'a> {
-    Max(Max<'a>),
-}
+// A dialect: a struct listing its ops with `#[mlir::dialect]` (and its traits, if any:
+// `dependents = [..]`, `materializer`, `canonicalizer`).
+#[mlir::dialect("demo", ops = [Max])]
+pub struct DemoDialect;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // custom form ⇄ struct ⇄ generic op
@@ -53,9 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(generic.to_string(), r#""demo.max"(%a, %b) : (i32, i32) -> i32"#);
     assert_eq!(Max::try_from(&generic)?, op);
 
-    // whole files: register the dialect
+    // whole files: load the dialect
     let mut opt = MlirOpt::upstream();
-    opt.register::<Demo>();
+    opt.load(DemoDialect);
     let module = opt.parse(r#"%0 = "demo.max"(%a, %b) : (i32, i32) -> i32"#)?;
     assert_eq!(opt.show(&module).to_string(), "%0 = demo.max %a, %b : i32\n");
     Ok(())
@@ -94,10 +93,10 @@ format, and the format tokenizer expands the call site into plain elements.
 
 What ODS says about each op — its native traits and interfaces (`Trait::Pure`,
 `Trait::RegionBranchOpInterface`, …), its memory effects, its inherent attributes — is asked
-through the `OpRegistry` trait, never a global table: `opt.op_info("memref.load")`,
-`opt.knows_dialect("tosa")`. `MlirOpt::upstream()` registers every upstream op (not only the
-dialects above) and the dialects `mlir-opt` registers; `OpInfos` is the default registry, filled by
-`OpInfos::upstream()` or `insert` / `dialect`. The upstream rows (`src/traits.gen.rs`) are generated
+of the context, never a global table: `opt.op_info("memref.load")`, `opt.knows_dialect("tosa")`.
+`MlirOpt::upstream()` knows every upstream op (not only the dialects above) and the dialects
+`mlir-opt` registers; a loaded dialect brings its own rows. The context keeps them in an `OpInfos`,
+filled by `OpInfos::upstream()` or `insert` / `dialect`. The upstream rows (`src/traits.gen.rs`) are generated
 from llvm-project's ODS by `scripts/traits.py`:
 
 ```sh
@@ -133,7 +132,7 @@ canonical form built from it through MLIR's simplifying constructors (`AffineMap
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
-op and a `#[mlir::dialect]` enum. TableGen itself is built in: a port of LLVM 22.1.8's front end
+op and a `#[mlir::dialect]` struct listing them, with the dialect's traits from its `Dialect` record. TableGen itself is built in: a port of LLVM 22.1.8's front end
 resolves the records in process (no LLVM build needed; only the `.td` sources, e.g. `mlir/include`).
 `--dump-json` prints those records exactly as `llvm-tblgen --dump-json` does (checked byte for byte on
 every MLIR dialect `.td` that `llvm-tblgen` accepts on its own). Several `.td` files are generated in parallel. The generated files also compile in

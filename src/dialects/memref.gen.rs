@@ -546,38 +546,10 @@ pub struct SubViewOp<'a> {
 }
 
 /// The `memref` dialect.
-#[mlir::dialect("memref")]
-pub enum Memref<'a> {
-    AssumeAlignment(AssumeAlignmentOp<'a>),
-    AtomicRMW(AtomicRMWOp<'a>),
-    AtomicYield(AtomicYieldOp<'a>),
-    Copy(CopyOp<'a>),
-    DistinctObjects(DistinctObjectsOp<'a>),
-    GenericAtomicRMW(GenericAtomicRMWOp<'a>),
-    Load(LoadOp<'a>),
-    Alloc(AllocOp<'a>),
-    Alloca(AllocaOp<'a>),
-    AllocaScope(AllocaScopeOp<'a>),
-    AllocaScopeReturn(AllocaScopeReturnOp<'a>),
-    Cast(CastOp<'a>),
-    CollapseShape(CollapseShapeOp<'a>),
-    Dealloc(DeallocOp<'a>),
-    Dim(DimOp<'a>),
-    DmaStart(DmaStartOp<'a>),
-    DmaWait(DmaWaitOp<'a>),
-    ExpandShape(ExpandShapeOp<'a>),
-    ExtractAlignedPointerAsIndex(ExtractAlignedPointerAsIndexOp<'a>),
-    ExtractStridedMetadata(ExtractStridedMetadataOp<'a>),
-    GetGlobal(GetGlobalOp<'a>),
-    Global(GlobalOp<'a>),
-    MemorySpaceCast(MemorySpaceCastOp<'a>),
-    Prefetch(PrefetchOp<'a>),
-    Rank(RankOp<'a>),
-    Realloc(ReallocOp<'a>),
-    ReinterpretCast(ReinterpretCastOp<'a>),
-    Reshape(ReshapeOp<'a>),
-    Store(StoreOp<'a>),
-    Transpose(TransposeOp<'a>),
-    View(ViewOp<'a>),
-    SubView(SubViewOp<'a>),
-}
+#[mlir::dialect(
+    "memref",
+    ops = [AssumeAlignmentOp, AtomicRMWOp, AtomicYieldOp, CopyOp, DistinctObjectsOp, GenericAtomicRMWOp, LoadOp, AllocOp, AllocaOp, AllocaScopeOp, AllocaScopeReturnOp, CastOp, CollapseShapeOp, DeallocOp, DimOp, DmaStartOp, DmaWaitOp, ExpandShapeOp, ExtractAlignedPointerAsIndexOp, ExtractStridedMetadataOp, GetGlobalOp, GlobalOp, MemorySpaceCastOp, PrefetchOp, RankOp, ReallocOp, ReinterpretCastOp, ReshapeOp, StoreOp, TransposeOp, ViewOp, SubViewOp],
+    dependents = ["arith", "ub"],
+    materializer
+)]
+pub struct MemrefDialect;

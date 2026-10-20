@@ -196,7 +196,9 @@ pub struct CmpIOp<'a> {
 }
 
 /// `arith.constant`: integer or floating point constant
-#[mlir::op("arith.constant", format = "attr-dict $value", results(result))]
+///
+/// Generic form only (result type `result` inferred in C++).
+#[mlir::op("arith.constant", generic, results(result))]
 pub struct ConstantOp<'a> {
     #[attr(name = "value")]
     pub value: Attribute<'a>,
@@ -718,57 +720,9 @@ pub struct SelectOp<'a> {
 }
 
 /// The `arith` dialect.
-#[mlir::dialect("arith")]
-pub enum Arith<'a> {
-    AddF(AddFOp<'a>),
-    AddI(AddIOp<'a>),
-    AddUIExtended(AddUIExtendedOp<'a>),
-    AndI(AndIOp<'a>),
-    Bitcast(BitcastOp<'a>),
-    CeilDivSI(CeilDivSIOp<'a>),
-    CeilDivUI(CeilDivUIOp<'a>),
-    CmpF(CmpFOp<'a>),
-    CmpI(CmpIOp<'a>),
-    Constant(ConstantOp<'a>),
-    DivF(DivFOp<'a>),
-    DivSI(DivSIOp<'a>),
-    DivUI(DivUIOp<'a>),
-    ExtF(ExtFOp<'a>),
-    ExtSI(ExtSIOp<'a>),
-    ExtUI(ExtUIOp<'a>),
-    FPToSI(FPToSIOp<'a>),
-    FPToUI(FPToUIOp<'a>),
-    FloorDivSI(FloorDivSIOp<'a>),
-    IndexCast(IndexCastOp<'a>),
-    IndexCastUI(IndexCastUIOp<'a>),
-    MaxNumF(MaxNumFOp<'a>),
-    MaxSI(MaxSIOp<'a>),
-    MaxUI(MaxUIOp<'a>),
-    MaximumF(MaximumFOp<'a>),
-    MinNumF(MinNumFOp<'a>),
-    MinSI(MinSIOp<'a>),
-    MinUI(MinUIOp<'a>),
-    MinimumF(MinimumFOp<'a>),
-    MulF(MulFOp<'a>),
-    MulI(MulIOp<'a>),
-    MulSIExtended(MulSIExtendedOp<'a>),
-    MulUIExtended(MulUIExtendedOp<'a>),
-    NegF(NegFOp<'a>),
-    OrI(OrIOp<'a>),
-    RemF(RemFOp<'a>),
-    RemSI(RemSIOp<'a>),
-    RemUI(RemUIOp<'a>),
-    SIToFP(SIToFPOp<'a>),
-    ScalingExtF(ScalingExtFOp<'a>),
-    ScalingTruncF(ScalingTruncFOp<'a>),
-    ShLI(ShLIOp<'a>),
-    ShRSI(ShRSIOp<'a>),
-    ShRUI(ShRUIOp<'a>),
-    SubF(SubFOp<'a>),
-    SubI(SubIOp<'a>),
-    TruncF(TruncFOp<'a>),
-    TruncI(TruncIOp<'a>),
-    UIToFP(UIToFPOp<'a>),
-    XOrI(XOrIOp<'a>),
-    Select(SelectOp<'a>),
-}
+#[mlir::dialect(
+    "arith",
+    ops = [AddFOp, AddIOp, AddUIExtendedOp, AndIOp, BitcastOp, CeilDivSIOp, CeilDivUIOp, CmpFOp, CmpIOp, ConstantOp, DivFOp, DivSIOp, DivUIOp, ExtFOp, ExtSIOp, ExtUIOp, FPToSIOp, FPToUIOp, FloorDivSIOp, IndexCastOp, IndexCastUIOp, MaxNumFOp, MaxSIOp, MaxUIOp, MaximumFOp, MinNumFOp, MinSIOp, MinUIOp, MinimumFOp, MulFOp, MulIOp, MulSIExtendedOp, MulUIExtendedOp, NegFOp, OrIOp, RemFOp, RemSIOp, RemUIOp, SIToFPOp, ScalingExtFOp, ScalingTruncFOp, ShLIOp, ShRSIOp, ShRUIOp, SubFOp, SubIOp, TruncFOp, TruncIOp, UIToFPOp, XOrIOp, SelectOp],
+    materializer
+)]
+pub struct ArithDialect;

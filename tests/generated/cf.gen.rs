@@ -34,7 +34,7 @@ pub struct CondBranchOp<'a> {
     pub true_dest_operands: Vec<Value<'a>>,
     #[slot(false_dest_operands_ty, name = "falseDestOperands")]
     pub false_dest_operands: Vec<Value<'a>>,
-    #[attr(name = "branch_weights")]
+    #[attr(name = "branch_weights", dense = "i32")]
     pub branch_weights: Option<Attribute<'a>>,
     #[successor(name = "trueDest")]
     pub true_dest: Str<'a>,
@@ -61,7 +61,7 @@ pub struct SwitchOp<'a> {
     pub case_operands: Vec<Value<'a>>,
     #[attr(name = "case_values")]
     pub case_values: Option<Attribute<'a>>,
-    #[attr(name = "case_operand_segments")]
+    #[attr(name = "case_operand_segments", dense = "i32")]
     pub case_operand_segments: Attribute<'a>,
     #[successor(name = "defaultDestination")]
     pub default_destination: Str<'a>,
@@ -76,10 +76,9 @@ pub struct SwitchOp<'a> {
 }
 
 /// The `cf` dialect.
-#[mlir::dialect("cf")]
-pub enum Cf<'a> {
-    Assert(AssertOp<'a>),
-    Branch(BranchOp<'a>),
-    CondBranch(CondBranchOp<'a>),
-    Switch(SwitchOp<'a>),
-}
+#[mlir::dialect(
+    "cf",
+    ops = [AssertOp, BranchOp, CondBranchOp, SwitchOp],
+    dependents = ["arith"]
+)]
+pub struct CfDialect;

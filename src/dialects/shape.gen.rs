@@ -516,46 +516,10 @@ pub struct YieldOp<'a> {
 }
 
 /// The `shape` dialect.
-#[mlir::dialect("shape")]
-pub enum Shape<'a> {
-    Add(AddOp<'a>),
-    Any(AnyOp<'a>),
-    AssumingAll(AssumingAllOp<'a>),
-    Assuming(AssumingOp<'a>),
-    AssumingYield(AssumingYieldOp<'a>),
-    Broadcast(BroadcastOp<'a>),
-    Concat(ConcatOp<'a>),
-    ConstShape(ConstShapeOp<'a>),
-    ConstSize(ConstSizeOp<'a>),
-    ConstWitness(ConstWitnessOp<'a>),
-    CstrBroadcastable(CstrBroadcastableOp<'a>),
-    CstrEq(CstrEqOp<'a>),
-    CstrRequire(CstrRequireOp<'a>),
-    DebugPrint(DebugPrintOp<'a>),
-    Dim(DimOp<'a>),
-    Div(DivOp<'a>),
-    FromExtentTensor(FromExtentTensorOp<'a>),
-    FromExtents(FromExtentsOp<'a>),
-    Func(FuncOp<'a>),
-    FunctionLibrary(FunctionLibraryOp<'a>),
-    GetExtent(GetExtentOp<'a>),
-    IndexToSize(IndexToSizeOp<'a>),
-    IsBroadcastable(IsBroadcastableOp<'a>),
-    Max(MaxOp<'a>),
-    Meet(MeetOp<'a>),
-    Min(MinOp<'a>),
-    Mul(MulOp<'a>),
-    NumElements(NumElementsOp<'a>),
-    Rank(RankOp<'a>),
-    Reduce(ReduceOp<'a>),
-    Return(ReturnOp<'a>),
-    ShapeEq(ShapeEqOp<'a>),
-    ShapeOf(ShapeOfOp<'a>),
-    SizeToIndex(SizeToIndexOp<'a>),
-    SplitAt(SplitAtOp<'a>),
-    ToExtentTensor(ToExtentTensorOp<'a>),
-    ValueAsShape(ValueAsShapeOp<'a>),
-    ValueOf(ValueOfOp<'a>),
-    With(WithOp<'a>),
-    Yield(YieldOp<'a>),
-}
+#[mlir::dialect(
+    "shape",
+    ops = [AddOp, AnyOp, AssumingAllOp, AssumingOp, AssumingYieldOp, BroadcastOp, ConcatOp, ConstShapeOp, ConstSizeOp, ConstWitnessOp, CstrBroadcastableOp, CstrEqOp, CstrRequireOp, DebugPrintOp, DimOp, DivOp, FromExtentTensorOp, FromExtentsOp, FuncOp, FunctionLibraryOp, GetExtentOp, IndexToSizeOp, IsBroadcastableOp, MaxOp, MeetOp, MinOp, MulOp, NumElementsOp, RankOp, ReduceOp, ReturnOp, ShapeEqOp, ShapeOfOp, SizeToIndexOp, SplitAtOp, ToExtentTensorOp, ValueAsShapeOp, ValueOfOp, WithOp, YieldOp],
+    dependents = ["arith", "tensor"],
+    materializer
+)]
+pub struct ShapeDialect;

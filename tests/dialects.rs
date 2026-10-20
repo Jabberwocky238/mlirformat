@@ -14,11 +14,11 @@ use mlirformat::{MlirOpt, Op};
 
 /// One test per dialect: `opt` registers it alone, so only its own custom forms are judged.
 macro_rules! dialects {
-    ($($test:ident: $ns:literal => $dialect:ty),* $(,)?) => {$(
+    ($($test:ident: $ns:literal => $dialect:expr),* $(,)?) => {$(
         #[test]
         fn $test() {
             let mut opt = MlirOpt::new();
-            opt.register::<$dialect>();
+            opt.load($dialect);
             // Hand-written forms for ops ODS describes in C++, as `MlirOpt::upstream` injects
             // them; they are named `affine.*`, so they change nothing for the other dialects.
             opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template());
@@ -28,18 +28,18 @@ macro_rules! dialects {
 }
 
 dialects! {
-    affine: "affine" => mlirformat::affine::Affine,
-    r#async: "async" => mlirformat::r#async::Async,
-    bufferization: "bufferization" => mlirformat::bufferization::Bufferization,
-    emitc: "emitc" => mlirformat::emitc::Emitc,
-    gpu: "gpu" => mlirformat::gpu::Gpu,
-    linalg: "linalg" => mlirformat::linalg::Linalg,
-    llvm: "llvm" => mlirformat::llvm::Llvm,
-    memref: "memref" => mlirformat::memref::Memref,
-    pdl: "pdl" => mlirformat::pdl::Pdl,
-    scf: "scf" => mlirformat::scf::Scf,
-    shape: "shape" => mlirformat::shape::Shape,
-    tensor: "tensor" => mlirformat::tensor::Tensor,
-    tosa: "tosa" => mlirformat::tosa::Tosa,
-    vector: "vector" => mlirformat::vector::Vector,
+    affine: "affine" => mlirformat::affine::AffineDialect,
+    r#async: "async" => mlirformat::r#async::AsyncDialect,
+    bufferization: "bufferization" => mlirformat::bufferization::BufferizationDialect,
+    emitc: "emitc" => mlirformat::emitc::EmitcDialect,
+    gpu: "gpu" => mlirformat::gpu::GpuDialect,
+    linalg: "linalg" => mlirformat::linalg::LinalgDialect,
+    llvm: "llvm" => mlirformat::llvm::LlvmDialect,
+    memref: "memref" => mlirformat::memref::MemrefDialect,
+    pdl: "pdl" => mlirformat::pdl::PdlDialect,
+    scf: "scf" => mlirformat::scf::ScfDialect,
+    shape: "shape" => mlirformat::shape::ShapeDialect,
+    tensor: "tensor" => mlirformat::tensor::TensorDialect,
+    tosa: "tosa" => mlirformat::tosa::TosaDialect,
+    vector: "vector" => mlirformat::vector::VectorDialect,
 }

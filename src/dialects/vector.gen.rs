@@ -677,45 +677,10 @@ pub struct YieldOp<'a> {
 }
 
 /// The `vector` dialect.
-#[mlir::dialect("vector")]
-pub enum Vector<'a> {
-    VectorScale(VectorScaleOp<'a>),
-    BitCast(BitCastOp<'a>),
-    Broadcast(BroadcastOp<'a>),
-    CompressStore(CompressStoreOp<'a>),
-    ConstantMask(ConstantMaskOp<'a>),
-    Contraction(ContractionOp<'a>),
-    CreateMask(CreateMaskOp<'a>),
-    Deinterleave(DeinterleaveOp<'a>),
-    ExpandLoad(ExpandLoadOp<'a>),
-    Extract(ExtractOp<'a>),
-    ExtractStridedSlice(ExtractStridedSliceOp<'a>),
-    FMA(FMAOp<'a>),
-    FromElements(FromElementsOp<'a>),
-    Gather(GatherOp<'a>),
-    Insert(InsertOp<'a>),
-    InsertStridedSlice(InsertStridedSliceOp<'a>),
-    Interleave(InterleaveOp<'a>),
-    Load(LoadOp<'a>),
-    Mask(MaskOp<'a>),
-    MaskedLoad(MaskedLoadOp<'a>),
-    MaskedStore(MaskedStoreOp<'a>),
-    MultiDimReduction(MultiDimReductionOp<'a>),
-    OuterProduct(OuterProductOp<'a>),
-    Print(PrintOp<'a>),
-    Reduction(ReductionOp<'a>),
-    ScalableExtract(ScalableExtractOp<'a>),
-    ScalableInsert(ScalableInsertOp<'a>),
-    Scan(ScanOp<'a>),
-    Scatter(ScatterOp<'a>),
-    ShapeCast(ShapeCastOp<'a>),
-    Shuffle(ShuffleOp<'a>),
-    Step(StepOp<'a>),
-    Store(StoreOp<'a>),
-    ToElements(ToElementsOp<'a>),
-    TransferRead(TransferReadOp<'a>),
-    TransferWrite(TransferWriteOp<'a>),
-    Transpose(TransposeOp<'a>),
-    TypeCast(TypeCastOp<'a>),
-    Yield(YieldOp<'a>),
-}
+#[mlir::dialect(
+    "vector",
+    ops = [VectorScaleOp, BitCastOp, BroadcastOp, CompressStoreOp, ConstantMaskOp, ContractionOp, CreateMaskOp, DeinterleaveOp, ExpandLoadOp, ExtractOp, ExtractStridedSliceOp, FMAOp, FromElementsOp, GatherOp, InsertOp, InsertStridedSliceOp, InterleaveOp, LoadOp, MaskOp, MaskedLoadOp, MaskedStoreOp, MultiDimReductionOp, OuterProductOp, PrintOp, ReductionOp, ScalableExtractOp, ScalableInsertOp, ScanOp, ScatterOp, ShapeCastOp, ShuffleOp, StepOp, StoreOp, ToElementsOp, TransferReadOp, TransferWriteOp, TransposeOp, TypeCastOp, YieldOp],
+    dependents = ["arith", "ub"],
+    materializer
+)]
+pub struct VectorDialect;

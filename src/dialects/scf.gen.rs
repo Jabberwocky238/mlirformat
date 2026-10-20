@@ -208,18 +208,9 @@ pub struct YieldOp<'a> {
 }
 
 /// The `scf` dialect.
-#[mlir::dialect("scf")]
-pub enum Scf<'a> {
-    Condition(ConditionOp<'a>),
-    ExecuteRegion(ExecuteRegionOp<'a>),
-    For(ForOp<'a>),
-    Forall(ForallOp<'a>),
-    If(IfOp<'a>),
-    InParallel(InParallelOp<'a>),
-    IndexSwitch(IndexSwitchOp<'a>),
-    Parallel(ParallelOp<'a>),
-    Reduce(ReduceOp<'a>),
-    ReduceReturn(ReduceReturnOp<'a>),
-    While(WhileOp<'a>),
-    Yield(YieldOp<'a>),
-}
+#[mlir::dialect(
+    "scf",
+    ops = [ConditionOp, ExecuteRegionOp, ForOp, ForallOp, IfOp, InParallelOp, IndexSwitchOp, ParallelOp, ReduceOp, ReduceReturnOp, WhileOp, YieldOp],
+    dependents = ["arith"]
+)]
+pub struct ScfDialect;

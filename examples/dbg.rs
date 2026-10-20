@@ -11,9 +11,8 @@ fn main() {
         match opt.template(&op.name) {
             Some(_) => {
                 println!("{}", opt.show(&op));
-                for e in [func::Func::try_from(&op).err(), arith::Arith::try_from(&op).err(), cf::Cf::try_from(&op).err(), builtin::Builtin::try_from(&op).err()] {
-                    println!("{e:?}");
-                }
+                // What the typed op makes of it: the custom form read back.
+                println!("{:?}", opt.parse_op(&opt.show(&op).to_string()).map(|back| back == op));
             }
             None => println!("not in the op table"),
         }

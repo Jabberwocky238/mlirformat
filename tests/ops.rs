@@ -60,7 +60,7 @@ fn dialects_register_and_unregister() {
     let src = "%0 = arith.addi %a, %b overflow<nsw> : i64";
     let op = &opt.parse_op(src).unwrap();
     assert_eq!(op.to_string(), r#"%0 = "arith.addi"(%a, %b) <{overflowFlags = #arith.overflow<nsw>}> : (i64, i64) -> i64"#);
-    assert!(matches!(arith::Arith::try_from(op), Ok(arith::Arith::AddI(_))));
+    assert!(arith::AddI::try_from(op).is_ok());
     assert!(opt.unregister("arith"));
     assert!(opt.parse_op(src).unwrap().raw.is_some());
     assert!(opt.namespaces().all(|ns| ns != "arith"));

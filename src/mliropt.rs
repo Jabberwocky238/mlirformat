@@ -4,7 +4,7 @@
 //!
 //! ```ignore
 //! let mut opt = MlirOpt::upstream();               // arith, builtin, cf, complex, func, index, math, ub
-//! opt.register::<MyDialect>();                     // a whole dialect (`#[mlir::dialect]`)
+//! opt.load(MyDialect);                            // a whole dialect (`#[mlir::dialect]` struct)
 //! opt.inject(MyOp::template());                    // one op (`#[mlir::op]`)
 //! let m = opt.parse(src)?;                         // text → Module (known ops structured)
 //! let text = opt.show(&m).to_string();             // Module → text (known ops in custom form)
@@ -14,6 +14,7 @@
 
 use alloc::collections::BTreeMap;
 use alloc::string::String;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::fmt;
 
@@ -22,40 +23,50 @@ pub use crate::dialects::{affine, affine_ops, arith, bufferization, scf_ops as s
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R, Read};
 
-/// The parameter hook of a registered dialect.
-type Params = for<'a> fn(SymKind, &str, &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>>;
-
-/// A registered dialect: its parameter hook and the ops it brought.
+/// A loaded dialect, and the ops it brought.
 #[derive(Clone)]
-struct Plugin {
-    params: Params,
+struct Loaded {
+    dialect: Arc<dyn Dialect>,
     ops: Vec<&'static str>,
 }
 
 /// ⭐ Dialect registry + op table + conversions.
 #[derive(Clone, Default)]
 pub struct MlirOpt {
-    dialects: BTreeMap<&'static str, Plugin>,
+    dialects: BTreeMap<&'static str, Loaded>,
     ops: BTreeMap<&'static str, Template>,
-    /// What ODS says about each op, for whoever works on the IR ([`OpRegistry`]).
+    /// What ODS says about each op, for whoever works on the IR.
     infos: crate::OpInfos,
 }
 
-impl crate::OpRegistry for MlirOpt {
-    fn op_info(&self, name: &str) -> Option<&crate::OpInfo> {
+impl MlirOpt {
+    // ---- what the context knows ---------------------------------------------------------
+
+    /// Loaded dialect `ns`.
+    pub fn dialect(&self, ns: &str) -> Option<&dyn Dialect> {
+        self.dialects.get(ns).map(|d| &*d.dialect)
+    }
+
+    /// Op `name`'s ODS facts (traits, effects, inherent attributes).
+    pub fn op_info(&self, name: &str) -> Option<&crate::OpInfo> {
         self.infos.op_info(name)
     }
 
-    fn knows_dialect(&self, ns: &str) -> bool {
+    /// Whether namespace `ns` is known (loaded, or among the upstream facts).
+    pub fn knows_dialect(&self, ns: &str) -> bool {
         self.infos.knows_dialect(ns)
     }
 
-    fn defaults(&self, op: &str) -> Vec<NamedAttr<'static>> {
+    /// Whether op `op`'s dialect is known (its ops may still be unregistered).
+    pub fn knows_dialect_of(&self, op: &str) -> bool {
+        op.split_once('.').is_some_and(|(ns, _)| self.knows_dialect(ns))
+    }
+
+    /// The default-valued properties of op `op`, with their defaults (what its ODS builders set).
+    pub fn defaults(&self, op: &str) -> Vec<NamedAttr<'static>> {
         self.template(op).map_or_else(Vec::new, |t| (t.defaults)())
     }
-}
 
-impl MlirOpt {
     /// The op facts this context knows, to register more.
     pub fn infos_mut(&mut self) -> &mut crate::OpInfos {
         &mut self.infos
@@ -72,28 +83,28 @@ impl MlirOpt {
     pub fn upstream() -> Self {
         let mut opt = Self::new();
         opt.infos = crate::OpInfos::upstream();
-        opt.register::<arith::Arith>()
-            .register::<func::Func>()
-            .register::<cf::Cf>()
-            .register::<builtin::Builtin>()
-            .register::<math::Math>()
-            .register::<index::Index>()
-            .register::<ub::Ub>()
-            .register::<complex::Complex>()
-            .register::<affine::Affine>()
-            .register::<r#async::Async>()
-            .register::<bufferization::Bufferization>()
-            .register::<emitc::Emitc>()
-            .register::<gpu::Gpu>()
-            .register::<linalg::Linalg>()
-            .register::<llvm::Llvm>()
-            .register::<memref::Memref>()
-            .register::<pdl::Pdl>()
-            .register::<scf::Scf>()
-            .register::<shape::Shape>()
-            .register::<tensor::Tensor>()
-            .register::<tosa::Tosa>()
-            .register::<vector::Vector>();
+        opt.load(arith::ArithDialect)
+            .load(func::FuncDialect)
+            .load(cf::CfDialect)
+            .load(builtin::BuiltinDialect)
+            .load(math::MathDialect)
+            .load(index::IndexDialect)
+            .load(ub::UbDialect)
+            .load(complex::ComplexDialect)
+            .load(affine::AffineDialect)
+            .load(r#async::AsyncDialect)
+            .load(bufferization::BufferizationDialect)
+            .load(emitc::EmitcDialect)
+            .load(gpu::GpuDialect)
+            .load(linalg::LinalgDialect)
+            .load(llvm::LlvmDialect)
+            .load(memref::MemrefDialect)
+            .load(pdl::PdlDialect)
+            .load(scf::ScfDialect)
+            .load(shape::ShapeDialect)
+            .load(tensor::TensorDialect)
+            .load(tosa::TosaDialect)
+            .load(vector::VectorDialect);
         // Hand-written forms for ops ODS describes in C++; injected by name over the generated
         // templates, so the generated files stay exactly as `mlirformat tblgen` wrote them.
         opt.inject(affine_ops::Apply::template())
@@ -110,20 +121,25 @@ impl MlirOpt {
 
     // ---- registry ----------------------------------------------------------------------
 
-    /// Registers dialect `D` and injects its op table (replacing an earlier registration).
-    pub fn register<D: Dialect>(&mut self) -> &mut Self {
-        self.unregister(D::NAMESPACE);
-        let templates = D::ops();
+    /// ⭐ Loads `dialect`: its op table and its ops' ODS facts (replacing an earlier load).
+    pub fn load(&mut self, dialect: impl Dialect + 'static) -> &mut Self {
+        let ns = dialect.namespace();
+        self.unregister(ns);
+        let templates = dialect.ops();
         let ops = templates.iter().map(|t| t.name).collect();
         self.ops.extend(templates.into_iter().map(|t| (t.name, t)));
-        self.dialects.insert(D::NAMESPACE, Plugin { params: D::parse_params, ops });
+        for info in dialect.op_infos() {
+            self.infos.insert(info);
+        }
+        self.infos.dialect(ns);
+        self.dialects.insert(ns, Loaded { dialect: Arc::new(dialect), ops });
         self
     }
 
-    /// Unregisters dialect `ns` and ejects the ops it brought; whether it was registered.
+    /// Unloads dialect `ns` and ejects the ops it brought; whether it was loaded.
     pub fn unregister(&mut self, ns: &str) -> bool {
-        let Some(plugin) = self.dialects.remove(ns) else { return false };
-        self.ops.retain(|name, _| !plugin.ops.contains(name));
+        let Some(loaded) = self.dialects.remove(ns) else { return false };
+        self.ops.retain(|name, _| !loaded.ops.contains(name));
         true
     }
 
@@ -150,10 +166,6 @@ impl MlirOpt {
     /// Op names in the table.
     pub fn op_names(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.ops.keys().copied()
-    }
-
-    pub(crate) fn params(&self, ns: &str) -> Option<Params> {
-        self.dialects.get(ns).map(|d| d.params)
     }
 
     // ---- conversions -------------------------------------------------------------------

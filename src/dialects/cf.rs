@@ -248,10 +248,9 @@ impl Parse for Switch<'_> {
 }
 
 /// The `cf` dialect.
-#[mlir::dialect("cf")]
-pub enum Cf<'a> {
-    Br(Br<'a>),
-    CondBr(CondBr<'a>),
-    Assert(Assert<'a>),
-    Switch(Switch<'a>),
-}
+#[mlir::dialect(
+    "cf",
+    ops = [Br, CondBr, Assert, Switch],
+    dependents = ["arith"]
+)]
+pub struct CfDialect;

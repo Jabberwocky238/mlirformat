@@ -351,35 +351,10 @@ pub struct TanhOp<'a> {
 }
 
 /// The `complex` dialect.
-#[mlir::dialect("complex")]
-pub enum Complex<'a> {
-    Abs(AbsOp<'a>),
-    Add(AddOp<'a>),
-    Angle(AngleOp<'a>),
-    Atan2(Atan2Op<'a>),
-    Bitcast(BitcastOp<'a>),
-    Conj(ConjOp<'a>),
-    Constant(ConstantOp<'a>),
-    Cos(CosOp<'a>),
-    Create(CreateOp<'a>),
-    Div(DivOp<'a>),
-    Equal(EqualOp<'a>),
-    Exp(ExpOp<'a>),
-    Expm1(Expm1Op<'a>),
-    Im(ImOp<'a>),
-    Log1p(Log1pOp<'a>),
-    Log(LogOp<'a>),
-    Mul(MulOp<'a>),
-    Neg(NegOp<'a>),
-    NotEqual(NotEqualOp<'a>),
-    Pow(PowOp<'a>),
-    Powi(PowiOp<'a>),
-    Re(ReOp<'a>),
-    Rsqrt(RsqrtOp<'a>),
-    Sign(SignOp<'a>),
-    Sin(SinOp<'a>),
-    Sqrt(SqrtOp<'a>),
-    Sub(SubOp<'a>),
-    Tan(TanOp<'a>),
-    Tanh(TanhOp<'a>),
-}
+#[mlir::dialect(
+    "complex",
+    ops = [AbsOp, AddOp, AngleOp, Atan2Op, BitcastOp, ConjOp, ConstantOp, CosOp, CreateOp, DivOp, EqualOp, ExpOp, Expm1Op, ImOp, Log1pOp, LogOp, MulOp, NegOp, NotEqualOp, PowOp, PowiOp, ReOp, RsqrtOp, SignOp, SinOp, SqrtOp, SubOp, TanOp, TanhOp],
+    dependents = ["arith"],
+    materializer
+)]
+pub struct ComplexDialect;

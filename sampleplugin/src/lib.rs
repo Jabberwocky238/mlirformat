@@ -1,12 +1,12 @@
 //! A dialect defined outside `mlirformat`: structs with `#[mlir::op]`, an enum with
-//! `#[mlir::dialect]`, then `MlirOpt::register::<Sample>()`. It covers every role: operands
+//! `#[mlir::dialect]` struct, then `MlirOpt::load(SampleDialect)`. It covers every role: operands
 //! (single, variadic, several variadic groups), type variables (spelled, inferred), properties
 //! (number, enum, unit, optional, dense array, attr-dict), regions, successors, a hand-written
 //! op and a type-parameter hook.
 
 use core::fmt::{self, Write};
 
-use mlirformat::{Attribute, Content, Op, Parser, Printer, R, Region, Str, SymKind, Type, Value, mlir};
+use mlirformat::{Attribute, Content, Op, Parse, Parser, Print, Printer, R, Region, Str, SymKind, Type, Value, mlir};
 use serde::{Deserialize, Serialize};
 
 /// `sample.add %a, %b : T`
@@ -123,17 +123,16 @@ pub struct Comment {
     pub text: String,
 }
 
-impl Op for Comment {
-    const NAME: &'static str = "sample.comment";
-    const FORMAT: &'static str = "";
-
+impl Print for Comment {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
-        p.op_name(Self::NAME)?;
+        p.op_name(<Self as Op>::NAME)?;
         write!(p, " {}", Attribute::str(&self.text))?;
         p.attr_dict("", &self.attrs, &[])?;
         p.loc(&self.loc)
     }
+}
 
+impl Parse for Comment {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let lit = Attribute::Str { lit: p.string()?.into(), ty: None };
         let text = lit.text().or_else(|e| p.err(e.0))?;
@@ -156,18 +155,8 @@ fn params<'a>(kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec
 }
 
 /// The `sample` dialect.
-#[mlir::dialect("sample", params = params)]
-pub enum Sample<'a> {
-    Add(Add<'a>),
-    Scale(Scale<'a>),
-    Round(Round<'a>),
-    Tag(Tag<'a>),
-    Loop(Loop<'a>),
-    Jump(Jump<'a>),
-    Pack(Pack<'a>),
-    Weights(Weights<'a>),
-    Comment(Comment),
-}
+#[mlir::dialect("sample", ops = [Add, Scale, Round, Tag, Loop, Jump, Pack, Weights, Comment], params = params)]
+pub struct SampleDialect;
 
 #[cfg(test)]
 mod tests {
@@ -208,7 +197,7 @@ sample.comment "say \22hi\22"
     #[test]
     fn registers_converts_unregisters() {
         let mut opt = MlirOpt::upstream();
-        opt.register::<Sample>();
+        opt.load(SampleDialect);
         let m = opt.parse(CUSTOM).unwrap();
         assert_eq!(m.to_string(), GENERIC);
         assert_eq!(opt.show(&m).to_string(), CUSTOM);
@@ -218,10 +207,10 @@ sample.comment "say \22hi\22"
         let round = Round::try_from(ops[2]).unwrap();
         assert_eq!(round.mode, Mode::Zero);
         assert_eq!(Operation::try_from(&round).unwrap(), Operation { results: Vec::new(), ..ops[2].clone() });
-        assert!(matches!(Sample::try_from(ops[5]), Ok(Sample::Loop(l)) if l.body.blocks[0].ops.len() == 1));
+        assert!(matches!(Loop::try_from(ops[5]), Ok(l) if l.body.blocks[0].ops.len() == 1));
         assert_eq!(Weights::try_from(ops[9]).unwrap().weights, [1, 2, 3]);
         assert_eq!(Comment::try_from(ops[10]).unwrap().text, "say \"hi\"");
-        let Ok(Sample::Pack(pack)) = Sample::try_from(ops[8]) else { panic!() };
+        let Ok(pack) = Pack::try_from(ops[8]) else { panic!() };
         let Type::Extended(Extended { params, .. }) = &pack.rhs_types[1] else { panic!() };
         assert_eq!(params[1], Attribute::Type(Type::Float(mlirformat::FloatKind::F32)));
 

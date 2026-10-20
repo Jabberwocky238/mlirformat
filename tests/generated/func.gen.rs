@@ -4,7 +4,9 @@
 use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
 /// `func.call_indirect`: indirect call operation
-#[mlir::op("func.call_indirect", format = "$callee `(` $callee_operands `)` attr-dict `:` type($callee)", results(results))]
+///
+/// Generic form only (result type `results` inferred in C++).
+#[mlir::op("func.call_indirect", generic, results(results))]
 pub struct CallIndirectOp<'a> {
     #[slot(callee_ty, name = "callee")]
     pub callee: Value<'a>,
@@ -25,7 +27,7 @@ pub struct CallIndirectOp<'a> {
 /// `func.call`: call operation
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("func.call", generic)]
+#[mlir::op("func.call", generic, results(result))]
 pub struct CallOp<'a> {
     #[slot(operands_ty, name = "operands")]
     pub operands: Vec<Value<'a>>,
@@ -39,15 +41,19 @@ pub struct CallOp<'a> {
     pub no_inline: bool,
     #[dtype(name = "operands_ty")]
     pub operands_ty: Vec<Type<'a>>,
+    #[dtype(name = "result")]
+    pub result: Vec<Type<'a>>,
 }
 
 /// `func.constant`: constant
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("func.constant", generic)]
+#[mlir::op("func.constant", generic, results(result))]
 pub struct ConstantOp<'a> {
     #[attr(name = "value")]
     pub value: Attribute<'a>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
 }
 
 /// `func.func`: An operation with a name containing a single `SSACFG` region
@@ -55,7 +61,7 @@ pub struct ConstantOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("func.func", generic)]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr(name = "sym_name", symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "function_type")]
     pub function_type: Attribute<'a>,
@@ -81,11 +87,9 @@ pub struct ReturnOp<'a> {
 }
 
 /// The `func` dialect.
-#[mlir::dialect("func")]
-pub enum Func<'a> {
-    CallIndirect(CallIndirectOp<'a>),
-    Call(CallOp<'a>),
-    Constant(ConstantOp<'a>),
-    Func(FuncOp<'a>),
-    Return(ReturnOp<'a>),
-}
+#[mlir::dialect(
+    "func",
+    ops = [CallIndirectOp, CallOp, ConstantOp, FuncOp, ReturnOp],
+    materializer
+)]
+pub struct FuncDialect;

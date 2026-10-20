@@ -343,22 +343,48 @@ pub struct Template {
     pub defaults: fn() -> Vec<NamedAttr<'static>>,
 }
 
-/// ⭐ A dialect: a namespace and its op table. `#[mlir::dialect]` writes one from an enum of
-/// `#[mlir::op]` structs; register it with `MlirOpt::register::<D>()`.
-pub trait Dialect {
+/// What ODS declares of a dialect as a whole (`Dialect` in `DialectBase.td`): the dialect-level
+/// counterpart of an op's traits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct DialectTraits {
+    /// `dependentDialects`: the namespaces loaded along with it.
+    pub dependents: &'static [&'static str],
+    /// `hasConstantMaterializer`: it turns an attribute into one of its constant ops.
+    pub constant_materializer: bool,
+    /// `hasCanonicalizer`: it has canonicalization patterns of its own, besides its ops'.
+    pub canonicalizer: bool,
+}
+
+/// ⭐ A dialect (MLIR's `Dialect`): the value a context loads and keeps — its namespace, its
+/// traits, its ops with their ODS facts, and how its types and attributes read.
+/// `#[mlir::dialect("arith", ops = [..])]` implements it on a unit struct (`ArithDialect`);
+/// load one with `MlirOpt::load(ArithDialect)`.
+pub trait Dialect: Send + Sync {
     /// Namespace, e.g. `"func"` for `func.call`, `!func.x`, `#func.x`.
-    const NAMESPACE: &'static str;
+    fn namespace(&self) -> &'static str;
+
+    /// What ODS declares of the dialect itself.
+    fn traits(&self) -> DialectTraits {
+        DialectTraits::default()
+    }
 
     /// The op table.
-    fn ops() -> Vec<Template>;
+    fn ops(&self) -> Vec<Template>;
+
+    /// Its ops' ODS facts (traits, effects, inherent attributes): the upstream rows of its
+    /// namespace.
+    fn op_infos(&self) -> Vec<crate::OpInfo> {
+        crate::OpInfos::upstream().of_dialect(self.namespace())
+    }
 
     /// Structures the body of `!ns.name<...>` / `#ns.name<...>`, positioned at its opening
     /// delimiter; `None` keeps it raw.
-    fn parse_params<'a>(kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>> {
+    fn parse_params<'a>(&self, kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>> {
         let _ = (kind, name, p);
         None
     }
 }
+
 
 // ---- the serde data model ----------------------------------------------------------------
 

@@ -131,11 +131,10 @@ pub struct PowiOp<'a> {
 }
 
 /// The `complex` dialect.
-#[mlir::dialect("complex")]
-pub enum Complex<'a> {
-    Conj(ConjOp<'a>), Cos(CosOp<'a>), Exp(ExpOp<'a>), Expm1(Expm1Op<'a>), Log(LogOp<'a>), Log1p(Log1pOp<'a>),
-    Neg(NegOp<'a>), Rsqrt(RsqrtOp<'a>), Sign(SignOp<'a>), Sin(SinOp<'a>), Sqrt(SqrtOp<'a>), Tan(TanOp<'a>),
-    Tanh(TanhOp<'a>), Re(ReOp<'a>), Im(ImOp<'a>), Abs(AbsOp<'a>), Angle(AngleOp<'a>), Add(AddOp<'a>), Sub(SubOp<'a>),
-    Mul(MulOp<'a>), Div(DivOp<'a>), Pow(PowOp<'a>), Atan2(Atan2Op<'a>), Equal(EqualOp<'a>), NotEqual(NotEqualOp<'a>),
-    Constant(ConstantOp<'a>), Create(CreateOp<'a>), Bitcast(BitcastOp<'a>), Powi(PowiOp<'a>),
-}
+#[mlir::dialect(
+    "complex",
+    ops = [ConjOp, CosOp, ExpOp, Expm1Op, LogOp, Log1pOp, NegOp, RsqrtOp, SignOp, SinOp, SqrtOp, TanOp, TanhOp, ReOp, ImOp, AbsOp, AngleOp, AddOp, SubOp, MulOp, DivOp, PowOp, Atan2Op, EqualOp, NotEqualOp, ConstantOp, CreateOp, BitcastOp, PowiOp],
+    dependents = ["arith"],
+    materializer
+)]
+pub struct ComplexDialect;
