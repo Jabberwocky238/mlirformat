@@ -33,6 +33,7 @@ dialects! {
     bufferization: "bufferization" => mlirformat::bufferization::Bufferization,
     gpu: "gpu" => mlirformat::gpu::Gpu,
     linalg: "linalg" => mlirformat::linalg::Linalg,
+    llvm: "llvm" => mlirformat::llvm::Llvm,
     memref: "memref" => mlirformat::memref::Memref,
     pdl: "pdl" => mlirformat::pdl::Pdl,
     scf: "scf" => mlirformat::scf::Scf,

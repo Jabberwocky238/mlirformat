@@ -24,6 +24,8 @@ pub mod bufferization;
 pub mod r#async;
 #[path = "gpu.gen.rs"]
 pub mod gpu;
+#[path = "llvm.gen.rs"]
+pub mod llvm;
 #[path = "linalg.gen.rs"]
 pub mod linalg;
 #[path = "memref.gen.rs"]

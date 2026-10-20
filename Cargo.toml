@@ -67,11 +67,6 @@ path = "tests/generated/index.rs"
 required-features = ["gen-tests"]
 
 [[test]]
-name = "gen_llvm"
-path = "tests/generated/llvm.rs"
-required-features = ["gen-tests"]
-
-[[test]]
 name = "gen_math"
 path = "tests/generated/math.rs"
 required-features = ["gen-tests"]

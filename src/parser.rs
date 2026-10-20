@@ -1435,9 +1435,35 @@ impl Format<'_> {
                             continue;
                         }
                         Role::Prop { unit: true, .. } => Content::Attr(Attribute::Unit),
+                        Role::Prop { bits: Some(_), int, .. } => {
+                            let Some(e) = f.bit_enum() else { return p.err("a bad bit enum") };
+                            p.ws();
+                            if !e.mnemonic.is_empty() {
+                                p.expect(e.mnemonic)?;
+                                p.expect("<")?;
+                            }
+                            let mut value = 0;
+                            loop {
+                                p.ws();
+                                let word = p.ident()?;
+                                value |= e.value(word).map_or_else(|| p.err(format!("`{word}` is not a case")), Ok)?;
+                                if !p.eat(e.sep.trim()) {
+                                    break;
+                                }
+                            }
+                            if !e.mnemonic.is_empty() {
+                                p.expect(">")?;
+                            }
+                            Content::Attr(Attribute::Int { lit: Str::Owned(format!("{value}")), ty: int.and_then(|t| Type::try_from(t).ok()) })
+                        }
                         Role::Prop { symbol: true, .. } => {
                             p.ws();
                             Content::Attr(Attribute::str(&p.sym_name()?))
+                        }
+                        // An alias (`#di_label`) stands for the whole attribute.
+                        Role::Prop { dialect: Some(_), .. } if { p.ws(); p.at(b'#') } => {
+                            let a = p.attr()?;
+                            owned(p, Some(&a))?
                         }
                         Role::Prop { dialect: Some(d), .. } => {
                             p.ws();
@@ -1556,11 +1582,15 @@ impl Format<'_> {
         let hit = match elems.iter().find(|e| !matches!(e, Elem::Lit(l) if l.trim().is_empty())) {
             Some(Elem::Lit(l)) => p.eat_lit(l),
             Some(Elem::Var(n)) => match self.field(n)?.role {
+                Role::Prop { bits: Some(_), .. } => self.field(n)?.bit_enum().is_some_and(|e| {
+                    p.ws();
+                    if e.mnemonic.is_empty() { p.ident().is_ok_and(|w| e.value(w).is_some()) } else { p.rest().starts_with(e.mnemonic) }
+                }),
                 Role::Operand { .. } => p.at(b'%'),
                 Role::Successor => p.at(b'^'),
                 Role::Region => p.at(b'{'),
                 Role::Prop { symbol: true, .. } => p.at(b'@'),
-                Role::Prop { dialect: Some(_), .. } => p.at(b'<'),
+                Role::Prop { dialect: Some(_), .. } => p.at(b'<') || p.at(b'#'),
                 // An enum keyword: any word the format does not spell as a literal.
                 Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w)),
                 _ => false,

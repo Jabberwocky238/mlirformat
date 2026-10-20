@@ -855,6 +855,11 @@ impl Format<'_> {
                         }
                         Role::Type { .. } => write!(p, "{}", Sep(&v.types(f)?, ", ")).map_err(io)?,
                         Role::Prop { unit: true, .. } | Role::Attrs | Role::Loc => {}
+                        Role::Prop { bits: Some(_), .. } => {
+                            if let (Some(e), Some(a)) = (f.bit_enum(), v.prop(f)?) {
+                                p.write_str(&e.show(u64::try_from(a.int()?).unwrap_or(0))).map_err(io)?;
+                            }
+                        }
                         Role::Prop { symbol: true, .. } => match v.prop(f)? {
                             Some(a @ Attribute::Str { .. }) => p.sym_name(&a.text()?).map_err(io)?,
                             Some(a) => write!(p, "{a}").map_err(io)?,
@@ -923,6 +928,8 @@ impl Format<'_> {
                     for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })).filter(|f| !spelled.contains(&f.name)) {
                         attrs.extend(v.prop(f)?.map(|a| NamedAttr::of(f.name, a)));
                     }
+                    // The properties as their dictionary (sorted by name), then the discardable ones.
+                    attrs.sort_by(|a, b| a.name.cmp(&b.name));
                     if let Some(f) = self.schema.of_role(|r| *r == Role::Attrs).next() {
                         attrs.extend(v.get::<Vec<NamedAttr<'static>>>(f)?);
                     }

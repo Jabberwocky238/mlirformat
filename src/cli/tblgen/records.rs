@@ -151,6 +151,9 @@ impl Records {
             _ if call.contains("getF32Type") || call.contains("Float32Type>") => "f32".into(),
             _ if call.contains("getF64Type") || call.contains("Float64Type>") => "f64".into(),
             _ if call.contains("getBF16Type") || call.contains("BFloat16Type>") => "bf16".into(),
+            // LLVM's opaque pointer in address space 0, and its token.
+            _ if call.contains("LLVMPointerType>(0)") => "!llvm.ptr".into(),
+            _ if call.contains("LLVMTokenType::get(") => "!llvm.token".into(),
             // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
             // ⛔ 只认 `getType<…>()` 这种**无参**构造 —— 带参数的类型光靠助记符拼不出写法
             // （`!pdl.range<T>` 还要那个 T）。
@@ -221,7 +224,8 @@ impl Records {
         out
     }
 
-    /// An integer enum attribute's cases `(keyword, value)` if they are `0..n` in order.
+    /// An integer enum attribute's cases `(keyword, value)` if their values ascend from 0 (a gap
+    /// becomes a hidden variant: a variant's index is its value).
     fn int_enum(&self, attr: &str) -> Option<(String, Vec<(String, i64)>, u64)> {
         if !self.is_a(attr, "IntEnumAttr") && !self.is_a(attr, "IntEnumAttrInfo") {
             return None;
@@ -235,8 +239,36 @@ impl Records {
                 Some((self.text(c, "str")?.to_string(), self.field(c, "value")?.as_i64()?))
             })
             .collect::<Option<_>>()?;
-        let contiguous = cases.iter().enumerate().all(|(i, (_, v))| i64::try_from(i) == Ok(*v));
-        contiguous.then(|| (self.text(attr, "className").unwrap_or(attr).to_string(), cases, self.field(attr, "bitwidth").and_then(Json::as_u64).unwrap_or(64)))
+        let ascending = cases.first().is_some_and(|(_, v)| *v >= 0) && cases.windows(2).all(|w| w[0].1 < w[1].1) && cases.last().is_some_and(|(_, v)| *v < 256);
+        ascending.then(|| (self.text(attr, "className").unwrap_or(attr).to_string(), cases, self.field(attr, "bitwidth").and_then(Json::as_u64).unwrap_or(64)))
+    }
+
+    /// A bit enum property stored as its integer (`EnumProp<GEPNoWrapFlags>`,
+    /// `NamedEnumPropWithAttrForm<IntegerOverflowFlags, "overflow", ..>`) ⇒ (`mnemonic/sep/case=v;..`,
+    /// width, default value).
+    fn bit_enum_prop(&self, prop: &str) -> Option<(String, u64, Option<i64>)> {
+        let wrapped = self.field(prop, "baseProperty").and_then(Self::def_of);
+        let prop = wrapped.filter(|_| !self.is_a(prop, "EnumProp")).unwrap_or(prop);
+        if !self.is_a(prop, "EnumProp") || self.field(prop, "storeInCustomAttribute").and_then(Json::as_i64) == Some(1) {
+            return None;
+        }
+        let info = self.field(prop, "enum").and_then(Self::def_of)?;
+        if !self.is_a(info, "BitEnumBase") {
+            return None;
+        }
+        let cases: Vec<String> = self.field(info, "enumerants")?.as_array()?.iter().filter_map(|c| {
+            let c = Self::def_of(c)?;
+            Some(format!("{}={}", self.text(c, "str")?, self.field(c, "value")?.as_i64()?))
+        }).collect();
+        let (mnemonic, sep) = (self.text(prop, "mnemonic").unwrap_or(""), self.text(info, "separator").unwrap_or("|"));
+        let default = self.text(prop, "defaultValue").and_then(|v| self.case_value(info, v.rsplit("::").next()?));
+        Some((format!("{mnemonic}/{sep}/{}", cases.join(";")), self.field(info, "bitwidth").and_then(Json::as_u64).unwrap_or(32), default))
+    }
+
+    /// The value of an integer enum's case `symbol`.
+    fn case_value(&self, attr: &str, symbol: &str) -> Option<i64> {
+        let cases = self.field(attr, "enumerants")?.as_array()?;
+        cases.iter().filter_map(|c| Self::def_of(c)).find(|c| self.text(c, "symbol") == Some(symbol)).and_then(|c| self.field(c, "value")?.as_i64())
     }
 
     /// A dialect enum attribute spelled `#ns.mnemonic<case>` ⇒ (`ns.mnemonic`, its enum's cases by symbol).
@@ -261,17 +293,29 @@ impl Records {
         if unit(constraint) || unit(base) {
             return (format!("#[attr({name})]"), "bool".into());
         }
+        if let Some((bits, width, default)) = self.bit_enum_prop(constraint) {
+            return match default {
+                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\", bits = {bits:?})]"), "Attribute<'a>".into()),
+                None => (format!("#[attr({name}, int = \"i{width}\", bits = {bits:?})]"), "Attribute<'a>".into()),
+            };
+        }
         if let Some((rust, cases, width)) = self.int_enum(base) {
             dialect.enums.insert(rust.clone(), cases);
-            let ty = if optional || defaulted { format!("Option<{rust}>") } else { rust };
-            return (format!("#[attr({name}, int = \"i{width}\")]"), ty);
+            // `DefaultValuedAttr<AtomicOrdering, "AtomicOrdering::not_atomic">`: the case's value.
+            let default = defaulted.then(|| self.text(constraint, "defaultValue")).flatten().and_then(|v| self.case_value(base, v.rsplit("::").next()?));
+            return match default {
+                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), rust),
+                None if optional || defaulted => (format!("#[attr({name}, int = \"i{width}\")]"), format!("Option<{rust}>")),
+                None => (format!("#[attr({name}, int = \"i{width}\")]"), rust),
+            };
         }
         if let Some((attr, cases)) = self.dialect_enum(base) {
             let default = defaulted
                 .then(|| self.text(constraint, "defaultValue"))
                 .flatten()
                 .and_then(|v| v.rsplit("::").next())
-                .and_then(|symbol| cases.get(symbol))
+                // `{}`: a bit enum with nothing set, its `none` case.
+                .and_then(|symbol| if symbol == "{}" { cases.values().find(|c| *c == "none") } else { cases.get(symbol) })
                 .map(|case| format!(", default = \"<{case}>\""));
             return match default {
                 Some(default) => (format!("#[attr({name}, dialect = {attr:?}{default})]"), "Attribute<'a>".into()),
@@ -280,6 +324,10 @@ impl Records {
             };
         }
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
+        // An attribute of one `AttrDef`: ODS prints it stripped (`<function = @f, tag = <id = 1>>`).
+        if self.is_a(base, "AttrDef") && self.text(base, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`")) && let Some(attr) = self.text(base, "attrName") {
+            return (format!("#[attr({name}, dialect = {attr:?})]"), ty.into());
+        }
         if let Some(el) = Self::dense_array(base).or_else(|| Self::dense_array(constraint)) {
             return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
         }
@@ -458,12 +506,12 @@ impl Records {
                 fields.push(GenField { marker: format!("#[dtype(name = {ods:?}{infer})]"), ident: var, ty: ty.into() });
             }
         }
-        let (format, generic_why) = self.format(op, &fields);
+        let (format, generic_why) = self.format(op, &fields, &results);
         GenOp { rust, name, summary, format, generic_why, results: results.iter().map(|r| Self::ident(r)).collect(), fields }
     }
 
     /// The assembly format if the runtime format engine can read it, else why not.
-    fn format(&self, op: &str, fields: &[GenField]) -> (Option<String>, Option<String>) {
+    fn format(&self, op: &str, fields: &[GenField], results: &[&str]) -> (Option<String>, Option<String>) {
         if self.field(op, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) {
             return (None, Some("custom C++ syntax".into()));
         }
@@ -502,6 +550,14 @@ impl Records {
                 },
             };
         }
+        // A result type the format neither spells nor infers comes from C++ (`inferReturnTypes`:
+        // `llvm.cmpxchg`'s `!llvm.struct<(T, i1)>`).
+        for r in results {
+            let own = format!("#[dtype(name = {r:?})]");
+            if fields.iter().any(|f| f.marker == own) && !format.contains(&format!("${r}")) && !format.contains("results") {
+                return (None, Some(format!("result type `{r}` inferred in C++")));
+            }
+        }
         match mlirformat::Elem::check(&format, op) {
             Ok(()) => (Some(format), None),
             Err(e) => (None, Some(e.to_string())),
@@ -526,8 +582,13 @@ impl GenDialect {
         for (name, cases) in &self.enums {
             let _ = writeln!(out, "#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize)]");
             let _ = writeln!(out, "#[serde(crate = \"mlirformat::__serde\")]\npub enum {name} {{");
-            for (keyword, _) in cases {
+            let mut next = 0;
+            for (keyword, value) in cases {
+                for gap in next..*value {
+                    let _ = writeln!(out, "    #[doc(hidden)]\n    #[serde(rename = \"__{gap}\")]\n    __{gap},");
+                }
                 let _ = writeln!(out, "    #[serde(rename = {keyword:?})]\n    {},", Records::camel(keyword));
+                next = value + 1;
             }
             let _ = writeln!(out, "}}\n");
         }

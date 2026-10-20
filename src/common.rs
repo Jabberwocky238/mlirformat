@@ -438,7 +438,7 @@ pub enum Infer {
 pub enum Role {
     Operand { ty: &'static str },
     Type { result: Option<usize>, infer: Option<Infer> },
-    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool },
+    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool, bits: Option<&'static str> },
     Region,
     Successor,
     Attrs,
@@ -493,6 +493,8 @@ impl TryFrom<&'static str> for Field {
                 (name, variadic, Role::Type { result: result.map(str::parse).transpose().map_err(|_| bad())?, infer })
             }
             b'#' => {
+                // `%`: a bit enum, last since its separator may be a `|`.
+                let (rest, bits) = split(rest, '%');
                 let (head, default) = split(rest, '|');
                 let (head, dialect) = split(head, '@');
                 let (name, int) = split(head, ':');
@@ -500,7 +502,7 @@ impl TryFrom<&'static str> for Field {
                 // `$`: a `SymbolNameAttr`, a string the custom form spells `@name`.
                 let (name, symbol) = name.strip_suffix('$').map_or((name, false), |n| (n, true));
                 let (name, unit) = name.strip_suffix('?').map_or((name, false), |n| (n, true));
-                (name, false, Role::Prop { unit, int, dialect, default, dense, symbol })
+                (name, false, Role::Prop { unit, int, dialect, default, dense, symbol, bits })
             }
             b'^' => {
                 let (name, variadic) = star(rest);
@@ -544,11 +546,58 @@ impl Field {
         })
     }
 
-    /// A property's default value (`#dialect.attr<default>`).
+    /// A bit enum property's cases (`overflow<nsw, nuw>`).
+    pub fn bit_enum(&self) -> Option<BitEnum> {
+        let Role::Prop { bits: Some(b), .. } = self.role else { return None };
+        let mut parts = b.splitn(3, '/');
+        let (mnemonic, sep, cases) = (parts.next()?, parts.next()?, parts.next()?);
+        let cases = cases.split(';').filter_map(|c| c.split_once('=')).filter_map(|(k, v)| Some((k, v.parse().ok()?))).collect();
+        Some(BitEnum { mnemonic, sep, cases })
+    }
+
+    /// A property's default value (`#dialect.attr<default>`, or an integer `0 : i64`).
     pub fn default_attr(&self) -> Option<Attribute<'static>> {
+        if let Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } = self.role {
+            return Some(Attribute::Int { lit: Cow::Borrowed(v), ty: Type::try_from(t).ok() });
+        }
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
         let body = (!body.is_empty()).then_some(Cow::Borrowed(body));
         Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
+    }
+}
+
+/// A bit enum property (`NamedEnumProp<IntegerOverflowFlags, "overflow">`, `EnumProp<GEPNoWrapFlags>`):
+/// stored as its integer, spelled as its set cases.
+pub struct BitEnum {
+    /// `overflow` ⇒ `overflow<...>`; empty: the cases alone.
+    pub mnemonic: &'static str,
+    pub sep: &'static str,
+    /// `(keyword, value)`; a group's value has several bits.
+    pub cases: Vec<(&'static str, u64)>,
+}
+
+impl BitEnum {
+    /// The cases of `value`, groups first (`printBitEnumPrimaryGroups`): `inbounds|nuw`.
+    pub fn show(&self, value: u64) -> String {
+        let (groups, single): (Vec<_>, Vec<_>) = self.cases.iter().filter(|(_, v)| *v != 0).partition(|(_, v)| v.count_ones() > 1);
+        let mut left = value;
+        let mut words = Vec::new();
+        for &(k, v) in groups.into_iter().chain(single) {
+            if left & v == v {
+                words.push(k);
+                left &= !v;
+            }
+        }
+        if words.is_empty() {
+            words.extend(self.cases.iter().find(|(_, v)| *v == 0).map(|(k, _)| *k));
+        }
+        let list = words.join(self.sep);
+        if self.mnemonic.is_empty() { list } else { format!("{}<{list}>", self.mnemonic) }
+    }
+
+    /// The value of case `word`.
+    pub fn value(&self, word: &str) -> Option<u64> {
+        self.cases.iter().find(|(k, _)| *k == word).map(|(_, v)| *v)
     }
 }
 
@@ -686,8 +735,8 @@ impl<'f> Elem<'f> {
                 }
                 Some('(') => {
                     let (elems, tail) = Self::list(&rest[1..], op)?;
-                    // `$x^`, or `type($x)^`: the anchor is `x`.
-                    let anchor = rest[1..].find('^').map(|c| rest[1..=c].strip_suffix(')').unwrap_or(&rest[1..=c])).and_then(|pre| pre.rfind('$').map(|s| &pre[s + 1..])).ok_or_else(|| bad("a group needs an anchor `$x^`".into()))?;
+                    // `$x^`, or `type($x)^`, outside any nested group: the anchor is `x`.
+                    let anchor = Self::anchor(&rest[1..]).ok_or_else(|| bad("a group needs an anchor `$x^`".into()))?;
                     (Self::Group { anchor, elems }, tail.strip_prefix(")?").ok_or_else(|| bad("a group must end with `)?`".into()))?)
                 }
                 _ if rest.starts_with("attr-dict") => (Self::AttrDict, &rest["attr-dict".len()..]),
@@ -712,6 +761,27 @@ impl<'f> Elem<'f> {
             out.push(elem);
             rest = tail;
         }
+    }
+
+    /// The `^` of a group's own elements (`group` past its `(`), not of a group nested in it.
+    fn anchor(group: &'f str) -> Option<&'f str> {
+        let (mut depth, mut quoted) = (0usize, false);
+        for (i, c) in group.char_indices() {
+            match c {
+                '`' => quoted = !quoted,
+                _ if quoted => {}
+                '(' => depth += 1,
+                ')' if depth == 0 => return None,
+                ')' => depth -= 1,
+                '^' if depth == 0 => {
+                    let pre = &group[..i];
+                    let pre = pre.strip_suffix(')').unwrap_or(pre);
+                    return pre.rfind('$').map(|s| &pre[s + 1..]);
+                }
+                _ => {}
+            }
+        }
+        None
     }
 
     /// Elements in order, groups opened.
