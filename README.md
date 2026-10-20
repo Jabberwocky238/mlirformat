@@ -68,7 +68,8 @@ Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `b
 `builtin`, `cf`, `complex`, `emitc`, `func`, `gpu`, `index`, `linalg`, `llvm`, `math`, `memref`,
 `pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`. `arith`, `builtin`, `cf`, `complex`,
 `func`, `index`, `math` and `ub` are written by hand; the rest are generated from ODS by
-`mlirformat tblgen`. An op
+`mlirformat tblgen`; `llvm_types::LlvmType` and `emitc_types::EmitcType` read and build those
+dialects' types. An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
 MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.
 
