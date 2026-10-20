@@ -555,7 +555,66 @@ struct_impls!(SerializeStruct, SerializeStructVariant);
 
 // ---- Rust values as attributes -------------------------------------------------------------
 
+/// `Cow::Borrowed` text made owned.
+fn own(s: &Str<'_>) -> Str<'static> {
+    Cow::Owned(String::from(&**s))
+}
+
+impl Extended<'_> {
+    /// A deep copy that borrows nothing.
+    pub fn owned(&self) -> Extended<'static> {
+        Extended { name: own(&self.name), body: self.body.as_ref().map(own), params: self.params.iter().map(Attribute::owned).collect() }
+    }
+}
+
+impl Type<'_> {
+    /// A deep copy that borrows nothing.
+    pub fn owned(&self) -> Type<'static> {
+        match self {
+            Type::Integer { signedness, width } => Type::Integer { signedness: *signedness, width: *width },
+            Type::Float(k) => Type::Float(*k),
+            Type::Index => Type::Index,
+            Type::NoneType => Type::NoneType,
+            Type::Complex(e) => Type::Complex(e.owned().into()),
+            Type::Tuple(ts) => Type::Tuple(ts.iter().map(Type::owned).collect()),
+            Type::Function(f) => Type::Function(FunctionType { inputs: f.inputs.iter().map(Type::owned).collect(), results: f.results.iter().map(Type::owned).collect() }),
+            Type::Shaped(s) => Type::Shaped(Shaped { kind: s.kind, shape: s.shape.clone(), elem: s.elem.owned().into(), extras: s.extras.iter().map(Attribute::owned).collect() }),
+            Type::Extended(e) => Type::Extended(e.owned()),
+        }
+    }
+}
+
 impl Attribute<'_> {
+    /// A deep copy that borrows nothing.
+    pub fn owned(&self) -> Attribute<'static> {
+        let ty = |t: &Option<Type<'_>>| t.as_ref().map(Type::owned);
+        match self {
+            Attribute::Unit => Attribute::Unit,
+            Attribute::Bool(b) => Attribute::Bool(*b),
+            Attribute::Int { lit, ty: t } => Attribute::Int { lit: own(lit), ty: ty(t) },
+            Attribute::Float { lit, ty: t } => Attribute::Float { lit: own(lit), ty: ty(t) },
+            Attribute::Str { lit, ty: t } => Attribute::Str { lit: own(lit), ty: ty(t) },
+            Attribute::Type(t) => Attribute::Type(t.owned()),
+            Attribute::Array(xs) => Attribute::Array(xs.iter().map(Attribute::owned).collect()),
+            Attribute::Dict(d) => Attribute::Dict(d.iter().map(|n| NamedAttr { name: own(&n.name), value: n.value.as_ref().map(Attribute::owned) }).collect()),
+            Attribute::SymbolRef(p) => Attribute::SymbolRef(p.iter().map(own).collect()),
+            Attribute::DenseArray { ty: t, values } => Attribute::DenseArray { ty: t.owned(), values: values.iter().map(own).collect() },
+            Attribute::Builtin { name, body, ty: t } => Attribute::Builtin { name: own(name), body: own(body), ty: ty(t) },
+            Attribute::Extended { ext, ty: t } => Attribute::Extended { ext: ext.owned(), ty: ty(t) },
+        }
+    }
+
+    /// `#name<body>` (`#name` when `body` is empty): an enum or other dialect attribute.
+    pub fn dialect(name: &str, body: &str) -> Attribute<'static> {
+        let body = (!body.is_empty()).then(|| Cow::Owned(String::from(body)));
+        Attribute::Extended { ext: Extended { name: Cow::Owned(name.into()), body, params: Vec::new() }, ty: None }
+    }
+
+    /// `v : i64`, how ODS stores an integer enum.
+    pub fn i64(v: i64) -> Attribute<'static> {
+        Attribute::of_int(v.into(), Type::int(64))
+    }
+
     /// `n : ty`.
     pub fn of_int(value: i128, ty: Type<'static>) -> Attribute<'static> {
         Attribute::Int { lit: Cow::Owned(value.to_string()), ty: Some(ty) }
