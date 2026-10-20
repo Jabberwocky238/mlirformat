@@ -14,7 +14,7 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 
-mlirformat_macros::syntax! {
+crate::mlir::syntax! {
     /// `[%a, 7, 42]` — each item is either the static integer or, where that integer is the
     /// `kDynamic` sentinel, the next operand. Upstream: `printDynamicIndexList`, 72 call sites.
     DynamicIndexList($values, $integers) = "[" zip($integers, $values) "]";
