@@ -65,7 +65,7 @@ mod traits;
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
-pub use traits::{DIALECTS, Effect, EffectKind, EffectOn, Effects, OPS, OpInfo, Trait};
+pub use traits::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos, OpRegistry, Trait};
 
 #[doc(hidden)]
 pub use {alloc::vec as __vec, alloc::vec::Vec as __Vec, serde as __serde};

@@ -88,10 +88,13 @@ format, and the format tokenizer expands the call site into plain elements.
 
 ### Op traits
 
-`OpInfo::of("memref.load")` gives what ODS says about every upstream op (not only the dialects
-above): its native traits and interfaces (`Trait::Pure`, `Trait::RegionBranchOpInterface`, …), its
-memory effects, and its inherent attributes; `DIALECTS` lists the dialects `mlir-opt` registers.
-The table (`src/traits.gen.rs`) is generated from llvm-project's ODS by `scripts/traits.py`:
+What ODS says about each op — its native traits and interfaces (`Trait::Pure`,
+`Trait::RegionBranchOpInterface`, …), its memory effects, its inherent attributes — is asked
+through the `OpRegistry` trait, never a global table: `opt.op_info("memref.load")`,
+`opt.knows_dialect("tosa")`. `MlirOpt::upstream()` registers every upstream op (not only the
+dialects above) and the dialects `mlir-opt` registers; `OpInfos` is the default registry, filled by
+`OpInfos::upstream()` or `insert` / `dialect`. The upstream rows (`src/traits.gen.rs`) are generated
+from llvm-project's ODS by `scripts/traits.py`:
 
 ```sh
 python3 scripts/traits.py --llvm $LLVM --mlirformat target/release/mlirformat -I $LLVM_BUILD/tools/mlir/include

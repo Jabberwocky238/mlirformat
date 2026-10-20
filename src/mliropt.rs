@@ -37,12 +37,29 @@ struct Plugin {
 pub struct MlirOpt {
     dialects: BTreeMap<&'static str, Plugin>,
     ops: BTreeMap<&'static str, Template>,
+    /// What ODS says about each op, for whoever works on the IR ([`OpRegistry`]).
+    infos: crate::OpInfos,
+}
+
+impl crate::OpRegistry for MlirOpt {
+    fn op_info(&self, name: &str) -> Option<&crate::OpInfo> {
+        self.infos.op_info(name)
+    }
+
+    fn knows_dialect(&self, ns: &str) -> bool {
+        self.infos.knows_dialect(ns)
+    }
 }
 
 impl MlirOpt {
+    /// The op facts this context knows, to register more.
+    pub fn infos_mut(&mut self) -> &mut crate::OpInfos {
+        &mut self.infos
+    }
+
     /// No dialects: every op stays generic or raw.
     pub const fn new() -> Self {
-        Self { dialects: BTreeMap::new(), ops: BTreeMap::new() }
+        Self { dialects: BTreeMap::new(), ops: BTreeMap::new(), infos: crate::OpInfos::new() }
     }
 
     /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
@@ -50,6 +67,7 @@ impl MlirOpt {
     /// `vector`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
+        opt.infos = crate::OpInfos::upstream();
         opt.register::<arith::Arith>()
             .register::<func::Func>()
             .register::<cf::Cf>()
