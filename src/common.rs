@@ -703,7 +703,8 @@ pub enum Elem<'f> {
     /// `type($x)`; `true` inside `qualified(...)`.
     TypeOf(&'f str, bool),
     FnType(&'f str, &'f str),
-    AttrDict,
+    /// `attr-dict`; `true` for `attr-dict-with-keyword` (`attributes {...}`).
+    AttrDict(bool),
     Group { anchor: &'f str, elems: Vec<Elem<'f>> },
     /// One list, two co-indexed fields: `integers` holds each static item, and the `kDynamic`
     /// sentinel wherever the item is the next operand of `values` instead. ODS has no way to
@@ -753,7 +754,7 @@ impl<'f> Format<'f> {
         let mut flat = Vec::new();
         Elem::flatten(&self.elems, &mut flat);
         let mut after = flat.into_iter().skip_while(|e| **e != Elem::Var(name)).skip(1);
-        after.find(|e| **e != Elem::AttrDict) == Some(&Elem::Lit(":"))
+        after.find(|e| !matches!(e, Elem::AttrDict(_))) == Some(&Elem::Lit(":"))
     }
 
     /// Is `word` one of the format's literals?
@@ -806,7 +807,8 @@ impl<'f> Elem<'f> {
                     let anchor = Self::anchor(&rest[1..]).ok_or_else(|| bad("a group needs an anchor `$x^`".into()))?;
                     (Self::Group { anchor, elems }, tail.strip_prefix(")?").ok_or_else(|| bad("a group must end with `)?`".into()))?)
                 }
-                _ if rest.starts_with("attr-dict") => (Self::AttrDict, &rest["attr-dict".len()..]),
+                _ if rest.starts_with("attr-dict-with-keyword") => (Self::AttrDict(true), &rest["attr-dict-with-keyword".len()..]),
+                _ if rest.starts_with("attr-dict") => (Self::AttrDict(false), &rest["attr-dict".len()..]),
                 // `qualified(x)`: types and attributes always print with their dialect prefix here.
                 _ if rest.starts_with("qualified(") => {
                     let (mut inner, tail) = Self::list(&rest["qualified(".len()..], op)?;
