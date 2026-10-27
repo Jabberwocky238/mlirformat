@@ -54,6 +54,31 @@ fn user_op_converts_both_ways() {
     assert_eq!(opt.show(&m).to_string(), "%0 = \"arith.maxsi\"(%a, %b) : (i32, i32) -> i32\n");
 }
 
+/// An optional operand whose value and type sit in two optional groups (as `mlirformat tblgen`
+/// writes `Optional<…>` / `Variadic<…>` operands of an ODS format such as CalVX's `vec.compact`).
+#[mlir::op("test.compact", format = "$input (`,` $mask^)? attr-dict `:` type($input) (`,` type($mask)^)? `->` type($result)", results(result))]
+pub struct Compact<'a> {
+    #[slot(input_ty, name = "input")]
+    pub input: Value<'a>,
+    #[slot(mask_ty, name = "mask")]
+    pub mask: Vec<Value<'a>>,
+    #[dtype(name = "input_ty")]
+    pub input_ty: Type<'a>,
+    #[dtype(name = "mask_ty")]
+    pub mask_ty: Vec<Type<'a>>,
+    #[dtype(name = "result")]
+    pub result: Type<'a>,
+}
+
+#[test]
+fn absent_optional_groups_sharing_an_operand_parse() {
+    for text in ["test.compact %k : tensor<16xi32> -> tensor<16xi32>", "test.compact %k, %m : tensor<16xi32>, tensor<16xi1> -> tensor<16xi32>"] {
+        let op = Compact::try_from(text).unwrap_or_else(|e| panic!("{text}: {e}"));
+        assert_eq!(op.to_string(), text);
+        assert_eq!(Compact::try_from(&Operation::try_from(&op).unwrap()).unwrap(), op);
+    }
+}
+
 #[test]
 fn dialects_register_and_unregister() {
     let mut opt = MlirOpt::upstream();

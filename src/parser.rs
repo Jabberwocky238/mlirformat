@@ -1416,9 +1416,14 @@ impl Format<'_> {
                         && let Role::Operand { ty } = f.role
                         && f.variadic
                     {
-                        r.set(f, Content::Seq(Vec::new()));
+                        // An absent group leaves its anchor empty, once: the operand and its type
+                        // may sit in two groups (`(`,` $v^)? … (`,` type($v)^)?`), both absent.
+                        if r.get(f).is_none() {
+                            r.set(f, Content::Seq(Vec::new()));
+                        }
                         if let Ok(t) = self.field(ty)
                             && t.variadic
+                            && r.bound(t.name).is_none()
                         {
                             r.bind(t.name, Vec::new());
                         }
