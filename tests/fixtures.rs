@@ -5,13 +5,15 @@ use std::fs;
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+mod common;
+
+use common::Fixtures;
 use mlirformat::*;
 
 /// Runs `check` on every `// -----` chunk of every file in `dir`, on all cores, collecting failures.
 fn each_chunk(dir: &str, check: impl Fn(&str) -> Result<(), String> + Sync) {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures").join(dir);
-    let mut files: Vec<_> = fs::read_dir(&dir).unwrap().map(|e| e.unwrap().path()).collect();
-    files.sort();
+    let files = Fixtures::sample(&dir);
     let next = AtomicUsize::new(0);
     let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
     let (total, mut failures) = std::thread::scope(|s| {

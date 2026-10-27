@@ -71,9 +71,9 @@ pub struct OperandOp<'a> {
 pub struct OperandsOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[dtype(name = "valueType_ty")]
-    pub value_type_ty: Vec<Type<'a>>,
-    #[dtype(name = "value")]
+    #[dtype(name = "valueType_ty", is = "!pdl.range<type>")]
+    pub value_type_ty: Type<'a>,
+    #[dtype(name = "value", is = "!pdl.range<value>")]
     pub value: Type<'a>,
 }
 
@@ -202,13 +202,11 @@ pub struct TypeOp<'a> {
 }
 
 /// `pdl.types`: Define a range of type handles within a pattern
-///
-/// Generic form only (result type `result` inferred in C++).
-#[mlir::op("pdl.types", generic, results(result))]
+#[mlir::op("pdl.types", format = "attr-dict (`:` $constantTypes^)?", results(result))]
 pub struct TypesOp<'a> {
     #[attr(name = "constantTypes")]
     pub constant_types: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", is = "!pdl.range<type>")]
     pub result: Type<'a>,
 }
 

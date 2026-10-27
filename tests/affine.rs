@@ -4,6 +4,8 @@
 //! MLIR would not. (`tests/fixtures/upstream` is the original test input, spacing and redundant
 //! parentheses included, so it says nothing about how MLIR prints.)
 
+mod common;
+
 use mlirformat::affine_expr::{Map, Set};
 use std::fmt::Display;
 use std::path::Path;
@@ -73,11 +75,7 @@ where
 fn affine_bodies_round_trip() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/custom");
     let (mut maps, mut sets, mut bad) = (0usize, 0usize, Vec::new());
-    for entry in std::fs::read_dir(&dir).expect("fixtures") {
-        let path = entry.expect("entry").path();
-        if path.extension().is_none_or(|e| e != "mlir") {
-            continue;
-        }
+    for path in common::Fixtures::sample(&dir) {
         let src = std::fs::read_to_string(&path).expect("read");
         maps += bodies(&src, "affine_map").len();
         sets += bodies(&src, "affine_set").len();

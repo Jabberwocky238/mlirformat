@@ -164,15 +164,37 @@ impl Records {
             _ if call.contains("LLVMPointerType>(0)") => "!llvm.ptr".into(),
             _ if call.contains("LLVMTokenType::get(") => "!llvm.token".into(),
             // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
-            // ⛔ 只认 `getType<…>()` 这种**无参**构造 —— 带参数的类型光靠助记符拼不出写法
-            // （`!pdl.range<T>` 还要那个 T）。
-            _ if call.trim_end().ends_with(">()") => {
-                let mnemonic = self.text(constraint, "mnemonic").filter(|m| !m.is_empty())?;
+            _ if call.trim_end().ends_with(">()") && let Some(m) = self.text(constraint, "mnemonic").filter(|m| !m.is_empty()) => {
                 let dialect = self.field(constraint, "dialect").and_then(Self::def_of)?;
-                format!("!{}.{mnemonic}", self.text(dialect, "name")?)
+                format!("!{}.{m}", self.text(dialect, "name")?)
             }
-            _ => return None,
+            _ => return self.spell(call.trim()),
         })
+    }
+
+    /// A dialect type's builder call spelled out from the type definitions, nesting included:
+    /// `getType<::mlir::pdl::ValueType>()` ⇒ `!pdl.value`,
+    /// `::mlir::pdl::RangeType::get($_builder.getType<::mlir::pdl::ValueType>())` ⇒ `!pdl.range<value>`
+    /// (a parameter of the outer type's own dialect prints without its `!dialect.` prefix).
+    fn spell(&self, call: &str) -> Option<String> {
+        if let Some(cpp) = call.strip_suffix(">()").and_then(|c| c.rsplit_once("getType<")).map(|(_, t)| t) {
+            let (dialect, mnemonic) = self.type_def_by_cpp(cpp)?;
+            return Some(format!("!{dialect}.{mnemonic}"));
+        }
+        let (outer, args) = call.strip_suffix(')')?.split_once("::get(")?;
+        let (dialect, mnemonic) = self.type_def_by_cpp(outer)?;
+        let inner = self.spell(args.trim())?;
+        let inner = inner.strip_prefix(&format!("!{dialect}.")).map_or(inner.clone(), String::from);
+        Some(format!("!{dialect}.{mnemonic}<{inner}>"))
+    }
+
+    /// The (dialect, mnemonic) of the type definition whose C++ class is `cpp` (`::mlir::pdl::RangeType`).
+    fn type_def_by_cpp(&self, cpp: &str) -> Option<(String, String)> {
+        let defs = self.all.get("!instanceof").and_then(|i| i.get("TypeDef")).and_then(Json::as_array)?;
+        let def = defs.iter().filter_map(Json::as_str).find(|d| self.text(d, "cppType") == Some(cpp))?;
+        let mnemonic = self.text(def, "mnemonic").filter(|m| !m.is_empty())?;
+        let dialect = self.field(def, "dialect").and_then(Self::def_of)?;
+        Some((self.text(dialect, "name")?.into(), mnemonic.into()))
     }
 
     /// ⭐ The dialects with ops defined in this file.

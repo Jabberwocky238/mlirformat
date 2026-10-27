@@ -140,19 +140,27 @@ mod indices {
     use alloc::string::String;
     use alloc::vec::Vec;
 
-    /// `%i + 1, 0` ⇒ the map it stands for and the values it names, dimensions in first-seen
-    /// order. Symbols are never produced: which operands are symbols is not in the text at all
-    /// (MLIR decides it from where each value comes from), so an op whose map has symbols keeps
-    /// the generic form instead — see the module's documentation.
+    /// `%i + symbol(%n), 0` ⇒ the map it stands for and the values it names: dimensions (bare
+    /// `%x`) then symbols (`symbol(%x)`, as MLIR prints and parses them), each in first-seen order.
     pub fn read(text: &str) -> Option<(String, Vec<String>)> {
-        let (mut names, mut out) = (Vec::new(), String::new());
+        let (mut dims, mut syms, mut out) = (Vec::<String>::new(), Vec::<String>::new(), String::new());
         let b = text.as_bytes();
         let mut i = 0;
+        let slot = |list: &mut Vec<String>, name: &str| {
+            list.iter().position(|n| n == name).unwrap_or_else(|| {
+                list.push(String::from(name));
+                list.len() - 1
+            })
+        };
         while i < b.len() {
-            if b[i] != b'%' {
+            let symbol = text[i..].starts_with("symbol(%");
+            if b[i] != b'%' && !symbol {
                 out.push(char::from(b[i]));
                 i += 1;
                 continue;
+            }
+            if symbol {
+                i += "symbol(".len();
             }
             let start = i;
             i += 1;
@@ -160,16 +168,24 @@ mod indices {
                 i += 1;
             }
             let name = &text[start..i];
-            let at = names.iter().position(|n| n == name).unwrap_or_else(|| {
-                names.push(String::from(name));
-                names.len() - 1
-            });
-            out.push_str(&format!("d{at}"));
+            if symbol {
+                if b.get(i) != Some(&b')') {
+                    return None;
+                }
+                i += 1;
+                out.push_str(&format!("s{}", slot(&mut syms, name)));
+            } else {
+                out.push_str(&format!("d{}", slot(&mut dims, name)));
+            }
         }
-        let dims = (0..names.len()).map(|k| format!("d{k}")).collect::<Vec<_>>().join(", ");
-        let body = format!("({dims}) -> ({out})");
+        let names = |list: &[String], c: char| (0..list.len()).map(|k| format!("{c}{k}")).collect::<Vec<_>>().join(", ");
+        let body = match syms.is_empty() {
+            true => format!("({}) -> ({out})", names(&dims, 'd')),
+            false => format!("({})[{}] -> ({out})", names(&dims, 'd'), names(&syms, 's')),
+        };
         Map::try_from(body.as_str()).ok()?;
-        Some((body, names))
+        dims.extend(syms);
+        Some((body, dims))
     }
 
     /// The attribute for a map body: the alias that already spells it, else the map written out.
@@ -180,14 +196,18 @@ mod indices {
         }
     }
 
-    /// `d0` ⇒ the operand it stands for, as [`Map`] substitution wants it.
-    pub fn args<'t>(map: &'t Map<'t>, values: &'t [String]) -> Vec<(&'t str, &'t str)> {
-        map.dims.iter().chain(map.syms.iter().flatten()).zip(values).map(|(name, v)| (*name, &**v)).collect()
+    /// `d0` ⇒ the operand it stands for, as [`Map`] substitution wants it; a symbol operand is
+    /// written `symbol(%x)`.
+    pub fn args(map: &Map<'_>, values: &[String]) -> Vec<(String, String)> {
+        let dims = map.dims.iter().map(|d| (String::from(*d), false));
+        let syms = map.syms.iter().flatten().map(|s| (String::from(*s), true));
+        dims.chain(syms).zip(values).map(|((name, symbol), v)| (name, if symbol { format!("symbol({v})") } else { v.clone() })).collect()
     }
 
     /// The index list as it is printed: the map's results against the operands.
     pub fn write(map: &Map<'_>, values: &[String]) -> String {
         let args = args(map, values);
+        let args: Vec<(&str, &str)> = args.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
         map.results.iter().map(|e| format!("{}", e.show(&args))).collect::<Vec<_>>().join(", ")
     }
 
@@ -651,17 +671,31 @@ pub struct Parallel<'a> {
 
 /// `dense<1> : tensor<Nxi32>`: one map result per induction variable, which is the only grouping
 /// this op writes out.
-fn ones(attr: &Attribute<'_>, n: usize) -> bool {
-    matches!(attr, Attribute::Builtin { name, body, ty: Some(Type::Shaped(Shaped { shape: Some(dims), .. })) }
-        if name == "dense" && body == "<1>" && dims.as_slice() == [Dim::Static(i64::try_from(n).unwrap_or(-1))])
+/// `dense<1> : tensor<2xi32>` / `dense<[1, 2]> : tensor<2xi32>` ⇒ how many expressions each of the
+/// `n` bounds has.
+fn groups_of(attr: &Attribute<'_>, n: usize) -> Option<Vec<usize>> {
+    let Attribute::Builtin { name, body, ty: Some(Type::Shaped(Shaped { shape: Some(dims), .. })) } = attr else { return None };
+    if name != "dense" || dims.as_slice() != [Dim::Static(i64::try_from(n).ok()?)] {
+        return None;
+    }
+    let inner = body.strip_prefix('<')?.strip_suffix('>')?;
+    let groups: Vec<usize> = match inner.strip_prefix('[').and_then(|l| l.strip_suffix(']')) {
+        Some(list) => list.split(',').map(|x| x.trim().parse().ok()).collect::<Option<_>>()?,
+        None => alloc::vec![inner.trim().parse().ok()?; n],
+    };
+    (groups.len() == n && groups.iter().all(|&g| g > 0)).then_some(groups)
 }
 
-/// The grouping [`ones`] accepts, rebuilt.
-fn ones_attr<'a>(n: usize) -> Attribute<'a> {
-    let shape = alloc::vec![Dim::Static(i64::try_from(n).unwrap_or_default())];
+/// The grouping attribute, written as MLIR prints it (a splat when every bound has as many).
+fn groups_attr<'a>(groups: &[usize]) -> Attribute<'a> {
+    let shape = alloc::vec![Dim::Static(i64::try_from(groups.len()).unwrap_or_default())];
     let elem = Type::Integer { signedness: Signedness::Signless, width: 32 };
     let ty = Type::Shaped(Shaped { kind: ShapedKind::Tensor, shape: Some(shape), elem: alloc::boxed::Box::new(elem), extras: Vec::new() });
-    Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Borrowed("<1>"), ty: Some(ty) }
+    let body = match groups {
+        [first, rest @ ..] if rest.iter().all(|g| g == first) => format!("<{first}>"),
+        _ => format!("<[{}]>", groups.iter().map(|g| format!("{g}")).collect::<Vec<_>>().join(", ")),
+    };
+    Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(ty) }
 }
 
 /// `[1, 2]` as the op holds it.
@@ -694,24 +728,26 @@ impl Print for Parallel<'_> {
         let ivs = entry.args.len();
         let inputs = |m: &Map<'_>| m.dims.len() + m.syms.as_ref().map_or(0, Vec::len);
         let split = inputs(&lm);
-        let shaped = lm.results.len() == ivs
-            && hm.results.len() == ivs
+        let (Some(lg), Some(ug)) = (groups_of(&self.lower_bounds_groups, ivs), groups_of(&self.upper_bounds_groups, ivs)) else {
+            return self.print_generic(p);
+        };
+        let shaped = lm.results.len() == lg.iter().sum::<usize>()
+            && hm.results.len() == ug.iter().sum::<usize>()
             && steps.len() == ivs
             && self.reductions == Attribute::Array(Vec::new())
             && self.results.is_empty()
-            && ones(&self.lower_bounds_groups, ivs)
-            && ones(&self.upper_bounds_groups, ivs)
             && split + inputs(&hm) == self.map_operands.len();
         if !shaped {
             return self.print_generic(p);
         }
         let (lt, ht) = (indices::texts(&self.map_operands[..split]), indices::texts(&self.map_operands[split..]));
-        let (lows, highs) = (indices::write(&lm, &lt), indices::write(&hm, &ht));
         // As for the memory ops, the printed bounds alone do not say how map and operands were
         // paired; print the custom form only where reading them back gives this op again.
-        if indices::read(&lows) != Some((lo_text.clone(), lt)) || indices::read(&highs) != Some((hi_text.clone(), ht)) {
+        if indices::read(&indices::write(&lm, &lt)) != Some((lo_text.clone(), lt.clone())) || indices::read(&indices::write(&hm, &ht)) != Some((hi_text.clone(), ht.clone())) {
             return self.print_generic(p);
         }
+        // A bound with several expressions is their `max` (lower) / `min` (upper).
+        let (lows, highs) = (grouped(&lm, &lt, &lg, "max"), grouped(&hm, &ht, &ug, "min"));
         p.op_name(Self::NAME)?;
         let names = entry.args.iter().map(|x| format!("%{}", x.name)).collect::<Vec<_>>().join(", ");
         write!(p, " ({names}) = ({lows}) to ({highs})")?;
@@ -728,9 +764,9 @@ impl Parse for Parallel<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let ivs = read_names(p)?;
         p.expect("=")?;
-        let (lower_bounds_map, lower_ops) = read_bounds(p)?;
+        let (lower_bounds_map, lower_ops, lower_groups) = read_bounds(p)?;
         p.expect_lit("to")?;
-        let (upper_bounds_map, upper_ops) = read_bounds(p)?;
+        let (upper_bounds_map, upper_ops, upper_groups) = read_bounds(p)?;
         let steps = match p.eat_kw("step") {
             true => read_names(p)?.iter().map(|s| s.parse::<i64>().unwrap_or(1)).collect(),
             false => alloc::vec![1; ivs.len()],
@@ -748,9 +784,9 @@ impl Parse for Parallel<'_> {
             map_operands,
             reductions: Attribute::Array(Vec::new()),
             lower_bounds_map,
-            lower_bounds_groups: ones_attr(ivs.len()),
+            lower_bounds_groups: groups_attr(&lower_groups),
             upper_bounds_map,
-            upper_bounds_groups: ones_attr(ivs.len()),
+            upper_bounds_groups: groups_attr(&upper_groups),
             steps: ints_attr(&steps),
             region,
             map_operands_ty: Type::Index,
@@ -778,12 +814,28 @@ fn read_names(p: &mut Parser<'_, '_>) -> R<Vec<String>> {
 }
 
 /// `(0, %i + 1)`: one bound per induction variable, as a map and the values it names.
-fn read_bounds<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a>>)> {
+/// `(%i, min(%j + 32, 35))` ⇒ the bounds map, its operands, and how many expressions each bound has.
+fn read_bounds<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a>>, Vec<usize>)> {
     // `group` starts where the cursor is, so the space before `(` has to go first.
     p.ws();
     let group = p.group()?;
     let inner = group.get(1..group.len() - 1).unwrap_or_default();
-    let Some((body, names)) = indices::read(inner) else { return p.err("affine.parallel: a bound list") };
+    let (mut flat, mut groups) = (Vec::new(), Vec::new());
+    for item in top_level(inner) {
+        let item = item.trim();
+        match item.strip_prefix("min(").or_else(|| item.strip_prefix("max(")).and_then(|r| r.strip_suffix(')')) {
+            Some(list) => {
+                let exprs = top_level(list);
+                groups.push(exprs.len());
+                flat.extend(exprs.into_iter().map(str::trim));
+            }
+            None => {
+                groups.push(1);
+                flat.push(item);
+            }
+        }
+    }
+    let Some((body, names)) = indices::read(&flat.join(", ")) else { return p.err("affine.parallel: a bound list") };
     let named = p.alias_named(&format!("affine_map<{body}>")).map(String::from);
     let mut values = Vec::new();
     for n in &names {
@@ -792,5 +844,38 @@ fn read_bounds<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'
             None => return p.err("affine.parallel: a bound operand"),
         }
     }
-    Ok((indices::attr(&body, named), values))
+    Ok((indices::attr(&body, named), values, groups))
+}
+
+/// `text` split at its top-level commas.
+fn top_level(text: &str) -> Vec<&str> {
+    let (mut parts, mut depth, mut start) = (Vec::new(), 0usize, 0);
+    for (i, c) in text.char_indices() {
+        match c {
+            '(' | '[' => depth += 1,
+            ')' | ']' => depth = depth.saturating_sub(1),
+            ',' if depth == 0 => {
+                parts.push(&text[start..i]);
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    parts.push(&text[start..]);
+    parts
+}
+
+/// The bounds as printed: one expression as is, several as `word(e1, e2)`.
+fn grouped(map: &Map<'_>, values: &[String], groups: &[usize], word: &str) -> String {
+    let args = indices::args(map, values);
+    let args: Vec<(&str, &str)> = args.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
+    let mut exprs = map.results.iter().map(|e| format!("{}", e.show(&args)));
+    let parts: Vec<String> = groups
+        .iter()
+        .map(|&n| {
+            let these: Vec<String> = exprs.by_ref().take(n).collect();
+            if n == 1 { these.concat() } else { format!("{word}({})", these.join(", ")) }
+        })
+        .collect();
+    parts.join(", ")
 }

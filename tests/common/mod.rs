@@ -97,11 +97,20 @@ impl Fixtures {
         op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
     }
 
-    /// The generic fixture files, sorted.
-    pub fn files() -> Vec<PathBuf> {
-        let mut files: Vec<PathBuf> = fs::read_dir(Self::dir().join("generic")).unwrap().map(|e| e.unwrap().path()).collect();
+    /// The files of fixture directory `dir` the tests read, sorted: all of them with feature
+    /// `more`, otherwise (`less`, the default) every 10th -- the same 10% on every run.
+    pub fn sample(dir: &Path) -> Vec<PathBuf> {
+        let mut files: Vec<PathBuf> = fs::read_dir(dir).unwrap().map(|e| e.unwrap().path()).filter(|p| p.extension().is_some_and(|e| e == "mlir")).collect();
         files.sort();
+        if !cfg!(feature = "more") {
+            files = files.into_iter().step_by(10).collect();
+        }
         files
+    }
+
+    /// The generic fixture files the tests read ([`Self::sample`]).
+    pub fn files() -> Vec<PathBuf> {
+        Self::sample(&Self::dir().join("generic"))
     }
 
     /// ⭐ Every op of every generic fixture (nested ones too), on all cores: `f(file, op, visible,

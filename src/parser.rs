@@ -427,6 +427,14 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
+    /// Does `id` name a scalar builtin type (`i32`, `ui8`, `f16`, `bf16`, `index`)? A bare word in
+    /// an attribute position is then a type attribute (`pdl.type : i32`), not an enum case;
+    /// `none` stays a word: enums use it as a case.
+    fn scalar_type_word(id: &str) -> bool {
+        let split = id.find(|c: char| c.is_ascii_digit()).unwrap_or(id.len());
+        id == "index" || FloatKind::try_from(id).is_ok() || (Signedness::try_from(&id[..split]).is_ok() && id[split..].parse::<u32>().is_ok())
+    }
+
     fn keyword_ty(&mut self) -> R<Type<'a>> {
         let start = self.pos;
         let id = self.ident()?;
@@ -1497,7 +1505,7 @@ impl Format<'_> {
                             // A bare keyword is a user enum case; anything else is an attribute.
                             let save = p.pos();
                             match p.ident() {
-                                Ok(word) if !ATTR_WORDS.contains(&word) && !p.rest().starts_with(['<', '(', '[']) => Content::Str(word.into()),
+                                Ok(word) if !ATTR_WORDS.contains(&word) && !p.rest().starts_with(['<', '(', '[']) && !Parser::scalar_type_word(word) => Content::Str(word.into()),
                                 _ => {
                                     p.seek(save);
                                     let a = if self.before_colon(n) || matches!(f.role, Role::Prop { int: Some(_), .. }) { p.bare_attr()? } else { p.attr()? };
@@ -1645,6 +1653,7 @@ impl Format<'_> {
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like()],
                 (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
                     Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => vec![Content::convert(&**elem)?],
+                    Some(Type::Extended(ext)) => vec![Content::convert(&ext.shaped_elem().ok_or_else(undetermined)?)?],
                     _ => return Err(undetermined()),
                 },
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],

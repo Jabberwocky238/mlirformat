@@ -119,3 +119,65 @@ impl Parse for For<'_> {
         Self::owned(&op, p)
     }
 }
+
+/// `scf.if %c -> (T) { ... } else { ... } {attrs}`。
+///
+/// 结果类型带括号（`-> (f32)`，`mlir-opt` 就这么印）。没有结果时，两边收尾的 `scf.yield`
+/// 都不印；else 区域没有块就整个不写。
+#[mlir::op("scf.if", custom, results(results))]
+pub struct If<'a> {
+    #[slot(condition_ty, name = "condition")]
+    pub condition: Value<'a>,
+    #[region(name = "thenRegion")]
+    pub then_region: Region<'a>,
+    #[region(name = "elseRegion")]
+    pub else_region: Region<'a>,
+    #[dtype(name = "condition_ty", is = i1)]
+    pub condition_ty: Type<'a>,
+    #[dtype(name = "results")]
+    pub results: Vec<Type<'a>>,
+}
+
+impl Print for If<'_> {
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        // 区域里只有一个块、⛔ 块参数：别的形状自定义形式写不出来
+        let plain = |r: &Region<'_>| r.blocks.len() <= 1 && r.blocks.iter().all(|b| b.args.is_empty());
+        if !plain(&self.then_region) || self.then_region.blocks.is_empty() || !plain(&self.else_region) {
+            return self.print_generic(p);
+        }
+        p.op_name(Self::NAME)?;
+        write!(p, " {}", self.condition)?;
+        if !self.results.is_empty() {
+            write!(p, " -> ({})", Sep(&self.results, ", "))?;
+        }
+        p.write_char(' ')?;
+        p.region_body(&self.then_region, "scf.yield")?;
+        if !self.else_region.blocks.is_empty() {
+            p.write_str(" else ")?;
+            p.region_body(&self.else_region, "scf.yield")?;
+        }
+        p.attr_dict("", &self.attrs, &[])
+    }
+}
+
+impl Parse for If<'_> {
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let condition = p.value()?;
+        let results = match p.eat("->") {
+            true => p.results_ty()?,
+            false => Vec::new(),
+        };
+        let mut then_region = p.region()?;
+        close_region(&mut then_region, "scf.yield");
+        let else_region = match p.eat_kw("else") {
+            true => {
+                let mut r = p.region()?;
+                close_region(&mut r, "scf.yield");
+                r
+            }
+            false => Region { blocks: Vec::new() },
+        };
+        let op = If { condition, then_region, else_region, condition_ty: Type::I1, results, attrs: p.opt_dict()?, loc: p.opt_loc()? };
+        Self::owned(&op, p)
+    }
+}

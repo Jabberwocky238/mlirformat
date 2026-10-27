@@ -115,7 +115,8 @@ impl MlirOpt {
             .inject(affine_ops::For::template())
             .inject(affine_ops::If::template())
             .inject(affine_ops::Parallel::template())
-            .inject(scf_hand::For::template());
+            .inject(scf_hand::For::template())
+            .inject(scf_hand::If::template());
         opt
     }
 

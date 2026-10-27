@@ -182,6 +182,30 @@ ast! {
     }
 }
 
+impl Extended<'_> {
+    /// The element type of a shaped dialect type, whose first parameter is `dims x element`
+    /// (`!gpu.mma_matrix<16x16xf32, "COp">` ⇒ `f32`): what an ODS element-type constraint means.
+    pub fn shaped_elem(&self) -> Option<Type<'static>> {
+        let body = self.body.as_deref()?.strip_prefix('<')?;
+        let mut depth = 0usize;
+        let end = body.char_indices().find_map(|(i, c)| {
+            match c {
+                '<' | '(' | '[' | '{' => depth += 1,
+                '>' | ')' | ']' | '}' if depth == 0 => return Some(i),
+                '>' | ')' | ']' | '}' => depth -= 1,
+                ',' if depth == 0 => return Some(i),
+                _ => {}
+            }
+            None
+        })?;
+        let shaped = format!("vector<{}>", body[..end].trim());
+        match crate::Parser::read(&shaped, |p| p.ty()).ok()? {
+            Type::Shaped(Shaped { elem, .. }) => Some(elem.owned()),
+            _ => None,
+        }
+    }
+}
+
 impl Type<'_> {
     pub const I1: Type<'static> = Type::Integer { signedness: Signedness::Signless, width: 1 };
 
