@@ -208,7 +208,7 @@ impl Parse for Func<'_> {
             attrs,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -401,6 +401,6 @@ impl Parse for LaunchFunc<'_> {
             attrs,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }

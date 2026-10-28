@@ -425,6 +425,16 @@ impl Content {
     pub fn of<T: Serialize + ?Sized>(value: &T) -> Result<Self, Error> {
         value.serialize(Serializer)
     }
+
+    /// A region as itself, by move ([`Content::Region`]).
+    pub fn region(r: Region<'_>) -> Self {
+        Self::Region(Box::new(r.into_static()))
+    }
+
+    /// Regions, one [`Content::Region`] each.
+    pub fn regions(rs: Vec<Region<'_>>) -> Self {
+        Self::Seq(rs.into_iter().map(Self::region).collect())
+    }
 }
 
 macro_rules! scalars {
@@ -558,6 +568,102 @@ struct_impls!(SerializeStruct, SerializeStructVariant);
 /// `Cow::Borrowed` text made owned.
 fn own(s: &Str<'_>) -> Str<'static> {
     Cow::Owned(String::from(&**s))
+}
+
+/// ⭐ The same value borrowing nothing, by move: owned text moves, only borrowed text is copied.
+/// A region that crosses [`Content`] goes through it, not through serde — an op's regions
+/// hold every op nested in them, and copying them through the data model at every level of
+/// nesting made printing and parsing quadratic in the depth.
+pub trait IntoStatic {
+    type Static;
+    fn into_static(self) -> Self::Static;
+}
+
+impl IntoStatic for Str<'_> {
+    type Static = Str<'static>;
+    fn into_static(self) -> Str<'static> {
+        Cow::Owned(self.into_owned())
+    }
+}
+
+impl<T: IntoStatic> IntoStatic for Option<T> {
+    type Static = Option<T::Static>;
+    fn into_static(self) -> Option<T::Static> {
+        self.map(T::into_static)
+    }
+}
+
+impl<T: IntoStatic> IntoStatic for Vec<T> {
+    type Static = Vec<T::Static>;
+    fn into_static(self) -> Vec<T::Static> {
+        self.into_iter().map(T::into_static).collect()
+    }
+}
+
+impl<T: IntoStatic> IntoStatic for Box<T> {
+    type Static = Box<T::Static>;
+    fn into_static(self) -> Box<T::Static> {
+        Box::new((*self).into_static())
+    }
+}
+
+/// Plain data: itself.
+macro_rules! static_as_is {
+    ($($t:ty),*) => {$(
+        impl IntoStatic for $t {
+            type Static = $t;
+            fn into_static(self) -> $t {
+                self
+            }
+        }
+    )*};
+}
+
+static_as_is!(u32, bool, Signedness, FloatKind, ShapedKind, Dim);
+
+/// A struct field by field, or an enum variant by variant (`Variant { fields }` / `Variant(x)` / `Variant`).
+macro_rules! static_fields {
+    ($($name:ident { $($f:ident),* })*) => {$(
+        impl IntoStatic for $name<'_> {
+            type Static = $name<'static>;
+            fn into_static(self) -> $name<'static> {
+                $name { $($f: self.$f.into_static()),* }
+            }
+        }
+    )*};
+    (@enum $($name:ident { $($v:ident $({ $($f:ident),* })? $(($x:ident))?),* })*) => {$(
+        impl IntoStatic for $name<'_> {
+            type Static = $name<'static>;
+            fn into_static(self) -> $name<'static> {
+                match self {
+                    $($name::$v $({ $($f),* })? $(($x))? => $name::$v $({ $($f: $f.into_static()),* })? $(($x.into_static()))?),*
+                }
+            }
+        }
+    )*};
+}
+
+static_fields! {
+    Operation { results, name, operands, successors, properties, regions, attributes, ty, loc, raw }
+    ResultDef { name, count }
+    Value { name, index }
+    Region { blocks }
+    Block { label, args, ops }
+    BlockArg { name, ty, loc }
+    NamedAttr { name, value }
+    FunctionType { inputs, results }
+    Shaped { kind, shape, elem, extras }
+    Extended { name, body, params }
+}
+
+static_fields! {
+    @enum
+    Piece { Text(x), Region(x) }
+    Type { Integer { signedness, width }, Float(x), Index, NoneType, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }
+    Attribute {
+        Unit, Bool(x), Int { lit, ty }, Float { lit, ty }, Str { lit, ty }, Type(x), Array(x), Dict(x),
+        SymbolRef(x), DenseArray { ty, values }, Builtin { name, body, ty }, Extended { ext, ty }
+    }
 }
 
 impl Extended<'_> {
@@ -732,10 +838,25 @@ impl Operation<'_> {
         Self::of_content(&Schema::of::<O>()?, Content::of(op)?)
     }
 
+    /// [`of_op`](Self::of_op) by move: the typed op's regions become the op's without a copy.
+    pub fn of_owned_op<O: Op>(op: O) -> Result<Operation<'static>, Error> {
+        Self::of_content(&Schema::of::<O>()?, op.into_content()?)
+    }
+
     /// [`of_op`](Self::of_op) from the op's [`Content`]: everything that does not depend on `O`,
     /// built once rather than once per op.
     fn of_content(schema: &Schema, content: Content) -> Result<Operation<'static>, Error> {
-        let Content::Struct(name, values) = content else { return Err("an op must serialize as a struct".into()) };
+        let Content::Struct(name, mut values) = content else { return Err("an op must serialize as a struct".into()) };
+        // Regions first, by move: the rest is small and read by clone (a type variable may be read twice).
+        let mut regions = Vec::new();
+        for f in schema.of_role(|r| *r == Role::Region) {
+            let at = values.iter().position(|(k, _)| *k == f.key).ok_or_else(|| Error(format!("missing field `{}`", f.key)))?;
+            match values.swap_remove(at).1 {
+                Content::Seq(xs) if f.variadic => regions.extend(xs.into_iter().map(Content::into_region).collect::<Result<Vec<_>, _>>()?),
+                c if f.variadic => regions.extend(c.to::<Vec<Region<'static>>>()?),
+                c => regions.push(c.into_region()?),
+            }
+        }
         let take = |key: &str| values.iter().find(|(k, _)| *k == key).map(|(_, v)| v.clone()).ok_or_else(|| Error(format!("missing field `{key}`")));
         let ty_of = |name: &str| -> Result<Bound<'static>, Error> {
             let f = schema.field(name).filter(|f| matches!(f.role, Role::Type { .. })).ok_or_else(|| Error(format!("no type variable `{name}`")))?;
@@ -769,10 +890,6 @@ impl Operation<'_> {
             props.push(NamedAttr::of(SEGMENTS, Attribute::DenseArray { ty: Type::int(32), values }));
         }
         props.sort_by(|a, b| a.name.cmp(&b.name));
-        let mut regions = Vec::new();
-        for f in schema.of_role(|r| *r == Role::Region) {
-            if f.variadic { regions.extend(take(f.key)?.to::<Vec<Region<'static>>>()?) } else { regions.push(take(f.key)?.to()?) }
-        }
         let one = |role: Role| schema.of_role(move |r| *r == role).next().map(|f| take(f.key)).transpose();
         Ok(Operation {
             name: Cow::Borrowed(name),
@@ -866,6 +983,14 @@ impl Values {
         self.raw(f).cloned().ok_or_else(|| Error(format!("missing field `{}`", f.key)))?.to()
     }
 
+    /// A region field, read in place when it was carried as itself.
+    fn region(&self, f: &Field) -> Result<Cow<'_, Region<'static>>, Error> {
+        match self.raw(f) {
+            Some(Content::Region(r)) => Ok(Cow::Borrowed(&**r)),
+            _ => self.get(f).map(Cow::Owned),
+        }
+    }
+
     /// The property as an attribute (`None`: absent or default).
     fn prop(&self, f: &Field) -> Result<Option<Attribute<'static>>, Error> {
         let a = self.raw(f).cloned().map(|c| f.attr(c)).transpose()?.flatten();
@@ -876,7 +1001,7 @@ impl Values {
         Ok(match f.role {
             Role::Prop { .. } => self.prop(f)?.is_some(),
             // An optional region is there when it has blocks.
-            Role::Region => !self.get::<Region<'static>>(f)?.blocks.is_empty(),
+            Role::Region => !self.region(f)?.blocks.is_empty(),
             _ => !matches!(self.raw(f), None | Some(Content::None | Content::Bool(false))) && !matches!(self.raw(f), Some(Content::Seq(xs)) if xs.is_empty()),
         })
     }
@@ -893,7 +1018,7 @@ impl Format<'_> {
     }
 
     /// [`print`](Self::print) from the op's [`Content`], built once rather than once per op.
-    fn print_content(&self, content: Result<Content, Error>, p: &mut Printer<'_, '_>) -> fmt::Result {
+    pub(crate) fn print_content(&self, content: Result<Content, Error>, p: &mut Printer<'_, '_>) -> fmt::Result {
         let Ok(Content::Struct(_, values)) = content else { return Err(fmt::Error) };
         let v = Values(values);
         p.op_name(self.schema.name)?;
@@ -964,7 +1089,7 @@ impl Format<'_> {
                         // ODS prints a region variable with its entry block's arguments
                         // (`OpFormatGen.cpp`: `printEntryBlockArgs=true`); an op that binds
                         // those arguments in its header writes its own form by hand instead.
-                        Role::Region => p.region(&v.get(f)?, true).map_err(io)?,
+                        Role::Region => p.region(&*v.region(f)?, true).map_err(io)?,
                     }
                 }
                 // ODS spaces a whole directive as one element; inside, the parts are tight.

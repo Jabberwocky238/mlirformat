@@ -186,7 +186,14 @@ impl OpArgs {
             };
             f.attrs.push(parse_quote!(#[serde(rename = #key)]));
             let id = &m.ident;
-            keys.push((key.clone(), if m.unit { quote!(#id: f.or_default(#key)?) } else { quote!(#id: f.take(#key)?) }));
+            // A region moves through `Content` as itself, never serialized.
+            let (take, put) = match (&m.kind, m.variadic) {
+                (Kind::Region, false) => (quote!(#id: f.region(#key)?), quote!((#key, ::mlirformat::Content::region(self.#id)))),
+                (Kind::Region, true) => (quote!(#id: f.regions(#key)?), quote!((#key, ::mlirformat::Content::regions(self.#id)))),
+                _ if m.unit => (quote!(#id: f.or_default(#key)?), quote!((#key, ::mlirformat::Content::of(&self.#id)?))),
+                _ => (quote!(#id: f.take(#key)?), quote!((#key, ::mlirformat::Content::of(&self.#id)?))),
+            };
+            keys.push((key.clone(), take, put));
         }
         if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(..)))) {
             return Err(Error::new(r.span(), format!("`{r}` is not a #[dtype] field")));
@@ -202,15 +209,23 @@ impl OpArgs {
         }).unzip();
         named.named.push(parse_quote!(#[serde(rename = "{}")] pub attrs: ::mlirformat::__Vec<::mlirformat::NamedAttr<#lt>>));
         named.named.push(parse_quote!(#[serde(rename = "@")] pub loc: ::core::option::Option<::mlirformat::Str<#lt>>));
-        keys.push(("{}".into(), quote!(attrs: f.or_default("{}")?)));
-        keys.push(("@".into(), quote!(loc: f.or_default("@")?)));
-        let (keys, takes): (Vec<_>, Vec<_>) = keys.into_iter().unzip();
+        keys.push(("{}".into(), quote!(attrs: f.or_default("{}")?), quote!(("{}", ::mlirformat::Content::of(&self.attrs)?))));
+        keys.push(("@".into(), quote!(loc: f.or_default("@")?), quote!(("@", ::mlirformat::Content::of(&self.loc)?))));
+        let (keys, takes, puts) = keys.into_iter().fold((Vec::new(), Vec::new(), Vec::new()), |(mut k, mut t, mut p), (a, b, c)| {
+            k.push(a);
+            t.push(b);
+            p.push(c);
+            (k, t, p)
+        });
         // ⭐ 字段一个个从 `Fields` 取，不派生 `Deserialize`：派生的 visitor 每个 op 一套，
         // 九百个 op 的类型检查、借用检查都花在它身上。
         let fields = quote! {
             const KEYS: &'static [&'static str] = &[#(#keys),*];
             fn from_fields(f: &mut ::mlirformat::Fields) -> ::core::result::Result<Self, ::mlirformat::Error> {
                 ::core::result::Result::Ok(Self { #(#takes),* })
+            }
+            fn into_fields(self) -> ::core::result::Result<::mlirformat::__Vec<(&'static str, ::mlirformat::Content)>, ::mlirformat::Error> {
+                ::core::result::Result::Ok(::mlirformat::__vec![#(#puts),*])
             }
         };
 

@@ -145,7 +145,7 @@ impl Parse for Generic<'_> {
         let region = p.region()?;
         let result_tensors = if p.eat("->") { p.results_ty()? } else { Vec::new() };
         let op = Generic { inputs, outputs, indexing_maps, iterator_types, doc, library_call, region, inputs_ty, outputs_ty, result_tensors, attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -191,7 +191,7 @@ impl Parse for Yield<'_> {
             ts
         };
         let op = Yield { values, values_ty, attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -574,7 +574,7 @@ macro_rules! named_ops {
                     return p.err(concat!($name, ": the region builder cannot build a body for these types"));
                 };
                 let op = $ty { inputs: n.inputs, outputs: n.outputs, $($attr,)* region, inputs_ty: n.inputs_ty, outputs_ty: n.outputs_ty, result_tensors: n.results, attrs: n.attrs, loc: p.opt_loc()? };
-                Self::owned(&op, p)
+                Self::owned(op, p)
             }
         }
     )*};
@@ -691,7 +691,7 @@ macro_rules! contraction_ops {
                     return p.err(concat!($name, ": the region builder cannot build a body for these types"));
                 };
                 let op = $ty { inputs: n.inputs, outputs: n.outputs, indexing_maps: Some(indexing_maps), cast, region, inputs_ty: n.inputs_ty, outputs_ty: n.outputs_ty, result_tensors: n.results, attrs: n.attrs, loc: p.opt_loc()? };
-                Self::owned(&op, p)
+                Self::owned(op, p)
             }
         }
     )*};
@@ -891,7 +891,7 @@ macro_rules! identity_ops {
                 let attrs = p.opt_dict()?;
                 let region = RegionBuilder::new(p.opt(), &[], &[], &[input_ty.clone(), init_ty.clone()]).identity();
                 let op = $ty { input: input.clone(), init: init.clone(), $attr, region, input_ty: input_ty.clone(), init_ty: init_ty.clone(), result: Dst::results(&outs_ty), attrs, loc: p.opt_loc()? };
-                Self::owned(&op, p)
+                Self::owned(op, p)
             }
         }
     )*};
@@ -953,7 +953,7 @@ impl Parse for Map<'_> {
             None => Dst::parse_long(p)?,
         };
         let op = Map { inputs, init: init.clone(), mapper, inputs_ty, init_ty: init_ty.clone(), result: Dst::results(&outs_ty), attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -1009,7 +1009,7 @@ impl Parse for Reduce<'_> {
             None => Dst::parse_long(p)?,
         };
         let op = Reduce { operands, dimensions, combiner, operands_ty, result, attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -1102,7 +1102,7 @@ impl Parse for Elementwise<'_> {
             return p.err("linalg.elementwise: the region builder cannot build a body for these types");
         };
         let op = Elementwise { inputs: n.inputs, outputs: n.outputs, kind, indexing_maps: Some(indexing_maps), region, inputs_ty: n.inputs_ty, outputs_ty: n.outputs_ty, result_tensors: n.results, attrs: n.attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 

@@ -159,7 +159,7 @@ impl Parse for FuncOp<'_> {
             attrs,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -212,7 +212,7 @@ impl Parse for CallIndirect<'_> {
         let ty = p.fn_ty()?;
         let (arg_types, results) = (ty.inputs.clone(), ty.results.clone());
         let op = CallIndirect { callee, callee_operands, callee_ty: Type::Function(ty), arg_types, results, attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 

@@ -1000,6 +1000,14 @@ impl Content {
         T::deserialize(self)
     }
 
+    /// A region: moved out of [`Content::Region`], else deserialized.
+    pub fn into_region(self) -> Result<Region<'static>, Error> {
+        match self {
+            Content::Region(r) => Ok(*r),
+            c => c.to(),
+        }
+    }
+
     /// Any serializable value as another type of the same shape (borrowed AST → owned AST).
     pub fn convert<T: Serialize + ?Sized, U: DeserializeOwned>(value: &T) -> Result<U, Error> {
         Content::of(value)?.to()
@@ -1053,6 +1061,8 @@ impl<'de> de::Deserializer<'de> for Content {
             Self::Map(xs) => v.visit_map(Pairs(xs.into_iter(), None)),
             Self::Struct(_, xs) => v.visit_map(Pairs(xs.into_iter(), None)),
             Self::Variant(..) => v.visit_enum(self),
+            // Asked for generically, a region is its serialized form after all.
+            Self::Region(r) => Self::of(&*r)?.deserialize_any(v),
             Self::Attr(a) => match a {
                 Attribute::Unit => v.visit_bool(true),
                 Attribute::Bool(b) => v.visit_bool(b),
@@ -1146,6 +1156,7 @@ impl<'de> de::Deserializer<'de> for Content {
             Self::Struct(_, xs) => v.visit_map(Pairs(xs.into_iter(), None)),
             Self::Map(xs) => v.visit_map(Pairs(xs.into_iter(), None)),
             Self::Attr(a) => Self::of(&a)?.deserialize_struct(name, fields, v),
+            Self::Region(r) => Self::of(&*r)?.deserialize_struct(name, fields, v),
             other => Err(de::Error::invalid_type(other.unexpected(), &v)),
         }
     }
@@ -1167,7 +1178,7 @@ impl Content {
             Self::Unit | Self::UnitStruct(_) => U::Unit,
             Self::Newtype(..) => U::NewtypeStruct,
             Self::Seq(_) => U::Seq,
-            Self::Map(_) | Self::Struct(..) => U::Map,
+            Self::Map(_) | Self::Struct(..) | Self::Region(_) => U::Map,
             Self::Variant(..) => U::Enum,
             Self::Attr(_) => U::Other("an attribute"),
         }
@@ -1391,6 +1402,20 @@ impl Fields {
         d.deserialize_struct(name, keys, Keyed(keys))
     }
 
+    /// Region field `key`, moved out when it was carried as itself.
+    pub fn region(&mut self, key: &str) -> Result<Region<'static>, Error> {
+        self.pop(key).ok_or_else(|| Error(format!("missing field `{key}`")))?.into_region()
+    }
+
+    /// Variadic region field `key`.
+    pub fn regions(&mut self, key: &str) -> Result<Vec<Region<'static>>, Error> {
+        match self.pop(key) {
+            Some(Content::Seq(xs)) => xs.into_iter().map(Content::into_region).collect(),
+            Some(c) => c.to(),
+            None => Err(format!("missing field `{key}`").into()),
+        }
+    }
+
     /// Field `key`, its default when missing.
     pub fn or_default<T: DeserializeOwned + Default>(&mut self, key: &str) -> Result<T, Error> {
         self.pop(key).map_or_else(|| Ok(T::default()), Content::to)
@@ -1529,7 +1554,7 @@ impl<'a> Operation<'a> {
         }
         let mut regions = self.regions.iter();
         for f in schema.of_role(|r| *r == Role::Region) {
-            fields.push((f.key, if f.variadic { Content::of(&regions.by_ref().collect::<Vec<_>>())? } else { Content::of(regions.next().ok_or_else(|| Error("too few regions".into()))?)? }));
+            fields.push((f.key, if f.variadic { Content::regions(regions.by_ref().cloned().collect()) } else { Content::region(regions.next().ok_or_else(|| Error("too few regions".into()))?.clone()) }));
         }
         if regions.next().is_some() {
             return Err("too many regions".into());
@@ -1699,8 +1724,7 @@ impl Format<'_> {
                         }
                         Role::Successor => Content::Str(p.sigil('^')?.into()),
                         Role::Region => {
-                            let r = p.region()?;
-                            content(p, Content::of(&r))?
+                            Content::region(p.region()?)
                         }
                         Role::Attrs | Role::Loc => continue,
                     };
@@ -1812,7 +1836,7 @@ impl Format<'_> {
             && f.role == Role::Region
             && r.get(f).is_none()
         {
-            r.set(f, Content::of(&Region { blocks: Vec::new() }).or_else(|e| p.err(e.0))?);
+            r.set(f, Content::region(Region { blocks: Vec::new() }));
         }
         for e in elems {
             if let Elem::Group { anchor, elems } = e {

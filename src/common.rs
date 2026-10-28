@@ -319,6 +319,15 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// writes it — a field after another, no visitor per op.
     fn from_fields(f: &mut Fields) -> Result<Self, Error>;
 
+    /// The other way round: the fields by move, each serialized but a region, which goes as
+    /// itself ([`Content::region`]); `#[mlir::op]` writes it.
+    fn into_fields(self) -> Result<Vec<(&'static str, Content)>, Error>;
+
+    /// The op as its [`Content`], by move: what `Serialize` gives, regions left as they are.
+    fn into_content(self) -> Result<Content, Error> {
+        Ok(Content::Struct(Self::NAME, self.into_fields()?))
+    }
+
     /// The op out of the [`Content`] of a struct.
     fn from_content(c: Content) -> Result<Self, Error> {
         Self::from_fields(&mut Fields::try_from(c)?)
@@ -333,10 +342,10 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
 
     /// Hands back an op that owns its text. A hand-written [`parse`](Self::parse) builds its op
     /// out of pieces borrowed from the parser; those borrows end with the call, so the op it
-    /// returns has to be a copy. It takes the borrowed op as an argument rather than `self`
-    /// precisely because the two differ in lifetime.
-    fn owned<B: Serialize>(borrowed: &B, p: &mut Parser<'_, '_>) -> R<Self> {
-        Content::of(borrowed).and_then(Self::from_content).or_else(|e| p.err(e.0))
+    /// returns has to be owned: its borrowed text is copied, the rest (regions above all) moves.
+    /// It takes the borrowed op as an argument rather than `self` because the two differ in lifetime.
+    fn owned<B: Op>(borrowed: B, p: &mut Parser<'_, '_>) -> R<Self> {
+        borrowed.into_content().and_then(Self::from_content).or_else(|e| p.err(e.0))
     }
 
     /// 照 [`FORMAT`](Self::FORMAT) 写出去 —— `#[mlir::op]` 生成的 [`Print`] 走这里。
@@ -457,6 +466,8 @@ pub enum Content {
     /// attribute present), an integer / float / string, a user enum (case value or name), or the
     /// `Attribute` itself.
     Attr(Attribute<'static>),
+    /// A region carried as itself ([`Content::region`]): nothing serialized, nothing copied.
+    Region(Box<Region<'static>>),
 }
 
 /// What an enum variant carries.

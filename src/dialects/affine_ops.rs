@@ -121,7 +121,7 @@ macro_rules! call_ops {
                     loc: p.opt_loc()?,
                 };
                 // The struct borrows the parser's text; hand back one that owns it.
-                Self::owned(&op, p)
+                Self::owned(op, p)
             }
         }
     )*};
@@ -313,7 +313,7 @@ macro_rules! memory_ops {
                     }
                 }
                 let op = $ty { $($value,)? memref, indices, map, memref_ty: memref_ty.clone(), indices_ty: Type::Index, result, attrs, loc: p.opt_loc()? };
-                Self::owned(&op, p)
+                Self::owned(op, p)
             }
         }
     )*};
@@ -520,7 +520,7 @@ impl Parse for For<'_> {
             attrs,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -637,7 +637,7 @@ impl Parse for If<'_> {
             attrs: p.opt_dict()?,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
@@ -795,7 +795,7 @@ impl Parse for Parallel<'_> {
             attrs: p.opt_dict()?,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 

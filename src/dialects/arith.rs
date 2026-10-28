@@ -197,7 +197,7 @@ impl Parse for Select<'_> {
         let first = p.ty()?;
         let (condition_ty, result) = if p.eat(",") { (first, p.ty()?) } else { (Type::I1, first) };
         let op = Select { condition, true_value, false_value, condition_ty, result, attrs, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 

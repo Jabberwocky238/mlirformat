@@ -119,7 +119,7 @@ impl Parse for CmpOp<'_> {
         p.expect(")")?;
         let pred = Attribute::Extended { ext: Extended { name: Cow::Borrowed("index"), body: Some(Cow::Owned(format!("<cmp_predicate {predicate}>"))), params: alloc::vec::Vec::new() }, ty: None };
         let op = CmpOp { pred, lhs, rhs, ty: Type::Index, result: Type::I1, attrs: p.opt_dict()?, loc: p.opt_loc()? };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 

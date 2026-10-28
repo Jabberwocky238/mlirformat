@@ -218,7 +218,7 @@ impl Template {
 
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
         let op = O::parse(p)?;
-        Operation::of_op(&op).or_else(|e| p.err(e.0))
+        Operation::of_owned_op(op).or_else(|e| p.err(e.0))
     }
 
     /// The custom form, or `None` (the op then prints generic) when it does not fit `O` or `O`
@@ -227,7 +227,13 @@ impl Template {
         O::CUSTOM.then_some(())?;
         let typed = op.to_op::<O>().ok()?;
         let mut text = alloc::string::String::new();
-        typed.print(&mut p.fork(&mut text)).ok()?;
+        let mut fork = p.fork(&mut text);
+        // A format's print, from the op's fields by move (its regions not serialized again).
+        match O::FORMAT {
+            "" => typed.print(&mut fork),
+            _ => Format::of::<O>().ok()?.print_content(typed.into_content(), &mut fork),
+        }
+        .ok()?;
         Some(fmt::Write::write_str(p, &text))
     }
 }

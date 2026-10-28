@@ -46,7 +46,7 @@ impl Parse for ModuleOp<'_> {
             body.blocks.push(Block { label: Some("bb0".into()), args: Vec::new(), ops: Vec::new() });
         }
         let loc = p.opt_loc()?;
-        Self::owned(&ModuleOp { sym_name, sym_visibility, body, attrs, loc }, p)
+        Self::owned(ModuleOp { sym_name, sym_visibility, body, attrs, loc }, p)
     }
 }
 

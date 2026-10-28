@@ -243,7 +243,7 @@ impl Parse for Switch<'_> {
             attrs: p.opt_dict()?,
             loc: p.opt_loc()?,
         };
-        Self::owned(&op, p)
+        Self::owned(op, p)
     }
 }
 
