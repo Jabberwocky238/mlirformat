@@ -96,7 +96,11 @@ dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, 
 over the generated one so the generated files stay as `mlirformat tblgen` wrote them:
 `affine_ops` (`affine.for` / `if` / `parallel` / `apply` / `min` / `max` / `load` / `store`),
 `scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`), `linalg_hand`
-(`linalg.generic`). An op
+(`linalg.generic` / `yield`, the named ops: the OpDSL ones generated from
+`LinalgNamedStructuredOps.yaml` by `scripts/linalg_named.py`, `matmul` / `batch_matmul` /
+`batch_reduce_matmul` / `contract`, `transpose` / `broadcast` / `map` / `reduce` / `elementwise`;
+`mlir-opt` does not print a named op's region, so reading one rebuilds it as the op's region
+builder does, with the ODS defaults of the ops it makes). An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
 MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.
 

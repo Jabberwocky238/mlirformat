@@ -119,7 +119,11 @@ impl MlirOpt {
             .inject(scf_hand::If::template())
             .inject(gpu_hand::Func::template())
             .inject(gpu_hand::LaunchFunc::template())
-            .inject(linalg_hand::Generic::template());
+            .inject(linalg_hand::Generic::template())
+            .inject(linalg_hand::Yield::template());
+        for t in linalg_hand::named_templates().into_iter().chain(linalg_hand::contraction_templates()).chain(linalg_hand::dst_templates()) {
+            opt.inject(t);
+        }
         opt
     }
 

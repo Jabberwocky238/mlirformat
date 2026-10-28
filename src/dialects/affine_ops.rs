@@ -28,7 +28,7 @@ fn body_of(attr: &Attribute<'_>, kind: &str, alias: &dyn Fn(&str) -> Option<Stri
 }
 
 /// The body of the `affine_map<...>` an attribute stands for.
-fn map_body(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
+pub(crate) fn map_body(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
     body_of(attr, "affine_map", alias)
 }
 

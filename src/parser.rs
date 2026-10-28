@@ -81,6 +81,11 @@ const fn closer(c: u8) -> u8 {
 }
 
 impl<'a, 'd> Parser<'a, 'd> {
+    /// The context this parser reads against (an op's custom form may need its ODS facts).
+    pub fn opt(&self) -> &'d MlirOpt {
+        self.opt
+    }
+
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
         Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new() }
     }

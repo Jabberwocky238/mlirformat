@@ -47,8 +47,12 @@ fn each_chunk(dir: &str, check: impl Fn(&str) -> Result<(), String> + Sync) {
 fn roundtrip(src: &str, opt: &MlirOpt) -> Result<(), String> {
     let m = opt.parse(src).map_err(|e| e.to_string())?;
     let text = opt.show(&m).to_string();
-    let again = opt.parse(&text).map_err(|e| format!("reparse: {e}\n{text}"))?;
-    (again == m).then_some(()).ok_or_else(|| format!("print/parse mismatch:\n{text}"))?;
+    let mut again = opt.parse(&text).map_err(|e| format!("reparse: {e}\n{text}"))?;
+    // linalg 命名 op 的区域自定义形式留不住（`mlir-opt` 不印）：比较前两边一起抹掉（`common::Elided`）
+    let mut first = m.clone();
+    common::Elided::module(&mut first);
+    common::Elided::module(&mut again);
+    (again == first).then_some(()).ok_or_else(|| format!("print/parse mismatch:\n{text}"))?;
     let json = serde_json::to_string(&m).unwrap();
     let back: Module<'_> = serde_json::from_str(&json).map_err(|e| e.to_string())?;
     (back == m).then_some(()).ok_or_else(|| "json mismatch".into())

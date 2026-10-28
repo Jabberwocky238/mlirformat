@@ -205,7 +205,7 @@ impl Fixtures {
             return Verdict::Generic;
         }
         match opt.parse_op_in(aliases, &text) {
-            Ok(back) if back == *op => {}
+            Ok(back) if back == *op || Elided::same(op, &back, aliases) => {}
             // ⭐ 报出**第一处不同的字段**，不是光说「往返不一致」—— 这样几百条失败能按
             // 字段归类，一眼看出是同一个毛病还是几种。
             Ok(back) => return Verdict::Broken(format!("往返不一致 [{}]: {text}", Self::first_diff(op, &back))),
@@ -224,5 +224,111 @@ impl Fixtures {
         let long = if body.starts_with(full) { body.to_string() } else { body.replacen(short, full, 1) };
         let brief = long.replacen(full, short, 1);
         if custom.contains(&Self::anon(&long)) || custom.contains(&Self::anon(&brief)) { Verdict::Matched } else { Verdict::Mismatch(text) }
+    }
+}
+
+/// linalg 的命名 op 自定义形式里没有区域（`mlir-opt` 不印）：读回来的体是照 `regionBuilder` 造的，里面的
+/// 名字由 mlirformat 起，缺省的 `indexing_maps` 是内联的 `affine_map<..>` 而不是 `#map` 别名。这两样
+/// 自定义形式本来就留不住，比较之前两边一起抹掉：linalg op 区域里的名字按位置重起，`indexing_maps` 里的别名展开；
+/// 可丢的 `linalg.memoized_indexing_maps` 去掉（`printNamedStructuredOp` 不印它）。
+pub struct Elided;
+
+impl Elided {
+    /// `op` 及其里面每条 linalg op 都抹一遍。
+    pub fn normalize(op: &mut Operation<'_>, aliases: &[(String, String)]) {
+        if op.name.starts_with("linalg.") {
+            Self::rename(op);
+            Self::expand(op, aliases);
+            op.attributes.retain(|a| a.name != "linalg.memoized_indexing_maps");
+        }
+        for r in &mut op.regions {
+            for b in &mut r.blocks {
+                for o in &mut b.ops {
+                    Self::normalize(o, aliases);
+                }
+            }
+        }
+    }
+
+    /// 整个模块：每条 op 都抹一遍。
+    pub fn module(m: &mut Module<'_>) {
+        let aliases = m.aliases();
+        for i in &mut m.items {
+            if let Item::Op(op) = i {
+                Self::normalize(op, &aliases);
+            }
+        }
+    }
+
+    /// 区域里的块参数 `__aN`、op 的结果 `__vN`（N 是它在块里的位置），引用一并改。
+    fn rename(op: &mut Operation<'_>) {
+        let mut names: BTreeMap<String, String> = BTreeMap::new();
+        for r in &op.regions {
+            for b in &r.blocks {
+                for (i, a) in b.args.iter().enumerate() {
+                    names.insert(a.name.to_string(), format!("__a{i}"));
+                }
+                for (k, o) in b.ops.iter().enumerate() {
+                    for res in &o.results {
+                        names.insert(res.name.to_string(), format!("__v{k}"));
+                    }
+                }
+            }
+        }
+        for r in &mut op.regions {
+            for b in &mut r.blocks {
+                for a in &mut b.args {
+                    a.name = names[&*a.name].clone().into();
+                    a.loc = None;
+                }
+                for o in &mut b.ops {
+                    Self::rename_uses(o, &names);
+                    for res in &mut o.results {
+                        res.name = names[&*res.name].clone().into();
+                    }
+                }
+            }
+        }
+    }
+
+    fn rename_uses(op: &mut Operation<'_>, names: &BTreeMap<String, String>) {
+        for v in &mut op.operands {
+            if let Some(n) = names.get(&*v.name) {
+                v.name = n.clone().into();
+            }
+        }
+        op.loc = None;
+        for r in &mut op.regions {
+            for b in &mut r.blocks {
+                for o in &mut b.ops {
+                    Self::rename_uses(o, names);
+                }
+            }
+        }
+    }
+
+    /// `indexing_maps = [#map, ..]` ⇒ 内联的 `affine_map<..>`。
+    fn expand(op: &mut Operation<'_>, aliases: &[(String, String)]) {
+        let Some(mlirformat::Attribute::Dict(props)) = &mut op.properties else { return };
+        for p in props.iter_mut().filter(|p| p.name == "indexing_maps") {
+            let Some(mlirformat::Attribute::Array(maps)) = &mut p.value else { continue };
+            for m in maps.iter_mut() {
+                let text = match &*m {
+                    mlirformat::Attribute::Extended { ext, .. } if ext.body.is_none() => aliases.iter().find(|(n, _)| *n == *ext.name).map(|(_, t)| t.clone()),
+                    _ => None,
+                };
+                if let Some(attr) = text.and_then(|t| mlirformat::Attribute::try_from(t.as_str()).ok().map(|a| a.owned())) {
+                    *m = attr;
+                }
+            }
+        }
+    }
+
+    /// 抹掉之后相等。
+    pub fn same(a: &Operation<'_>, b: &Operation<'_>, aliases: &[(String, String)]) -> bool {
+        let (mut a, mut b) = (a.clone(), b.clone());
+        Self::normalize(&mut a, aliases);
+        Self::normalize(&mut b, aliases);
+        a == b
     }
 }
