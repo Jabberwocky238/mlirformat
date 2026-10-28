@@ -870,6 +870,8 @@ impl Values {
     fn present(&self, f: &Field) -> Result<bool, Error> {
         Ok(match f.role {
             Role::Prop { .. } => self.prop(f)?.is_some(),
+            // An optional region is there when it has blocks.
+            Role::Region => !self.get::<Region<'static>>(f)?.blocks.is_empty(),
             _ => !matches!(self.raw(f), None | Some(Content::None | Content::Bool(false))) && !matches!(self.raw(f), Some(Content::Seq(xs)) if xs.is_empty()),
         })
     }
@@ -1001,7 +1003,7 @@ impl Format<'_> {
                     let ty = FunctionType { inputs: v.types(self.type_var(a)?)?, results: v.types(self.type_var(b)?)? };
                     write!(p, "{ty}").map_err(io)?;
                 }
-                Elem::AttrDict => {
+                Elem::AttrDict(keyword) => {
                     let spelled = self.spelled();
                     let mut attrs: Vec<NamedAttr<'static>> = Vec::new();
                     for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })).filter(|f| !spelled.contains(&f.name)) {
@@ -1012,7 +1014,7 @@ impl Format<'_> {
                     if let Some(f) = self.schema.of_role(|r| *r == Role::Attrs).next() {
                         attrs.extend(v.get::<Vec<NamedAttr<'static>>>(f)?);
                     }
-                    p.attr_dict("", &attrs, &[]).map_err(io)?;
+                    p.attr_dict(if *keyword { "attributes " } else { "" }, &attrs, &[]).map_err(io)?;
                     s.dict();
                 }
             }

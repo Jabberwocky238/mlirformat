@@ -92,7 +92,10 @@ Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `b
 `pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`. `arith`, `builtin`, `cf`, `complex`,
 `func`, `index`, `math` and `ub` are written by hand; the rest are generated from ODS by
 `mlirformat tblgen`; `llvm_types::LlvmType` and `emitc_types::EmitcType` read and build those
-dialects' types. An op
+dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name
+over the generated one so the generated files stay as `mlirformat tblgen` wrote them:
+`affine_ops` (`affine.for` / `if` / `parallel` / `apply` / `min` / `max` / `load` / `store`),
+`scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`). An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
 MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.
 
@@ -156,7 +159,10 @@ canonical form built from it through MLIR's simplifying constructors (`AffineMap
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
-op and a `#[mlir::dialect]` struct listing them, with the dialect's traits from its `Dialect` record. TableGen itself is built in: a port of LLVM 22.1.8's front end
+op and a `#[mlir::dialect]` struct listing them, with the dialect's traits from its `Dialect` record.
+Each struct's doc comment is the op's ODS `summary` and `description` (Markdown kept; a code block
+without a language or an indented one becomes `text`, so none is a doctest), so `cargo doc` on a
+crate holding generated dialects documents every op as its `.td` does. TableGen itself is built in: a port of LLVM 22.1.8's front end
 resolves the records in process (no LLVM build needed; only the `.td` sources, e.g. `mlir/include`).
 `--dump-json` prints those records exactly as `llvm-tblgen --dump-json` does (checked byte for byte on
 every MLIR dialect `.td` that `llvm-tblgen` accepts on its own). Several `.td` files are generated in parallel. The generated files also compile in

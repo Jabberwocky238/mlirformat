@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, arith, bufferization, scf_ops as scf_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector};
+pub use crate::dialects::{affine, affine_ops, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R, Read};
 
@@ -116,7 +116,9 @@ impl MlirOpt {
             .inject(affine_ops::If::template())
             .inject(affine_ops::Parallel::template())
             .inject(scf_hand::For::template())
-            .inject(scf_hand::If::template());
+            .inject(scf_hand::If::template())
+            .inject(gpu_hand::Func::template())
+            .inject(gpu_hand::LaunchFunc::template());
         opt
     }
 

@@ -65,12 +65,77 @@ pub struct GenOp {
     /// Full op name (`arith.addi`).
     pub name: String,
     pub summary: String,
+    /// The ODS `description`, dedented.
+    pub description: String,
     /// `None` ⇒ generic form only.
     pub format: Option<String>,
     /// Why there is no custom form (for the doc comment).
     pub generic_why: Option<String>,
     pub results: Vec<String>,
     pub fields: Vec<GenField>,
+}
+
+impl GenOp {
+    /// The text without its common indentation and the blank lines around it, as Python's
+    /// `inspect.cleandoc`: the first line is stripped on its own (it often follows `[{` directly),
+    /// the others lose the indentation they share.
+    fn dedent(text: &str) -> String {
+        let text = text.trim_start_matches(['\n', '\r']);
+        let mut lines: Vec<&str> = text.lines().map(str::trim_end).collect();
+        let indent = lines.iter().skip(1).filter(|l| !l.is_empty()).map(|l| l.len() - l.trim_start().len()).min().unwrap_or(0);
+        for l in lines.iter_mut().skip(1) {
+            *l = l.get(indent..).unwrap_or("");
+        }
+        if let Some(first) = lines.first_mut() {
+            *first = first.trim_start();
+        }
+        lines.join("\n").trim_matches('\n').to_string()
+    }
+
+    /// ⭐ The description as rustdoc lines (after a blank `///`): Markdown kept, but no code
+    /// block is ever a doctest — a fence without a language and an indented block become
+    /// ```` ```text ````; a fenced block keeps its language (`mlir` is not Rust to rustdoc).
+    fn doc(&self) -> Vec<String> {
+        if self.description.is_empty() {
+            return Vec::new();
+        }
+        let mut out = vec![String::new()];
+        let (mut fenced, mut indented, mut blank) = (false, false, true);
+        for line in self.description.lines() {
+            let fence = line.trim_start().starts_with("```");
+            if indented && !line.is_empty() && !line.starts_with("    ") {
+                Self::close(&mut out);
+                out.push(String::new());
+                indented = false;
+            }
+            if fence {
+                let lang = line.trim_start()[3..].trim();
+                out.push(if !fenced && lang.is_empty() { "```text".into() } else { line.trim_start().to_string() });
+                fenced = !fenced;
+            } else if !fenced && !indented && blank && line.starts_with("    ") {
+                out.push("```text".into());
+                indented = true;
+                out.push(line[4..].to_string());
+            } else if indented {
+                out.push(line.get(4..).unwrap_or("").to_string());
+            } else {
+                out.push(line.to_string());
+            }
+            blank = line.is_empty();
+        }
+        if indented || fenced {
+            Self::close(&mut out);
+        }
+        out
+    }
+
+    /// Ends an open code block (its trailing blank lines dropped).
+    fn close(out: &mut Vec<String>) {
+        while out.last().is_some_and(String::is_empty) {
+            out.pop();
+        }
+        out.push("```".into());
+    }
 }
 
 /// One struct field: marker attribute, Rust name and type.
@@ -454,6 +519,7 @@ impl Records {
         let rust = op.split_once('_').map_or(op, |(_, r)| r).to_string();
         let name = format!("{}.{}", dialect.name, self.text(op, "opName").unwrap_or(""));
         let summary = self.text(op, "summary").unwrap_or("").trim().to_string();
+        let description = GenOp::dedent(self.text(op, "description").unwrap_or(""));
         let mut groups: Vec<Group> = Vec::new();
         let mut props: Vec<GenField> = Vec::new();
         let mut operand_names = Vec::new();
@@ -616,7 +682,7 @@ impl Records {
             }
         }
         let (format, generic_why) = self.format(op, &fields, &results);
-        GenOp { rust, name, summary, format, generic_why, results: results.iter().map(|r| Self::ident(r)).collect(), fields }
+        GenOp { rust, name, summary, description, format, generic_why, results: results.iter().map(|r| Self::ident(r)).collect(), fields }
     }
 
     /// The assembly format if the runtime format engine can read it, else why not.
@@ -653,7 +719,7 @@ impl Records {
                         None => return (None, Some("`custom<` without its `>`".into())),
                     }
                 }
-                _ => match ["type(", "functional-type(", "qualified(", "attr-dict"].iter().find(|w| rest.starts_with(**w) && !rest.starts_with("attr-dict-with-keyword")) {
+                _ => match ["type(", "functional-type(", "qualified(", "attr-dict-with-keyword", "attr-dict"].iter().find(|w| rest.starts_with(**w)) {
                     Some(w) => &rest[w.len()..],
                     None => return (None, Some(format!("directive `{}`", rest.split([' ', '(']).next().unwrap_or(rest)))),
                 },
@@ -690,7 +756,7 @@ impl GenDialect {
     pub fn render(&self, source: &str, params: Option<&str>) -> String {
         let mut out = String::new();
         let _ = writeln!(out, "//! `{}` dialect: generated by `mlirformat tblgen` from `{source}`. Do not edit.", self.name);
-        let _ = writeln!(out, "#![allow(non_camel_case_types, unused_imports, clippy::all)]\n");
+        let _ = writeln!(out, "#![allow(non_camel_case_types, unused_imports, clippy::all, rustdoc::all)]\n");
         // `__Vec as Vec`: the file also compiles in `no_std` crates (no `Vec` in their prelude).
         let _ = writeln!(out, "use mlirformat::{{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec}};\n");
         for (name, cases) in &self.enums {
@@ -709,6 +775,9 @@ impl GenDialect {
         for op in &self.ops {
             if !op.summary.is_empty() {
                 let _ = writeln!(out, "/// `{}`: {}", op.name, op.summary.replace('\n', " "));
+            }
+            for line in op.doc() {
+                let _ = writeln!(out, "///{}{line}", if line.is_empty() { "" } else { " " });
             }
             if let Some(why) = &op.generic_why {
                 let _ = writeln!(out, "///\n/// Generic form only ({why}).");

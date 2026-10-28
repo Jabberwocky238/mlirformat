@@ -1420,21 +1420,8 @@ impl Format<'_> {
                 Elem::Group { anchor, elems } => {
                     if self.group_ahead(elems, p).or_else(|e| p.err(e.0))? {
                         self.read(elems, r, p)?;
-                    } else if let Ok(f) = self.field(anchor)
-                        && let Role::Operand { ty } = f.role
-                        && f.variadic
-                    {
-                        // An absent group leaves its anchor empty, once: the operand and its type
-                        // may sit in two groups (`(`,` $v^)? … (`,` type($v)^)?`), both absent.
-                        if r.get(f).is_none() {
-                            r.set(f, Content::Seq(Vec::new()));
-                        }
-                        if let Ok(t) = self.field(ty)
-                            && t.variadic
-                            && r.bound(t.name).is_none()
-                        {
-                            r.bind(t.name, Vec::new());
-                        }
+                    } else {
+                        self.absent(anchor, elems, r, p)?;
                     }
                 }
                 Elem::Var(n) => {
@@ -1572,10 +1559,15 @@ impl Format<'_> {
                     r.bind(a.name, ty.inputs);
                     r.bind(b.name, ty.results);
                 }
-                Elem::AttrDict => {
+                Elem::AttrDict(keyword) => {
                     let spelled = self.spelled();
                     let mut rest = Vec::new();
-                    for a in p.opt_dict()? {
+                    let dict = match keyword {
+                        true if p.eat_kw("attributes") => p.dict()?,
+                        true => Vec::new(),
+                        false => p.opt_dict()?,
+                    };
+                    for a in dict {
                         match self.schema.field(&a.name).filter(|f| matches!(f.role, Role::Prop { .. }) && !spelled.contains(&f.name)) {
                             Some(&f) => r.set(&f, owned(p, a.value.as_ref())?),
                             None => rest.push(a),
@@ -1609,6 +1601,37 @@ impl Format<'_> {
         Ok(ts)
     }
 
+    /// An absent group: its anchor, and the anchors of the groups nested in it, are left empty —
+    /// once, since an operand and its type may sit in two groups
+    /// (`(`,` $v^)? … (`,` type($v)^)?`), both absent; an anchored region is an empty region.
+    fn absent<'a>(&self, anchor: &str, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
+        if let Ok(f) = self.field(anchor)
+            && let Role::Operand { ty } = f.role
+            && f.variadic
+        {
+            if r.get(f).is_none() {
+                r.set(f, Content::Seq(Vec::new()));
+            }
+            if let Ok(t) = self.field(ty)
+                && t.variadic
+                && r.bound(t.name).is_none()
+            {
+                r.bind(t.name, Vec::new());
+            }
+        } else if let Ok(f) = self.field(anchor)
+            && f.role == Role::Region
+            && r.get(f).is_none()
+        {
+            r.set(f, Content::of(&Region { blocks: Vec::new() }).or_else(|e| p.err(e.0))?);
+        }
+        for e in elems {
+            if let Elem::Group { anchor, elems } = e {
+                self.absent(anchor, elems, r, p)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Does an optional group start here? Decided by its first element.
     fn group_ahead(&self, elems: &[Elem<'_>], p: &mut Parser<'_, '_>) -> Result<bool, Error> {
         let save = p.pos();
@@ -1626,7 +1649,9 @@ impl Format<'_> {
                 Role::Prop { symbol: true, .. } => p.at(b'@'),
                 Role::Prop { dialect: Some(d), .. } if d.contains('<') => p.at(b'#') || p.ident().is_ok_and(|w| !self.literal(w)),
                 Role::Prop { dialect: Some(_), .. } => p.at(b'<') || p.at(b'#'),
-                // An enum keyword: any word the format does not spell as a literal.
+                // An enum keyword: any word the format does not spell as a literal; or an array
+                // attribute (`($targets^)?` ⇒ `[#nvvm.target]`).
+                Role::Prop { int: None, .. } if p.at(b'[') => true,
                 Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w)),
                 _ => false,
             },
