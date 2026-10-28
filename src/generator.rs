@@ -729,8 +729,13 @@ impl NamedAttr<'_> {
 impl Operation<'_> {
     /// ⭐ A typed op as an op.
     pub fn of_op<O: Serialize + DeserializeOwned>(op: &O) -> Result<Operation<'static>, Error> {
-        let schema = Schema::of::<O>()?;
-        let Content::Struct(name, values) = Content::of(op)? else { return Err("an op must serialize as a struct".into()) };
+        Self::of_content(&Schema::of::<O>()?, Content::of(op)?)
+    }
+
+    /// [`of_op`](Self::of_op) from the op's [`Content`]: everything that does not depend on `O`,
+    /// built once rather than once per op.
+    fn of_content(schema: &Schema, content: Content) -> Result<Operation<'static>, Error> {
+        let Content::Struct(name, values) = content else { return Err("an op must serialize as a struct".into()) };
         let take = |key: &str| values.iter().find(|(k, _)| *k == key).map(|(_, v)| v.clone()).ok_or_else(|| Error(format!("missing field `{key}`")));
         let ty_of = |name: &str| -> Result<Bound<'static>, Error> {
             let f = schema.field(name).filter(|f| matches!(f.role, Role::Type { .. })).ok_or_else(|| Error(format!("no type variable `{name}`")))?;
@@ -884,7 +889,12 @@ impl Values {
 impl Format<'_> {
     /// ⭐ Prints `op` in custom form: the op name, then the format.
     pub fn print<O: Serialize + ?Sized>(&self, op: &O, p: &mut Printer<'_, '_>) -> fmt::Result {
-        let Ok(Content::Struct(_, values)) = Content::of(op) else { return Err(fmt::Error) };
+        self.print_content(Content::of(op), p)
+    }
+
+    /// [`print`](Self::print) from the op's [`Content`], built once rather than once per op.
+    fn print_content(&self, content: Result<Content, Error>, p: &mut Printer<'_, '_>) -> fmt::Result {
+        let Ok(Content::Struct(_, values)) = content else { return Err(fmt::Error) };
         let v = Values(values);
         p.op_name(self.schema.name)?;
         self.write(&self.elems, &v, &mut Spacer::default(), p).map_err(|_| fmt::Error)?;

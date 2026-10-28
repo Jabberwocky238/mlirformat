@@ -582,6 +582,11 @@ impl Schema {
     pub fn of_role(&self, pick: impl Fn(&Role) -> bool) -> impl Iterator<Item = &Field> {
         self.fields.iter().filter(move |f| pick(&f.role))
     }
+
+    /// The properties declaring a default, with it (what an ODS builder sets).
+    pub fn defaults(&self) -> Vec<NamedAttr<'static>> {
+        self.of_role(|r| matches!(r, Role::Prop { .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
+    }
 }
 
 impl Field {

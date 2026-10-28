@@ -213,8 +213,7 @@ impl Template {
     }
 
     fn defaults_of<O: Op>() -> Vec<NamedAttr<'static>> {
-        let Ok(schema) = Schema::of::<O>() else { return Vec::new() };
-        schema.of_role(|r| matches!(r, Role::Prop { .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
+        Schema::of::<O>().map_or_else(|_| Vec::new(), |s| s.defaults())
     }
 
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {

@@ -1105,7 +1105,7 @@ impl<'de> de::Deserializer<'de> for Content {
 
     forward!(
         deserialize_bool, deserialize_f32, deserialize_f64, deserialize_char, deserialize_str, deserialize_string,
-        deserialize_bytes, deserialize_byte_buf, deserialize_unit, deserialize_seq, deserialize_map, deserialize_identifier,
+        deserialize_bytes, deserialize_byte_buf, deserialize_unit, deserialize_seq, deserialize_map,
         deserialize_ignored_any
     );
 
@@ -1118,8 +1118,51 @@ impl<'de> de::Deserializer<'de> for Content {
     fn deserialize_tuple_struct<V: Visitor<'de>>(self, _: &'static str, _: usize, v: V) -> Result<V::Value, Error> {
         self.deserialize_any(v)
     }
-    fn deserialize_struct<V: Visitor<'de>>(self, _: &'static str, _: &'static [&'static str], v: V) -> Result<V::Value, Error> {
-        self.deserialize_any(v)
+    // ⭐ 标识符与结构体只派发它们真会收到的形状，别经 `deserialize_any`：那样每个 op 的
+    // 字段 visitor 与结构体 visitor 都会把全部 `visit_*` 单态化一遍（九百个 op 乘下来）。
+    // 其余形状派生的 visitor 本来也只会报 invalid type。
+    fn deserialize_identifier<V: Visitor<'de>>(self, v: V) -> Result<V::Value, Error> {
+        match self {
+            Self::Str(x) => v.visit_string(x),
+            Self::U8(x) => v.visit_u64(x.into()),
+            Self::U16(x) => v.visit_u64(x.into()),
+            Self::U32(x) => v.visit_u64(x.into()),
+            Self::U64(x) => v.visit_u64(x),
+            Self::Bytes(x) => v.visit_byte_buf(x),
+            Self::Attr(a @ Attribute::Str { .. }) => v.visit_string(a.text()?),
+            other => Err(de::Error::invalid_type(other.unexpected(), &v)),
+        }
+    }
+    fn deserialize_struct<V: Visitor<'de>>(self, name: &'static str, fields: &'static [&'static str], v: V) -> Result<V::Value, Error> {
+        match self {
+            Self::Struct(_, xs) => v.visit_map(Pairs(xs.into_iter(), None)),
+            Self::Map(xs) => v.visit_map(Pairs(xs.into_iter(), None)),
+            Self::Attr(a) => Self::of(&a)?.deserialize_struct(name, fields, v),
+            other => Err(de::Error::invalid_type(other.unexpected(), &v)),
+        }
+    }
+}
+
+impl Content {
+    /// What [`de::Error::invalid_type`] names.
+    fn unexpected(&self) -> de::Unexpected<'_> {
+        use de::Unexpected as U;
+        match self {
+            Self::Bool(x) => U::Bool(*x),
+            Self::I8(_) | Self::I16(_) | Self::I32(_) | Self::I64(_) => U::Other("a signed integer"),
+            Self::U8(_) | Self::U16(_) | Self::U32(_) | Self::U64(_) => U::Other("an unsigned integer"),
+            Self::F32(_) | Self::F64(_) => U::Other("a float"),
+            Self::Char(x) => U::Char(*x),
+            Self::Str(x) => U::Str(x),
+            Self::Bytes(x) => U::Bytes(x),
+            Self::None | Self::Some(_) => U::Option,
+            Self::Unit | Self::UnitStruct(_) => U::Unit,
+            Self::Newtype(..) => U::NewtypeStruct,
+            Self::Seq(_) => U::Seq,
+            Self::Map(_) | Self::Struct(..) => U::Map,
+            Self::Variant(..) => U::Enum,
+            Self::Attr(_) => U::Other("an attribute"),
+        }
     }
 }
 
@@ -1230,7 +1273,16 @@ impl Schema {
     pub fn of<O: DeserializeOwned>() -> Result<Self, Error> {
         let found = Cell::new(None);
         let _ = O::deserialize(Probe(&found));
-        let (name, keys) = found.get().ok_or_else(|| Error("an op must be a struct".into()))?;
+        found.get().ok_or_else(|| Error("an op must be a struct".into()))?.try_into()
+    }
+}
+
+/// The struct name and field keys [`Probe`] records. Out of [`Schema::of`] so that only the
+/// probe itself is built once per op.
+impl TryFrom<(&'static str, &'static [&'static str])> for Schema {
+    type Error = Error;
+
+    fn try_from((name, keys): (&'static str, &'static [&'static str])) -> Result<Self, Error> {
         Ok(Self { name, fields: keys.iter().map(|&k| Field::try_from(k)).collect::<Result<_, _>>()? })
     }
 }
@@ -1249,7 +1301,12 @@ pub(crate) enum Bound<'a> {
 impl<'a> Operation<'a> {
     /// ⭐ This op as the typed op `O`; an error if it does not fit (it then stays generic).
     pub fn to_op<O: DeserializeOwned>(&self) -> Result<O, Error> {
-        let schema = Schema::of::<O>()?;
+        self.to_content(&Schema::of::<O>()?)?.to()
+    }
+
+    /// [`to_op`](Self::to_op) up to the struct's [`Content`]: everything that does not depend on
+    /// `O`, built once rather than once per op.
+    fn to_content(&self, schema: &Schema) -> Result<Content, Error> {
         if self.name != schema.name || self.raw.is_some() {
             return Err(format!("`{}` is not `{}`", self.name, schema.name).into());
         }
@@ -1366,7 +1423,7 @@ impl<'a> Operation<'a> {
         if let Some(f) = schema.of_role(|r| *r == Role::Loc).next() {
             fields.push((f.key, Content::of(&self.loc)?));
         }
-        Content::Struct(schema.name, fields).to()
+        Ok(Content::Struct(schema.name, fields))
     }
 }
 
@@ -1410,7 +1467,7 @@ impl Format<'_> {
         let mut r = Slots::default();
         self.read(&self.elems, &mut r, p)?;
         let loc = p.opt_loc()?;
-        self.finish(r, loc).or_else(|e| p.err(e.0))
+        self.finish(r, loc).and_then(Content::to).or_else(|e| p.err(e.0))
     }
 
     fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
@@ -1666,8 +1723,8 @@ impl Format<'_> {
         Ok(hit)
     }
 
-    /// Fills defaults and inferred types, then builds the struct.
-    fn finish<O: DeserializeOwned>(&self, mut r: Slots<'_>, loc: Option<Str<'_>>) -> Result<O, Error> {
+    /// Fills defaults and inferred types, then builds the struct's [`Content`].
+    fn finish(&self, mut r: Slots<'_>, loc: Option<Str<'_>>) -> Result<Content, Error> {
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
             if r.get(f).is_none()
                 && let Some(d) = f.default_attr()
@@ -1706,6 +1763,6 @@ impl Format<'_> {
         {
             r.set(f, Content::Seq(Vec::new()));
         }
-        Content::Struct(self.schema.name, r.fields).to()
+        Ok(Content::Struct(self.schema.name, r.fields))
     }
 }
