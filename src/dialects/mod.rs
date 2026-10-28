@@ -17,6 +17,7 @@ pub mod ub;
 pub mod affine_ops;
 pub mod gpu_ops;
 pub mod emitc_types;
+pub mod linalg_ops;
 pub mod llvm_types;
 pub mod scf_ops;
 pub mod spirv_types;

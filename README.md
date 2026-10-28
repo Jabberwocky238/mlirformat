@@ -95,7 +95,8 @@ Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `b
 dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name
 over the generated one so the generated files stay as `mlirformat tblgen` wrote them:
 `affine_ops` (`affine.for` / `if` / `parallel` / `apply` / `min` / `max` / `load` / `store`),
-`scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`). An op
+`scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`), `linalg_hand`
+(`linalg.generic`). An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
 MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.
 

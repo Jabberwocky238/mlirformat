@@ -10,6 +10,7 @@ mod common;
 use common::Fixtures;
 use mlirformat::affine_ops::{Apply, For, If, Load, Max, Min, Parallel, Store};
 use mlirformat::gpu_hand::{Func as GpuFunc, LaunchFunc};
+use mlirformat::linalg_hand::Generic as LinalgGeneric;
 use mlirformat::scf_hand::{For as ScfFor, If as ScfIf};
 use mlirformat::{MlirOpt, Op};
 
@@ -21,8 +22,8 @@ macro_rules! dialects {
             let mut opt = MlirOpt::new();
             opt.load($dialect);
             // Hand-written forms for ops ODS describes in C++, as `MlirOpt::upstream` injects
-            // them; they are named `affine.*` / `scf.*` / `gpu.*`, so they change nothing for the other dialects.
-            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template()).inject(ScfIf::template()).inject(GpuFunc::template()).inject(LaunchFunc::template());
+            // them; they are named `affine.*` / `scf.*` / `gpu.*` / `linalg.*`, so they change nothing for the other dialects.
+            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template()).inject(ScfIf::template()).inject(GpuFunc::template()).inject(LaunchFunc::template()).inject(LinalgGeneric::template());
             Fixtures::check_dialect(&opt, $ns);
         }
     )*};
