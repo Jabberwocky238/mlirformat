@@ -422,6 +422,11 @@ impl Layout {
             FloatKind::TF32 => Self { exp: 8, mant: 10 },
             FloatKind::F32 => Self { exp: 8, mant: 23 },
             FloatKind::F64 => Self { exp: 11, mant: 52 },
+            // The 8-bit formats with IEEE semantics (infinities, NaNs); the `FN` / `FNUZ`
+            // ones encode special values (and bias exponents) their own way.
+            FloatKind::F8E5M2 => Self { exp: 5, mant: 2 },
+            FloatKind::F8E4M3 => Self { exp: 4, mant: 3 },
+            FloatKind::F8E3M4 => Self { exp: 3, mant: 4 },
             _ => return None,
         })
     }

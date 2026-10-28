@@ -18,6 +18,7 @@ pub mod affine_ops;
 pub mod emitc_types;
 pub mod llvm_types;
 pub mod scf_ops;
+pub mod spirv_types;
 #[path = "affine.gen.rs"]
 pub mod affine;
 #[path = "bufferization.gen.rs"]
