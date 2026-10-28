@@ -89,7 +89,7 @@ position; the hidden `__N` variants filling gaps take none) — `CmpIPredicate::
 
 Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
 `builtin`, `cf`, `complex`, `emitc`, `func`, `gpu`, `index`, `linalg`, `llvm`, `math`, `memref`,
-`pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`. `arith`, `builtin`, `cf`, `complex`,
+`pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`, and the x86 CPU's `x86vector` and `amx`. `arith`, `builtin`, `cf`, `complex`,
 `func`, `index`, `math` and `ub` are written by hand; the rest are generated from ODS by
 `mlirformat tblgen`; `llvm_types::LlvmType` and `emitc_types::EmitcType` read and build those
 dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name

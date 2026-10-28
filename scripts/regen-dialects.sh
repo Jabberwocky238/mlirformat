@@ -13,6 +13,6 @@ cargo run -q -- tblgen $I -o "$OUT" \
     $D/Affine/IR/AffineOps.td $D/Async/IR/AsyncOps.td $D/Bufferization/IR/BufferizationOps.td \
     $D/EmitC/IR/EmitC.td $D/GPU/IR/GPUOps.td $D/MemRef/IR/MemRefOps.td $D/PDL/IR/PDLOps.td \
     $D/SCF/IR/SCFOps.td $D/Shape/IR/ShapeOps.td $D/Tensor/IR/TensorOps.td $D/Tosa/IR/TosaOps.td \
-    $D/Vector/IR/VectorOps.td
+    $D/Vector/IR/VectorOps.td $D/X86Vector/X86Vector.td $D/AMX/AMX.td
 cargo run -q -- tblgen --dialect llvm $I -o "$OUT" scripts/td/LLVM.td
 cargo run -q -- tblgen --dialect linalg $I -o "$OUT" scripts/td/Linalg.td

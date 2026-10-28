@@ -23,6 +23,10 @@ pub enum LlvmType<'a> {
     Token,
     Label,
     Metadata,
+    /// `x86_amx`: an AMX tile.
+    X86Amx,
+    /// `ppc_fp128`.
+    PpcFp128,
     Array(u64, Box<Type<'a>>),
     /// `body: None` is `opaque` when `opaque`, else a name-only reference to an enclosing
     /// identified struct.
@@ -58,6 +62,8 @@ impl<'a> LlvmType<'a> {
             LlvmType::Token => ("token", None),
             LlvmType::Label => ("label", None),
             LlvmType::Metadata => ("metadata", None),
+            LlvmType::X86Amx => ("x86_amx", None),
+            LlvmType::PpcFp128 => ("ppc_fp128", None),
             LlvmType::Array(n, t) => ("array", Some(format!("<{n} x {}>", Self::nested(t, ctx)))),
             LlvmType::Struct { name, packed, body, opaque } => {
                 let mut s = String::from("<");
@@ -121,7 +127,7 @@ impl<'a> LlvmType<'a> {
         let word_end = s.find(|c: char| !c.is_ascii_alphanumeric() && c != '_').unwrap_or(s.len());
         let (word, rest) = s.split_at(word_end);
         let llvm = match word {
-            "ptr" | "void" | "token" | "label" | "metadata" | "array" | "struct" | "func" => true,
+            "ptr" | "void" | "token" | "label" | "metadata" | "x86_amx" | "ppc_fp128" | "array" | "struct" | "func" => true,
             _ => false,
         };
         if llvm {
@@ -178,6 +184,8 @@ impl<'a> LlvmType<'a> {
             "token" => LlvmType::Token,
             "label" => LlvmType::Label,
             "metadata" => LlvmType::Metadata,
+            "x86_amx" => LlvmType::X86Amx,
+            "ppc_fp128" => LlvmType::PpcFp128,
             "array" => {
                 let (n, t) = inner?.split_once(" x ")?;
                 LlvmType::Array(n.trim().parse().ok()?, Self::parse_nested(t)?.0.into())

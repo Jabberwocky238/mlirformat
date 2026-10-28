@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector};
+pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
 pub use crate::parser::{Parser, R, Read};
 
@@ -79,7 +79,7 @@ impl MlirOpt {
 
     /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
     /// `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`,
-    /// `vector`.
+    /// `vector`, and the CPU's `x86vector` and `amx`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
         opt.infos = crate::OpInfos::upstream();
@@ -104,7 +104,9 @@ impl MlirOpt {
             .load(shape::ShapeDialect)
             .load(tensor::TensorDialect)
             .load(tosa::TosaDialect)
-            .load(vector::VectorDialect);
+            .load(vector::VectorDialect)
+            .load(amx::AmxDialect)
+            .load(x86vector::X86vectorDialect);
         // Hand-written forms for ops ODS describes in C++; injected by name over the generated
         // templates, so the generated files stay exactly as `mlirformat tblgen` wrote them.
         opt.inject(affine_ops::Apply::template())

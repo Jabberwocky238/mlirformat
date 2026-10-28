@@ -23,6 +23,8 @@ pub mod scf_ops;
 pub mod spirv_types;
 #[path = "affine.gen.rs"]
 pub mod affine;
+#[path = "amx.gen.rs"]
+pub mod amx;
 #[path = "bufferization.gen.rs"]
 pub mod bufferization;
 #[path = "async.gen.rs"]
@@ -49,3 +51,5 @@ pub mod tensor;
 pub mod tosa;
 #[path = "vector.gen.rs"]
 pub mod vector;
+#[path = "x86vector.gen.rs"]
+pub mod x86vector;

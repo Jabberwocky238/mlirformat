@@ -40,6 +40,7 @@ macro_rules! dialects {
 
 dialects! {
     affine: "affine" => mlirformat::affine::AffineDialect,
+    amx: "amx" => mlirformat::amx::AmxDialect,
     r#async: "async" => mlirformat::r#async::AsyncDialect,
     bufferization: "bufferization" => mlirformat::bufferization::BufferizationDialect,
     emitc: "emitc" => mlirformat::emitc::EmitcDialect,
@@ -53,4 +54,5 @@ dialects! {
     tensor: "tensor" => mlirformat::tensor::TensorDialect,
     tosa: "tosa" => mlirformat::tosa::TosaDialect,
     vector: "vector" => mlirformat::vector::VectorDialect,
+    x86vector: "x86vector" => mlirformat::x86vector::X86vectorDialect,
 }

@@ -3,6 +3,7 @@
 use super::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos};
 
 traits! {
+    AMXIntrinsicOp,
     AccessGroupOpInterface,
     AffineMapAccessInterface,
     AffineReadOpInterface,
@@ -80,6 +81,7 @@ traits! {
     NoTerminator,
     NonNegFlagInterface,
     OffsetSizeAndStrideOpInterface,
+    OneToOneIntrinsicOpInterface,
     OpAsmOpInterface,
     ParallelCombiningOpInterface,
     PromotableAllocationOpInterface,
@@ -137,6 +139,7 @@ traits! {
     Vectorizable,
     ViewLikeOpInterface,
     WeightedBranchOpInterface,
+    X86IntrinsicOp,
 }
 
 impl OpInfos {
@@ -156,6 +159,11 @@ impl OpInfos {
         self.insert(OpInfo { name: "affine.vector_load", traits: &[Trait::AffineMapAccessInterface, Trait::AffineReadOpInterface, Trait::MemRefsNormalizable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &["map"] });
         self.insert(OpInfo { name: "affine.vector_store", traits: &[Trait::AffineMapAccessInterface, Trait::AffineWriteOpInterface, Trait::MemRefsNormalizable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Operand(1), resource: "DefaultResource" }]), inherent: &["map"] });
         self.insert(OpInfo { name: "affine.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemRefsNormalizable, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "amx.tile_load", traits: &[Trait::AMXIntrinsicOp, Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "amx.tile_mulf", traits: &[Trait::AMXIntrinsicOp, Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "amx.tile_muli", traits: &[Trait::AMXIntrinsicOp, Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface], effects: Effects::Known(&[]), inherent: &["isZextLhs", "isZextRhs"] });
+        self.insert(OpInfo { name: "amx.tile_store", traits: &[Trait::AMXIntrinsicOp, Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "amx.tile_zero", traits: &[Trait::AMXIntrinsicOp, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
         self.insert(OpInfo { name: "arith.addf", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ArithFastMathInterface, Trait::ConditionallySpeculatable, Trait::Elementwise, Trait::IsCommutative, Trait::MemoryEffectOpInterface, Trait::SameOperandsAndResultType, Trait::Scalarizable, Trait::Tensorizable, Trait::VectorUnrollOpInterface, Trait::Vectorizable], effects: Effects::Known(&[]), inherent: &["fastmath"] });
         self.insert(OpInfo { name: "arith.addi", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ArithIntegerOverflowFlagsInterface, Trait::ConditionallySpeculatable, Trait::Elementwise, Trait::InferIntRangeInterface, Trait::IsCommutative, Trait::MemoryEffectOpInterface, Trait::SameOperandsAndResultType, Trait::Scalarizable, Trait::Tensorizable, Trait::VectorUnrollOpInterface, Trait::Vectorizable], effects: Effects::Known(&[]), inherent: &["overflowFlags"] });
         self.insert(OpInfo { name: "arith.addui_extended", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::Elementwise, Trait::IsCommutative, Trait::MemoryEffectOpInterface, Trait::Scalarizable, Trait::Tensorizable, Trait::VectorUnrollOpInterface, Trait::Vectorizable], effects: Effects::Known(&[]), inherent: &[] });
@@ -1948,5 +1956,17 @@ impl OpInfos {
         self.insert(OpInfo { name: "vector.type_cast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::ViewLikeOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "vector.vscale", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "vector.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx.bcst_to_f32.packed", traits: &[Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx.cvt.packed.even.indexed_to_f32", traits: &[Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx.cvt.packed.odd.indexed_to_f32", traits: &[Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx.dot.i8", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx.intr.dot", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::SameOperandsAndResultType, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx.rsqrt", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::SameOperandsAndResultType, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx512.cvt.packed.f32_to_bf16", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx512.dot", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx512.mask.compress", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &["constant_src"] });
+        self.insert(OpInfo { name: "x86vector.avx512.mask.rndscale", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx512.mask.scalef", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "x86vector.avx512.vp2intersect", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
     }
 }

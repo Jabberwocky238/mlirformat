@@ -17,6 +17,7 @@ from pathlib import Path
 # The test dialect is in: `mlir-opt` registers it, and upstream tests use its ops throughout.
 TDS = [
     "include/mlir/IR/BuiltinOps.td",
+    "include/mlir/Dialect/AMX/AMX.td",
     "include/mlir/Dialect/Affine/IR/AffineOps.td",
     "include/mlir/Dialect/Arith/IR/ArithOps.td",
     "include/mlir/Dialect/Async/IR/AsyncOps.td",
@@ -47,6 +48,7 @@ TDS = [
     "include/mlir/Dialect/Tosa/IR/TosaShapeOps.td",
     "include/mlir/Dialect/UB/IR/UBOps.td",
     "include/mlir/Dialect/Vector/IR/VectorOps.td",
+    "include/mlir/Dialect/X86Vector/X86Vector.td",
     "test/lib/Dialect/Test/TestOps.td",
     "test/lib/Dialect/Test/TestOpsSyntax.td",
 ]

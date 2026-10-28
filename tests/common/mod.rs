@@ -97,6 +97,13 @@ impl Fixtures {
         op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
     }
 
+    /// Does `opt` print `op` only in generic form (`"vector.mask"(%m) ({ ... })`)?
+    fn generic_only(opt: &MlirOpt, op: &Operation<'_>) -> bool {
+        let text = opt.show(op).to_string();
+        let body = if op.results.is_empty() { text.as_str() } else { text.split_once(" = ").map_or(text.as_str(), |(_, b)| b) };
+        body.starts_with('"')
+    }
+
     /// The files of fixture directory `dir` the tests read, sorted: all of them with feature
     /// `more`, otherwise (`less`, the default) every 10th -- the same 10% on every run.
     pub fn sample(dir: &Path) -> Vec<PathBuf> {
@@ -217,6 +224,11 @@ impl Fixtures {
         // A bare terminator its parent writes nothing for is not rendered on its own, here or by
         // mlir-opt; judging its text against the file would only ever report the omission.
         if Self::bare(op) && parent.is_some_and(|par| !opt.show_in(aliases, par).to_string().contains(&*op.name)) {
+            return Verdict::Reparsed;
+        }
+        // Nor can a block's terminator be judged under a parent only C++ prints in custom form
+        // (`vector.mask`, `memref.alloca_scope`): there `mlir-opt` may leave it out.
+        if parent.is_some_and(|par| Self::generic_only(opt, par) && par.regions.iter().flat_map(|r| &r.blocks).any(|b| b.ops.last().is_some_and(|l| core::ptr::eq(l, op)))) {
             return Verdict::Reparsed;
         }
         // Inside its own dialect's regions an op prints without its prefix (`return`).
