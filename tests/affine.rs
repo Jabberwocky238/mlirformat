@@ -96,3 +96,24 @@ fn a_map_shows_against_operands() {
     let shown: Vec<String> = map.results.iter().map(|e| e.show(&args).to_string()).collect();
     assert_eq!(shown, ["%i + 1", "%n * 2", "%i floordiv 4"]);
 }
+
+/// `affine.store` has no result (only `affine.load` does): a module mlir-opt 22.1.8 printed
+/// (`affine.for` over a load and a store) parses and prints back byte for byte.
+#[test]
+fn a_store_has_no_result() {
+    let mlir_opt = "module {
+  func.func @f(%arg0: memref<4x16xf32>, %arg1: memref<4x16xf32>) {
+    affine.for %arg2 = 0 to 4 {
+      affine.for %arg3 = 0 to 16 {
+        %0 = affine.load %arg0[%arg2, %arg3 + 1] : memref<4x16xf32>
+        affine.store %0, %arg1[%arg2, %arg3] : memref<4x16xf32>
+      }
+    }
+    return
+  }
+}
+";
+    let opt = mlirformat::MlirOpt::upstream();
+    let module = opt.parse(mlir_opt).expect("parse");
+    assert_eq!(opt.show(&module).to_string(), mlir_opt);
+}

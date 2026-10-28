@@ -228,11 +228,12 @@ fn value_of(text: &str) -> Option<Value<'static>> {
 
 /// Declares one `%memref[<map results>] : <memref type>` op. `affine.store` writes the stored
 /// value first; the two cannot share one struct, because an operand group that an op does not
-/// have leaves its flat operand list with no way to split.
+/// have leaves its flat operand list with no way to split. Both have the element type `result`
+/// (the store types its value by it), but only `affine.load` has it as a result.
 macro_rules! memory_ops {
-    ($($ty:ident = $name:literal, $doc:literal, $($value:ident)?;)*) => {$(
+    ($($ty:ident = $name:literal, $doc:literal, ($($res:ident)?), $($value:ident)?;)*) => {$(
         #[doc = $doc]
-        #[mlir::op($name, custom, results(result))]
+        #[mlir::op($name, custom, results($($res)?))]
         pub struct $ty<'a> {
             $(#[slot(result, name = "value")]
             pub $value: Value<'a>,)?
@@ -319,8 +320,8 @@ macro_rules! memory_ops {
 }
 
 memory_ops! {
-    Load = "affine.load", "`affine.load %A[%i + 1]`: the map's results against the operands.",;
-    Store = "affine.store", "`affine.store %v, %A[%i + 1]`: the value stored where the map says.", value;
+    Load = "affine.load", "`affine.load %A[%i + 1]`: the map's results against the operands.", (result),;
+    Store = "affine.store", "`affine.store %v, %A[%i + 1]`: the value stored where the map says.", (), value;
 }
 
 /// A loop bound: a constant, a single operand, or the map applied to its operands, which
