@@ -230,7 +230,7 @@ pub struct AffineForOp<'a> {
     pub lower_bound_map: Attribute<'a>,
     #[attr(name = "upperBoundMap")]
     pub upper_bound_map: Attribute<'a>,
-    #[attr(name = "step")]
+    #[attr(name = "step", int = "index")]
     pub step: Attribute<'a>,
     #[region(name = "region")]
     pub region: Region<'a>,

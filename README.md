@@ -69,7 +69,7 @@ is the lowerCamelCase field name unless `name = "..."`):
 | marker | the field is |
 |---|---|
 | `#[slot(T)]` | an operand, typed by type variable `T` |
-| `#[dtype]`, `#[dtype(i1)]`, `#[dtype(i1 = x)]`, `#[dtype(of = attr)]`, `#[dtype(eq = x)]`, `#[dtype(is = index)]`, `#[dtype(el = x)]` | a type variable (results by `results(...)`), and how the custom form infers it when unspelled |
+| `#[dtype]`, `#[dtype(i1)]`, `#[dtype(i1 = x)]`, `#[dtype(of = attr)]`, `#[dtype(eq = x)]`, `#[dtype(is = index)]`, `#[dtype(el = x)]`, `#[dtype(width = x)]` | a type variable (results by `results(...)`), and how the custom form infers it when unspelled |
 | `#[attr]`, `#[attr(int = "i32")]`, `#[attr(dialect = "arith.overflow", default = "<none>")]`, `dense = "i64"`, `symbol`, `bits = ...` | a property: `bool` is a unit attribute, an enum a case typed `int` |
 | `#[region]`, `#[successor]` | a region, a successor |
 

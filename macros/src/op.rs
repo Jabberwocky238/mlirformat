@@ -104,7 +104,7 @@ impl Marked {
                             fixed = Some(if v.peek(LitStr) { v.parse::<LitStr>()?.value() } else { v.parse::<Ident>()?.to_string() });
                             rule = Some((key, None));
                         }
-                        ("dtype", "i1" | "of" | "eq" | "el") => {
+                        ("dtype", "i1" | "of" | "eq" | "el" | "width") => {
                             let arg = if m.input.peek(Token![=]) { Some(m.value()?.parse::<Ident>()?) } else { None };
                             rule = Some((key, arg));
                         }

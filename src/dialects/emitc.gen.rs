@@ -1135,15 +1135,13 @@ pub struct LiteralOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v2 = v1;
 /// ```
-///
-/// Generic form only (result type `result` inferred in C++).
-#[mlir::op("emitc.load", generic, results(result))]
+#[mlir::op("emitc.load", format = "$operand attr-dict `:` type($operand)", results(result))]
 pub struct LoadOp<'a> {
     #[slot(operand_ty, name = "operand")]
     pub operand: Value<'a>,
     #[dtype(name = "operand_ty", strip = "emitc.lvalue")]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", el = operand_ty)]
     pub result: Type<'a>,
 }
 

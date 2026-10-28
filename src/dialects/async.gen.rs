@@ -281,7 +281,7 @@ pub struct ExecuteOp<'a> {
     pub body_operands_ty: Vec<Type<'a>>,
     #[dtype(name = "token", is = "!async.token")]
     pub token: Type<'a>,
-    #[dtype(name = "bodyResults")]
+    #[dtype(name = "bodyResults", strip = "async.value")]
     pub body_results: Vec<Type<'a>>,
 }
 
@@ -470,15 +470,13 @@ pub struct RuntimeIsErrorOp<'a> {
 ///
 /// The `async.runtime.load` operation loads the value from the runtime
 /// async.value storage.
-///
-/// Generic form only (result type `result` inferred in C++).
-#[mlir::op("async.runtime.load", generic, results(result))]
+#[mlir::op("async.runtime.load", format = "$storage attr-dict `:` type($storage)", results(result))]
 pub struct RuntimeLoadOp<'a> {
     #[slot(storage_ty, name = "storage")]
     pub storage: Value<'a>,
-    #[dtype(name = "storage_ty")]
+    #[dtype(name = "storage_ty", strip = "async.value")]
     pub storage_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype(name = "result", el = storage_ty)]
     pub result: Type<'a>,
 }
 
@@ -538,9 +536,9 @@ pub struct RuntimeStoreOp<'a> {
     pub value: Value<'a>,
     #[slot(storage_ty, name = "storage")]
     pub storage: Value<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype(name = "value_ty", el = storage_ty)]
     pub value_ty: Type<'a>,
-    #[dtype(name = "storage_ty")]
+    #[dtype(name = "storage_ty", strip = "async.value")]
     pub storage_ty: Type<'a>,
 }
 

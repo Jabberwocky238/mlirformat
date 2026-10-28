@@ -172,7 +172,7 @@ pub struct BinaryOp<'a> {
 pub struct BlockDimOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -198,7 +198,7 @@ pub struct BlockDimOp<'a> {
 pub struct BlockIdOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -222,7 +222,7 @@ pub struct BlockIdOp<'a> {
 pub struct ClusterBlockIdOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -247,7 +247,7 @@ pub struct ClusterBlockIdOp<'a> {
 pub struct ClusterDimBlocksOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -272,7 +272,7 @@ pub struct ClusterDimBlocksOp<'a> {
 pub struct ClusterDimOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -297,7 +297,7 @@ pub struct ClusterDimOp<'a> {
 pub struct ClusterIdOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -961,7 +961,7 @@ pub struct GPUModuleOp<'a> {
 pub struct GlobalIdOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -994,7 +994,7 @@ pub struct GlobalIdOp<'a> {
 pub struct GridDimOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -1046,7 +1046,7 @@ pub struct HostUnregisterOp<'a> {
 /// target-independent `kMaxSubgroupSize` (currently 128).
 #[mlir::op("gpu.lane_id", format = "(`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct LaneIdOp<'a> {
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -1459,7 +1459,7 @@ pub struct MemsetOp<'a> {
 /// `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.num_subgroups", format = "(`upper_bound` $upper_bound^)? attr-dict `:` type($result)", results(result))]
 pub struct NumSubgroupsOp<'a> {
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -2241,7 +2241,7 @@ pub struct SubgroupBroadcastOp<'a> {
 /// (currently uint32_t::max).
 #[mlir::op("gpu.subgroup_id", format = "(`upper_bound` $upper_bound^)? attr-dict `:` type($result)", results(result))]
 pub struct SubgroupIdOp<'a> {
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -2473,7 +2473,7 @@ pub struct SubgroupMmaLoadMatrixOp<'a> {
     pub src_memref: Value<'a>,
     #[slot(indices_ty, name = "indices")]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "leadDimension")]
+    #[attr(name = "leadDimension", int = "index")]
     pub lead_dimension: Attribute<'a>,
     #[attr(name = "transpose")]
     pub transpose: bool,
@@ -2514,7 +2514,7 @@ pub struct SubgroupMmaStoreMatrixOp<'a> {
     pub dst_memref: Value<'a>,
     #[slot(indices_ty, name = "indices")]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "leadDimension")]
+    #[attr(name = "leadDimension", int = "index")]
     pub lead_dimension: Attribute<'a>,
     #[attr(name = "transpose")]
     pub transpose: bool,
@@ -2591,7 +2591,7 @@ pub struct SubgroupReduceOp<'a> {
 /// 128.
 #[mlir::op("gpu.subgroup_size", format = "(`upper_bound` $upper_bound^)? attr-dict `:` type($result)", results(result))]
 pub struct SubgroupSizeOp<'a> {
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,
@@ -2625,7 +2625,7 @@ pub struct TerminatorOp<'a> {
 pub struct ThreadIdOp<'a> {
     #[attr(name = "dimension", dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound")]
+    #[attr(name = "upper_bound", int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
     #[dtype(name = "result", is = index)]
     pub result: Type<'a>,

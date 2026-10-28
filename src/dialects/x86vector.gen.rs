@@ -208,7 +208,7 @@ pub struct MaskCompressOp<'a> {
     pub src: Vec<Value<'a>>,
     #[attr(name = "constant_src")]
     pub constant_src: Option<Attribute<'a>>,
-    #[dtype(name = "k_ty")]
+    #[dtype(name = "k_ty", i1 = dst)]
     pub k_ty: Type<'a>,
     #[dtype(name = "src_ty")]
     pub src_ty: Vec<Type<'a>>,
@@ -242,7 +242,7 @@ pub struct MaskRndScaleOp<'a> {
     pub rounding: Value<'a>,
     #[dtype(name = "k_ty", is = i32)]
     pub k_ty: Type<'a>,
-    #[dtype(name = "imm_ty")]
+    #[dtype(name = "imm_ty", width = dst)]
     pub imm_ty: Type<'a>,
     #[dtype(name = "rounding_ty", is = i32)]
     pub rounding_ty: Type<'a>,
@@ -274,7 +274,7 @@ pub struct MaskScaleFOp<'a> {
     pub k: Value<'a>,
     #[slot(rounding_ty, name = "rounding")]
     pub rounding: Value<'a>,
-    #[dtype(name = "k_ty")]
+    #[dtype(name = "k_ty", width = dst)]
     pub k_ty: Type<'a>,
     #[dtype(name = "rounding_ty", is = i32)]
     pub rounding_ty: Type<'a>,
@@ -305,9 +305,7 @@ pub struct RsqrtOp<'a> {
 /// specified by `k1` and `k2`. A match in corresponding elements of `a` and
 /// `b` is indicated by a set bit in the corresponding bit of the mask
 /// registers.
-///
-/// Generic form only (result type `k1` inferred in C++).
-#[mlir::op("x86vector.avx512.vp2intersect", generic, results(k1, k2))]
+#[mlir::op("x86vector.avx512.vp2intersect", format = "$a `,` $b attr-dict `:` type($a)", results(k1, k2))]
 pub struct Vp2IntersectOp<'a> {
     #[slot(a_ty, name = "a")]
     pub a: Value<'a>,
@@ -315,9 +313,9 @@ pub struct Vp2IntersectOp<'a> {
     pub b: Value<'a>,
     #[dtype(name = "a_ty")]
     pub a_ty: Type<'a>,
-    #[dtype(name = "k1")]
+    #[dtype(name = "k1", i1 = a_ty)]
     pub k1: Type<'a>,
-    #[dtype(name = "k2")]
+    #[dtype(name = "k2", i1 = a_ty)]
     pub k2: Type<'a>,
 }
 

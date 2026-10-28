@@ -30,6 +30,9 @@ pub struct Parser<'a, 'd> {
     bare: bool,
     /// Attribute aliases seen so far, so an op's custom form can look inside one.
     aliases: Vec<(String, String)>,
+    /// How many values the op being read defines (`%0:2 = ` ⇒ 2): a variadic result whose
+    /// types the custom form leaves out (`vector.to_elements`) has that many.
+    results: usize,
 }
 
 /// IR nodes a [`Parser`] reads whole — the dual of [`Emit`](crate::Emit), which writes them.
@@ -88,7 +91,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
-        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new() }
+        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 }
     }
 
     /// Parses all of `src` with `f`, no dialects registered.
@@ -717,6 +720,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             }
             self.expect("=")?;
         }
+        self.results = results.iter().map(|r| r.count.unwrap_or(1)).sum::<u32>().try_into().unwrap_or(0);
         let op = if self.at(b'"') { self.generic()? } else { self.custom()? };
         Ok(Operation { results, ..op })
     }
@@ -849,7 +853,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
-        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone() };
+        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone(), results: 0 };
         loop {
             if p.sigil('%').is_err() {
                 return false;
@@ -879,7 +883,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if !(tail.is_empty() || tail.starts_with("//")) || line_end == rest.len() {
             return false;
         }
-        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone() };
+        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone(), results: 0 };
         probe.ws();
         match probe.peek() {
             Some(b'%' | b'^' | b'}') => true,
@@ -1617,10 +1621,12 @@ const ATTR_WORDS: &[&str] = &["true", "false", "unit", "dense", "dense_resource"
 impl Format<'_> {
     /// ⭐ Parses the custom form after the op name into `O`.
     pub fn parse<O: Op>(&self, p: &mut Parser<'_, '_>) -> R<O> {
+        // Taken before the body: an op inside a region resets it.
+        let results = p.results;
         let mut r = Slots::default();
         self.read(&self.elems, &mut r, p)?;
         let loc = p.opt_loc()?;
-        self.finish(r, loc).and_then(O::from_content).or_else(|e| p.err(e.0))
+        self.finish(r, loc, results).and_then(O::from_content).or_else(|e| p.err(e.0))
     }
 
     fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
@@ -1875,8 +1881,22 @@ impl Format<'_> {
         Ok(hit)
     }
 
+    /// How many values variadic type variable `f` types: its results (those the other result
+    /// variables leave), or its operand group as read.
+    fn arity(&self, f: &Field, r: &Slots<'_>, results: usize) -> usize {
+        if let Role::Type { result: Some(_), .. } = f.role {
+            let fixed = self.schema.of_role(|x| matches!(x, Role::Type { result: Some(_), .. })).filter(|g| !g.variadic).count();
+            return results.saturating_sub(fixed);
+        }
+        let group = self.schema.of_role(|x| matches!(x, Role::Operand { ty } if *ty == f.name)).next();
+        match group.and_then(|g| r.get(g)) {
+            Some(Content::Seq(xs)) => xs.len(),
+            _ => 1,
+        }
+    }
+
     /// Fills defaults and inferred types, then builds the struct's [`Content`].
-    fn finish(&self, mut r: Slots<'_>, loc: Option<Str<'_>>) -> Result<Content, Error> {
+    fn finish(&self, mut r: Slots<'_>, loc: Option<Str<'_>>, results: usize) -> Result<Content, Error> {
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
             if r.get(f).is_none()
                 && let Some(d) = f.default_attr()
@@ -1890,9 +1910,21 @@ impl Format<'_> {
                 (Some(ts), _) => Content::convert(ts)?,
                 (None, Role::Type { infer: Some(Infer::I1), .. }) => vec![Type::I1],
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like()],
-                (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
-                    Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => vec![Content::convert(&**elem)?],
-                    Some(Type::Extended(ext)) => vec![Content::convert(&ext.shaped_elem().ok_or_else(undetermined)?)?],
+                (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => {
+                    let elem: Type<'static> = match r.bound(var).and_then(|t| t.first()) {
+                        Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => Content::convert(&**elem)?,
+                        Some(Type::Extended(ext)) => Content::convert(&ext.shaped_elem().ok_or_else(undetermined)?)?,
+                        _ => return Err(undetermined()),
+                    };
+                    // A variadic variable has one type per value (`tensor.from_elements`'s
+                    // operands, `vector.to_elements`'s results).
+                    vec![elem; if f.variadic { self.arity(f, &r, results) } else { 1 }]
+                }
+                (None, Role::Type { infer: Some(Infer::Width(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
+                    Some(Type::Shaped(Shaped { shape: Some(shape), .. })) => match shape.first() {
+                        Some(Dim::Static(n)) => vec![Type::int(u32::try_from(*n).map_err(|_| undetermined())?)],
+                        _ => return Err(undetermined()),
+                    },
                     _ => return Err(undetermined()),
                 },
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],

@@ -496,13 +496,16 @@ pub enum Infer {
     Is(&'static str),
     /// The element type of type variable `.0`: `complex<T>`, a tensor / vector / memref of `T` (`complex.re`'s result).
     ElemOf(&'static str),
+    /// The signless integer as wide as type variable `.0`'s leading dimension
+    /// (`x86vector.avx512.mask.scalef`'s mask: `vector<16xf32>` ⇒ `i16`).
+    Width(&'static str),
 }
 
 /// A field's MLIR role. `#[mlir::op]` spells it in the field's serde name:
 ///
 /// ```text
 /// %name[*]:T                      operand(s); their type is type variable `T`
-/// !name[*][=k][~i1|~i1:T|~of:a|~eq:T|~is:ty|~el:T]   type variable; `=k`: result #k; `~`: how custom form infers it
+/// !name[*][=k][~i1|~i1:T|~of:a|~eq:T|~is:ty|~el:T|~width:T]   type variable; `=k`: result #k; `~`: how custom form infers it
 /// #name[?][:iN][@dialect.attr][|default]
 ///                                 property; `?`: unit (a `bool`); `:iN`: integer type of an enum's
 ///                                 case value (default `i64`); `@`: a dialect attribute spelled
@@ -565,6 +568,7 @@ impl TryFrom<&'static str> for Field {
                     Some(("eq", Some(var))) => Some(Infer::Same(var)),
                     Some(("is", Some(ty))) => Some(Infer::Is(ty)),
                     Some(("el", Some(var))) => Some(Infer::ElemOf(var)),
+                    Some(("width", Some(var))) => Some(Infer::Width(var)),
                     Some(_) => return Err(bad()),
                 };
                 (name, variadic, Role::Type { result: result.map(str::parse).transpose().map_err(|_| bad())?, infer, strip })

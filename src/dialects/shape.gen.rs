@@ -201,7 +201,7 @@ pub struct ConstShapeOp<'a> {
 /// ```
 #[mlir::op("shape.const_size", format = "$value attr-dict", results(result))]
 pub struct ConstSizeOp<'a> {
-    #[attr(name = "value")]
+    #[attr(name = "value", int = "index")]
     pub value: Attribute<'a>,
     #[dtype(name = "result", is = "!shape.size")]
     pub result: Type<'a>,

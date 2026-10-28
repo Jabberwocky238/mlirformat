@@ -24,7 +24,7 @@ fn upstream_ops_match_mlir_opt() {
         }
     }
     println!("checked: {hits:?}\n{} declined:\n{}", declined.len(), declined.join("\n"));
-    assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.iter().take(40).cloned().collect::<Vec<_>>().join("\n"));
+    assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     assert!(hits.len() > 20);
 }
 /// A user-defined op: a struct and `#[mlir::op]` are all it takes.

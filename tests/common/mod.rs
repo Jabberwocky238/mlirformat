@@ -197,7 +197,7 @@ impl Fixtures {
             *tally.entry(kind).or_default() += 1;
         }
         println!("{ns}: {} ops {tally:?}", verdicts.len());
-        assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.iter().take(60).cloned().collect::<Vec<_>>().join("\n"));
+        assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     }
 
     /// ⭐ Judges `op` printed with `opt` against `mlir-opt`'s custom output of its file.

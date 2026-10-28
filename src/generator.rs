@@ -1144,11 +1144,12 @@ impl Format<'_> {
                     for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })).filter(|f| !spelled.contains(&f.name)) {
                         attrs.extend(v.prop(f)?.map(|a| NamedAttr::of(f.name, a)));
                     }
-                    // The properties as their dictionary (sorted by name), then the discardable ones.
-                    attrs.sort_by(|a, b| a.name.cmp(&b.name));
+                    // One dictionary, sorted by name, the discardable ones among the properties:
+                    // what `Operation::getAttrDictionary` hands the generated printer.
                     if let Some(f) = self.schema.of_role(|r| *r == Role::Attrs).next() {
                         attrs.extend(v.get::<Vec<NamedAttr<'static>>>(f)?);
                     }
+                    attrs.sort_by(|a, b| a.name.cmp(&b.name));
                     p.attr_dict(if *keyword { "attributes " } else { "" }, &attrs, &[]).map_err(io)?;
                     s.dict();
                 }

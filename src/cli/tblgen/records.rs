@@ -262,6 +262,15 @@ impl Records {
         Some((self.text(dialect, "name")?.into(), mnemonic.into()))
     }
 
+    /// The `attrName` (`ub.poison`) of the parameterless attribute definition whose C++ class is
+    /// `cpp` (`::mlir::ub::PoisonAttr`).
+    fn bare_attr_def(&self, cpp: &str) -> Option<String> {
+        let defs = self.all.get("!instanceof").and_then(|i| i.get("AttrDef")).and_then(Json::as_array)?;
+        let def = defs.iter().filter_map(Json::as_str).find(|d| self.text(d, "cppType") == Some(cpp))?;
+        let params = self.field(def, "parameters").and_then(|p| p.get("args")).and_then(Json::as_array)?;
+        params.is_empty().then(|| self.text(def, "attrName").map(String::from)).flatten()
+    }
+
     /// ⭐ The dialects with ops defined in this file.
     /// `only`: that dialect, with its ops from every file (a wrapper `.td` that includes them).
     pub fn dialects(&self, only: Option<&str>) -> Vec<GenDialect> {
@@ -376,11 +385,13 @@ impl Records {
     }
 
     /// The dialect type a type constraint is exactly (`Arg<EmitC_LValueType, ..>` ⇒ `emitc.lvalue`),
-    /// when it is written `<...>`.
+    /// when it is written `<...>`: by its assembly format, or by a C++ printer
+    /// (`hasCustomAssemblyFormat`: `!async.value<f32>` ⇒ `<f32>`).
     fn type_def(&self, constraint: &str) -> Option<String> {
         let c = self.field(constraint, "constraint").and_then(Self::def_of).unwrap_or(constraint);
         let c = self.field(c, "baseType").and_then(Self::def_of).unwrap_or(c);
-        (self.is_a(c, "TypeDef") && self.text(c, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`"))).then(|| self.text(c, "typeName").map(String::from)).flatten()
+        let custom = self.field(c, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(c, "mnemonic").is_some_and(|m| !m.is_empty());
+        (self.is_a(c, "TypeDef") && (custom || self.text(c, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`")))).then(|| self.text(c, "typeName").map(String::from)).flatten()
     }
 
     /// The value of an integer enum's case `symbol`.
@@ -465,6 +476,12 @@ impl Records {
                 None => (format!("#[attr({name}, dialect = {attr:?})]"), "Attribute<'a>".into()),
             };
         }
+        // `DefaultValuedAttr<PoisonAttrInterface, "{}">`: the default is what the attribute's
+        // `constBuilderCall` builds, a parameterless `AttrDef` (`#ub.poison`) — the value is a mere
+        // placeholder there.
+        if filled && let Some(attr) = chain.iter().find_map(|c| self.text(c, "constBuilderCall")?.strip_suffix("::get($_builder.getContext())").and_then(|cpp| self.bare_attr_def(cpp))) {
+            return (format!("#[attr({name}, dialect = {attr:?}, default = \"\")]"), "Option<Attribute<'a>>".into());
+        }
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
         // An attribute of one `AttrDef`: ODS prints it stripped (`<function = @f, tag = <id = 1>>`).
         if self.is_a(base, "AttrDef") && self.text(base, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`")) && let Some(attr) = self.text(base, "attrName") {
@@ -474,11 +491,12 @@ impl Records {
             return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
         }
         let default = filled.then(|| self.text(constraint, "defaultValue")).flatten();
-        // `I64Attr`: the custom form leaves the integer's type out (`linalg.index 0`).
-        if let Some(width) = chain.iter().find_map(|c| Self::int_attr(c)) {
+        // `I64Attr`, `IndexAttr`: the custom form leaves the integer's type out (`linalg.index 0`,
+        // `gpu.lane_id upper_bound 64`).
+        if let Some(int) = chain.iter().find_map(|c| Self::int_attr(c)) {
             return match default.filter(|v| v.parse::<i64>().is_ok()) {
-                Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), "Option<Attribute<'a>>".into()),
-                None => (format!("#[attr({name}, int = \"i{width}\")]"), ty.into()),
+                Some(v) => (format!("#[attr({name}, int = \"{int}\", default = \"{v}\")]"), "Option<Attribute<'a>>".into()),
+                None => (format!("#[attr({name}, int = \"{int}\")]"), ty.into()),
             };
         }
         // `DefaultValuedAttr<BoolAttr, "false">`.
@@ -492,9 +510,12 @@ impl Records {
         (format!("#[attr({name})]"), ty.into())
     }
 
-    /// `I64Attr` ⇒ 64: a signless integer attribute of a fixed width.
-    fn int_attr(def: &str) -> Option<u32> {
-        def.strip_prefix('I')?.strip_suffix("Attr")?.parse().ok().filter(|w| [1, 8, 16, 32, 64].contains(w))
+    /// `I64Attr` ⇒ `i64`, `IndexAttr` ⇒ `index`: an integer attribute of a fixed type.
+    fn int_attr(def: &str) -> Option<String> {
+        if def == "IndexAttr" {
+            return Some("index".into());
+        }
+        def.strip_prefix('I')?.strip_suffix("Attr")?.parse::<u32>().ok().filter(|w| [1, 8, 16, 32, 64].contains(w)).map(|w| format!("i{w}"))
     }
 
     /// `DenseI64ArrayAttr` ⇒ `i64`. The custom form prints such an attribute as a bare list, so
@@ -596,11 +617,19 @@ impl Records {
                     let plain = transformer.trim().strip_prefix("::llvm::cast<Type>(").and_then(|r| r.strip_suffix(')')).unwrap_or(transformer).trim();
                     match () {
                         _ if plain == "$_self" => vec![lhs, rhs],
-                        _ if transformer.contains("getI1SameShape") => {
+                        // `VectorType::get({shape[0]}, i1)`: the operand is a 1-D vector, so that is its
+                        // `i1` shape (`x86vector.avx512.mask.compress`'s mask).
+                        _ if transformer.contains("getI1SameShape") || plain.split_whitespace().collect::<String>() == "VectorType::get({::llvm::cast<VectorType>($_self).getShape()[0]},IntegerType::get($_self.getContext(),1))" => {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        _ if transformer.contains("getElementType()") && !groups[lhs].variadic => {
+                        // `IntegerType::get(ctx, shape[0])`: as many bits as lanes.
+                        _ if plain.split_whitespace().collect::<String>() == "IntegerType::get($_self.getContext(),(::llvm::cast<VectorType>($_self).getShape()[0]))" => {
+                            infer.insert(rhs, format!("width = {}", groups[lhs].name));
+                            Vec::new()
+                        }
+                        // `!async.value<T>` ⇒ `T`: its first parameter, as an element type.
+                        _ if (transformer.contains("getElementType()") || (plain.starts_with("::llvm::cast<") && plain.ends_with(">($_self).getValueType()"))) && !groups[lhs].variadic => {
                             infer.insert(rhs, format!("el = {}", groups[lhs].name));
                             Vec::new()
                         }
