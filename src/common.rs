@@ -216,7 +216,10 @@ impl Type<'_> {
 
 // ---- errors ------------------------------------------------------------------------------
 
-/// A text error with its position.
+/// A text error with its position. Inside a parse only the offset is known (`line` 0): most
+/// errors there are a guess that failed and is backtracked, and finding the line of each one
+/// scanned the text up to it — quadratic in the input. The parse fills the line in for the one
+/// that is returned ([`ParseError::placed`]).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{line}:{col}: {msg}")]
 pub struct ParseError {
@@ -232,6 +235,19 @@ impl ParseError {
         let line = before.matches('\n').count() + 1;
         let col = offset - before.rfind('\n').map_or(0, |i| i + 1) + 1;
         Self { offset, line, col, msg: msg.into() }
+    }
+
+    /// At `offset`, its line not looked up yet.
+    pub fn unplaced(offset: usize, msg: impl Into<String>) -> Self {
+        Self { offset, line: 0, col: 0, msg: msg.into() }
+    }
+
+    /// With its line and column in `src`, when they are not known yet.
+    pub fn placed(self, src: &str) -> Self {
+        match self.line {
+            0 => Self::at(src, self.offset, self.msg),
+            _ => self,
+        }
     }
 }
 

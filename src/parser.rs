@@ -127,9 +127,9 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Runs `f` and requires it to consume the whole input.
     pub fn all<T>(mut self, f: impl FnOnce(&mut Self) -> R<T>) -> R<T> {
-        let v = f(&mut self)?;
+        let v = f(&mut self).map_err(|e| e.placed(self.src))?;
         self.ws();
-        if self.pos == self.src.len() { Ok(v) } else { self.err("unexpected trailing input") }
+        if self.pos == self.src.len() { Ok(v) } else { self.err::<T>("unexpected trailing input").map_err(|e| e.placed(self.src)) }
     }
 
     // ---- low level -------------------------------------------------------
@@ -161,8 +161,9 @@ impl<'a, 'd> Parser<'a, 'd> {
         &self.src[start..self.pos]
     }
 
+    /// An error here; its line is filled in only if it is the one the parse returns ([`all`](Self::all)).
     pub fn err<T>(&self, msg: impl Into<String>) -> R<T> {
-        Err(ParseError::at(self.src, self.pos, msg))
+        Err(ParseError::unplaced(self.pos, msg))
     }
 
     /// Skips whitespace (including newlines) and `//` comments.
@@ -854,7 +855,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
-        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone(), results: 0 };
+        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 };
         loop {
             if p.sigil('%').is_err() {
                 return false;
@@ -884,7 +885,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if !(tail.is_empty() || tail.starts_with("//")) || line_end == rest.len() {
             return false;
         }
-        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: self.aliases.clone(), results: 0 };
+        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 };
         probe.ws();
         match probe.peek() {
             Some(b'%' | b'^' | b'}') => true,
