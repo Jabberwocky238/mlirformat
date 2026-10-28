@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde::de::{self, DeserializeOwned, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess, Visitor};
 
 use crate::common::*;
+use crate::generator::IntoStatic;
 use crate::mliropt::MlirOpt;
 
 pub type R<T> = Result<T, ParseError>;
@@ -1431,7 +1432,12 @@ impl Fields {
 impl Schema {
     /// ⭐ `O`'s op name and field roles, read off the keys `#[mlir::op]` spells.
     pub fn of<O: Op>() -> Result<Self, Error> {
-        (O::NAME, O::KEYS).try_into()
+        Ok(Self { types: O::TYPES, ..(O::NAME, O::KEYS).try_into()? })
+    }
+
+    /// Field `i`'s Rust type.
+    pub fn ty(&self, i: usize) -> FieldType {
+        self.types.get(i).copied().unwrap_or(FieldType::Attr { required: false })
     }
 }
 
@@ -1440,7 +1446,7 @@ impl TryFrom<(&'static str, &'static [&'static str])> for Schema {
     type Error = Error;
 
     fn try_from((name, keys): (&'static str, &'static [&'static str])) -> Result<Self, Error> {
-        Ok(Self { name, fields: keys.iter().map(|&k| Field::try_from(k)).collect::<Result<_, _>>()? })
+        Ok(Self { name, fields: keys.iter().map(|&k| Field::try_from(k)).collect::<Result<_, _>>()?, types: &[] })
     }
 }
 
@@ -1455,19 +1461,157 @@ pub(crate) enum Bound<'a> {
     Many(Vec<Type<'a>>),
 }
 
+/// ⭐ What one field of an op holds, borrowed from the op (`'o`) whose text lives for `'a`: the
+/// op read through a typed op's schema without building the typed op.
+#[derive(Debug)]
+pub(crate) enum Slot<'o, 'a> {
+    /// An operand group.
+    Values(&'o [Value<'a>]),
+    /// A type variable's types: one per value, or the one type of a single variable. Owned only
+    /// for a fixed type the op does not spell (`index` of an empty group).
+    Types(Cow<'o, [Type<'a>]>),
+    /// A property as the op holds it: `Unit` for a valueless one, owned only for a default
+    /// filled in.
+    Prop(Cow<'o, Attribute<'a>>),
+    Regions(&'o [Region<'a>]),
+    Successors(&'o [Str<'a>]),
+    Attrs(&'o [NamedAttr<'a>]),
+    Loc(Option<&'o Str<'a>>),
+}
+
+/// How a property's typed field shows its value: the custom form spells a user enum by its case
+/// and a Rust number without its type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Shape {
+    Case(&'static str),
+    Number,
+    Attr,
+}
+
+/// ⭐ An op through a schema: every field a [`Slot`] borrowed from the op, checked the way the
+/// typed op would check it — an op that does not fit has no view (and stays generic).
+pub(crate) struct View<'o, 'a> {
+    /// `(field, its Rust type, what it holds)`; an absent property has no entry.
+    pub(crate) slots: Vec<(Field, FieldType, Slot<'o, 'a>)>,
+}
+
+impl<'o, 'a> View<'o, 'a> {
+    fn slot(&self, f: &Field) -> Option<&Slot<'o, 'a>> {
+        self.slots.iter().find(|(g, _, _)| g.key == f.key).map(|(_, _, s)| s)
+    }
+
+    pub(crate) fn values(&self, f: &Field) -> Result<&'o [Value<'a>], Error> {
+        match self.slot(f) {
+            Some(Slot::Values(vs)) => Ok(vs),
+            _ => Err(format!("`{}` is not an operand group", f.name).into()),
+        }
+    }
+
+    pub(crate) fn types(&self, f: &Field) -> Result<&[Type<'a>], Error> {
+        match self.slot(f) {
+            Some(Slot::Types(ts)) => Ok(ts),
+            _ => Err(format!("`{}` is not a type variable", f.name).into()),
+        }
+    }
+
+    pub(crate) fn regions(&self, f: &Field) -> Result<&'o [Region<'a>], Error> {
+        match self.slot(f) {
+            Some(Slot::Regions(rs)) => Ok(rs),
+            _ => Err(format!("`{}` is not a region", f.name).into()),
+        }
+    }
+
+    pub(crate) fn successors(&self, f: &Field) -> Result<&'o [Str<'a>], Error> {
+        match self.slot(f) {
+            Some(Slot::Successors(ss)) => Ok(ss),
+            _ => Err(format!("`{}` is not a successor", f.name).into()),
+        }
+    }
+
+    pub(crate) fn attrs(&self) -> &'o [NamedAttr<'a>] {
+        self.slots.iter().find_map(|(_, _, s)| if let Slot::Attrs(a) = s { Some(*a) } else { None }).unwrap_or(&[])
+    }
+
+    pub(crate) fn loc(&self) -> Option<&'o Str<'a>> {
+        self.slots.iter().find_map(|(_, _, s)| if let Slot::Loc(l) = s { *l } else { None })
+    }
+
+    /// ⭐ A property as the custom form shows it — `None`: absent — with what its typed field
+    /// made of it. An `Attribute` field is borrowed as it is (an integer of a declared type
+    /// retyped); a field of another Rust type goes through that type, and only this field does.
+    pub(crate) fn shown(&self, f: &Field) -> Result<(Option<Cow<'_, Attribute<'a>>>, Shape), Error> {
+        let Some((_, ty, Slot::Prop(a))) = self.slots.iter().find(|(g, _, _)| g.key == f.key) else { return Ok((None, Shape::Attr)) };
+        match ty {
+            FieldType::Attr { .. } => Ok((Some(match (&**a, f.role) {
+                (Attribute::Int { lit, ty }, Role::Prop { int: Some(t), .. }) if let want = Type::try_from(t).ok() && *ty != want => Cow::Owned(Attribute::Int { lit: lit.clone(), ty: want }),
+                _ => Cow::Borrowed(&**a),
+            }), Shape::Attr)),
+            FieldType::Typed(through) => {
+                let c = through(Content::Attr((**a).clone().into_static()))?;
+                let shape = match c.looked_through() {
+                    Content::Variant(e, _, case, _) if !matches!(*e, "Attribute" | "Type") => Shape::Case(case),
+                    Content::I8(_) | Content::I16(_) | Content::I32(_) | Content::I64(_) | Content::U8(_) | Content::U16(_) | Content::U32(_) | Content::U64(_) | Content::F32(_) | Content::F64(_) => Shape::Number,
+                    _ => Shape::Attr,
+                };
+                Ok((f.attr(c)?.map(Cow::Owned), shape))
+            }
+        }
+    }
+
+    /// The property as the custom form shows it, `None` when absent or its default.
+    pub(crate) fn prop(&self, f: &Field) -> Result<Option<Cow<'_, Attribute<'a>>>, Error> {
+        let (a, _) = self.shown(f)?;
+        Ok(a.filter(|a| Some(&**a) != f.default_attr().as_ref()))
+    }
+
+    /// The struct's [`Content`]: what the typed op deserializes. Text is copied here, regions
+    /// cloned — the price of a typed op, which owns its fields.
+    pub(crate) fn content(&self, name: &'static str) -> Result<Content, Error> {
+        let mut fields = Vec::with_capacity(self.slots.len());
+        for (f, _, s) in &self.slots {
+            let c = match s {
+                Slot::Values(vs) if f.variadic => Content::of(vs)?,
+                Slot::Values(vs) => Content::of(&vs[0])?,
+                Slot::Types(ts) if f.variadic => Content::of(&**ts)?,
+                Slot::Types(ts) => Content::of(&ts[0])?,
+                Slot::Prop(a) => Content::Attr((**a).clone().into_static()),
+                Slot::Regions(rs) if f.variadic => Content::regions(rs.to_vec()),
+                Slot::Regions(rs) => Content::region(rs[0].clone()),
+                Slot::Successors(ss) if f.variadic => Content::of(ss)?,
+                Slot::Successors(ss) => Content::of(&ss[0])?,
+                Slot::Attrs(a) => Content::of(a)?,
+                Slot::Loc(l) => Content::of(l)?,
+            };
+            fields.push((f.key, c));
+        }
+        Ok(Content::Struct(name, fields))
+    }
+}
+
+impl Content {
+    /// An `Option`'s `Some` (or a newtype) looked through.
+    pub(crate) fn looked_through(&self) -> &Content {
+        match self {
+            Self::Some(x) | Self::Newtype(_, x) => x.looked_through(),
+            c => c,
+        }
+    }
+}
+
 impl<'a> Operation<'a> {
     /// ⭐ This op as the typed op `O`; an error if it does not fit (it then stays generic).
     pub fn to_op<O: Op>(&self) -> Result<O, Error> {
-        O::from_content(self.to_content(&Schema::of::<O>()?)?)
+        let schema = Schema::of::<O>()?;
+        O::from_content(self.view(&schema)?.content(schema.name)?)
     }
 
-    /// [`to_op`](Self::to_op) up to the struct's [`Content`]: everything that does not depend on
-    /// `O`, built once rather than once per op.
-    fn to_content(&self, schema: &Schema) -> Result<Content, Error> {
+    /// ⭐ This op through `schema`, every field borrowed: an error if it does not fit, the way
+    /// the typed op would not.
+    pub(crate) fn view<'o>(&'o self, schema: &Schema) -> Result<View<'o, 'a>, Error> {
         if self.name != schema.name || self.raw.is_some() {
             return Err(format!("`{}` is not `{}`", self.name, schema.name).into());
         }
-        let mut props: Vec<&NamedAttr<'a>> = match &self.properties {
+        let mut props: Vec<&'o NamedAttr<'a>> = match &self.properties {
             None => Vec::new(),
             Some(Attribute::Dict(ps)) => ps.iter().collect(),
             Some(other) => return Err(format!("properties must be a dictionary, found `{other}`").into()),
@@ -1491,13 +1635,15 @@ impl<'a> Operation<'a> {
         if sizes.len() != groups.len() || sizes.iter().sum::<usize>() != self.operands.len() || self.ty.inputs.len() != self.operands.len() {
             return Err("operands do not match the op's operand groups".into());
         }
-        let mut fields: Vec<(&'static str, Content)> = Vec::new();
-        let mut bound: Vec<(&'static str, Bound<'a>)> = Vec::new();
-        let mut bind = |name: &'static str, b: Bound<'a>| -> Result<(), Error> {
+        let mut slots: Vec<(Field, FieldType, Slot<'o, 'a>)> = Vec::with_capacity(schema.fields.len());
+        let ty_of = |f: &Field| schema.fields.iter().position(|g| g.key == f.key).map_or(FieldType::Attr { required: false }, |i| schema.ty(i));
+        // Each type variable's types, borrowed from the operands' and results' types.
+        let mut bound: Vec<(&'static str, &'o [Type<'a>])> = Vec::new();
+        let mut bind = |name: &'static str, ts: &'o [Type<'a>]| -> Result<(), Error> {
             match bound.iter().find(|(n, _)| *n == name) {
-                Some((_, old)) if *old != b => Err(format!("type variable `{name}` bound twice to different types").into()),
+                Some((_, old)) if *old != ts => Err(format!("type variable `{name}` bound twice to different types").into()),
                 Some(_) => Ok(()),
-                None => Ok(bound.push((name, b))),
+                None => Ok(bound.push((name, ts))),
             }
         };
         let mut at = 0;
@@ -1508,12 +1654,12 @@ impl<'a> Operation<'a> {
             if !f.variadic && n != 1 {
                 return Err(format!("`{}` takes exactly one operand", f.name).into());
             }
-            fields.push((f.key, if f.variadic { Content::of(ops)? } else { Content::of(&ops[0])? }));
+            slots.push((**f, ty_of(f), Slot::Values(ops)));
             let var = schema.field(ty).ok_or_else(|| Error(format!("no type variable `{ty}`")))?;
             if var.variadic {
-                bind(var.name, Bound::Many(tys.to_vec()))?;
+                bind(var.name, tys)?;
             } else {
-                tys.iter().try_for_each(|t| bind(var.name, Bound::One(t.clone())))?;
+                tys.chunks(1).try_for_each(|t| bind(var.name, t))?;
             }
         }
         let mut results: Vec<&Field> = schema.of_role(|r| matches!(r, Role::Type { result: Some(_), .. })).collect();
@@ -1525,42 +1671,51 @@ impl<'a> Operation<'a> {
         let mut at = 0;
         for f in results {
             let n = if f.variadic { rest } else { 1 };
-            let tys = &self.ty.results[at..at + n];
+            bind(f.name, &self.ty.results[at..at + n])?;
             at += n;
-            bind(f.name, if f.variadic { Bound::Many(tys.to_vec()) } else { Bound::One(tys[0].clone()) })?;
         }
         if at != self.ty.results.len() {
             return Err("too many results".into());
         }
         for f in schema.of_role(|r| matches!(r, Role::Type { .. })) {
-            fields.push((f.key, match bound.iter().find(|(n, _)| *n == f.name) {
-                Some((_, Bound::One(t))) if !f.variadic => Content::of(t)?,
-                Some((_, Bound::Many(ts))) if f.variadic => Content::of(ts)?,
+            let ts = match bound.iter().find(|(n, _)| *n == f.name) {
+                Some((_, ts)) => Cow::Borrowed(*ts),
                 // A variadic variable of an empty variadic group: no types.
-                None if f.variadic => Content::Seq(Vec::new()),
+                None if f.variadic => Cow::Borrowed(&[][..]),
                 // A fixed type whose only operand groups are empty.
-                None if matches!(f.role, Role::Type { infer: Some(Infer::Is(_)), .. }) => {
-                    let Role::Type { infer: Some(Infer::Is(ty)), .. } = f.role else { unreachable!() };
-                    Content::of(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?
-                }
+                None if let Role::Type { infer: Some(Infer::Is(ty)), .. } = f.role => Cow::Owned(vec![Type::try_from(ty).map_err(|e| Error(e.msg))?.owned()]),
                 _ => return Err(format!("type variable `{}` is not determined", f.name).into()),
-            }));
+            };
+            slots.push((*f, ty_of(f), Slot::Types(ts)));
         }
         for f in schema.of_role(|r| matches!(r, Role::Prop { .. })) {
-            let value = match props.iter().position(|p| p.name == f.name) {
-                Some(i) => Some(props.remove(i).value.as_ref().map_or(Ok(Attribute::Unit), Content::convert)?),
-                None => f.default_attr(),
+            let ty = ty_of(f);
+            let a = match props.iter().position(|p| p.name == f.name) {
+                Some(i) => Some(props.remove(i).value.as_ref().map_or(Cow::Owned(Attribute::Unit), Cow::Borrowed)),
+                None => f.default_attr().map(Cow::Owned),
             };
-            fields.extend(value.map(|a| (f.key, Content::Attr(a))));
+            match (a, ty) {
+                (Some(a), _) => slots.push((*f, ty, Slot::Prop(a))),
+                // Absent: fine for an `Option` (and a unit attribute's `bool`), not for a
+                // required field.
+                (None, FieldType::Attr { required: true }) => return Err(format!("`{}` needs `{}`", schema.name, f.name).into()),
+                (None, FieldType::Typed(through)) if !matches!(f.role, Role::Prop { unit: true, .. }) => {
+                    through(Content::None).map_err(|_| Error(format!("`{}` needs `{}`", schema.name, f.name)))?;
+                }
+                (None, _) => {}
+            }
         }
         if let Some(p) = props.first() {
             return Err(format!("`{}` has no property `{}`", schema.name, p.name).into());
         }
-        let mut regions = self.regions.iter();
+        let mut at = 0;
         for f in schema.of_role(|r| *r == Role::Region) {
-            fields.push((f.key, if f.variadic { Content::regions(regions.by_ref().cloned().collect()) } else { Content::region(regions.next().ok_or_else(|| Error("too few regions".into()))?.clone()) }));
+            let n = if f.variadic { self.regions.len().saturating_sub(at) } else { 1 };
+            let rs = self.regions.get(at..at + n).ok_or_else(|| Error("too few regions".into()))?;
+            at += n;
+            slots.push((*f, ty_of(f), Slot::Regions(rs)));
         }
-        if regions.next().is_some() {
+        if at < self.regions.len() {
             return Err("too many regions".into());
         }
         let succ: Vec<&Field> = schema.of_role(|r| *r == Role::Successor).collect();
@@ -1568,19 +1723,22 @@ impl<'a> Operation<'a> {
         if rest > 0 && !succ.iter().any(|f| f.variadic) {
             return Err("too many successors".into());
         }
-        let mut successors = self.successors.iter();
+        let mut at = 0;
         for f in succ {
-            fields.push((f.key, if f.variadic { Content::of(&successors.by_ref().take(rest).collect::<Vec<_>>())? } else { Content::of(successors.next().ok_or_else(|| Error("too few successors".into()))?)? }));
+            let n = if f.variadic { rest } else { 1 };
+            let ss = self.successors.get(at..at + n).ok_or_else(|| Error("too few successors".into()))?;
+            at += n;
+            slots.push((*f, ty_of(f), Slot::Successors(ss)));
         }
         match schema.of_role(|r| *r == Role::Attrs).next() {
-            Some(f) => fields.push((f.key, Content::of(&self.attributes)?)),
+            Some(f) => slots.push((*f, ty_of(f), Slot::Attrs(&self.attributes))),
             None if !self.attributes.is_empty() => return Err("discardable attributes on an op without an attribute dictionary".into()),
             None => {}
         }
         if let Some(f) = schema.of_role(|r| *r == Role::Loc).next() {
-            fields.push((f.key, Content::of(&self.loc)?));
+            slots.push((*f, ty_of(f), Slot::Loc(self.loc.as_ref())));
         }
-        Ok(Content::Struct(schema.name, fields))
+        Ok(View { slots })
     }
 }
 

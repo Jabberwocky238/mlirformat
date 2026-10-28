@@ -309,6 +309,8 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// The serde key of each field in order: its name with its MLIR role spelled in (see
     /// [`Field`]); `#[mlir::op]` writes them.
     const KEYS: &'static [&'static str];
+    /// Each field's Rust type, in the order of [`KEYS`](Self::KEYS); `#[mlir::op]` writes them.
+    const TYPES: &'static [FieldType];
     /// ODS-style assembly format (see [`Elem`]).
     const FORMAT: &'static str;
     /// Whether the op has a custom form; `false` (`#[mlir::op(..., generic)]`): it always prints
@@ -535,10 +537,45 @@ pub struct Field {
 }
 
 /// A typed op's shape: its name (the struct's serde name) and fields.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Schema {
     pub name: &'static str,
     pub fields: Vec<Field>,
+    /// Each field's Rust type, as [`Op::TYPES`] says it (empty: every one an `Attribute`).
+    pub types: &'static [FieldType],
+}
+
+/// ⭐ How a property field's Rust type holds its attribute: `#[mlir::op]` says it of each field
+/// in [`Op::TYPES`], so an op is read and written through its schema without building the typed
+/// op — only a field of another Rust type goes through it, and only that field.
+#[derive(Clone, Copy)]
+pub enum FieldType {
+    /// An `Attribute` (`required`) or an `Option<Attribute>` — or not a property at all: the
+    /// attribute as it is.
+    Attr { required: bool },
+    /// Any other Rust type (a user enum, a number, a string, `bool`): what the field makes of an
+    /// attribute, `Content::Attr` in and the field's own [`Content`] out.
+    Typed(fn(Content) -> Result<Content, Error>),
+}
+
+impl FieldType {
+    /// [`Typed`](Self::Typed) for a field of type `T`: generic in the field's type, not the op's.
+    pub const fn of<T: Serialize + DeserializeOwned>() -> Self {
+        Self::Typed(Self::through::<T>)
+    }
+
+    fn through<T: Serialize + DeserializeOwned>(c: Content) -> Result<Content, Error> {
+        Content::of(&c.to::<T>()?)
+    }
+}
+
+impl fmt::Debug for FieldType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Attr { required } => write!(f, "Attr {{ required: {required} }}"),
+            Self::Typed(_) => f.write_str("Typed"),
+        }
+    }
 }
 
 impl TryFrom<&'static str> for Field {

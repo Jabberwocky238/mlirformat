@@ -67,6 +67,28 @@ fn last_segment(ty: &Type) -> Option<String> {
     }
 }
 
+/// `T` of `Option<T>`.
+fn option_of(ty: &Type) -> Option<&Type> {
+    let Type::Path(p) = ty else { return None };
+    let seg = p.path.segments.last().filter(|s| s.ident == "Option")?;
+    let syn::PathArguments::AngleBracketed(args) = &seg.arguments else { return None };
+    args.args.iter().find_map(|a| if let syn::GenericArgument::Type(t) = a { Some(t) } else { None })
+}
+
+/// A field's `FieldType`: an `Attribute` property is read as it is, one of any other Rust type
+/// through that type.
+fn field_type(kind: &Kind, ty: &Type) -> Ts {
+    let inner = option_of(ty);
+    match kind {
+        Kind::Prop { .. } if last_segment(inner.unwrap_or(ty)).as_deref() == Some("Attribute") => {
+            let required = inner.is_none();
+            quote!(::mlirformat::FieldType::Attr { required: #required })
+        }
+        Kind::Prop { .. } => quote!(::mlirformat::FieldType::of::<#ty>()),
+        _ => quote!(::mlirformat::FieldType::Attr { required: false }),
+    }
+}
+
 /// `overflow_flags` → `overflowFlags`.
 fn camel(id: &Ident) -> String {
     let s = id.to_string();
@@ -156,6 +178,7 @@ impl OpArgs {
         };
         // `(key, field)` in order: `KEYS` and `from_fields`.
         let mut keys = Vec::new();
+        let mut types = Vec::new();
         for (f, m) in named.named.iter_mut().zip(&marked) {
             let star = if m.variadic { "*" } else { "" };
             let key = match &m.kind {
@@ -194,6 +217,7 @@ impl OpArgs {
                 _ => (quote!(#id: f.take(#key)?), quote!((#key, ::mlirformat::Content::of(&self.#id)?))),
             };
             keys.push((key.clone(), take, put));
+            types.push(field_type(&m.kind, &f.ty));
         }
         if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(..)))) {
             return Err(Error::new(r.span(), format!("`{r}` is not a #[dtype] field")));
@@ -221,6 +245,7 @@ impl OpArgs {
         // 九百个 op 的类型检查、借用检查都花在它身上。
         let fields = quote! {
             const KEYS: &'static [&'static str] = &[#(#keys),*];
+            const TYPES: &'static [::mlirformat::FieldType] = &[#(#types,)* ::mlirformat::FieldType::Attr { required: false }, ::mlirformat::FieldType::Attr { required: false }];
             fn from_fields(f: &mut ::mlirformat::Fields) -> ::core::result::Result<Self, ::mlirformat::Error> {
                 ::core::result::Result::Ok(Self { #(#takes),* })
             }

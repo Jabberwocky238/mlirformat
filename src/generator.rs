@@ -10,12 +10,11 @@ use alloc::vec::Vec;
 use core::fmt::{self, Display, Formatter, Write};
 
 use serde::Serialize;
-use serde::de::DeserializeOwned;
 use serde::ser;
 
 use crate::common::*;
 use crate::mliropt::MlirOpt;
-use crate::parser::{Bound, SEGMENTS};
+use crate::parser::{Bound, SEGMENTS, Shape, View};
 
 /// `items` joined by `sep`.
 pub struct Sep<'x, T>(pub &'x [T], pub &'x str);
@@ -313,13 +312,22 @@ impl Display for NamedAttr<'_> {
     }
 }
 
-impl Display for FunctionType<'_> {
+/// `(inputs) -> results` out of two borrowed lists: a function type, printed without building one.
+pub struct Signature<'s, 'a>(pub &'s [Type<'a>], pub &'s [Type<'a>]);
+
+impl Display for Signature<'_, '_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "({}) -> ", Sep(&self.inputs, ", "))?;
-        match self.results.as_slice() {
+        write!(f, "({}) -> ", Sep(self.0, ", "))?;
+        match self.1 {
             [t] if !matches!(t, Type::Function(_)) => t.fmt(f),
             ts => write!(f, "({})", Sep(ts, ", ")),
         }
+    }
+}
+
+impl Display for FunctionType<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Signature(&self.inputs, &self.results).fmt(f)
     }
 }
 
@@ -402,6 +410,21 @@ impl Display for Attribute<'_> {
             Self::DenseArray { ty, values } => write!(f, "array<{ty}: {}>", Sep(values, ", ")),
             Self::Builtin { name, body, ty } => write!(f, "{name}{body}{}", TySuffix(ty)),
             Self::Extended { ext, ty } => write!(f, "#{ext}{}", TySuffix(ty)),
+        }
+    }
+}
+
+/// An attribute without its `: type` suffix, printed in place ([`Attribute::untyped`] borrowed).
+pub struct Untyped<'s, 'a>(pub &'s Attribute<'a>);
+
+impl Display for Untyped<'_, '_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            Attribute::Int { lit, .. } | Attribute::Float { lit, .. } => f.write_str(lit),
+            Attribute::Str { lit, .. } => write!(f, "\"{lit}\""),
+            Attribute::Builtin { name, body, .. } => write!(f, "{name}{body}"),
+            Attribute::Extended { ext, .. } => write!(f, "#{ext}"),
+            other => other.fmt(f),
         }
     }
 }
@@ -967,75 +990,51 @@ impl Spacer {
     }
 }
 
-/// The serialized fields of the op being printed.
-struct Values(Vec<(&'static str, Content)>);
-
-impl Values {
-    /// A field's value; an `Option`'s `Some` is looked through.
-    fn raw(&self, f: &Field) -> Option<&Content> {
-        self.0.iter().find(|(k, _)| *k == f.key).map(|(_, v)| match v {
-            Content::Some(x) => &**x,
-            v => v,
-        })
-    }
-
-    fn get<T: DeserializeOwned>(&self, f: &Field) -> Result<T, Error> {
-        self.raw(f).cloned().ok_or_else(|| Error(format!("missing field `{}`", f.key)))?.to()
-    }
-
-    /// A region field, read in place when it was carried as itself.
-    fn region(&self, f: &Field) -> Result<Cow<'_, Region<'static>>, Error> {
-        match self.raw(f) {
-            Some(Content::Region(r)) => Ok(Cow::Borrowed(&**r)),
-            _ => self.get(f).map(Cow::Owned),
-        }
-    }
-
-    /// The property as an attribute (`None`: absent or default).
-    fn prop(&self, f: &Field) -> Result<Option<Attribute<'static>>, Error> {
-        let a = self.raw(f).cloned().map(|c| f.attr(c)).transpose()?.flatten();
-        Ok(a.filter(|a| Some(a) != f.default_attr().as_ref()))
-    }
-
-    fn present(&self, f: &Field) -> Result<bool, Error> {
-        Ok(match f.role {
-            Role::Prop { .. } => self.prop(f)?.is_some(),
-            // An optional region is there when it has blocks.
-            Role::Region => !self.region(f)?.blocks.is_empty(),
-            _ => !matches!(self.raw(f), None | Some(Content::None | Content::Bool(false))) && !matches!(self.raw(f), Some(Content::Seq(xs)) if xs.is_empty()),
-        })
-    }
-
-    fn types(&self, f: &Field) -> Result<Vec<Type<'static>>, Error> {
-        if f.variadic { self.get(f) } else { Ok(vec![self.get(f)?]) }
-    }
-}
-
 impl Format<'_> {
-    /// ⭐ Prints `op` in custom form: the op name, then the format.
-    pub fn print<O: Serialize + ?Sized>(&self, op: &O, p: &mut Printer<'_, '_>) -> fmt::Result {
-        self.print_content(Content::of(op), p)
+    /// ⭐ Prints a typed op in custom form: the op name, then the format.
+    pub fn print<O: Op>(&self, op: &O, p: &mut Printer<'_, '_>) -> fmt::Result {
+        self.print_op(&Operation::of_op(op).map_err(|_| fmt::Error)?, p)
     }
 
-    /// [`print`](Self::print) from the op's [`Content`], built once rather than once per op.
-    pub(crate) fn print_content(&self, content: Result<Content, Error>, p: &mut Printer<'_, '_>) -> fmt::Result {
-        let Ok(Content::Struct(_, values)) = content else { return Err(fmt::Error) };
-        let v = Values(values);
+    /// ⭐ Prints `op` in this custom form, reading every field in place (no typed op built);
+    /// an error if `op` does not fit the form's schema.
+    pub fn print_op(&self, op: &Operation<'_>, p: &mut Printer<'_, '_>) -> fmt::Result {
+        let v = op.view(&self.schema).map_err(|_| fmt::Error)?;
         p.op_name(self.schema.name)?;
         self.write(&self.elems, &v, &mut Spacer::default(), p).map_err(|_| fmt::Error)?;
-        match self.schema.of_role(|r| *r == Role::Loc).next() {
-            Some(f) => p.loc(&v.get(f).map_err(|_| fmt::Error)?),
+        match v.loc() {
+            Some(l) => write!(p, " loc({l})"),
             None => Ok(()),
         }
     }
 
-    fn write(&self, elems: &[Elem<'_>], v: &Values, s: &mut Spacer, p: &mut Printer<'_, '_>) -> Result<(), Error> {
+    fn present(&self, f: &Field, v: &View<'_, '_>) -> Result<bool, Error> {
+        Ok(match f.role {
+            Role::Prop { .. } => v.prop(f)?.is_some(),
+            // An optional region is there when it has blocks.
+            Role::Region if f.variadic => return Err(format!("`{}`: a region list as an anchor", f.name).into()),
+            Role::Region => v.regions(f)?.iter().any(|r| !r.blocks.is_empty()),
+            Role::Operand { .. } => !v.values(f)?.is_empty(),
+            Role::Type { .. } => !v.types(f)?.is_empty(),
+            Role::Successor => !v.successors(f)?.is_empty(),
+            Role::Attrs => !v.attrs().is_empty(),
+            Role::Loc => v.loc().is_some(),
+        })
+    }
+
+    /// A type variable's types as `type($x)` prints them: one for a single variable.
+    fn shown_types<'v, 'a>(f: &Field, v: &'v View<'_, 'a>) -> Result<&'v [Type<'a>], Error> {
+        let ts = v.types(f)?;
+        Ok(if f.variadic { ts } else { ts.get(..1).ok_or_else(|| Error(format!("no type for `{}`", f.name)))? })
+    }
+
+    fn write(&self, elems: &[Elem<'_>], v: &View<'_, '_>, s: &mut Spacer, p: &mut Printer<'_, '_>) -> Result<(), Error> {
         let io = |_| Error("write failed".into());
         for e in elems {
             match e {
                 Elem::Lit(l) => s.lit(p, l).map_err(io)?,
                 Elem::Group { anchor, elems } => {
-                    if v.present(self.field(anchor)?)? {
+                    if self.present(self.field(anchor)?, v)? {
                         self.write(elems, v, s, p)?;
                     }
                 }
@@ -1046,50 +1045,60 @@ impl Format<'_> {
                     }
                     match f.role {
                         Role::Operand { .. } => {
-                            let vs: Vec<Value<'static>> = if f.variadic { v.get(f)? } else { vec![v.get(f)?] };
-                            write!(p, "{}", Sep(&vs, ", ")).map_err(io)?;
+                            let vs = v.values(f)?;
+                            let vs = if f.variadic { vs } else { vs.get(..1).ok_or_else(|| Error(format!("no operand `{}`", f.name)))? };
+                            write!(p, "{}", Sep(vs, ", ")).map_err(io)?;
                         }
-                        Role::Type { .. } => write!(p, "{}", Sep(&v.types(f)?, ", ")).map_err(io)?,
+                        Role::Type { .. } => write!(p, "{}", Sep(Self::shown_types(f, v)?, ", ")).map_err(io)?,
                         Role::Prop { unit: true, .. } | Role::Attrs | Role::Loc => {}
                         Role::Prop { bits: Some(_), .. } => {
                             if let (Some(e), Some(a)) = (f.bit_enum(), v.prop(f)?) {
                                 p.write_str(&e.show(u64::try_from(a.int()?).unwrap_or(0))).map_err(io)?;
                             }
                         }
-                        Role::Prop { symbol: true, .. } => match v.prop(f)? {
+                        Role::Prop { symbol: true, .. } => match v.prop(f)?.as_deref() {
                             Some(a @ Attribute::Str { .. }) => p.sym_name(&a.text()?).map_err(io)?,
                             Some(a) => write!(p, "{a}").map_err(io)?,
                             None => {}
                         },
-                        Role::Prop { dialect, int, .. } => match (v.raw(f), v.prop(f)?) {
-                            // A user enum prints its case name.
-                            (Some(Content::Variant(e, _, case, _)), _) if !matches!(*e, "Attribute" | "Type") => p.write_str(case).map_err(io)?,
-                            // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).
-                            (Some(Content::I8(_) | Content::I16(_) | Content::I32(_) | Content::I64(_) | Content::U8(_) | Content::U16(_) | Content::U32(_) | Content::U64(_) | Content::F32(_) | Content::F64(_)), Some(a)) => {
-                                write!(p, "{}", a.untyped()).map_err(io)?;
+                        Role::Prop { dialect, int, .. } => {
+                            let (_, shape) = v.shown(f)?;
+                            match (shape, v.prop(f)?.as_deref()) {
+                                // A user enum prints its case name.
+                                (Shape::Case(case), _) => p.write_str(case).map_err(io)?,
+                                // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).
+                                (Shape::Number, Some(a)) => write!(p, "{}", Untyped(a)).map_err(io)?,
+                                (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
+                                // `#gpu<dim x>` ⇒ ` x`: the attribute's own printer puts a space before
+                                // its case, so `mlir-opt` shows two (`gpu.thread_id  x`).
+                                (_, Some(Attribute::Extended { ext, .. }))
+                                    if let Some((ns, m)) = f.keyword_dialect()
+                                        && ext.name == ns
+                                        && let Some(case) = ext.body.as_deref().and_then(|b| b.strip_prefix('<')?.strip_prefix(m)?.strip_prefix(' ')?.strip_suffix('>')) =>
+                                {
+                                    write!(p, " {case}").map_err(io)?
+                                }
+                                // A dense array prints as a list: `[30, 70]`.
+                                (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(values, ", ")).map_err(io)?,
+                                // Before a `:`, or of a buildable type (`I64Attr`): ODS leaves the type out.
+                                (_, Some(a)) if self.before_colon(n) || int.is_some() => write!(p, "{}", Untyped(a)).map_err(io)?,
+                                (_, Some(a)) => write!(p, "{a}").map_err(io)?,
+                                (_, None) => {}
                             }
-                            (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
-                            // `#gpu<dim x>` ⇒ ` x`: the attribute's own printer puts a space before
-                            // its case, so `mlir-opt` shows two (`gpu.thread_id  x`).
-                            (_, Some(Attribute::Extended { ref ext, .. }))
-                                if let Some((ns, m)) = f.keyword_dialect()
-                                    && ext.name == ns
-                                    && let Some(case) = ext.body.as_deref().and_then(|b| b.strip_prefix('<')?.strip_prefix(m)?.strip_prefix(' ')?.strip_suffix('>')) =>
-                            {
-                                write!(p, " {case}").map_err(io)?
-                            }
-                            // A dense array prints as a list: `[30, 70]`.
-                            (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(&values, ", ")).map_err(io)?,
-                            // Before a `:`, or of a buildable type (`I64Attr`): ODS leaves the type out.
-                            (_, Some(a)) if self.before_colon(n) || int.is_some() => write!(p, "{}", a.untyped()).map_err(io)?,
-                            (_, Some(a)) => write!(p, "{a}").map_err(io)?,
-                            (_, None) => {}
-                        },
-                        Role::Successor => write!(p, "^{}", v.get::<String>(f)?).map_err(io)?,
+                        }
+                        Role::Successor if f.variadic => return Err(format!("`{n}`: a successor list in a format").into()),
+                        Role::Successor => {
+                            let ss = v.successors(f)?;
+                            write!(p, "^{}", ss.first().ok_or_else(|| Error(format!("no successor `{}`", f.name)))?).map_err(io)?
+                        }
                         // ODS prints a region variable with its entry block's arguments
                         // (`OpFormatGen.cpp`: `printEntryBlockArgs=true`); an op that binds
                         // those arguments in its header writes its own form by hand instead.
-                        Role::Region => p.region(&*v.region(f)?, true).map_err(io)?,
+                        Role::Region if f.variadic => return Err(format!("`{n}`: a region list in a format").into()),
+                        Role::Region => {
+                            let r = v.regions(f)?.first().ok_or_else(|| Error(format!("no region `{}`", f.name)))?;
+                            p.region(r, true).map_err(io)?
+                        }
                     }
                 }
                 // ODS spaces a whole directive as one element; inside, the parts are tight.
@@ -1101,12 +1110,13 @@ impl Format<'_> {
                 // sentinel says the item is the next operand instead.
                 Elem::Zip { integers, values } => {
                     s.elem(p).map_err(io)?;
-                    let items = match v.prop(self.field(integers)?)? {
-                        Some(Attribute::DenseArray { values, .. }) => values,
-                        Some(Attribute::Array(a)) => a.into_iter().map(|x| Str::Owned(x.untyped().to_string())).collect(),
+                    let list = v.prop(self.field(integers)?)?;
+                    let items: Vec<Cow<'_, str>> = match list.as_deref() {
+                        Some(Attribute::DenseArray { values, .. }) => values.iter().map(|x| Cow::Borrowed(&**x)).collect(),
+                        Some(Attribute::Array(a)) => a.iter().map(|x| Cow::Owned(Untyped(x).to_string())).collect(),
                         _ => return Err(format!("`{integers}`: a zipped list needs an integer array").into()),
                     };
-                    let mut ops = v.get::<Vec<Value<'static>>>(self.field(values)?)?.into_iter();
+                    let mut ops = v.values(self.field(values)?)?.iter();
                     for (k, item) in items.iter().enumerate() {
                         if k > 0 {
                             p.write_str(", ").map_err(io)?;
@@ -1121,36 +1131,45 @@ impl Format<'_> {
                 Elem::TypeOf(n, qualified) => {
                     s.elem(p).map_err(io)?;
                     let f = self.type_var(n)?;
-                    let ts = v.types(f)?;
+                    let ts = Self::shown_types(f, v)?;
                     match f.role {
                         Role::Type { strip: Some(d), .. } if !*qualified => {
-                            let shown: Vec<String> = ts.iter().map(|t| {
+                            for (i, t) in ts.iter().enumerate() {
                                 let full = t.to_string();
-                                full.strip_prefix('!').and_then(|r| r.strip_prefix(d)).filter(|r| r.starts_with('<')).map_or(full.clone(), String::from)
-                            }).collect();
-                            write!(p, "{}", Sep(&shown, ", ")).map_err(io)?;
+                                let shown = full.strip_prefix('!').and_then(|r| r.strip_prefix(d)).filter(|r| r.starts_with('<')).unwrap_or(&full);
+                                write!(p, "{}{shown}", if i > 0 { ", " } else { "" }).map_err(io)?;
+                            }
                         }
-                        _ => write!(p, "{}", Sep(&ts, ", ")).map_err(io)?,
+                        _ => write!(p, "{}", Sep(ts, ", ")).map_err(io)?,
                     }
                 }
                 Elem::FnType(a, b) => {
                     s.elem(p).map_err(io)?;
-                    let ty = FunctionType { inputs: v.types(self.type_var(a)?)?, results: v.types(self.type_var(b)?)? };
-                    write!(p, "{ty}").map_err(io)?;
+                    let sig = Signature(Self::shown_types(self.type_var(a)?, v)?, Self::shown_types(self.type_var(b)?, v)?);
+                    write!(p, "{sig}").map_err(io)?;
                 }
                 Elem::AttrDict(keyword) => {
                     let spelled = self.spelled();
-                    let mut attrs: Vec<NamedAttr<'static>> = Vec::new();
+                    let mut shown: Vec<(&str, Cow<'_, Attribute<'_>>)> = Vec::new();
                     for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })).filter(|f| !spelled.contains(&f.name)) {
-                        attrs.extend(v.prop(f)?.map(|a| NamedAttr::of(f.name, a)));
+                        shown.extend(v.prop(f)?.map(|a| (f.name, a)));
                     }
                     // One dictionary, sorted by name, the discardable ones among the properties:
-                    // what `Operation::getAttrDictionary` hands the generated printer.
-                    if let Some(f) = self.schema.of_role(|r| *r == Role::Attrs).next() {
-                        attrs.extend(v.get::<Vec<NamedAttr<'static>>>(f)?);
+                    // what `Operation::getAttrDictionary` hands the generated printer. A unit
+                    // attribute is its name alone.
+                    let mut attrs: Vec<(&str, Option<&Attribute<'_>>)> = shown.iter().map(|(n, a)| (*n, Some(&**a).filter(|a| **a != Attribute::Unit))).collect();
+                    attrs.extend(v.attrs().iter().map(|a| (&*a.name, a.value.as_ref())));
+                    attrs.sort_by(|a, b| a.0.cmp(b.0));
+                    if !attrs.is_empty() {
+                        write!(p, " {}{{", if *keyword { "attributes " } else { "" }).map_err(io)?;
+                        for (i, (name, value)) in attrs.iter().enumerate() {
+                            write!(p, "{}{name}", if i > 0 { ", " } else { "" }).map_err(io)?;
+                            if let Some(a) = value {
+                                write!(p, " = {a}").map_err(io)?;
+                            }
+                        }
+                        p.write_char('}').map_err(io)?;
                     }
-                    attrs.sort_by(|a, b| a.name.cmp(&b.name));
-                    p.attr_dict(if *keyword { "attributes " } else { "" }, &attrs, &[]).map_err(io)?;
                     s.dict();
                 }
             }

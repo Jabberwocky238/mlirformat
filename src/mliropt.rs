@@ -20,7 +20,7 @@ use core::fmt;
 
 pub use crate::common::*;
 pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector};
-pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
+pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
 /// A loaded dialect, and the ops it brought.
@@ -225,13 +225,12 @@ impl Template {
     /// cannot print it.
     fn print_as<O: Op>(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
         O::CUSTOM.then_some(())?;
-        let typed = op.to_op::<O>().ok()?;
         let mut text = alloc::string::String::new();
         let mut fork = p.fork(&mut text);
-        // A format's print, from the op's fields by move (its regions not serialized again).
+        // A format prints the op's fields in place; only a hand-written print needs the typed op.
         match O::FORMAT {
-            "" => typed.print(&mut fork),
-            _ => Format::of::<O>().ok()?.print_content(typed.into_content(), &mut fork),
+            "" => op.to_op::<O>().ok()?.print(&mut fork),
+            _ => Format::of::<O>().ok()?.print_op(op, &mut fork),
         }
         .ok()?;
         Some(fmt::Write::write_str(p, &text))
