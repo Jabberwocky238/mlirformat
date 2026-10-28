@@ -728,7 +728,7 @@ impl NamedAttr<'_> {
 
 impl Operation<'_> {
     /// ⭐ A typed op as an op.
-    pub fn of_op<O: Serialize + DeserializeOwned>(op: &O) -> Result<Operation<'static>, Error> {
+    pub fn of_op<O: Op>(op: &O) -> Result<Operation<'static>, Error> {
         Self::of_content(&Schema::of::<O>()?, Content::of(op)?)
     }
 

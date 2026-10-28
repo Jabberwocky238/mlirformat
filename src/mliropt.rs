@@ -21,7 +21,7 @@ use core::fmt;
 pub use crate::common::*;
 pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector};
 pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Spacer};
-pub use crate::parser::{Parser, R, Read};
+pub use crate::parser::{Fields, Parser, R, Read};
 
 /// A loaded dialect, and the ops it brought.
 #[derive(Clone)]

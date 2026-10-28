@@ -7,9 +7,10 @@ use alloc::format;
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
-use core::cell::Cell;
 
-use serde::Serialize;
+use core::fmt;
+
+use serde::{Deserialize, Serialize};
 use serde::de::{self, DeserializeOwned, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess, Visitor};
 
 use crate::common::*;
@@ -1076,7 +1077,8 @@ impl<'de> de::Deserializer<'de> for Content {
 
     fn deserialize_option<V: Visitor<'de>>(self, v: V) -> Result<V::Value, Error> {
         match self {
-            Self::None => v.visit_none(),
+            // `Unit`: what a self-describing format's `null` reads back as.
+            Self::None | Self::Unit => v.visit_none(),
             Self::Some(x) => v.visit_some(*x),
             other => v.visit_some(other),
         }
@@ -1099,6 +1101,12 @@ impl<'de> de::Deserializer<'de> for Content {
             (Self::Attr(Attribute::Bool(b)), _) => v.visit_enum(Named(Self::Str(if b { "true" } else { "false" }.into()))),
             // A bare name (or index) picks a unit variant: how custom syntax spells an enum keyword.
             (this @ (Self::Str(_) | Self::U32(_) | Self::U64(_)), _) => v.visit_enum(Named(this)),
+            // `{variant: payload}`: an enum as a self-describing format writes it, and as
+            // [`Content`]'s own `Deserialize` reads one back.
+            (Self::Map(mut xs), _) if xs.len() == 1 => {
+                let (k, x) = xs.remove(0);
+                v.visit_enum(Tagged(k, x))
+            }
             (other, _) => v.visit_enum(other),
         }
     }
@@ -1210,27 +1218,42 @@ impl<'de> VariantAccess<'de> for Payload {
     type Error = Error;
     fn unit_variant(self) -> Result<(), Error> {
         match self {
-            Self::Unit => Ok(()),
+            Self::Unit | Self::Newtype(Content::Unit) => Ok(()),
             _ => Err("expected a unit variant".into()),
         }
     }
     fn newtype_variant_seed<T: DeserializeSeed<'de>>(self, seed: T) -> Result<T::Value, Error> {
         match self {
             Self::Newtype(x) => seed.deserialize(x),
-            _ => Err("expected a newtype variant".into()),
+            // Read as newtypes by [`Content`]'s `Deserialize`, which cannot know the kind.
+            Self::Unit => seed.deserialize(Content::Unit),
+            Self::Tuple(xs) => seed.deserialize(Content::Seq(xs)),
+            Self::Struct(xs) => seed.deserialize(Content::Struct("", xs)),
         }
     }
     fn tuple_variant<V: Visitor<'de>>(self, _: usize, v: V) -> Result<V::Value, Error> {
         match self {
-            Self::Tuple(xs) => v.visit_seq(Items(xs.into_iter())),
+            Self::Tuple(xs) | Self::Newtype(Content::Seq(xs)) => v.visit_seq(Items(xs.into_iter())),
             _ => Err("expected a tuple variant".into()),
         }
     }
     fn struct_variant<V: Visitor<'de>>(self, _: &'static [&'static str], v: V) -> Result<V::Value, Error> {
         match self {
-            Self::Struct(xs) => v.visit_map(Pairs(xs.into_iter(), None)),
+            Self::Struct(xs) | Self::Newtype(Content::Struct(_, xs)) => v.visit_map(Pairs(xs.into_iter(), None)),
+            Self::Newtype(Content::Map(xs)) => v.visit_map(Pairs(xs.into_iter(), None)),
             _ => Err("expected a struct variant".into()),
         }
+    }
+}
+
+/// `{variant: payload}`.
+struct Tagged(Content, Content);
+
+impl<'de> EnumAccess<'de> for Tagged {
+    type Error = Error;
+    type Variant = Payload;
+    fn variant_seed<T: DeserializeSeed<'de>>(self, seed: T) -> Result<(T::Value, Payload), Error> {
+        Ok((seed.deserialize(self.0)?, Payload::Newtype(self.1)))
     }
 }
 
@@ -1245,40 +1268,145 @@ impl<'de> EnumAccess<'de> for Named {
     }
 }
 
-// ---- schemas -------------------------------------------------------------------------------
+// ---- any self-describing format into Content -----------------------------------------------
 
-/// A deserializer that only records the struct name and field keys it is asked for.
-struct Probe<'c>(&'c Cell<Option<(&'static str, &'static [&'static str])>>);
+/// Reads whatever the format holds, as it holds it.
+struct Capture;
 
-impl<'de> de::Deserializer<'de> for Probe<'_> {
+macro_rules! capture {
+    ($($m:ident($t:ty) => $v:ident),* $(,)?) => {$(
+        fn $m<E: de::Error>(self, x: $t) -> Result<Content, E> {
+            Ok(Content::$v(x.into()))
+        }
+    )*};
+}
+
+impl<'de> Visitor<'de> for Capture {
+    type Value = Content;
+
+    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("any value")
+    }
+
+    capture! {
+        visit_bool(bool) => Bool, visit_i8(i8) => I8, visit_i16(i16) => I16, visit_i32(i32) => I32, visit_i64(i64) => I64,
+        visit_u8(u8) => U8, visit_u16(u16) => U16, visit_u32(u32) => U32, visit_u64(u64) => U64, visit_f32(f32) => F32,
+        visit_f64(f64) => F64, visit_char(char) => Char, visit_str(&str) => Str, visit_string(String) => Str,
+        visit_bytes(&[u8]) => Bytes, visit_byte_buf(Vec<u8>) => Bytes,
+    }
+
+    fn visit_none<E: de::Error>(self) -> Result<Content, E> {
+        Ok(Content::None)
+    }
+    fn visit_unit<E: de::Error>(self) -> Result<Content, E> {
+        Ok(Content::Unit)
+    }
+    fn visit_some<D: de::Deserializer<'de>>(self, d: D) -> Result<Content, D::Error> {
+        Content::deserialize(d).map(|x| Content::Some(Box::new(x)))
+    }
+    fn visit_newtype_struct<D: de::Deserializer<'de>>(self, d: D) -> Result<Content, D::Error> {
+        Content::deserialize(d)
+    }
+    fn visit_seq<A: SeqAccess<'de>>(self, mut a: A) -> Result<Content, A::Error> {
+        let mut xs = Vec::new();
+        while let Some(x) = a.next_element()? {
+            xs.push(x);
+        }
+        Ok(Content::Seq(xs))
+    }
+    fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Content, A::Error> {
+        let mut xs = Vec::new();
+        while let Some(kv) = a.next_entry()? {
+            xs.push(kv);
+        }
+        Ok(Content::Map(xs))
+    }
+    /// `{variant: payload}`; the payload read as a newtype, the kind being unknown here.
+    fn visit_enum<A: EnumAccess<'de>>(self, a: A) -> Result<Content, A::Error> {
+        let (k, v): (Content, _) = a.variant()?;
+        Ok(Content::Map(vec![(k, v.newtype_variant()?)]))
+    }
+}
+
+/// ⭐ Any self-describing format (JSON, …) into the data model: how a typed op deserializes
+/// ([`Fields::read`]) without a visitor of its own.
+impl<'de> Deserialize<'de> for Content {
+    fn deserialize<D: de::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_any(Capture)
+    }
+}
+
+/// An op's fields as keyed by `keys`; other keys are skipped.
+struct Keyed(&'static [&'static str]);
+
+impl<'de> Visitor<'de> for Keyed {
+    type Value = Fields;
+
+    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("an op")
+    }
+
+    fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Fields, A::Error> {
+        let mut xs = Vec::new();
+        while let Some(k) = a.next_key::<String>()? {
+            match self.0.iter().find(|key| **key == k) {
+                Some(key) => xs.push((*key, a.next_value()?)),
+                None => drop(a.next_value::<de::IgnoredAny>()?),
+            }
+        }
+        Ok(Fields(xs))
+    }
+}
+
+/// ⭐ An op's serialized fields, taken one by one into the struct ([`Op::from_fields`]).
+pub struct Fields(Vec<(&'static str, Content)>);
+
+impl TryFrom<Content> for Fields {
     type Error = Error;
 
-    fn deserialize_any<V: Visitor<'de>>(self, _: V) -> Result<V::Value, Error> {
-        Err("probe".into())
-    }
-
-    fn deserialize_struct<V: Visitor<'de>>(self, name: &'static str, fields: &'static [&'static str], _: V) -> Result<V::Value, Error> {
-        self.0.set(Some((name, fields)));
-        Err("probe".into())
-    }
-
-    serde::forward_to_deserialize_any! {
-        bool i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string bytes byte_buf option unit unit_struct
-        newtype_struct seq tuple tuple_struct map enum identifier ignored_any
+    fn try_from(c: Content) -> Result<Self, Error> {
+        match c {
+            Content::Struct(_, xs) => Ok(Self(xs)),
+            _ => Err("an op must be a struct".into()),
+        }
     }
 }
+
+impl Fields {
+    fn pop(&mut self, key: &str) -> Option<Content> {
+        self.0.iter().position(|(k, _)| *k == key).map(|i| self.0.swap_remove(i).1)
+    }
+
+    /// Field `key`; a missing one is an `Option`'s `None`, else an error.
+    pub fn take<T: DeserializeOwned>(&mut self, key: &str) -> Result<T, Error> {
+        match self.pop(key) {
+            Some(c) => c.to(),
+            None => Content::None.to().map_err(|_| Error(format!("missing field `{key}`"))),
+        }
+    }
+
+    /// ⭐ An op's fields out of any deserializer: what `#[mlir::op]`'s `Deserialize` reads
+    /// before [`Op::from_fields`] — generic in the format only, shared by every op.
+    pub fn read<'de, D: de::Deserializer<'de>>(d: D, name: &'static str, keys: &'static [&'static str]) -> Result<Self, D::Error> {
+        d.deserialize_struct(name, keys, Keyed(keys))
+    }
+
+    /// Field `key`, its default when missing.
+    pub fn or_default<T: DeserializeOwned + Default>(&mut self, key: &str) -> Result<T, Error> {
+        self.pop(key).map_or_else(|| Ok(T::default()), Content::to)
+    }
+}
+
+// ---- schemas -------------------------------------------------------------------------------
 
 impl Schema {
-    /// ⭐ Reads `O`'s op name and field roles off its `Deserialize` impl.
-    pub fn of<O: DeserializeOwned>() -> Result<Self, Error> {
-        let found = Cell::new(None);
-        let _ = O::deserialize(Probe(&found));
-        found.get().ok_or_else(|| Error("an op must be a struct".into()))?.try_into()
+    /// ⭐ `O`'s op name and field roles, read off the keys `#[mlir::op]` spells.
+    pub fn of<O: Op>() -> Result<Self, Error> {
+        (O::NAME, O::KEYS).try_into()
     }
 }
 
-/// The struct name and field keys [`Probe`] records. Out of [`Schema::of`] so that only the
-/// probe itself is built once per op.
+/// An op's name and field keys.
 impl TryFrom<(&'static str, &'static [&'static str])> for Schema {
     type Error = Error;
 
@@ -1300,8 +1428,8 @@ pub(crate) enum Bound<'a> {
 
 impl<'a> Operation<'a> {
     /// ⭐ This op as the typed op `O`; an error if it does not fit (it then stays generic).
-    pub fn to_op<O: DeserializeOwned>(&self) -> Result<O, Error> {
-        self.to_content(&Schema::of::<O>()?)?.to()
+    pub fn to_op<O: Op>(&self) -> Result<O, Error> {
+        O::from_content(self.to_content(&Schema::of::<O>()?)?)
     }
 
     /// [`to_op`](Self::to_op) up to the struct's [`Content`]: everything that does not depend on
@@ -1463,11 +1591,11 @@ const ATTR_WORDS: &[&str] = &["true", "false", "unit", "dense", "dense_resource"
 
 impl Format<'_> {
     /// ⭐ Parses the custom form after the op name into `O`.
-    pub fn parse<O: DeserializeOwned>(&self, p: &mut Parser<'_, '_>) -> R<O> {
+    pub fn parse<O: Op>(&self, p: &mut Parser<'_, '_>) -> R<O> {
         let mut r = Slots::default();
         self.read(&self.elems, &mut r, p)?;
         let loc = p.opt_loc()?;
-        self.finish(r, loc).and_then(Content::to).or_else(|e| p.err(e.0))
+        self.finish(r, loc).and_then(O::from_content).or_else(|e| p.err(e.0))
     }
 
     fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {

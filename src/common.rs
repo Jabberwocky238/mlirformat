@@ -22,7 +22,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 
 use crate::generator::Printer;
-use crate::parser::{Parser, R};
+use crate::parser::{Fields, Parser, R};
 
 /// Source text slice; borrowed after parsing, owned after building or deserializing.
 pub type Str<'a> = Cow<'a, str>;
@@ -306,11 +306,23 @@ pub trait Parse: Sized {
 pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// Fully qualified name, e.g. `"arith.addi"`.
     const NAME: &'static str;
+    /// The serde key of each field in order: its name with its MLIR role spelled in (see
+    /// [`Field`]); `#[mlir::op]` writes them.
+    const KEYS: &'static [&'static str];
     /// ODS-style assembly format (see [`Elem`]).
     const FORMAT: &'static str;
     /// Whether the op has a custom form; `false` (`#[mlir::op(..., generic)]`): it always prints
     /// generic, typed conversions still work.
     const CUSTOM: bool = true;
+
+    /// The op out of its serialized fields (`Serialize` the other way round); `#[mlir::op]`
+    /// writes it — a field after another, no visitor per op.
+    fn from_fields(f: &mut Fields) -> Result<Self, Error>;
+
+    /// The op out of the [`Content`] of a struct.
+    fn from_content(c: Content) -> Result<Self, Error> {
+        Self::from_fields(&mut Fields::try_from(c)?)
+    }
 
     /// This op written generically. A hand-written [`print`](Self::print) ends here whenever the
     /// custom form cannot say what the op holds — the generic form always can, and is still
@@ -324,7 +336,7 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// returns has to be a copy. It takes the borrowed op as an argument rather than `self`
     /// precisely because the two differ in lifetime.
     fn owned<B: Serialize>(borrowed: &B, p: &mut Parser<'_, '_>) -> R<Self> {
-        Content::convert(borrowed).or_else(|e| p.err(e.0))
+        Content::of(borrowed).and_then(Self::from_content).or_else(|e| p.err(e.0))
     }
 
     /// 照 [`FORMAT`](Self::FORMAT) 写出去 —— `#[mlir::op]` 生成的 [`Print`] 走这里。

@@ -1,6 +1,6 @@
 [package]
 name = "mlirformat-macros"
-version = "0.4.0"
+version = "0.4.6"
 edition = "2024"
 description = "Proc macros for mlirformat: #[mlir::op], #[mlir::dialect], #[derive(mlir::Cases)]"
 license = "MIT"

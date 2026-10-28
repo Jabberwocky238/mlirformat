@@ -154,6 +154,8 @@ impl OpArgs {
         let mlir_name = |id: &Ident| -> syn::Result<String> {
             marked.iter().find(|m| m.ident == *id).map(|m| m.name.clone()).ok_or_else(|| Error::new(id.span(), format!("no field `{id}`")))
         };
+        // `(key, field)` in order: `KEYS` and `from_fields`.
+        let mut keys = Vec::new();
         for (f, m) in named.named.iter_mut().zip(&marked) {
             let star = if m.variadic { "*" } else { "" };
             let key = match &m.kind {
@@ -183,9 +185,8 @@ impl OpArgs {
                 Kind::Successor => format!(">{}{star}", m.name),
             };
             f.attrs.push(parse_quote!(#[serde(rename = #key)]));
-            if m.unit {
-                f.attrs.push(parse_quote!(#[serde(default)]));
-            }
+            let id = &m.ident;
+            keys.push((key.clone(), if m.unit { quote!(#id: f.or_default(#key)?) } else { quote!(#id: f.take(#key)?) }));
         }
         if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(..)))) {
             return Err(Error::new(r.span(), format!("`{r}` is not a #[dtype] field")));
@@ -199,12 +200,26 @@ impl OpArgs {
             let (id, t) = (&f.ident, &f.ty);
             (quote!(#id: #t), quote!(#id))
         }).unzip();
-        named.named.push(parse_quote!(#[serde(rename = "{}", default)] pub attrs: ::mlirformat::__Vec<::mlirformat::NamedAttr<#lt>>));
-        named.named.push(parse_quote!(#[serde(rename = "@", default)] pub loc: ::core::option::Option<::mlirformat::Str<#lt>>));
+        named.named.push(parse_quote!(#[serde(rename = "{}")] pub attrs: ::mlirformat::__Vec<::mlirformat::NamedAttr<#lt>>));
+        named.named.push(parse_quote!(#[serde(rename = "@")] pub loc: ::core::option::Option<::mlirformat::Str<#lt>>));
+        keys.push(("{}".into(), quote!(attrs: f.or_default("{}")?)));
+        keys.push(("@".into(), quote!(loc: f.or_default("@")?)));
+        let (keys, takes): (Vec<_>, Vec<_>) = keys.into_iter().unzip();
+        // ⭐ 字段一个个从 `Fields` 取，不派生 `Deserialize`：派生的 visitor 每个 op 一套，
+        // 九百个 op 的类型检查、借用检查都花在它身上。
+        let fields = quote! {
+            const KEYS: &'static [&'static str] = &[#(#keys),*];
+            fn from_fields(f: &mut ::mlirformat::Fields) -> ::core::result::Result<Self, ::mlirformat::Error> {
+                ::core::result::Result::Ok(Self { #(#takes),* })
+            }
+        };
 
         let ty = &item.ident;
         let name = &self.name;
         let (ig, tg, wc) = item.generics.split_for_impl();
+        let mut de_generics = item.generics.clone();
+        de_generics.params.insert(0, parse_quote!('de));
+        let (de_ig, _, _) = de_generics.split_for_impl();
         // ⭐ 一条格式串同时给出两侧：`Print` 与 `Parse` 都从 `FORMAT` 来，法则
         // `parse(print(x)) == x` 因此自动成立。写 `custom` 的自己实现这两个 trait，
         // 也就自己担保这条法则。
@@ -227,6 +242,7 @@ impl OpArgs {
                     const NAME: &'static str = #name;
                     const FORMAT: &'static str = "";
                     const CUSTOM: bool = false;
+                    #fields
                 }
 
                 #dual
@@ -237,12 +253,14 @@ impl OpArgs {
                 impl #ig ::mlirformat::Op for #ty #tg #wc {
                     const NAME: &'static str = #name;
                     const FORMAT: &'static str = "";
+                    #fields
                 }
             },
             (Some(format), false) => quote! {
                 impl #ig ::mlirformat::Op for #ty #tg #wc {
                     const NAME: &'static str = #name;
                     const FORMAT: &'static str = #format;
+                    #fields
                 }
 
                 #dual
@@ -250,11 +268,20 @@ impl OpArgs {
             (None, false) => return Err(Error::new(name.span(), "missing `format = \"...\"` (or `custom` / `generic`)")),
         };
         Ok(quote! {
-            #[derive(::core::fmt::Debug, ::core::clone::Clone, ::core::cmp::PartialEq, ::mlirformat::__serde::Serialize, ::mlirformat::__serde::Deserialize)]
+            #[derive(::core::fmt::Debug, ::core::clone::Clone, ::core::cmp::PartialEq, ::mlirformat::__serde::Serialize)]
             #[serde(crate = "::mlirformat::__serde", rename = #name)]
             #item
 
             #op_impl
+
+            // ⭐ `Content` 中转：只有 `Fields::read` 按格式泛型，所有 op 共用；每个 op 不再有
+            // 自己的 visitor。
+            impl #de_ig ::mlirformat::__serde::Deserialize<'de> for #ty #tg #wc {
+                fn deserialize<D: ::mlirformat::__serde::Deserializer<'de>>(d: D) -> ::core::result::Result<Self, D::Error> {
+                    let mut f = ::mlirformat::Fields::read(d, #name, <Self as ::mlirformat::Op>::KEYS)?;
+                    <Self as ::mlirformat::Op>::from_fields(&mut f).map_err(<D::Error as ::mlirformat::__serde::de::Error>::custom)
+                }
+            }
 
             impl #ig #ty #tg #wc {
                 #[allow(clippy::too_many_arguments)]

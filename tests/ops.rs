@@ -90,3 +90,26 @@ fn dialects_register_and_unregister() {
     assert!(opt.parse_op(src).unwrap().raw.is_some());
     assert!(opt.namespaces().all(|ns| ns != "arith"));
 }
+
+/// Typed ops through any self-describing format and back: `#[mlir::op]`'s `Deserialize` goes
+/// through `Content`, enums (`Type`, `Attribute`, a predicate) and absent defaults included.
+#[test]
+fn ops_round_trip_through_serde() {
+    macro_rules! round_trip {
+        ($($ty:ty: $src:literal),* $(,)?) => {$({
+            let op = <$ty>::try_from($src).unwrap();
+            let json = serde_json::to_string(&op).unwrap();
+            assert_eq!(serde_json::from_str::<$ty>(&json).unwrap(), op, "{json}");
+            assert_eq!(Content::of(&op).unwrap().to::<$ty>().unwrap(), op, "{}", $src);
+        })*};
+    }
+    round_trip! {
+        arith::CmpI: "arith.cmpi slt, %a, %b : i32",
+        arith::Constant: "arith.constant {tag} dense<[1, 2]> : tensor<2xi32>",
+        arith::TruncI: "arith.trunci %a overflow<nsw> : i64 to i32 loc(\"x.mlir\":1:2)",
+        arith::TruncI: "arith.trunci %a : i64 to i32",
+        func::Call: "func.call @f(%a, %b) : (i32, f32) -> (i1, index)",
+        memref::SubViewOp: "memref.subview %m[%i, 4] [2, 2] [1, 1] : memref<8x8xf32> to memref<2x2xf32, strided<[8, 1], offset: ?>>",
+        ArithMax: "arith.maxsi %a, %b {tag, n = 3 : i64} : vector<4xi8>",
+    }
+}

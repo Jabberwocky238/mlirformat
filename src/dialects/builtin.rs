@@ -4,7 +4,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Block, Content, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type, Value, mlir};
+use crate::{Block, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type, Value, mlir};
 
 /// `module @name attributes {...} { ... }`: hand-written syntax.
 #[mlir::op("builtin.module", custom)]
@@ -46,7 +46,7 @@ impl Parse for ModuleOp<'_> {
             body.blocks.push(Block { label: Some("bb0".into()), args: Vec::new(), ops: Vec::new() });
         }
         let loc = p.opt_loc()?;
-        Content::convert(&ModuleOp { sym_name, sym_visibility, body, attrs, loc }).or_else(|e| p.err(e.0))
+        Self::owned(&ModuleOp { sym_name, sym_visibility, body, attrs, loc }, p)
     }
 }
 
