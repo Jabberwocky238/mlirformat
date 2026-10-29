@@ -35,7 +35,6 @@ pub struct Max<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -63,8 +62,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Field markers
 
-Each field of a `#[mlir::op]` struct says its MLIR role (a `Vec` field is variadic; the MLIR name
-is the field name unless `name = "..."`, e.g. `overflow_flags` spelled `overflowFlags`):
+A field's MLIR role is its Rust type: a `Type` is a type variable, a `Region` a region, anything
+else but a `Value` a property (`bool`: a unit attribute). A marker is written for an operand
+(`#[slot(T)]`), a successor, a role the type does not say (`#[attr]` on a `Type`: a type
+attribute), or to carry the options below. A `Vec` field is variadic; the MLIR name is the field
+name unless `name = "..."` (`overflow_flags` spelled `overflowFlags`).
 
 | marker | the field is |
 |---|---|

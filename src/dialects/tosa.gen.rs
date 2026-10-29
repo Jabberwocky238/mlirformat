@@ -18,9 +18,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct AbsOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -46,11 +44,8 @@ pub struct AddOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -93,13 +88,9 @@ pub struct ApplyScaleOp<'a> {
     pub shift: Value<'a>,
     #[attr(dialect = "tosa.rounding_mode")]
     pub rounding_mode: Attribute<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub multiplier_ty: Type<'a>,
-    #[dtype]
     pub shift_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -118,9 +109,7 @@ pub struct ArgMaxOp<'a> {
     pub axis: Attribute<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -137,13 +126,9 @@ pub struct ArithmeticRightShiftOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[attr]
     pub round: Attribute<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -170,15 +155,10 @@ pub struct AvgPool2dOp<'a> {
     pub stride: Attribute<'a>,
     #[attr(dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr]
     pub acc_type: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype]
     pub output_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -194,11 +174,8 @@ pub struct BitwiseAndOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -211,9 +188,7 @@ pub struct BitwiseAndOp<'a> {
 pub struct BitwiseNotOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -229,11 +204,8 @@ pub struct BitwiseOrOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -249,11 +221,8 @@ pub struct BitwiseXorOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -272,11 +241,8 @@ pub struct CastFromBlockScaledOp<'a> {
     pub input_scale: Value<'a>,
     #[attr(dialect = "tosa.block_size")]
     pub block_size: Attribute<'a>,
-    #[dtype]
     pub input_data_ty: Type<'a>,
-    #[dtype]
     pub input_scale_ty: Type<'a>,
-    #[dtype]
     pub output_data: Type<'a>,
 }
 
@@ -340,9 +306,7 @@ pub struct CastFromBlockScaledOp<'a> {
 pub struct CastOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -360,11 +324,8 @@ pub struct CastToBlockScaledOp<'a> {
     pub input_data: Value<'a>,
     #[attr(dialect = "tosa.block_size")]
     pub block_size: Attribute<'a>,
-    #[dtype]
     pub input_data_ty: Type<'a>,
-    #[dtype]
     pub output_data: Type<'a>,
-    #[dtype]
     pub output_scale: Type<'a>,
 }
 
@@ -377,9 +338,7 @@ pub struct CastToBlockScaledOp<'a> {
 pub struct CeilOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -396,15 +355,11 @@ pub struct CeilOp<'a> {
 pub struct ClampOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr]
     pub min_val: Attribute<'a>,
-    #[attr]
     pub max_val: Attribute<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -417,9 +372,7 @@ pub struct ClampOp<'a> {
 pub struct ClzOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -435,9 +388,7 @@ pub struct ConcatOp<'a> {
     pub input1: Vec<Value<'a>>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input1_ty: Vec<Type<'a>>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -472,9 +423,7 @@ pub struct ConcatShapeOp<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("tosa.const", results(output))]
 pub struct ConstOp<'a> {
-    #[attr]
     pub values: Attribute<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -492,7 +441,6 @@ pub struct ConstOp<'a> {
 /// Generic form only (directive `operands`).
 #[mlir::op("tosa.const_shape", results(output))]
 pub struct ConstShapeOp<'a> {
-    #[attr]
     pub values: Attribute<'a>,
     #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
@@ -523,21 +471,13 @@ pub struct Conv2DOp<'a> {
     pub stride: Attribute<'a>,
     #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
-    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -565,21 +505,13 @@ pub struct Conv3DOp<'a> {
     pub stride: Attribute<'a>,
     #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
-    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -592,9 +524,7 @@ pub struct Conv3DOp<'a> {
 pub struct CosOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -632,15 +562,10 @@ pub struct CosOp<'a> {
 pub struct CustomOp<'a> {
     #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
-    #[attr]
     pub operator_name: Attribute<'a>,
-    #[attr]
     pub domain_name: Attribute<'a>,
-    #[attr]
     pub implementation_attrs: Attribute<'a>,
-    #[dtype]
     pub input_list_ty: Vec<Type<'a>>,
-    #[dtype]
     pub output_list: Vec<Type<'a>>,
 }
 
@@ -669,21 +594,13 @@ pub struct DepthwiseConv2DOp<'a> {
     pub stride: Attribute<'a>,
     #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
-    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -698,7 +615,6 @@ pub struct DimOp<'a> {
     pub input1: Value<'a>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
@@ -753,11 +669,8 @@ pub struct EqualOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -773,9 +686,7 @@ pub struct EqualOp<'a> {
 pub struct ErfOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -803,9 +714,7 @@ pub struct Exp2ShapeOp<'a> {
 pub struct ExpOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -830,17 +739,11 @@ pub struct FFT2dOp<'a> {
     pub input_real: Value<'a>,
     #[slot(input_imag_ty)]
     pub input_imag: Value<'a>,
-    #[attr]
     pub inverse: Attribute<'a>,
-    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype]
     pub input_real_ty: Type<'a>,
-    #[dtype]
     pub input_imag_ty: Type<'a>,
-    #[dtype]
     pub output_real: Type<'a>,
-    #[dtype]
     pub output_imag: Type<'a>,
 }
 
@@ -853,9 +756,7 @@ pub struct FFT2dOp<'a> {
 pub struct FloorOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -873,11 +774,8 @@ pub struct GatherOp<'a> {
     pub values: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -892,11 +790,8 @@ pub struct GreaterEqualOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -911,11 +806,8 @@ pub struct GreaterOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -928,9 +820,7 @@ pub struct GreaterOp<'a> {
 pub struct IdentityOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -946,15 +836,10 @@ pub struct IfOp<'a> {
     pub condition: Value<'a>,
     #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
-    #[region]
     pub then_graph: Region<'a>,
-    #[region]
     pub else_graph: Region<'a>,
-    #[dtype]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub input_list_ty: Vec<Type<'a>>,
-    #[dtype]
     pub output_list: Vec<Type<'a>>,
 }
 
@@ -973,11 +858,8 @@ pub struct IntDivOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1020,9 +902,7 @@ pub struct Log2FloorShapeOp<'a> {
 pub struct LogOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1038,11 +918,8 @@ pub struct LogicalAndOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1059,11 +936,8 @@ pub struct LogicalLeftShiftOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1076,9 +950,7 @@ pub struct LogicalLeftShiftOp<'a> {
 pub struct LogicalNotOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1094,11 +966,8 @@ pub struct LogicalOrOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1115,11 +984,8 @@ pub struct LogicalRightShiftOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1135,11 +1001,8 @@ pub struct LogicalXorOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1158,15 +1021,10 @@ pub struct MatMulOp<'a> {
     pub a_zp: Value<'a>,
     #[slot(b_zp_ty)]
     pub b_zp: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub b_ty: Type<'a>,
-    #[dtype]
     pub a_zp_ty: Type<'a>,
-    #[dtype]
     pub b_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1190,15 +1048,10 @@ pub struct MatmulTBlockScaledOp<'a> {
     pub b_scale: Value<'a>,
     #[attr(dialect = "tosa.block_size")]
     pub block_size: Attribute<'a>,
-    #[dtype]
     pub a_data_ty: Type<'a>,
-    #[dtype]
     pub a_scale_ty: Type<'a>,
-    #[dtype]
     pub b_data_ty: Type<'a>,
-    #[dtype]
     pub b_scale_ty: Type<'a>,
-    #[dtype]
     pub output_data: Type<'a>,
 }
 
@@ -1222,9 +1075,7 @@ pub struct MaxPool2dOp<'a> {
     pub pad: Attribute<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1261,11 +1112,8 @@ pub struct MaximumOp<'a> {
     pub input2: Value<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1302,11 +1150,8 @@ pub struct MinimumOp<'a> {
     pub input2: Value<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1344,13 +1189,9 @@ pub struct MulOp<'a> {
     pub input2: Value<'a>,
     #[slot(shift_ty)]
     pub shift: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub shift_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1386,13 +1227,9 @@ pub struct NegateOp<'a> {
     pub input1_zp: Value<'a>,
     #[slot(output_zp_ty)]
     pub output_zp: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input1_zp_ty: Type<'a>,
-    #[dtype]
     pub output_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1427,13 +1264,10 @@ pub struct PadOp<'a> {
     pub padding: Value<'a>,
     #[slot(pad_const_ty)]
     pub pad_const: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub padding_ty: Type<'a>,
-    #[dtype]
     pub pad_const_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1450,11 +1284,8 @@ pub struct PowOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1480,13 +1311,9 @@ pub struct PowOp<'a> {
 pub struct RFFT2dOp<'a> {
     #[slot(input_real_ty)]
     pub input_real: Value<'a>,
-    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype]
     pub input_real_ty: Type<'a>,
-    #[dtype]
     pub output_real: Type<'a>,
-    #[dtype]
     pub output_imag: Type<'a>,
 }
 
@@ -1500,9 +1327,7 @@ pub struct RFFT2dOp<'a> {
 pub struct ReciprocalOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1517,9 +1342,7 @@ pub struct ReduceAllOp<'a> {
     pub input: Value<'a>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1534,9 +1357,7 @@ pub struct ReduceAnyOp<'a> {
     pub input: Value<'a>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1553,9 +1374,7 @@ pub struct ReduceMaxOp<'a> {
     pub axis: Attribute<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1572,9 +1391,7 @@ pub struct ReduceMinOp<'a> {
     pub axis: Attribute<'a>,
     #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1589,9 +1406,7 @@ pub struct ReduceProductOp<'a> {
     pub input: Value<'a>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1606,9 +1421,7 @@ pub struct ReduceSumOp<'a> {
     pub input: Value<'a>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1660,27 +1473,17 @@ pub struct RescaleOp<'a> {
     pub input_zp: Value<'a>,
     #[slot(output_zp_ty)]
     pub output_zp: Value<'a>,
-    #[attr]
     pub scale32: Attribute<'a>,
     #[attr(dialect = "tosa.rounding_mode")]
     pub rounding_mode: Attribute<'a>,
-    #[attr]
     pub per_channel: Attribute<'a>,
-    #[attr]
     pub input_unsigned: Attribute<'a>,
-    #[attr]
     pub output_unsigned: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub multiplier_ty: Type<'a>,
-    #[dtype]
     pub shift_ty: Type<'a>,
-    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype]
     pub output_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1697,11 +1500,9 @@ pub struct ReshapeOp<'a> {
     pub input1: Value<'a>,
     #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1745,15 +1546,10 @@ pub struct ResizeOp<'a> {
     pub border: Value<'a>,
     #[attr(dialect = "tosa.resize_mode")]
     pub mode: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub scale_ty: Type<'a>,
-    #[dtype]
     pub offset_ty: Type<'a>,
-    #[dtype]
     pub border_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1770,9 +1566,7 @@ pub struct ReverseOp<'a> {
     pub input1: Value<'a>,
     #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1786,9 +1580,7 @@ pub struct ReverseOp<'a> {
 pub struct RsqrtOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1812,13 +1604,9 @@ pub struct ScatterOp<'a> {
     pub indices: Value<'a>,
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub values_in_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub values_out: Type<'a>,
 }
 
@@ -1835,13 +1623,9 @@ pub struct SelectOp<'a> {
     pub input2: Value<'a>,
     #[slot(input3_ty)]
     pub input3: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub input3_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1860,9 +1644,7 @@ pub struct SelectOp<'a> {
 pub struct SigmoidOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1875,9 +1657,7 @@ pub struct SigmoidOp<'a> {
 pub struct SinOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1896,13 +1676,11 @@ pub struct SliceOp<'a> {
     pub start: Value<'a>,
     #[slot(size_ty)]
     pub size: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub start_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub size_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1921,9 +1699,7 @@ pub struct SliceShapeOp<'a> {
     pub size: Value<'a>,
     #[dtype(strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub start_ty: Type<'a>,
-    #[dtype]
     pub size_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
@@ -1941,11 +1717,8 @@ pub struct SubOp<'a> {
     pub input1: Value<'a>,
     #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1992,11 +1765,8 @@ pub struct TableOp<'a> {
     pub input1: Value<'a>,
     #[slot(table_ty)]
     pub table: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub table_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2014,9 +1784,7 @@ pub struct TableOp<'a> {
 pub struct TanhOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2031,11 +1799,9 @@ pub struct TileOp<'a> {
     pub input1: Value<'a>,
     #[slot(multiples_ty)]
     pub multiples: Value<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
     #[dtype(strip = "tosa.shape")]
     pub multiples_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2062,21 +1828,13 @@ pub struct TransposeConv2DOp<'a> {
     pub out_pad: Attribute<'a>,
     #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2093,9 +1851,7 @@ pub struct TransposeOp<'a> {
     pub input1: Value<'a>,
     #[attr(dense = "i32")]
     pub perms: Attribute<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2109,11 +1865,9 @@ pub struct TransposeOp<'a> {
 pub struct VariableOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub var_shape: Attribute<'a>,
     #[attr(name = "type")]
     pub type_: Attribute<'a>,
-    #[attr]
     pub initial_value: Option<Attribute<'a>>,
 }
 
@@ -2124,7 +1878,6 @@ pub struct VariableOp<'a> {
 pub struct VariableReadOp<'a> {
     #[attr(symbol)]
     pub name: Attribute<'a>,
-    #[dtype]
     pub output1: Type<'a>,
 }
 
@@ -2137,7 +1890,6 @@ pub struct VariableWriteOp<'a> {
     pub input1: Value<'a>,
     #[attr(symbol)]
     pub name: Attribute<'a>,
-    #[dtype]
     pub input1_ty: Type<'a>,
 }
 
@@ -2153,13 +1905,9 @@ pub struct VariableWriteOp<'a> {
 pub struct WhileOp<'a> {
     #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
-    #[region]
     pub cond_graph: Region<'a>,
-    #[region]
     pub body_graph: Region<'a>,
-    #[dtype]
     pub input_list_ty: Vec<Type<'a>>,
-    #[dtype]
     pub output_list: Vec<Type<'a>>,
 }
 
@@ -2172,7 +1920,6 @@ pub struct WhileOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
 }
 

@@ -11,19 +11,15 @@ use crate::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parse, Print, Pars
 pub struct Return<'a> {
     #[slot(types)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub types: Vec<Type<'a>>,
 }
 
 #[mlir::op("func.call", format = "$callee `(` $operands `)` attr-dict `:` functional-type($operands, $results)", results(results))]
 pub struct Call<'a> {
-    #[attr]
     pub callee: Attribute<'a>,
     #[slot(arg_types)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub arg_types: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -31,19 +27,14 @@ pub struct Call<'a> {
 /// hand-written syntax. The entry block's arguments are the signature's named arguments.
 #[mlir::op("func.func", custom)]
 pub struct FuncOp<'a> {
-    #[attr]
     pub sym_name: String,
     #[attr]
     pub function_type: Type<'a>,
-    #[attr]
     pub sym_visibility: Option<String>,
     /// One dictionary per argument.
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
     /// One dictionary per result.
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -166,9 +157,7 @@ impl Parse for FuncOp<'_> {
 /// `%f = constant @symbol : (T) -> U`.
 #[mlir::op("func.constant", format = "$value attr-dict `:` type($result)", results(result))]
 pub struct Constant<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -179,11 +168,8 @@ pub struct CallIndirect<'a> {
     pub callee: Value<'a>,
     #[slot(arg_types, name = "calleeOperands")]
     pub callee_operands: Vec<Value<'a>>,
-    #[dtype]
     pub callee_ty: Type<'a>,
-    #[dtype]
     pub arg_types: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 

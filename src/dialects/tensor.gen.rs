@@ -19,9 +19,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct BitcastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -50,9 +48,7 @@ pub struct BitcastOp<'a> {
 pub struct CastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -77,11 +73,8 @@ pub struct CastOp<'a> {
 pub struct CollapseShapeOp<'a> {
     #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr]
     pub reassociation: Attribute<'a>,
-    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -114,9 +107,7 @@ pub struct ConcatOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[attr(int = "i64")]
     pub dim: Attribute<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -149,7 +140,6 @@ pub struct DimOp<'a> {
     pub source: Value<'a>,
     #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub index_ty: Type<'a>,
@@ -177,7 +167,6 @@ pub struct EmptyOp<'a> {
     pub dynamic_sizes: Vec<Value<'a>>,
     #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -212,15 +201,12 @@ pub struct ExpandShapeOp<'a> {
     pub src: Value<'a>,
     #[slot(output_shape_ty)]
     pub output_shape: Vec<Value<'a>>,
-    #[attr]
     pub reassociation: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_output_shape: Attribute<'a>,
-    #[dtype]
     pub src_ty: Type<'a>,
     #[dtype(is = index)]
     pub output_shape_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -243,7 +229,6 @@ pub struct ExtractOp<'a> {
     pub tensor: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype]
     pub tensor_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -325,7 +310,6 @@ pub struct ExtractSliceOp<'a> {
     pub static_sizes: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
@@ -333,7 +317,6 @@ pub struct ExtractSliceOp<'a> {
     pub sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -359,7 +342,6 @@ pub struct FromElementsOp<'a> {
     pub elements: Vec<Value<'a>>,
     #[dtype(el = result)]
     pub elements_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -468,13 +450,9 @@ pub struct GatherOp<'a> {
     pub indices: Value<'a>,
     #[attr(dense = "i64")]
     pub gather_dims: Attribute<'a>,
-    #[attr]
     pub unique: bool,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -502,11 +480,9 @@ pub struct GatherOp<'a> {
 pub struct GenerateOp<'a> {
     #[slot(dynamic_extents_ty, name = "dynamicExtents")]
     pub dynamic_extents: Vec<Value<'a>>,
-    #[region]
     pub body: Region<'a>,
     #[dtype(is = index)]
     pub dynamic_extents_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -539,7 +515,6 @@ pub struct InsertOp<'a> {
     pub scalar_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -613,7 +588,6 @@ pub struct InsertSliceOp<'a> {
     pub static_sizes: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
@@ -621,7 +595,6 @@ pub struct InsertSliceOp<'a> {
     pub sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -723,17 +696,13 @@ pub struct PadOp<'a> {
     pub static_low: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_high: Attribute<'a>,
-    #[attr]
     pub nofold: bool,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub low_ty: Type<'a>,
     #[dtype(is = index)]
     pub high_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -813,9 +782,7 @@ pub struct ParallelInsertSliceOp<'a> {
     pub static_sizes: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
@@ -839,7 +806,6 @@ pub struct ParallelInsertSliceOp<'a> {
 pub struct RankOp<'a> {
     #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[dtype]
     pub tensor_ty: Type<'a>,
     #[dtype(is = index)]
     pub result: Type<'a>,
@@ -885,11 +851,8 @@ pub struct ReshapeOp<'a> {
     pub source: Value<'a>,
     #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1003,15 +966,10 @@ pub struct ScatterOp<'a> {
     pub indices: Value<'a>,
     #[attr(dense = "i64")]
     pub scatter_dims: Attribute<'a>,
-    #[attr]
     pub unique: bool,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1048,7 +1006,6 @@ pub struct SplatOp<'a> {
     pub input_ty: Type<'a>,
     #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype]
     pub aggregate: Type<'a>,
 }
 
@@ -1061,7 +1018,6 @@ pub struct SplatOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
 }
 

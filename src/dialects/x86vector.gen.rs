@@ -21,9 +21,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct BcstToPackedF32Op<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -44,9 +42,7 @@ pub struct BcstToPackedF32Op<'a> {
 pub struct CvtPackedEvenIndexedToF32Op<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -69,9 +65,7 @@ pub struct CvtPackedEvenIndexedToF32Op<'a> {
 pub struct CvtPackedF32ToBF16Op<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -92,9 +86,7 @@ pub struct CvtPackedF32ToBF16Op<'a> {
 pub struct CvtPackedOddIndexedToF32Op<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -122,9 +114,7 @@ pub struct DotBF16Op<'a> {
     pub a: Value<'a>,
     #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -153,9 +143,7 @@ pub struct DotInt8Op<'a> {
     pub a: Value<'a>,
     #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -181,7 +169,6 @@ pub struct DotOp<'a> {
     pub a: Value<'a>,
     #[slot(res)]
     pub b: Value<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -206,13 +193,10 @@ pub struct MaskCompressOp<'a> {
     pub a: Value<'a>,
     #[slot(src_ty)]
     pub src: Vec<Value<'a>>,
-    #[attr]
     pub constant_src: Option<Attribute<'a>>,
     #[dtype(i1 = dst)]
     pub k_ty: Type<'a>,
-    #[dtype]
     pub src_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -246,7 +230,6 @@ pub struct MaskRndScaleOp<'a> {
     pub imm_ty: Type<'a>,
     #[dtype(is = i32)]
     pub rounding_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -278,7 +261,6 @@ pub struct MaskScaleFOp<'a> {
     pub k_ty: Type<'a>,
     #[dtype(is = i32)]
     pub rounding_ty: Type<'a>,
-    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -287,7 +269,6 @@ pub struct MaskScaleFOp<'a> {
 pub struct RsqrtOp<'a> {
     #[slot(b)]
     pub a: Value<'a>,
-    #[dtype]
     pub b: Type<'a>,
 }
 
@@ -311,7 +292,6 @@ pub struct Vp2IntersectOp<'a> {
     pub a: Value<'a>,
     #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype]
     pub a_ty: Type<'a>,
     #[dtype(i1 = a_ty)]
     pub k1: Type<'a>,

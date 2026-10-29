@@ -21,13 +21,10 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct ApplyNativeConstraintOp<'a> {
     #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr]
     pub name: Attribute<'a>,
     #[attr(name = "isNegated", default = "false")]
     pub is_negated: Option<Attribute<'a>>,
-    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -61,11 +58,8 @@ pub struct ApplyNativeConstraintOp<'a> {
 pub struct ApplyNativeRewriteOp<'a> {
     #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr]
     pub name: Attribute<'a>,
-    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -96,7 +90,6 @@ pub struct ApplyNativeRewriteOp<'a> {
 pub struct AttributeOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[attr]
     pub value: Option<Attribute<'a>>,
     #[dtype(is = "!pdl.type")]
     pub value_type_ty: Type<'a>,
@@ -290,11 +283,9 @@ pub struct OperationOp<'a> {
     pub op_name: Option<Attribute<'a>>,
     #[attr(name = "attributeValueNames")]
     pub attribute_value_names: Attribute<'a>,
-    #[dtype]
     pub operand_values_ty: Vec<Type<'a>>,
     #[dtype(is = "!pdl.attribute")]
     pub attribute_values_ty: Type<'a>,
-    #[dtype]
     pub type_values_ty: Vec<Type<'a>>,
     #[dtype(is = "!pdl.operation")]
     pub op: Type<'a>,
@@ -363,9 +354,7 @@ pub struct PatternOp<'a> {
 pub struct RangeOp<'a> {
     #[slot(arguments_ty)]
     pub arguments: Vec<Value<'a>>,
-    #[dtype]
     pub arguments_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -404,7 +393,6 @@ pub struct ReplaceOp<'a> {
     pub op_value_ty: Type<'a>,
     #[dtype(is = "!pdl.operation")]
     pub repl_operation_ty: Type<'a>,
-    #[dtype]
     pub repl_values_ty: Vec<Type<'a>>,
 }
 
@@ -477,7 +465,6 @@ pub struct ResultsOp<'a> {
     pub index: Option<Attribute<'a>>,
     #[dtype(is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
-    #[dtype]
     pub val: Type<'a>,
 }
 
@@ -524,13 +511,11 @@ pub struct RewriteOp<'a> {
     pub root: Vec<Value<'a>>,
     #[slot(external_args_ty, name = "externalArgs")]
     pub external_args: Vec<Value<'a>>,
-    #[attr]
     pub name: Option<Attribute<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
     #[dtype(is = "!pdl.operation")]
     pub root_ty: Type<'a>,
-    #[dtype]
     pub external_args_ty: Vec<Type<'a>>,
 }
 

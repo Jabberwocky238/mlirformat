@@ -15,7 +15,6 @@ pub struct Br<'a> {
     pub dest: Str<'a>,
     #[slot(dest_types, name = "destOperands")]
     pub dest_operands: Vec<Value<'a>>,
-    #[dtype]
     pub dest_types: Vec<Type<'a>>,
 }
 
@@ -26,7 +25,6 @@ pub struct Br<'a> {
 pub struct CondBr<'a> {
     #[slot(condition_ty)]
     pub condition: Value<'a>,
-    #[attr]
     pub branch_weights: Option<Vec<i32>>,
     #[successor(name = "trueDest")]
     pub true_dest: Str<'a>,
@@ -38,9 +36,7 @@ pub struct CondBr<'a> {
     pub false_dest_operands: Vec<Value<'a>>,
     #[dtype(i1)]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub true_types: Vec<Type<'a>>,
-    #[dtype]
     pub false_types: Vec<Type<'a>>,
 }
 
@@ -48,7 +44,6 @@ pub struct CondBr<'a> {
 pub struct Assert<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[attr]
     pub msg: String,
     #[dtype(i1)]
     pub arg_ty: Type<'a>,
@@ -75,16 +70,11 @@ pub struct Switch<'a> {
     #[successor(name = "caseDestinations")]
     pub case_destinations: Vec<Str<'a>>,
     /// `dense<[v, …]> : vector<NxT>` (absent without cases).
-    #[attr]
     pub case_values: Option<Attribute<'a>>,
     /// `array<i32: n, …>`: operands per case.
-    #[attr]
     pub case_operand_segments: Attribute<'a>,
-    #[dtype]
     pub flag_ty: Type<'a>,
-    #[dtype]
     pub default_types: Vec<Type<'a>>,
-    #[dtype]
     pub case_types: Vec<Type<'a>>,
 }
 

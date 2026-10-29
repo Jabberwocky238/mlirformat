@@ -22,7 +22,6 @@ pub struct AddToGroupOp<'a> {
     pub operand: Value<'a>,
     #[slot(group_ty)]
     pub group: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
     #[dtype(is = "!async.group")]
     pub group_ty: Type<'a>,
@@ -76,9 +75,7 @@ pub struct AwaitAllOp<'a> {
 pub struct AwaitOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -100,15 +97,10 @@ pub struct AwaitOp<'a> {
 pub struct CallOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub callee: Attribute<'a>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -277,7 +269,6 @@ pub struct ExecuteOp<'a> {
     pub body_region: Region<'a>,
     #[dtype(is = "!async.token")]
     pub dependencies_ty: Type<'a>,
-    #[dtype]
     pub body_operands_ty: Vec<Type<'a>>,
     #[dtype(is = "!async.token")]
     pub token: Type<'a>,
@@ -320,15 +311,10 @@ pub struct ExecuteOp<'a> {
 pub struct FuncOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -347,7 +333,6 @@ pub struct FuncOp<'a> {
 pub struct ReturnOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -361,7 +346,6 @@ pub struct RuntimeAddRefOp<'a> {
     pub operand: Value<'a>,
     #[attr(int = "i64")]
     pub count: Attribute<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -375,7 +359,6 @@ pub struct RuntimeAddToGroupOp<'a> {
     pub operand: Value<'a>,
     #[slot(group_ty)]
     pub group: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
     #[dtype(is = "!async.group")]
     pub group_ty: Type<'a>,
@@ -394,7 +377,6 @@ pub struct RuntimeAwaitAndResumeOp<'a> {
     pub operand: Value<'a>,
     #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
     #[dtype(is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
@@ -408,7 +390,6 @@ pub struct RuntimeAwaitAndResumeOp<'a> {
 pub struct RuntimeAwaitOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -432,7 +413,6 @@ pub struct RuntimeCreateGroupOp<'a> {
 /// value. Tokens and values are created in the non-ready state.
 #[mlir::op("async.runtime.create", format = "attr-dict `:` type($result)", results(result))]
 pub struct RuntimeCreateOp<'a> {
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -446,7 +426,6 @@ pub struct RuntimeDropRefOp<'a> {
     pub operand: Value<'a>,
     #[attr(int = "i64")]
     pub count: Attribute<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -460,7 +439,6 @@ pub struct RuntimeDropRefOp<'a> {
 pub struct RuntimeIsErrorOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
     #[dtype(is = i1)]
     pub is_error: Type<'a>,
@@ -510,7 +488,6 @@ pub struct RuntimeResumeOp<'a> {
 pub struct RuntimeSetAvailableOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -522,7 +499,6 @@ pub struct RuntimeSetAvailableOp<'a> {
 pub struct RuntimeSetErrorOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -550,7 +526,6 @@ pub struct RuntimeStoreOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

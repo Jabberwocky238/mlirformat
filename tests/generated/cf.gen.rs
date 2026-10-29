@@ -20,7 +20,6 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct AssertOp<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[attr]
     pub msg: Attribute<'a>,
     #[dtype(is = i1)]
     pub arg_ty: Type<'a>,
@@ -47,7 +46,6 @@ pub struct BranchOp<'a> {
     pub dest_operands: Vec<Value<'a>>,
     #[successor]
     pub dest: Str<'a>,
-    #[dtype]
     pub dest_operands_ty: Vec<Type<'a>>,
 }
 
@@ -93,9 +91,7 @@ pub struct CondBranchOp<'a> {
     pub false_dest: Str<'a>,
     #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub true_dest_operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub false_dest_operands_ty: Vec<Type<'a>>,
 }
 
@@ -126,7 +122,6 @@ pub struct SwitchOp<'a> {
     pub default_operands: Vec<Value<'a>>,
     #[slot(case_operands_ty, name = "caseOperands")]
     pub case_operands: Vec<Value<'a>>,
-    #[attr]
     pub case_values: Option<Attribute<'a>>,
     #[attr(dense = "i32")]
     pub case_operand_segments: Attribute<'a>,
@@ -134,11 +129,8 @@ pub struct SwitchOp<'a> {
     pub default_destination: Str<'a>,
     #[successor(name = "caseDestinations")]
     pub case_destinations: Vec<Str<'a>>,
-    #[dtype]
     pub flag_ty: Type<'a>,
-    #[dtype]
     pub default_operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub case_operands_ty: Vec<Type<'a>>,
 }
 

@@ -110,7 +110,6 @@ pub struct AddFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -154,7 +153,6 @@ pub struct AddIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", dialect = "arith.overflow", default = "<none>")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -183,9 +181,7 @@ pub struct AddUIExtendedOp<'a> {
     pub lhs: Value<'a>,
     #[slot(sum)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub sum: Type<'a>,
-    #[dtype]
     pub overflow: Type<'a>,
 }
 
@@ -214,7 +210,6 @@ pub struct AndIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -238,9 +233,7 @@ pub struct AndIOp<'a> {
 pub struct BitcastOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -265,7 +258,6 @@ pub struct CeilDivSIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -291,7 +283,6 @@ pub struct CeilDivUIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -330,7 +321,6 @@ pub struct CmpFOp<'a> {
     pub predicate: CmpFPredicate,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
     #[dtype(i1 = lhs_ty)]
     pub result: Type<'a>,
@@ -407,7 +397,6 @@ pub struct CmpIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(int = "i64")]
     pub predicate: CmpIPredicate,
-    #[dtype]
     pub lhs_ty: Type<'a>,
     #[dtype(i1 = lhs_ty)]
     pub result: Type<'a>,
@@ -432,9 +421,7 @@ pub struct CmpIOp<'a> {
 /// Generic form only (result type `result` inferred in C++).
 #[mlir::op("arith.constant", results(result))]
 pub struct ConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -447,7 +434,6 @@ pub struct DivFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -487,7 +473,6 @@ pub struct DivSIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -527,7 +512,6 @@ pub struct DivUIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -542,9 +526,7 @@ pub struct ExtFOp<'a> {
     pub in_: Value<'a>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -570,9 +552,7 @@ pub struct ExtFOp<'a> {
 pub struct ExtSIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -597,9 +577,7 @@ pub struct ExtSIOp<'a> {
 pub struct ExtUIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -612,9 +590,7 @@ pub struct ExtUIOp<'a> {
 pub struct FPToSIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -627,9 +603,7 @@ pub struct FPToSIOp<'a> {
 pub struct FPToUIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -655,7 +629,6 @@ pub struct FloorDivSIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -669,9 +642,7 @@ pub struct FloorDivSIOp<'a> {
 pub struct IndexCastOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -685,9 +656,7 @@ pub struct IndexCastOp<'a> {
 pub struct IndexCastUIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -711,7 +680,6 @@ pub struct MaxNumFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -722,7 +690,6 @@ pub struct MaxSIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -733,7 +700,6 @@ pub struct MaxUIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -756,7 +722,6 @@ pub struct MaximumFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -780,7 +745,6 @@ pub struct MinNumFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -791,7 +755,6 @@ pub struct MinSIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -802,7 +765,6 @@ pub struct MinUIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -825,7 +787,6 @@ pub struct MinimumFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -859,7 +820,6 @@ pub struct MulFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -903,7 +863,6 @@ pub struct MulIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", dialect = "arith.overflow", default = "<none>")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -932,7 +891,6 @@ pub struct MulSIExtendedOp<'a> {
     pub lhs: Value<'a>,
     #[slot(low)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub low: Type<'a>,
     #[dtype(eq = low)]
     pub high: Type<'a>,
@@ -963,7 +921,6 @@ pub struct MulUIExtendedOp<'a> {
     pub lhs: Value<'a>,
     #[slot(low)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub low: Type<'a>,
     #[dtype(eq = low)]
     pub high: Type<'a>,
@@ -994,7 +951,6 @@ pub struct NegFOp<'a> {
     pub operand: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1023,7 +979,6 @@ pub struct OrIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1039,7 +994,6 @@ pub struct RemFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1070,7 +1024,6 @@ pub struct RemSIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1101,7 +1054,6 @@ pub struct RemUIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1115,9 +1067,7 @@ pub struct RemUIOp<'a> {
 pub struct SIToFPOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -1175,11 +1125,8 @@ pub struct ScalingExtFOp<'a> {
     pub scale: Value<'a>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub scale_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -1241,11 +1188,8 @@ pub struct ScalingTruncFOp<'a> {
     pub roundingmode: Option<RoundingMode>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub scale_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -1278,7 +1222,6 @@ pub struct ShLIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", dialect = "arith.overflow", default = "<none>")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1312,7 +1255,6 @@ pub struct ShRSIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1344,7 +1286,6 @@ pub struct ShRUIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1378,7 +1319,6 @@ pub struct SubFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1422,7 +1362,6 @@ pub struct SubIOp<'a> {
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", dialect = "arith.overflow", default = "<none>")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1441,9 +1380,7 @@ pub struct TruncFOp<'a> {
     pub roundingmode: Option<RoundingMode>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -1480,9 +1417,7 @@ pub struct TruncIOp<'a> {
     pub in_: Value<'a>,
     #[attr(name = "overflowFlags", dialect = "arith.overflow", default = "<none>")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -1496,9 +1431,7 @@ pub struct TruncIOp<'a> {
 pub struct UIToFPOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -1527,7 +1460,6 @@ pub struct XOrIOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1576,9 +1508,7 @@ pub struct SelectOp<'a> {
     pub true_value: Value<'a>,
     #[slot(result)]
     pub false_value: Value<'a>,
-    #[dtype]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

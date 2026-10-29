@@ -83,7 +83,6 @@ macro_rules! call_ops {
         pub struct $ty<'a> {
             #[slot(operands_ty, name = "mapOperands")]
             pub map_operands: Vec<Value<'a>>,
-            #[attr]
             pub map: Attribute<'a>,
             #[dtype(name = "mapOperands_ty", is = index)]
             pub operands_ty: Type<'a>,
@@ -241,9 +240,7 @@ macro_rules! memory_ops {
             pub memref: Value<'a>,
             #[slot(indices_ty)]
             pub indices: Vec<Value<'a>>,
-            #[attr]
             pub map: Attribute<'a>,
-            #[dtype]
             pub memref_ty: Type<'a>,
             #[dtype(is = index)]
             pub indices_ty: Type<'a>,
@@ -399,15 +396,12 @@ pub struct For<'a> {
     pub lower_bound_map: Attribute<'a>,
     #[attr(name = "upperBoundMap")]
     pub upper_bound_map: Attribute<'a>,
-    #[attr]
     pub step: Attribute<'a>,
-    #[region]
     pub region: Region<'a>,
     #[dtype(name = "lowerBoundOperands_ty", is = index)]
     pub lower_bound_operands_ty: Type<'a>,
     #[dtype(name = "upperBoundOperands_ty", is = index)]
     pub upper_bound_operands_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -552,7 +546,6 @@ fn read_bound<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a
 pub struct If<'a> {
     #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr]
     pub condition: Attribute<'a>,
     #[region(name = "thenRegion")]
     pub then_region: Region<'a>,
@@ -560,7 +553,6 @@ pub struct If<'a> {
     pub else_region: Region<'a>,
     #[dtype(is = index)]
     pub args_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -650,7 +642,6 @@ impl Parse for If<'_> {
 pub struct Parallel<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
     pub map_operands: Vec<Value<'a>>,
-    #[attr]
     pub reductions: Attribute<'a>,
     #[attr(name = "lowerBoundsMap")]
     pub lower_bounds_map: Attribute<'a>,
@@ -660,13 +651,10 @@ pub struct Parallel<'a> {
     pub upper_bounds_map: Attribute<'a>,
     #[attr(name = "upperBoundsGroups")]
     pub upper_bounds_groups: Attribute<'a>,
-    #[attr]
     pub steps: Attribute<'a>,
-    #[region]
     pub region: Region<'a>,
     #[dtype(name = "mapOperands_ty", is = index)]
     pub map_operands_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 

@@ -9,11 +9,8 @@ use crate::{Block, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type
 /// `module @name attributes {...} { ... }`: hand-written syntax.
 #[mlir::op("builtin.module", custom)]
 pub struct ModuleOp<'a> {
-    #[attr]
     pub sym_name: Option<String>,
-    #[attr]
     pub sym_visibility: Option<String>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -58,9 +55,7 @@ impl Parse for ModuleOp<'_> {
 pub struct UnrealizedConversionCast<'a> {
     #[slot(input_types)]
     pub inputs: Vec<Value<'a>>,
-    #[dtype]
     pub input_types: Vec<Type<'a>>,
-    #[dtype]
     pub outputs: Vec<Type<'a>>,
 }
 

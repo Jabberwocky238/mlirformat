@@ -67,8 +67,13 @@ fn last_segment(ty: &Type) -> Option<String> {
 
 /// `T` of `Option<T>`.
 fn option_of(ty: &Type) -> Option<&Type> {
+    wrapped(ty, "Option")
+}
+
+/// `T` of `W<T>`.
+fn wrapped<'t>(ty: &'t Type, w: &str) -> Option<&'t Type> {
     let Type::Path(p) = ty else { return None };
-    let seg = p.path.segments.last().filter(|s| s.ident == "Option")?;
+    let seg = p.path.segments.last().filter(|s| s.ident == w)?;
     let syn::PathArguments::AngleBracketed(args) = &seg.arguments else { return None };
     args.args.iter().find_map(|a| if let syn::GenericArgument::Type(t) = a { Some(t) } else { None })
 }
@@ -137,7 +142,17 @@ impl Marked {
             }
         }
         f.attrs.retain(|a| !["slot", "dtype", "attr", "region", "successor"].iter().any(|m| a.path().is_ident(m)));
-        let kind = found.ok_or_else(|| Error::new_spanned(&ident, "field needs #[slot(T)], #[dtype], #[attr], #[region] or #[successor]"))?;
+        // Unmarked: the Rust type says the role. A `Type` is a type variable, a `Region` a
+        // region, anything else but a `Value` a property.
+        let kind = match found {
+            Some(k) => k,
+            None => match last_segment(wrapped(&f.ty, "Vec").unwrap_or(&f.ty)).as_deref() {
+                Some("Type") => Kind::DType(None, None),
+                Some("Region") => Kind::Region,
+                Some("Value") => return Err(Error::new_spanned(&ident, "an operand needs #[slot(T)]: its type variable")),
+                _ => Kind::Prop { int: None, dialect: None, default: None, dense: None, symbol: false, bits: None },
+            },
+        };
         let seg = last_segment(&f.ty);
         Ok(Self {
             name: name.unwrap_or_else(|| ident.to_string().trim_start_matches("r#").into()),

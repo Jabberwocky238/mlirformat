@@ -47,9 +47,7 @@ pub struct VectorScaleOp<'a> {
 pub struct BitCastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -89,9 +87,7 @@ pub struct BitCastOp<'a> {
 pub struct BroadcastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub vector: Type<'a>,
 }
 
@@ -151,13 +147,10 @@ pub struct CompressStoreOp<'a> {
     pub value_to_store: Value<'a>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
 }
 
@@ -199,7 +192,6 @@ pub struct CompressStoreOp<'a> {
 pub struct ConstantMaskOp<'a> {
     #[attr(dense = "i64")]
     pub mask_dim_sizes: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -325,19 +317,13 @@ pub struct ContractionOp<'a> {
     pub rhs: Value<'a>,
     #[slot(acc_ty)]
     pub acc: Value<'a>,
-    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr]
     pub iterator_types: Attribute<'a>,
     #[attr(dialect = "vector.kind", default = "<add>")]
     pub kind: Option<Attribute<'a>>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub acc_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -377,7 +363,6 @@ pub struct CreateMaskOp<'a> {
     pub operands: Vec<Value<'a>>,
     #[dtype(is = index)]
     pub operands_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -414,9 +399,7 @@ pub struct CreateMaskOp<'a> {
 pub struct DeinterleaveOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub res1: Type<'a>,
     #[dtype(eq = res1)]
     pub res2: Type<'a>,
@@ -478,15 +461,11 @@ pub struct ExpandLoadOp<'a> {
     pub pass_thru: Value<'a>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub pass_thru_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -518,11 +497,9 @@ pub struct ExtractOp<'a> {
     pub dynamic_position: Vec<Value<'a>>,
     #[attr(dense = "i64")]
     pub static_position: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub dynamic_position_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -557,15 +534,10 @@ pub struct ExtractOp<'a> {
 pub struct ExtractStridedSliceOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[attr]
     pub offsets: Attribute<'a>,
-    #[attr]
     pub sizes: Attribute<'a>,
-    #[attr]
     pub strides: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -592,7 +564,6 @@ pub struct FMAOp<'a> {
     pub rhs: Value<'a>,
     #[slot(result)]
     pub acc: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -629,7 +600,6 @@ pub struct FromElementsOp<'a> {
     pub elements: Vec<Value<'a>>,
     #[dtype(el = dest)]
     pub elements_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -702,17 +672,12 @@ pub struct GatherOp<'a> {
     pub pass_thru: Value<'a>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub pass_thru_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -746,11 +711,9 @@ pub struct InsertOp<'a> {
     pub dynamic_position: Vec<Value<'a>>,
     #[attr(dense = "i64")]
     pub static_position: Attribute<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
     #[dtype(is = index)]
     pub dynamic_position_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -780,13 +743,9 @@ pub struct InsertStridedSliceOp<'a> {
     pub value_to_store: Value<'a>,
     #[slot(result)]
     pub dest: Value<'a>,
-    #[attr]
     pub offsets: Attribute<'a>,
-    #[attr]
     pub strides: Attribute<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -822,9 +781,7 @@ pub struct InterleaveOp<'a> {
     pub lhs: Value<'a>,
     #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -899,15 +856,12 @@ pub struct LoadOp<'a> {
     pub base: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -974,11 +928,8 @@ pub struct MaskOp<'a> {
     pub passthru: Vec<Value<'a>>,
     #[region(name = "maskRegion")]
     pub mask_region: Region<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub passthru_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -1031,15 +982,11 @@ pub struct MaskedLoadOp<'a> {
     pub pass_thru: Value<'a>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub pass_thru_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1092,13 +1039,10 @@ pub struct MaskedStoreOp<'a> {
     pub value_to_store: Value<'a>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
 }
 
@@ -1128,9 +1072,7 @@ pub struct MultiDimReductionOp<'a> {
     pub kind: Attribute<'a>,
     #[attr(dense = "i64")]
     pub reduction_dims: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -1193,13 +1135,9 @@ pub struct OuterProductOp<'a> {
     pub acc: Vec<Value<'a>>,
     #[attr(dialect = "vector.kind", default = "<add>")]
     pub kind: Option<Attribute<'a>>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub acc_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1257,7 +1195,6 @@ pub struct PrintOp<'a> {
     pub punctuation: Option<Attribute<'a>>,
     #[attr(name = "stringLiteral")]
     pub string_literal: Option<Attribute<'a>>,
-    #[dtype]
     pub source_ty: Vec<Type<'a>>,
 }
 
@@ -1292,9 +1229,7 @@ pub struct ReductionOp<'a> {
     pub kind: Attribute<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub vector_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -1326,9 +1261,7 @@ pub struct ScalableExtractOp<'a> {
     pub source: Value<'a>,
     #[attr(int = "i64")]
     pub pos: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1366,9 +1299,7 @@ pub struct ScalableInsertOp<'a> {
     pub dest: Value<'a>,
     #[attr(int = "i64")]
     pub pos: Attribute<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1397,11 +1328,8 @@ pub struct ScanOp<'a> {
     pub kind: Attribute<'a>,
     #[attr(int = "i64")]
     pub reduction_dim: Attribute<'a>,
-    #[attr]
     pub inclusive: Attribute<'a>,
-    #[dtype]
     pub dest: Type<'a>,
-    #[dtype]
     pub accumulated_value: Type<'a>,
 }
 
@@ -1461,17 +1389,12 @@ pub struct ScatterOp<'a> {
     pub value_to_store: Value<'a>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -1500,9 +1423,7 @@ pub struct ScatterOp<'a> {
 pub struct ShapeCastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1554,11 +1475,8 @@ pub struct ShuffleOp<'a> {
     pub v2: Value<'a>,
     #[attr(dense = "i64")]
     pub mask: Attribute<'a>,
-    #[dtype]
     pub v1_ty: Type<'a>,
-    #[dtype]
     pub v2_ty: Type<'a>,
-    #[dtype]
     pub vector: Type<'a>,
 }
 
@@ -1578,7 +1496,6 @@ pub struct ShuffleOp<'a> {
 /// ```
 #[mlir::op("vector.step", format = "attr-dict `:` type($result)", results(result))]
 pub struct StepOp<'a> {
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1653,13 +1570,10 @@ pub struct StoreOp<'a> {
     pub base: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -1707,7 +1621,6 @@ pub struct StoreOp<'a> {
 pub struct ToElementsOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(el = source_ty)]
     pub elements: Vec<Type<'a>>,
@@ -1908,19 +1821,13 @@ pub struct TransferReadOp<'a> {
     pub padding: Value<'a>,
     #[slot(mask_ty)]
     pub mask: Vec<Value<'a>>,
-    #[attr]
     pub permutation_map: Attribute<'a>,
-    #[attr]
     pub in_bounds: Attribute<'a>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub padding_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Vec<Type<'a>>,
-    #[dtype]
     pub vector: Type<'a>,
 }
 
@@ -2034,19 +1941,13 @@ pub struct TransferWriteOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[slot(mask_ty)]
     pub mask: Vec<Value<'a>>,
-    #[attr]
     pub permutation_map: Attribute<'a>,
-    #[attr]
     pub in_bounds: Attribute<'a>,
-    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -2081,9 +1982,7 @@ pub struct TransposeOp<'a> {
     pub vector: Value<'a>,
     #[attr(dense = "i64")]
     pub permutation: Attribute<'a>,
-    #[dtype]
     pub vector_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2105,9 +2004,7 @@ pub struct TransposeOp<'a> {
 pub struct TypeCastOp<'a> {
     #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2124,7 +2021,6 @@ pub struct TypeCastOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

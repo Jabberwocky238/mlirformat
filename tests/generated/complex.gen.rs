@@ -18,7 +18,6 @@ pub struct AbsOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub complex_ty: Type<'a>,
     #[dtype(el = complex_ty)]
     pub result: Type<'a>,
@@ -41,7 +40,6 @@ pub struct AddOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -60,7 +58,6 @@ pub struct AngleOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub complex_ty: Type<'a>,
     #[dtype(el = complex_ty)]
     pub result: Type<'a>,
@@ -84,7 +81,6 @@ pub struct Atan2Op<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -99,9 +95,7 @@ pub struct Atan2Op<'a> {
 pub struct BitcastOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -121,7 +115,6 @@ pub struct ConjOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -137,9 +130,7 @@ pub struct ConjOp<'a> {
 /// ```
 #[mlir::op("complex.constant", format = "$value attr-dict `:` type($complex)", results(complex))]
 pub struct ConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub complex: Type<'a>,
 }
 
@@ -159,7 +150,6 @@ pub struct CosOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -181,7 +171,6 @@ pub struct CreateOp<'a> {
     pub imaginary: Value<'a>,
     #[dtype(el = complex)]
     pub real_ty: Type<'a>,
-    #[dtype]
     pub complex: Type<'a>,
 }
 
@@ -201,7 +190,6 @@ pub struct DivOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -220,7 +208,6 @@ pub struct EqualOp<'a> {
     pub lhs: Value<'a>,
     #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -243,7 +230,6 @@ pub struct ExpOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -262,7 +248,6 @@ pub struct Expm1Op<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -281,7 +266,6 @@ pub struct ImOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub complex_ty: Type<'a>,
     #[dtype(el = complex_ty)]
     pub imaginary: Type<'a>,
@@ -305,7 +289,6 @@ pub struct Log1pOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -326,7 +309,6 @@ pub struct LogOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -345,7 +327,6 @@ pub struct MulOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -364,7 +345,6 @@ pub struct NegOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -384,7 +364,6 @@ pub struct NotEqualOp<'a> {
     pub lhs: Value<'a>,
     #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -408,7 +387,6 @@ pub struct PowOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -431,9 +409,7 @@ pub struct PowiOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -452,7 +428,6 @@ pub struct ReOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub complex_ty: Type<'a>,
     #[dtype(el = complex_ty)]
     pub real: Type<'a>,
@@ -473,7 +448,6 @@ pub struct RsqrtOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -493,7 +467,6 @@ pub struct SignOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -513,7 +486,6 @@ pub struct SinOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -532,7 +504,6 @@ pub struct SqrtOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -553,7 +524,6 @@ pub struct SubOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -573,7 +543,6 @@ pub struct TanOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -593,7 +562,6 @@ pub struct TanhOp<'a> {
     pub complex: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

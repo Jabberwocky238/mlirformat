@@ -20,21 +20,13 @@ use core::fmt::{self, Write};
 pub struct Func<'a> {
     #[attr]
     pub function_type: Type<'a>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub workgroup_attrib_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub private_attrib_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub known_block_size: Option<Attribute<'a>>,
-    #[attr]
     pub known_grid_size: Option<Attribute<'a>>,
-    #[attr]
     pub known_cluster_size: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -242,7 +234,6 @@ pub struct LaunchFunc<'a> {
     pub kernel_operands: Vec<Value<'a>>,
     #[slot(async_object_ty, name = "asyncObject")]
     pub async_object: Vec<Value<'a>>,
-    #[attr]
     pub kernel: Attribute<'a>,
     #[dtype(name = "asyncDependencies_ty")]
     pub async_dependencies_ty: Vec<Type<'a>>,

@@ -28,21 +28,13 @@ pub struct Generic<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr]
     pub iterator_types: Attribute<'a>,
-    #[attr]
     pub doc: Option<Attribute<'a>>,
-    #[attr]
     pub library_call: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -154,7 +146,6 @@ impl Parse for Generic<'_> {
 pub struct Yield<'a> {
     #[slot(values_ty)]
     pub values: Vec<Value<'a>>,
-    #[dtype]
     pub values_ty: Vec<Type<'a>>,
 }
 
@@ -546,13 +537,9 @@ macro_rules! named_ops {
             pub outputs: Vec<Value<'a>>,
             $(#[attr(name = $aname)]
             pub $attr: Option<Attribute<'a>>,)*
-            #[region]
             pub region: Region<'a>,
-            #[dtype]
             pub inputs_ty: Vec<Type<'a>>,
-            #[dtype]
             pub outputs_ty: Vec<Type<'a>>,
-            #[dtype]
             pub result_tensors: Vec<Type<'a>>,
         }
 
@@ -644,17 +631,11 @@ macro_rules! contraction_ops {
             pub inputs: Vec<Value<'a>>,
             #[slot(outputs_ty)]
             pub outputs: Vec<Value<'a>>,
-            #[attr]
             pub indexing_maps: Option<Attribute<'a>>,
-            #[attr]
             pub cast: Option<Attribute<'a>>,
-            #[region]
             pub region: Region<'a>,
-            #[dtype]
             pub inputs_ty: Vec<Type<'a>>,
-            #[dtype]
             pub outputs_ty: Vec<Type<'a>>,
-            #[dtype]
             pub result_tensors: Vec<Type<'a>>,
         }
 
@@ -859,13 +840,9 @@ macro_rules! identity_ops {
             pub init: Value<'a>,
             #[attr(name = $aname)]
             pub $attr: Attribute<'a>,
-            #[region]
             pub region: Region<'a>,
-            #[dtype]
             pub input_ty: Type<'a>,
-            #[dtype]
             pub init_ty: Type<'a>,
-            #[dtype]
             pub result: Vec<Type<'a>>,
         }
 
@@ -909,13 +886,9 @@ pub struct Map<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(init_ty)]
     pub init: Value<'a>,
-    #[region]
     pub mapper: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -963,13 +936,9 @@ impl Parse for Map<'_> {
 pub struct Reduce<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub dimensions: Attribute<'a>,
-    #[region]
     pub combiner: Region<'a>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -1021,17 +990,11 @@ pub struct Elementwise<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub kind: Attribute<'a>,
-    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 

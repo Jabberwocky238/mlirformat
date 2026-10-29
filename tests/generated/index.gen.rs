@@ -67,7 +67,6 @@ pub struct AndOp<'a> {
 /// ```
 #[mlir::op("index.bool.constant", format = "attr-dict $value", results(result))]
 pub struct BoolConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -93,9 +92,7 @@ pub struct BoolConstantOp<'a> {
 pub struct CastSOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -119,9 +116,7 @@ pub struct CastSOp<'a> {
 pub struct CastUOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 

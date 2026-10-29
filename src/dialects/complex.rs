@@ -11,7 +11,6 @@ macro_rules! unary {
             pub complex: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
             pub fastmath: Option<Attribute<'a>>,
-            #[dtype]
             pub ty: Type<'a>,
         }
     )*};
@@ -26,7 +25,6 @@ macro_rules! part {
             pub complex: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
             pub fastmath: Option<Attribute<'a>>,
-            #[dtype]
             pub ty: Type<'a>,
             #[dtype(el = ty)]
             pub result: Type<'a>,
@@ -45,7 +43,6 @@ macro_rules! binary {
             pub rhs: Value<'a>,
             #[attr(dialect = "arith.fastmath", default = "<none>")]
             pub fastmath: Option<Attribute<'a>>,
-            #[dtype]
             pub result: Type<'a>,
         }
     )*};
@@ -60,7 +57,6 @@ macro_rules! compare {
             pub lhs: Value<'a>,
             #[slot(ty)]
             pub rhs: Value<'a>,
-            #[dtype]
             pub ty: Type<'a>,
             #[dtype(is = i1)]
             pub result: Type<'a>,
@@ -86,9 +82,7 @@ compare! { EqualOp = "complex.eq", NotEqualOp = "complex.neq" }
 /// `complex.constant [re, im] : complex<T>`.
 #[mlir::op("complex.constant", format = "$value attr-dict `:` type($complex)", results(complex))]
 pub struct ConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub complex: Type<'a>,
 }
 
@@ -101,7 +95,6 @@ pub struct CreateOp<'a> {
     pub imaginary: Value<'a>,
     #[dtype(el = complex)]
     pub elem: Type<'a>,
-    #[dtype]
     pub complex: Type<'a>,
 }
 
@@ -109,9 +102,7 @@ pub struct CreateOp<'a> {
 pub struct BitcastOp<'a> {
     #[slot(in_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -124,9 +115,7 @@ pub struct PowiOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
 }
 

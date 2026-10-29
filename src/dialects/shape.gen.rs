@@ -17,11 +17,8 @@ pub struct AddOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -43,9 +40,7 @@ pub struct AddOp<'a> {
 pub struct AnyOp<'a> {
     #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -95,7 +90,6 @@ pub struct AssumingOp<'a> {
     pub do_region: Region<'a>,
     #[dtype(is = "!shape.witness")]
     pub witness_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -109,7 +103,6 @@ pub struct AssumingOp<'a> {
 pub struct AssumingYieldOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -140,11 +133,8 @@ pub struct AssumingYieldOp<'a> {
 pub struct BroadcastOp<'a> {
     #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[attr]
     pub error: Option<Attribute<'a>>,
-    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -163,11 +153,8 @@ pub struct ConcatOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -186,9 +173,7 @@ pub struct ConcatOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("shape.const_shape", results(result))]
 pub struct ConstShapeOp<'a> {
-    #[attr]
     pub shape: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -222,7 +207,6 @@ pub struct ConstSizeOp<'a> {
 /// ```
 #[mlir::op("shape.const_witness", format = "$passing attr-dict", results(result))]
 pub struct ConstWitnessOp<'a> {
-    #[attr]
     pub passing: Attribute<'a>,
     #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
@@ -245,7 +229,6 @@ pub struct ConstWitnessOp<'a> {
 pub struct CstrBroadcastableOp<'a> {
     #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
     #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
@@ -266,7 +249,6 @@ pub struct CstrBroadcastableOp<'a> {
 pub struct CstrEqOp<'a> {
     #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
     #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
@@ -293,7 +275,6 @@ pub struct CstrEqOp<'a> {
 pub struct CstrRequireOp<'a> {
     #[slot(pred_ty)]
     pub pred: Value<'a>,
-    #[attr]
     pub msg: Attribute<'a>,
     #[dtype(is = i1)]
     pub pred_ty: Type<'a>,
@@ -312,9 +293,7 @@ pub struct CstrRequireOp<'a> {
 pub struct DebugPrintOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -332,11 +311,8 @@ pub struct DimOp<'a> {
     pub value: Value<'a>,
     #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub index_ty: Type<'a>,
-    #[dtype]
     pub extent: Type<'a>,
 }
 
@@ -363,11 +339,8 @@ pub struct DivOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -380,7 +353,6 @@ pub struct DivOp<'a> {
 pub struct FromExtentTensorOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
     #[dtype(is = "!shape.shape")]
     pub result: Type<'a>,
@@ -401,7 +373,6 @@ pub struct FromExtentTensorOp<'a> {
 pub struct FromExtentsOp<'a> {
     #[slot(extents_ty)]
     pub extents: Vec<Value<'a>>,
-    #[dtype]
     pub extents_ty: Vec<Type<'a>>,
     #[dtype(is = "!shape.shape")]
     pub shape: Type<'a>,
@@ -418,15 +389,10 @@ pub struct FromExtentsOp<'a> {
 pub struct FuncOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -453,11 +419,8 @@ pub struct FuncOp<'a> {
 pub struct FunctionLibraryOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr]
     pub mapping: Attribute<'a>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -471,11 +434,8 @@ pub struct GetExtentOp<'a> {
     pub shape: Value<'a>,
     #[slot(dim_ty)]
     pub dim: Value<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub dim_ty: Type<'a>,
-    #[dtype]
     pub extent: Type<'a>,
 }
 
@@ -516,7 +476,6 @@ pub struct IndexToSizeOp<'a> {
 pub struct IsBroadcastableOp<'a> {
     #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -534,11 +493,8 @@ pub struct MaxOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -573,13 +529,9 @@ pub struct MeetOp<'a> {
     pub arg0: Value<'a>,
     #[slot(arg1_ty)]
     pub arg1: Value<'a>,
-    #[attr]
     pub error: Option<Attribute<'a>>,
-    #[dtype]
     pub arg0_ty: Type<'a>,
-    #[dtype]
     pub arg1_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -595,11 +547,8 @@ pub struct MinOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -617,11 +566,8 @@ pub struct MulOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -636,9 +582,7 @@ pub struct MulOp<'a> {
 pub struct NumElementsOp<'a> {
     #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -649,9 +593,7 @@ pub struct NumElementsOp<'a> {
 pub struct RankOp<'a> {
     #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub rank: Type<'a>,
 }
 
@@ -695,13 +637,9 @@ pub struct ReduceOp<'a> {
     pub shape: Value<'a>,
     #[slot(init_vals_ty, name = "initVals")]
     pub init_vals: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub init_vals_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -714,7 +652,6 @@ pub struct ReduceOp<'a> {
 pub struct ReturnOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -729,7 +666,6 @@ pub struct ReturnOp<'a> {
 pub struct ShapeEqOp<'a> {
     #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -743,9 +679,7 @@ pub struct ShapeEqOp<'a> {
 pub struct ShapeOfOp<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -759,7 +693,6 @@ pub struct ShapeOfOp<'a> {
 pub struct SizeToIndexOp<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype]
     pub arg_ty: Type<'a>,
     #[dtype(is = index)]
     pub result: Type<'a>,
@@ -795,13 +728,9 @@ pub struct SplitAtOp<'a> {
     pub operand: Value<'a>,
     #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub index_ty: Type<'a>,
-    #[dtype]
     pub head: Type<'a>,
-    #[dtype]
     pub tail: Type<'a>,
 }
 
@@ -816,9 +745,7 @@ pub struct SplitAtOp<'a> {
 pub struct ToExtentTensorOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -842,9 +769,7 @@ pub struct ToExtentTensorOp<'a> {
 pub struct ValueAsShapeOp<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -859,7 +784,6 @@ pub struct ValueOfOp<'a> {
     pub arg: Value<'a>,
     #[dtype(is = "!shape.value_shape")]
     pub arg_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -904,9 +828,7 @@ pub struct WithOp<'a> {
     pub operand: Value<'a>,
     #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
     #[dtype(is = "!shape.value_shape")]
     pub result: Type<'a>,
@@ -917,7 +839,6 @@ pub struct WithOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

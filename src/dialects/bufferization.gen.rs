@@ -65,15 +65,12 @@ pub struct AllocTensorOp<'a> {
     pub copy: Vec<Value<'a>>,
     #[slot(size_hint_ty)]
     pub size_hint: Vec<Value<'a>>,
-    #[attr]
     pub memory_space: Option<Attribute<'a>>,
     #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype]
     pub copy_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub size_hint_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -95,9 +92,7 @@ pub struct AllocTensorOp<'a> {
 pub struct CloneOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -160,11 +155,9 @@ pub struct DeallocOp<'a> {
     pub conditions: Vec<Value<'a>>,
     #[slot(retained_ty)]
     pub retained: Vec<Value<'a>>,
-    #[dtype]
     pub memrefs_ty: Vec<Type<'a>>,
     #[dtype(is = i1)]
     pub conditions_ty: Type<'a>,
-    #[dtype]
     pub retained_ty: Vec<Type<'a>>,
     #[dtype(is = i1)]
     pub updated_conditions: Type<'a>,
@@ -198,7 +191,6 @@ pub struct DeallocOp<'a> {
 pub struct DeallocTensorOp<'a> {
     #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[dtype]
     pub tensor_ty: Type<'a>,
 }
 
@@ -257,15 +249,10 @@ pub struct MaterializeInDestinationOp<'a> {
     pub source: Value<'a>,
     #[slot(dest_ty)]
     pub dest: Value<'a>,
-    #[attr]
     pub restrict: bool,
-    #[attr]
     pub writable: bool,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -289,11 +276,8 @@ pub struct MaterializeInDestinationOp<'a> {
 pub struct ToBufferOp<'a> {
     #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[attr]
     pub read_only: bool,
-    #[dtype]
     pub tensor_ty: Type<'a>,
-    #[dtype]
     pub buffer: Type<'a>,
 }
 
@@ -351,13 +335,9 @@ pub struct ToBufferOp<'a> {
 pub struct ToTensorOp<'a> {
     #[slot(buffer_ty)]
     pub buffer: Value<'a>,
-    #[attr]
     pub restrict: bool,
-    #[attr]
     pub writable: bool,
-    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

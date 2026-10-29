@@ -47,13 +47,11 @@ pub struct TileLoadOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[slot(stride_ty)]
     pub stride: Vec<Value<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
     #[dtype(is = index)]
     pub stride_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -80,11 +78,8 @@ pub struct TileMulFOp<'a> {
     pub rhs: Value<'a>,
     #[slot(res)]
     pub acc: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -118,11 +113,8 @@ pub struct TileMulIOp<'a> {
     pub is_zext_lhs: bool,
     #[attr(name = "isZextRhs")]
     pub is_zext_rhs: bool,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -169,11 +161,9 @@ pub struct TileStoreOp<'a> {
     pub val: Value<'a>,
     #[slot(stride_ty)]
     pub stride: Vec<Value<'a>>,
-    #[dtype]
     pub base_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub val_ty: Type<'a>,
     #[dtype(is = index)]
     pub stride_ty: Type<'a>,
@@ -197,7 +187,6 @@ pub struct TileStoreOp<'a> {
 /// ```
 #[mlir::op("amx.tile_zero", format = "attr-dict `:` qualified(type($res))", results(res))]
 pub struct TileZeroOp<'a> {
-    #[dtype]
     pub res: Type<'a>,
 }
 

@@ -835,7 +835,14 @@ impl GenDialect {
             let _ = writeln!(out, "#[mlir::op({:?}{syntax}{results})]", op.name);
             let _ = writeln!(out, "pub struct {}<'a> {{", op.rust);
             for f in &op.fields {
-                let _ = writeln!(out, "    {}\n    pub {}: {},", f.shown(op.format.as_deref()), f.ident, f.ty);
+                let marker = f.shown(op.format.as_deref());
+                // A bare marker the field's type already says (`#[mlir::op]` infers it) is left out.
+                let typed = ["Type<", "Region<", "Value<"].iter().any(|t| f.ty.contains(t));
+                if matches!(marker.as_str(), "#[dtype]" | "#[region]") || marker == "#[attr]" && !typed {
+                    let _ = writeln!(out, "    pub {}: {},", f.ident, f.ty);
+                } else {
+                    let _ = writeln!(out, "    {marker}\n    pub {}: {},", f.ident, f.ty);
+                }
             }
             let _ = writeln!(out, "}}\n");
         }

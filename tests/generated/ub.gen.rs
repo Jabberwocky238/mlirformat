@@ -23,7 +23,6 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct PoisonOp<'a> {
     #[attr(dialect = "ub.poison", default = "")]
     pub value: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

@@ -7,7 +7,6 @@ use crate::{Attribute, Type, mlir};
 pub struct PoisonOp<'a> {
     #[attr(dialect = "ub.poison", default = "")]
     pub value: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

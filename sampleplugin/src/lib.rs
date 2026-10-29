@@ -16,7 +16,6 @@ pub struct Add<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -26,9 +25,7 @@ pub struct Add<'a> {
 pub struct Scale<'a> {
     #[slot(result)]
     pub input: Value<'a>,
-    #[attr]
     pub factor: i64,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -43,13 +40,10 @@ pub enum Mode {
 /// `sample.round zero %x : f32 -> i32`
 #[mlir::op("sample.round", format = "$mode $input attr-dict `:` type($input) `->` type($result)", results(result))]
 pub struct Round<'a> {
-    #[attr]
     pub mode: Mode,
     #[slot(in_ty)]
     pub input: Value<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -59,11 +53,8 @@ pub struct Round<'a> {
 pub struct Tag<'a> {
     #[slot(ty)]
     pub input: Value<'a>,
-    #[attr]
     pub checked: bool,
-    #[attr]
     pub note: Option<Attribute<'a>>,
-    #[dtype]
     pub ty: Type<'a>,
 }
 
@@ -74,9 +65,7 @@ pub struct Loop<'a> {
     pub lower: Value<'a>,
     #[slot(ty)]
     pub upper: Value<'a>,
-    #[region]
     pub body: Region<'a>,
-    #[dtype]
     pub ty: Type<'a>,
 }
 
@@ -87,7 +76,6 @@ pub struct Jump<'a> {
     pub dest: Str<'a>,
     #[slot(arg_types)]
     pub args: Vec<Value<'a>>,
-    #[dtype]
     pub arg_types: Vec<Type<'a>>,
 }
 
@@ -99,9 +87,7 @@ pub struct Pack<'a> {
     pub lhs: Vec<Value<'a>>,
     #[slot(rhs_types)]
     pub rhs: Vec<Value<'a>>,
-    #[dtype]
     pub lhs_types: Vec<Type<'a>>,
-    #[dtype]
     pub rhs_types: Vec<Type<'a>>,
 }
 
@@ -110,16 +96,13 @@ pub struct Pack<'a> {
 pub struct Weights<'a> {
     #[slot(ty)]
     pub input: Value<'a>,
-    #[attr]
     pub weights: Vec<i64>,
-    #[dtype]
     pub ty: Type<'a>,
 }
 
 /// `sample.comment "text"`: hand-written syntax (`custom`), no lifetime.
 #[mlir::op("sample.comment", custom)]
 pub struct Comment {
-    #[attr]
     pub text: String,
 }
 

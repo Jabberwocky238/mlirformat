@@ -15,7 +15,6 @@ macro_rules! binops {
             pub lhs: Value<'a>,
             #[slot(result)]
             pub rhs: Value<'a>,
-            #[dtype]
             pub result: Type<'a>,
         }
     )*};
@@ -32,7 +31,6 @@ macro_rules! flagged {
             pub rhs: Value<'a>,
             #[attr(name = $key, dialect = $attr, default = "<none>")]
             pub $field: Option<Attribute<'a>>,
-            #[dtype]
             pub result: Type<'a>,
         }
     )*};
@@ -49,7 +47,6 @@ macro_rules! exact {
             pub rhs: Value<'a>,
             #[attr(name = "isExact")]
             pub is_exact: bool,
-            #[dtype]
             pub result: Type<'a>,
         }
     )*};
@@ -62,9 +59,7 @@ macro_rules! casts {
         pub struct $ty<'a> {
             #[slot(in_ty, name = "in")]
             pub input: Value<'a>,
-            #[dtype]
             pub in_ty: Type<'a>,
-            #[dtype]
             pub out: Type<'a>,
         }
     )*};
@@ -131,9 +126,7 @@ pub struct ExtF<'a> {
     pub input: Value<'a>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -149,9 +142,7 @@ pub struct TruncF<'a> {
     pub roundingmode: Option<RoundingMode>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -165,9 +156,7 @@ pub struct Select<'a> {
     pub true_value: Value<'a>,
     #[slot(result, name = "falseValue")]
     pub false_value: Value<'a>,
-    #[dtype]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -207,19 +196,16 @@ pub struct NegF<'a> {
     pub operand: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
 #[mlir::op("arith.cmpi", format = "$predicate `,` $lhs `,` $rhs attr-dict `:` type($lhs)", results(result))]
 pub struct CmpI<'a> {
-    #[attr]
     pub predicate: CmpIPredicate,
     #[slot(ty)]
     pub lhs: Value<'a>,
     #[slot(ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub ty: Type<'a>,
     #[dtype(i1 = ty)]
     pub result: Type<'a>,
@@ -227,7 +213,6 @@ pub struct CmpI<'a> {
 
 #[mlir::op("arith.cmpf", format = "$predicate `,` $lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($lhs)", results(result))]
 pub struct CmpF<'a> {
-    #[attr]
     pub predicate: CmpFPredicate,
     #[slot(ty)]
     pub lhs: Value<'a>,
@@ -235,7 +220,6 @@ pub struct CmpF<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub ty: Type<'a>,
     #[dtype(i1 = ty)]
     pub result: Type<'a>,
@@ -243,7 +227,6 @@ pub struct CmpF<'a> {
 
 #[mlir::op("arith.constant", format = "attr-dict $value", results(result))]
 pub struct Constant<'a> {
-    #[attr]
     pub value: Attribute<'a>,
     #[dtype(of = value)]
     pub result: Type<'a>,
@@ -255,9 +238,7 @@ pub struct TruncI<'a> {
     pub input: Value<'a>,
     #[attr(dialect = "arith.overflow", default = "<none>", name = "overflowFlags")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -270,7 +251,6 @@ macro_rules! extended_mul {
             pub lhs: Value<'a>,
             #[slot(low)]
             pub rhs: Value<'a>,
-            #[dtype]
             pub low: Type<'a>,
             #[dtype(eq = low)]
             pub high: Type<'a>,
@@ -287,9 +267,7 @@ pub struct AddUIExtended<'a> {
     pub lhs: Value<'a>,
     #[slot(sum)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub sum: Type<'a>,
-    #[dtype]
     pub overflow: Type<'a>,
 }
 
@@ -305,11 +283,8 @@ pub struct ScalingExtF<'a> {
     pub scale: Value<'a>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub scale_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 
@@ -327,11 +302,8 @@ pub struct ScalingTruncF<'a> {
     pub roundingmode: Option<RoundingMode>,
     #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub scale_ty: Type<'a>,
-    #[dtype]
     pub out: Type<'a>,
 }
 

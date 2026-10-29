@@ -58,7 +58,6 @@ pub struct AssumeAlignmentOp<'a> {
     pub memref: Value<'a>,
     #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -87,7 +86,6 @@ pub struct AtomicRMWOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(int = "i64")]
     pub kind: AtomicRMWKind,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -103,7 +101,6 @@ pub struct AtomicRMWOp<'a> {
 pub struct AtomicYieldOp<'a> {
     #[slot(result_ty)]
     pub result: Value<'a>,
-    #[dtype]
     pub result_ty: Type<'a>,
 }
 
@@ -124,9 +121,7 @@ pub struct CopyOp<'a> {
     pub source: Value<'a>,
     #[slot(target_ty)]
     pub target: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub target_ty: Type<'a>,
 }
 
@@ -154,9 +149,7 @@ pub struct CopyOp<'a> {
 pub struct DistinctObjectsOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -190,9 +183,7 @@ pub struct GenericAtomicRMWOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[region]
     pub atomic_body: Region<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -235,11 +226,9 @@ pub struct LoadOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -298,7 +287,6 @@ pub struct AllocOp<'a> {
     pub dynamic_sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub symbol_operands_ty: Type<'a>,
-    #[dtype]
     pub memref: Type<'a>,
 }
 
@@ -349,7 +337,6 @@ pub struct AllocaOp<'a> {
     pub dynamic_sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub symbol_operands_ty: Type<'a>,
-    #[dtype]
     pub memref: Type<'a>,
 }
 
@@ -392,7 +379,6 @@ pub struct AllocaOp<'a> {
 pub struct AllocaScopeOp<'a> {
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -410,7 +396,6 @@ pub struct AllocaScopeOp<'a> {
 pub struct AllocaScopeReturnOp<'a> {
     #[slot(results_ty)]
     pub results: Vec<Value<'a>>,
-    #[dtype]
     pub results_ty: Vec<Type<'a>>,
 }
 
@@ -466,9 +451,7 @@ pub struct AllocaScopeReturnOp<'a> {
 pub struct CastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -517,11 +500,8 @@ pub struct CastOp<'a> {
 pub struct CollapseShapeOp<'a> {
     #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr]
     pub reassociation: Attribute<'a>,
-    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -542,7 +522,6 @@ pub struct CollapseShapeOp<'a> {
 pub struct DeallocOp<'a> {
     #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
 }
 
@@ -575,7 +554,6 @@ pub struct DimOp<'a> {
     pub source: Value<'a>,
     #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub index_ty: Type<'a>,
@@ -643,7 +621,6 @@ pub struct DimOp<'a> {
 pub struct DmaStartOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -673,7 +650,6 @@ pub struct DmaWaitOp<'a> {
     pub tag_indices: Vec<Value<'a>>,
     #[slot(num_elements_ty, name = "numElements")]
     pub num_elements: Value<'a>,
-    #[dtype]
     pub tag_mem_ref_ty: Type<'a>,
     #[dtype(is = index)]
     pub tag_indices_ty: Type<'a>,
@@ -730,15 +706,12 @@ pub struct ExpandShapeOp<'a> {
     pub src: Value<'a>,
     #[slot(output_shape_ty)]
     pub output_shape: Vec<Value<'a>>,
-    #[attr]
     pub reassociation: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_output_shape: Attribute<'a>,
-    #[dtype]
     pub src_ty: Type<'a>,
     #[dtype(is = index)]
     pub output_shape_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -768,7 +741,6 @@ pub struct ExpandShapeOp<'a> {
 pub struct ExtractAlignedPointerAsIndexOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub aligned_pointer: Type<'a>,
@@ -822,9 +794,7 @@ pub struct ExtractAlignedPointerAsIndexOp<'a> {
 pub struct ExtractStridedMetadataOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub base_buffer: Type<'a>,
     #[dtype(is = index)]
     pub offset: Type<'a>,
@@ -848,9 +818,7 @@ pub struct ExtractStridedMetadataOp<'a> {
 /// ```
 #[mlir::op("memref.get_global", format = "$name `:` type($result) attr-dict", results(result))]
 pub struct GetGlobalOp<'a> {
-    #[attr]
     pub name: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -896,13 +864,10 @@ pub struct GetGlobalOp<'a> {
 pub struct GlobalOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
     #[attr(name = "type")]
     pub type_: Attribute<'a>,
-    #[attr]
     pub initial_value: Option<Attribute<'a>>,
-    #[attr]
     pub constant: bool,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
@@ -939,9 +904,7 @@ pub struct GlobalOp<'a> {
 pub struct MemorySpaceCastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -975,7 +938,6 @@ pub struct PrefetchOp<'a> {
     pub locality_hint: Attribute<'a>,
     #[attr(name = "isDataCache")]
     pub is_data_cache: Attribute<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -995,7 +957,6 @@ pub struct PrefetchOp<'a> {
 pub struct RankOp<'a> {
     #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub result: Type<'a>,
@@ -1067,11 +1028,9 @@ pub struct ReallocOp<'a> {
     pub dynamic_result_size: Vec<Value<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub dynamic_result_size_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1200,7 +1159,6 @@ pub struct ReinterpretCastOp<'a> {
     pub static_sizes: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
@@ -1208,7 +1166,6 @@ pub struct ReinterpretCastOp<'a> {
     pub sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1253,11 +1210,8 @@ pub struct ReshapeOp<'a> {
     pub source: Value<'a>,
     #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1295,13 +1249,11 @@ pub struct StoreOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
     #[dtype(el = memref_ty)]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -1324,11 +1276,8 @@ pub struct StoreOp<'a> {
 pub struct TransposeOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[attr]
     pub permutation: Attribute<'a>,
-    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1378,13 +1327,11 @@ pub struct ViewOp<'a> {
     pub byte_shift: Value<'a>,
     #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub byte_shift_ty: Type<'a>,
     #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1547,7 +1494,6 @@ pub struct SubViewOp<'a> {
     pub static_sizes: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
@@ -1555,7 +1501,6 @@ pub struct SubViewOp<'a> {
     pub sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

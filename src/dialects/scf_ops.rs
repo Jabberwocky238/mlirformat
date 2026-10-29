@@ -38,11 +38,9 @@ pub struct For<'a> {
     pub init_args: Vec<Value<'a>>,
     #[attr(name = "unsignedCmp")]
     pub unsigned_cmp: bool,
-    #[region]
     pub region: Region<'a>,
     #[dtype(name = "lowerBound_ty")]
     pub lower_bound_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -134,7 +132,6 @@ pub struct If<'a> {
     pub else_region: Region<'a>,
     #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 

@@ -37,11 +37,8 @@ pub struct AllReduceOp<'a> {
     pub value: Value<'a>,
     #[attr(dialect = "gpu<all_reduce_op")]
     pub op: Option<Attribute<'a>>,
-    #[attr]
     pub uniform: bool,
-    #[region]
     pub body: Region<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -77,15 +74,12 @@ pub struct AllocOp<'a> {
     pub symbol_operands: Vec<Value<'a>>,
     #[attr(name = "hostShared")]
     pub host_shared: bool,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
     #[dtype(is = index)]
     pub symbol_operands_ty: Type<'a>,
-    #[dtype]
     pub memref: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -142,7 +136,6 @@ pub struct BinaryOp<'a> {
     pub sym_name: Attribute<'a>,
     #[attr(name = "offloadingHandler")]
     pub offloading_handler: Option<Attribute<'a>>,
-    #[attr]
     pub objects: Attribute<'a>,
 }
 
@@ -334,17 +327,13 @@ pub struct Create2To4SpMatOp<'a> {
     pub memref: Value<'a>,
     #[attr(name = "pruneFlag", dialect = "gpu<prune_2to4_spmat_flag")]
     pub prune_flag: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub rows_ty: Type<'a>,
     #[dtype(is = index)]
     pub cols_ty: Type<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype]
     pub sp_mat: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -394,7 +383,6 @@ pub struct CreateBsrOp<'a> {
     pub b_col_idxs: Value<'a>,
     #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub brows_ty: Type<'a>,
@@ -406,15 +394,10 @@ pub struct CreateBsrOp<'a> {
     pub r_block_size_ty: Type<'a>,
     #[dtype(is = index)]
     pub c_block_size_ty: Type<'a>,
-    #[dtype]
     pub b_row_pos_ty: Type<'a>,
-    #[dtype]
     pub b_col_idxs_ty: Type<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -454,7 +437,6 @@ pub struct CreateCooAoSOp<'a> {
     pub idxs: Value<'a>,
     #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub rows_ty: Type<'a>,
@@ -462,13 +444,9 @@ pub struct CreateCooAoSOp<'a> {
     pub cols_ty: Type<'a>,
     #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype]
     pub idxs_ty: Type<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -508,7 +486,6 @@ pub struct CreateCooOp<'a> {
     pub col_idxs: Value<'a>,
     #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub rows_ty: Type<'a>,
@@ -516,15 +493,10 @@ pub struct CreateCooOp<'a> {
     pub cols_ty: Type<'a>,
     #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype]
     pub row_idxs_ty: Type<'a>,
-    #[dtype]
     pub col_idxs_ty: Type<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -567,7 +539,6 @@ pub struct CreateCscOp<'a> {
     pub row_idxs: Value<'a>,
     #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub rows_ty: Type<'a>,
@@ -575,15 +546,10 @@ pub struct CreateCscOp<'a> {
     pub cols_ty: Type<'a>,
     #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype]
     pub col_pos_ty: Type<'a>,
-    #[dtype]
     pub row_idxs_ty: Type<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -626,7 +592,6 @@ pub struct CreateCsrOp<'a> {
     pub col_idxs: Value<'a>,
     #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub rows_ty: Type<'a>,
@@ -634,15 +599,10 @@ pub struct CreateCsrOp<'a> {
     pub cols_ty: Type<'a>,
     #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype]
     pub row_pos_ty: Type<'a>,
-    #[dtype]
     pub col_idxs_ty: Type<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -672,15 +632,11 @@ pub struct CreateDnTensorOp<'a> {
     pub memref: Value<'a>,
     #[slot(dims_ty)]
     pub dims: Vec<Value<'a>>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub dims_ty: Type<'a>,
-    #[dtype]
     pub dn_tensor: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -710,11 +666,8 @@ pub struct DeallocOp<'a> {
     pub async_dependencies: Vec<Value<'a>>,
     #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -741,11 +694,8 @@ pub struct DestroyDnTensorOp<'a> {
     pub async_dependencies: Vec<Value<'a>>,
     #[slot(dn_tensor_ty, name = "dnTensor")]
     pub dn_tensor: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dn_tensor_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -772,11 +722,8 @@ pub struct DestroySpMatOp<'a> {
     pub async_dependencies: Vec<Value<'a>>,
     #[slot(spmat_ty)]
     pub spmat: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -873,23 +820,14 @@ pub struct DynamicSharedMemoryOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("gpu.func")]
 pub struct GPUFuncOp<'a> {
-    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub workgroup_attrib_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub private_attrib_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub known_block_size: Option<Attribute<'a>>,
-    #[attr]
     pub known_grid_size: Option<Attribute<'a>>,
-    #[attr]
     pub known_cluster_size: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -934,7 +872,6 @@ pub struct GPUFuncOp<'a> {
 pub struct GPUModuleOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub targets: Option<Attribute<'a>>,
     #[attr(name = "offloadingHandler")]
     pub offloading_handler: Option<Attribute<'a>>,
@@ -1014,7 +951,6 @@ pub struct GridDimOp<'a> {
 pub struct HostRegisterOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
 }
 
@@ -1028,7 +964,6 @@ pub struct HostRegisterOp<'a> {
 pub struct HostUnregisterOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
 }
 
@@ -1177,25 +1112,16 @@ pub struct LaunchFuncOp<'a> {
     pub kernel_operands: Vec<Value<'a>>,
     #[slot(async_object_ty, name = "asyncObject")]
     pub async_object: Vec<Value<'a>>,
-    #[attr]
     pub kernel: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub grid_size_x_ty: Type<'a>,
-    #[dtype]
     pub cluster_size_x_ty: Vec<Type<'a>>,
-    #[dtype]
     pub cluster_size_y_ty: Vec<Type<'a>>,
-    #[dtype]
     pub cluster_size_z_ty: Vec<Type<'a>>,
     #[dtype(is = i32)]
     pub dynamic_shared_memory_size_ty: Type<'a>,
-    #[dtype]
     pub kernel_operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub async_object_ty: Vec<Type<'a>>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1341,13 +1267,9 @@ pub struct LaunchOp<'a> {
     pub cluster_size_z: Vec<Value<'a>>,
     #[slot(dynamic_shared_memory_size_ty, name = "dynamicSharedMemorySize")]
     pub dynamic_shared_memory_size: Vec<Value<'a>>,
-    #[attr]
     pub module: Option<Attribute<'a>>,
-    #[attr]
     pub function: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub grid_size_x_ty: Type<'a>,
@@ -1369,7 +1291,6 @@ pub struct LaunchOp<'a> {
     pub cluster_size_z_ty: Type<'a>,
     #[dtype(is = i32)]
     pub dynamic_shared_memory_size_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1399,13 +1320,9 @@ pub struct MemcpyOp<'a> {
     pub dst: Value<'a>,
     #[slot(src_ty)]
     pub src: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1435,13 +1352,9 @@ pub struct MemsetOp<'a> {
     pub dst: Value<'a>,
     #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1476,9 +1389,7 @@ pub struct NumSubgroupsOp<'a> {
 pub struct PrintfOp<'a> {
     #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr]
     pub format: Attribute<'a>,
-    #[dtype]
     pub args_ty: Vec<Type<'a>>,
 }
 
@@ -1491,7 +1402,6 @@ pub struct PrintfOp<'a> {
 pub struct ReturnOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -1531,7 +1441,6 @@ pub struct RotateOp<'a> {
     pub offset: Attribute<'a>,
     #[attr(int = "i32")]
     pub width: Attribute<'a>,
-    #[dtype]
     pub rotate_result: Type<'a>,
     #[dtype(is = i1)]
     pub valid: Type<'a>,
@@ -1575,17 +1484,12 @@ pub struct SDDMMBufferSizeOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dnmat_a_ty: Type<'a>,
-    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype]
     pub spmat_c_ty: Type<'a>,
     #[dtype(is = index)]
     pub buffer_sz: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1629,17 +1533,11 @@ pub struct SDDMMOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub dnmat_a_ty: Type<'a>,
-    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype]
     pub spmat_c_ty: Type<'a>,
-    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1673,17 +1571,11 @@ pub struct SetCsrPointersOp<'a> {
     pub coordinates: Value<'a>,
     #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_ty: Type<'a>,
-    #[dtype]
     pub positions_ty: Type<'a>,
-    #[dtype]
     pub coordinates_ty: Type<'a>,
-    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1765,7 +1657,6 @@ pub struct ShuffleOp<'a> {
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub width_ty: Type<'a>,
-    #[dtype]
     pub shuffle_result: Type<'a>,
     #[dtype(is = i1)]
     pub valid: Type<'a>,
@@ -1809,17 +1700,11 @@ pub struct SpGEMMCopyOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub desc_ty: Type<'a>,
-    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype]
     pub spmat_b_ty: Type<'a>,
-    #[dtype]
     pub spmat_c_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1845,11 +1730,8 @@ pub struct SpGEMMCopyOp<'a> {
 pub struct SpGEMMCreateDescrOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub desc: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1874,11 +1756,8 @@ pub struct SpGEMMDestroyDescrOp<'a> {
     pub async_dependencies: Vec<Value<'a>>,
     #[slot(desc_ty)]
     pub desc: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub desc_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1935,23 +1814,16 @@ pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
     pub compute_type: Attribute<'a>,
     #[attr(dialect = "gpu<spgemm_work_estimation_or_compute_kind")]
     pub kind: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub desc_ty: Type<'a>,
-    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype]
     pub spmat_b_ty: Type<'a>,
-    #[dtype]
     pub spmat_c_ty: Type<'a>,
     #[dtype(is = index)]
     pub buffer_sz_ty: Type<'a>,
-    #[dtype]
     pub buffer_ty: Type<'a>,
     #[dtype(is = index)]
     pub buffer_sz_new: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1993,17 +1865,12 @@ pub struct SpMMBufferSizeOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype]
     pub dnmat_c_ty: Type<'a>,
     #[dtype(is = index)]
     pub buffer_szs: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2047,17 +1914,11 @@ pub struct SpMMOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype]
     pub dnmat_c_ty: Type<'a>,
-    #[dtype]
     pub buffers_ty: Vec<Type<'a>>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2097,17 +1958,12 @@ pub struct SpMVBufferSizeOp<'a> {
     pub mode_a: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype]
     pub dn_x_ty: Type<'a>,
-    #[dtype]
     pub dn_y_ty: Type<'a>,
     #[dtype(is = index)]
     pub buffer_sz: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2149,17 +2005,11 @@ pub struct SpMVOp<'a> {
     pub mode_a: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype]
     pub dn_x_ty: Type<'a>,
-    #[dtype]
     pub dn_y_ty: Type<'a>,
-    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2185,9 +2035,7 @@ pub struct SpMatGetSizeOp<'a> {
     pub async_dependencies: Vec<Value<'a>>,
     #[slot(spmat_ty)]
     pub spmat: Value<'a>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub spmat_ty: Type<'a>,
     #[dtype(is = index)]
     pub rows: Type<'a>,
@@ -2195,7 +2043,6 @@ pub struct SpMatGetSizeOp<'a> {
     pub cols: Type<'a>,
     #[dtype(is = index)]
     pub nnz: Type<'a>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2222,7 +2069,6 @@ pub struct SubgroupBroadcastOp<'a> {
     pub broadcast_type: Attribute<'a>,
     #[dtype(is = i32)]
     pub lane_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2284,15 +2130,10 @@ pub struct SubgroupMmaComputeOp<'a> {
     pub op_b: Value<'a>,
     #[slot(res, name = "opC")]
     pub op_c: Value<'a>,
-    #[attr]
     pub a_transpose: bool,
-    #[attr]
     pub b_transpose: bool,
-    #[dtype]
     pub op_a_ty: Type<'a>,
-    #[dtype]
     pub op_b_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2323,7 +2164,6 @@ pub struct SubgroupMmaConstantMatrixOp<'a> {
     pub value: Value<'a>,
     #[dtype(el = res)]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2351,9 +2191,7 @@ pub struct SubgroupMmaElementwiseOp<'a> {
     pub args: Vec<Value<'a>>,
     #[attr(name = "opType", dialect = "gpu<mma_element_wise")]
     pub op_type: Attribute<'a>,
-    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2388,7 +2226,6 @@ pub struct SubgroupMmaExtractThreadLocalOp<'a> {
     pub matrix: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype]
     pub matrix_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -2433,11 +2270,9 @@ pub struct SubgroupMmaInsertThreadLocalOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[dtype(el = matrix_ty)]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub matrix_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2475,13 +2310,10 @@ pub struct SubgroupMmaLoadMatrixOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "leadDimension", int = "index")]
     pub lead_dimension: Attribute<'a>,
-    #[attr]
     pub transpose: bool,
-    #[dtype]
     pub src_memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2516,11 +2348,8 @@ pub struct SubgroupMmaStoreMatrixOp<'a> {
     pub indices: Vec<Value<'a>>,
     #[attr(name = "leadDimension", int = "index")]
     pub lead_dimension: Attribute<'a>,
-    #[attr]
     pub transpose: bool,
-    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype]
     pub dst_memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -2566,13 +2395,11 @@ pub struct SubgroupReduceOp<'a> {
     pub value: Value<'a>,
     #[attr(dialect = "gpu<all_reduce_op")]
     pub op: Attribute<'a>,
-    #[attr]
     pub uniform: bool,
     #[attr(int = "i32")]
     pub cluster_size: Option<Attribute<'a>>,
     #[attr(int = "i32", default = "1")]
     pub cluster_stride: Option<Attribute<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2668,9 +2495,7 @@ pub struct ThreadIdOp<'a> {
 pub struct WaitOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2788,9 +2613,7 @@ pub struct WarpExecuteOnLane0Op<'a> {
     pub warp_region: Region<'a>,
     #[dtype(is = index)]
     pub laneid_ty: Type<'a>,
-    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -2808,7 +2631,6 @@ pub struct WarpExecuteOnLane0Op<'a> {
 pub struct YieldOp<'a> {
     #[slot(values_ty)]
     pub values: Vec<Value<'a>>,
-    #[dtype]
     pub values_ty: Vec<Type<'a>>,
 }
 

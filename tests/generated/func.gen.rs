@@ -26,15 +26,10 @@ pub struct CallIndirectOp<'a> {
     pub callee: Value<'a>,
     #[slot(callee_operands_ty)]
     pub callee_operands: Vec<Value<'a>>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype]
     pub callee_ty: Type<'a>,
-    #[dtype]
     pub callee_operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -56,17 +51,11 @@ pub struct CallIndirectOp<'a> {
 pub struct CallOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub callee: Attribute<'a>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub no_inline: bool,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -93,9 +82,7 @@ pub struct CallOp<'a> {
 /// Generic form only (directive `results)`).
 #[mlir::op("func.constant", results(result))]
 pub struct ConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -142,17 +129,11 @@ pub struct ConstantOp<'a> {
 pub struct FuncOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub no_inline: bool,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -175,7 +156,6 @@ pub struct FuncOp<'a> {
 pub struct ReturnOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

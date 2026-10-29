@@ -30,9 +30,7 @@ macro_rules! casts {
         pub struct $ty<'a> {
             #[slot(in_ty)]
             pub input: Value<'a>,
-            #[dtype]
             pub in_ty: Type<'a>,
-            #[dtype]
             pub output: Type<'a>,
         }
     )*};
@@ -60,7 +58,6 @@ pub struct ConstantOp<'a> {
 /// `index.bool.constant true`.
 #[mlir::op("index.bool.constant", format = "attr-dict $value", results(result))]
 pub struct BoolConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -75,15 +72,12 @@ pub struct SizeOfOp<'a> {
 /// `index.cmp slt(%a, %b)`: the predicate is `#index<cmp_predicate slt>`, hand-written syntax.
 #[mlir::op("index.cmp", custom, results(result))]
 pub struct CmpOp<'a> {
-    #[attr]
     pub pred: Attribute<'a>,
     #[slot(ty)]
     pub lhs: Value<'a>,
     #[slot(ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

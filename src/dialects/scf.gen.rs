@@ -17,7 +17,6 @@ pub struct ConditionOp<'a> {
     pub args: Vec<Value<'a>>,
     #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub args_ty: Vec<Type<'a>>,
 }
 
@@ -75,11 +74,8 @@ pub struct ConditionOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("scf.execute_region", results(result))]
 pub struct ExecuteRegionOp<'a> {
-    #[attr]
     pub no_inline: bool,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -194,13 +190,9 @@ pub struct ForOp<'a> {
     pub init_args: Vec<Value<'a>>,
     #[attr(name = "unsignedCmp")]
     pub unsigned_cmp: bool,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub lower_bound_ty: Type<'a>,
-    #[dtype]
     pub init_args_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -386,9 +378,7 @@ pub struct ForallOp<'a> {
     pub static_upper_bound: Attribute<'a>,
     #[attr(name = "staticStep", dense = "i64")]
     pub static_step: Attribute<'a>,
-    #[attr]
     pub mapping: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
     #[dtype(is = index)]
     pub dynamic_lower_bound_ty: Type<'a>,
@@ -396,9 +386,7 @@ pub struct ForallOp<'a> {
     pub dynamic_upper_bound_ty: Type<'a>,
     #[dtype(is = index)]
     pub dynamic_step_ty: Type<'a>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -463,7 +451,6 @@ pub struct IfOp<'a> {
     pub else_region: Region<'a>,
     #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -480,7 +467,6 @@ pub struct IfOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("scf.forall.in_parallel")]
 pub struct InParallelOp<'a> {
-    #[region]
     pub region: Region<'a>,
 }
 
@@ -527,7 +513,6 @@ pub struct IndexSwitchOp<'a> {
     pub case_regions: Vec<Region<'a>>,
     #[dtype(is = index)]
     pub arg_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -596,7 +581,6 @@ pub struct ParallelOp<'a> {
     pub step: Vec<Value<'a>>,
     #[slot(init_vals_ty, name = "initVals")]
     pub init_vals: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
     #[dtype(is = index)]
     pub lower_bound_ty: Type<'a>,
@@ -604,9 +588,7 @@ pub struct ParallelOp<'a> {
     pub upper_bound_ty: Type<'a>,
     #[dtype(is = index)]
     pub step_ty: Type<'a>,
-    #[dtype]
     pub init_vals_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -646,9 +628,7 @@ pub struct ParallelOp<'a> {
 pub struct ReduceOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[region]
     pub reductions: Vec<Region<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -667,7 +647,6 @@ pub struct ReduceOp<'a> {
 pub struct ReduceReturnOp<'a> {
     #[slot(result_ty)]
     pub result: Value<'a>,
-    #[dtype]
     pub result_ty: Type<'a>,
 }
 
@@ -789,13 +768,9 @@ pub struct ReduceReturnOp<'a> {
 pub struct WhileOp<'a> {
     #[slot(inits_ty)]
     pub inits: Vec<Value<'a>>,
-    #[region]
     pub before: Region<'a>,
-    #[region]
     pub after: Region<'a>,
-    #[dtype]
     pub inits_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -814,7 +789,6 @@ pub struct WhileOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(results_ty)]
     pub results: Vec<Value<'a>>,
-    #[dtype]
     pub results_ty: Vec<Type<'a>>,
 }
 

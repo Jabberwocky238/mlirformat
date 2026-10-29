@@ -25,13 +25,9 @@ pub struct AbsOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -52,13 +48,9 @@ pub struct AddOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -108,17 +100,12 @@ pub struct BatchMatmulOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
     #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -134,13 +121,9 @@ pub struct BatchMatvecOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -158,13 +141,9 @@ pub struct BatchMmt4DOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -214,17 +193,12 @@ pub struct BatchReduceMatmulOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
     #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -240,13 +214,9 @@ pub struct BatchVecmatOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -271,13 +241,9 @@ pub struct BroadcastOp<'a> {
     pub init: Value<'a>,
     #[attr(dense = "i64")]
     pub dimensions: Attribute<'a>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -292,13 +258,9 @@ pub struct CeilOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -369,17 +331,12 @@ pub struct ContractOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub indexing_maps: Attribute<'a>,
     #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region]
     pub combiner: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -399,17 +356,11 @@ pub struct Conv1DNcwFcwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -425,17 +376,11 @@ pub struct Conv1DNwcWcfOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -451,13 +396,9 @@ pub struct Conv1DOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -477,17 +418,11 @@ pub struct Conv2DNchwFchwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -508,17 +443,11 @@ pub struct Conv2DNchwFchwQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -538,17 +467,11 @@ pub struct Conv2DNgchwFgchwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -568,17 +491,11 @@ pub struct Conv2DNgchwGfchwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -599,17 +516,11 @@ pub struct Conv2DNgchwGfchwQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -629,17 +540,11 @@ pub struct Conv2DNhwcFhwcOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -660,17 +565,11 @@ pub struct Conv2DNhwcFhwcQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -690,17 +589,11 @@ pub struct Conv2DNhwcHwcfOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -721,17 +614,11 @@ pub struct Conv2DNhwcHwcfQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -751,17 +638,11 @@ pub struct Conv2DNhwgcGfhwcOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -782,17 +663,11 @@ pub struct Conv2DNhwgcGfhwcQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -808,13 +683,9 @@ pub struct Conv2DOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -830,17 +701,11 @@ pub struct Conv3DNcdhwFcdhwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -856,17 +721,11 @@ pub struct Conv3DNdhwcDhwcfOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -883,17 +742,11 @@ pub struct Conv3DNdhwcDhwcfQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -909,13 +762,9 @@ pub struct Conv3DOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -933,13 +782,9 @@ pub struct CopyOp<'a> {
     pub outputs: Vec<Value<'a>>,
     #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -956,17 +801,11 @@ pub struct DepthwiseConv1DNcwCwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -983,17 +822,11 @@ pub struct DepthwiseConv1DNwcWcOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1009,17 +842,11 @@ pub struct DepthwiseConv1DNwcWcmOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1036,17 +863,11 @@ pub struct DepthwiseConv2DNchwChwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1063,17 +884,11 @@ pub struct DepthwiseConv2DNhwcHwcOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1089,17 +904,11 @@ pub struct DepthwiseConv2DNhwcHwcQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1115,17 +924,11 @@ pub struct DepthwiseConv2DNhwcHwcmOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1141,17 +944,11 @@ pub struct DepthwiseConv2DNhwcHwcmQOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1168,17 +965,11 @@ pub struct DepthwiseConv3DNcdhwCdhwOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1195,17 +986,11 @@ pub struct DepthwiseConv3DNdhwcDhwcOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1221,17 +1006,11 @@ pub struct DepthwiseConv3DNdhwcDhwcmOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1252,13 +1031,9 @@ pub struct DivOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1279,13 +1054,9 @@ pub struct DivUnsignedOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1301,13 +1072,9 @@ pub struct DotOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1359,15 +1126,10 @@ pub struct ElementwiseOp<'a> {
     pub outputs: Vec<Value<'a>>,
     #[attr(dialect = "linalg.elementwise_kind")]
     pub kind: Attribute<'a>,
-    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1382,13 +1144,9 @@ pub struct ErfOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1403,13 +1161,9 @@ pub struct ExpOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1426,13 +1180,9 @@ pub struct FillOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1453,13 +1203,9 @@ pub struct FillRng2DOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1474,13 +1220,9 @@ pub struct FloorOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1575,21 +1317,13 @@ pub struct GenericOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr]
     pub iterator_types: Attribute<'a>,
-    #[attr]
     pub doc: Option<Attribute<'a>>,
-    #[attr]
     pub library_call: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1751,13 +1485,10 @@ pub struct PackOp<'a> {
     pub inner_dims_pos: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_inner_tiles: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub padding_value_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub inner_tiles_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1787,11 +1518,8 @@ pub struct SoftmaxOp<'a> {
     pub output: Value<'a>,
     #[attr(int = "i64")]
     pub dimension: Attribute<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -1868,11 +1596,9 @@ pub struct UnPackOp<'a> {
     pub inner_dims_pos: Attribute<'a>,
     #[attr(dense = "i64")]
     pub static_inner_tiles: Attribute<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
     #[dtype(is = index)]
     pub inner_tiles_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1901,11 +1627,8 @@ pub struct WinogradFilterTransformOp<'a> {
     pub output: Value<'a>,
     #[attr(int = "i32")]
     pub fmr: WinogradConv2DFmr,
-    #[dtype]
     pub filter_ty: Type<'a>,
-    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1934,11 +1657,8 @@ pub struct WinogradInputTransformOp<'a> {
     pub output: Value<'a>,
     #[attr(int = "i32")]
     pub fmr: WinogradConv2DFmr,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1967,11 +1687,8 @@ pub struct WinogradOutputTransformOp<'a> {
     pub output: Value<'a>,
     #[attr(int = "i32")]
     pub fmr: WinogradConv2DFmr,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1992,7 +1709,6 @@ pub struct WinogradOutputTransformOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(values_ty)]
     pub values: Vec<Value<'a>>,
-    #[dtype]
     pub values_ty: Vec<Type<'a>>,
 }
 
@@ -2007,13 +1723,9 @@ pub struct LogOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2052,13 +1764,9 @@ pub struct MapOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(init_ty)]
     pub init: Value<'a>,
-    #[region]
     pub mapper: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -2108,17 +1816,12 @@ pub struct MatmulOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
     #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2134,13 +1837,9 @@ pub struct MatvecOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2161,13 +1860,9 @@ pub struct MaxOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2188,13 +1883,9 @@ pub struct MinOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2215,13 +1906,9 @@ pub struct Mmt4DOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2242,13 +1929,9 @@ pub struct MulOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2263,13 +1946,9 @@ pub struct NegFOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2285,17 +1964,11 @@ pub struct PoolingNchwMaxOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2315,17 +1988,11 @@ pub struct PoolingNchwSumOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2341,17 +2008,11 @@ pub struct PoolingNcwMaxOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2371,17 +2032,11 @@ pub struct PoolingNcwSumOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2397,17 +2052,11 @@ pub struct PoolingNdhwcMaxOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2423,17 +2072,11 @@ pub struct PoolingNdhwcMinOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2449,17 +2092,11 @@ pub struct PoolingNdhwcSumOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2475,17 +2112,11 @@ pub struct PoolingNhwcMaxOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2501,17 +2132,11 @@ pub struct PoolingNhwcMaxUnsignedOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2527,17 +2152,11 @@ pub struct PoolingNhwcMinOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2553,17 +2172,11 @@ pub struct PoolingNhwcMinUnsignedOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2583,17 +2196,11 @@ pub struct PoolingNhwcSumOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2609,17 +2216,11 @@ pub struct PoolingNwcMaxOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2635,17 +2236,11 @@ pub struct PoolingNwcMaxUnsignedOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2661,17 +2256,11 @@ pub struct PoolingNwcMinOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2687,17 +2276,11 @@ pub struct PoolingNwcMinUnsignedOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2717,17 +2300,11 @@ pub struct PoolingNwcSumOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2750,13 +2327,9 @@ pub struct PowFOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2774,13 +2347,9 @@ pub struct QuantizedBatchMatmulOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2798,13 +2367,9 @@ pub struct QuantizedMatmulOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2819,13 +2384,9 @@ pub struct ReciprocalOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2870,13 +2431,9 @@ pub struct ReduceOp<'a> {
     pub inits: Vec<Value<'a>>,
     #[attr(dense = "i64")]
     pub dimensions: Attribute<'a>,
-    #[region]
     pub combiner: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub inits_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -2891,13 +2448,9 @@ pub struct RoundOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2912,13 +2465,9 @@ pub struct RsqrtOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2939,13 +2488,9 @@ pub struct SelectOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2960,13 +2505,9 @@ pub struct SqrtOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2981,13 +2522,9 @@ pub struct SquareOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -3008,13 +2545,9 @@ pub struct SubOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -3029,13 +2562,9 @@ pub struct TanhOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -3064,13 +2593,9 @@ pub struct TransposeOp<'a> {
     pub init: Value<'a>,
     #[attr(dense = "i64")]
     pub permutation: Attribute<'a>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -3086,13 +2611,9 @@ pub struct VecmatOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 

@@ -34,7 +34,6 @@ pub struct ArithMax<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -62,11 +61,8 @@ pub struct Compact<'a> {
     pub input: Value<'a>,
     #[slot(mask_ty)]
     pub mask: Vec<Value<'a>>,
-    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype]
     pub mask_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 

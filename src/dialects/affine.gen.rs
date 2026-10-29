@@ -33,7 +33,6 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 pub struct AffineApplyOp<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
     pub map_operands: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
     #[dtype(is = index)]
     pub map_operands_ty: Type<'a>,
@@ -232,15 +231,12 @@ pub struct AffineForOp<'a> {
     pub upper_bound_map: Attribute<'a>,
     #[attr(int = "index")]
     pub step: Attribute<'a>,
-    #[region]
     pub region: Region<'a>,
     #[dtype(is = index)]
     pub lower_bound_operands_ty: Type<'a>,
     #[dtype(is = index)]
     pub upper_bound_operands_ty: Type<'a>,
-    #[dtype]
     pub inits_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -318,15 +314,12 @@ pub struct AffineForOp<'a> {
 pub struct AffineIfOp<'a> {
     #[slot(operand_ty)]
     pub operand: Vec<Value<'a>>,
-    #[attr]
     pub condition: Attribute<'a>,
     #[region(name = "thenRegion")]
     pub then_region: Region<'a>,
     #[region(name = "elseRegion")]
     pub else_region: Region<'a>,
-    #[dtype]
     pub operand_ty: Vec<Type<'a>>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -391,7 +384,6 @@ pub struct AffineLinearizeIndexOp<'a> {
     pub dynamic_basis: Vec<Value<'a>>,
     #[attr(dense = "i64")]
     pub static_basis: Attribute<'a>,
-    #[attr]
     pub disjoint: bool,
     #[dtype(is = index)]
     pub multi_index_ty: Type<'a>,
@@ -435,13 +427,10 @@ pub struct AffineLoadOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -461,7 +450,6 @@ pub struct AffineLoadOp<'a> {
 pub struct AffineMaxOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
     #[dtype(is = index)]
     pub operands_ty: Type<'a>,
@@ -495,7 +483,6 @@ pub struct AffineMaxOp<'a> {
 pub struct AffineMinOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
     #[dtype(is = index)]
     pub operands_ty: Type<'a>,
@@ -572,7 +559,6 @@ pub struct AffineMinOp<'a> {
 pub struct AffineParallelOp<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
     pub map_operands: Vec<Value<'a>>,
-    #[attr]
     pub reductions: Attribute<'a>,
     #[attr(name = "lowerBoundsMap")]
     pub lower_bounds_map: Attribute<'a>,
@@ -582,13 +568,10 @@ pub struct AffineParallelOp<'a> {
     pub upper_bounds_map: Attribute<'a>,
     #[attr(name = "upperBoundsGroups")]
     pub upper_bounds_groups: Attribute<'a>,
-    #[attr]
     pub steps: Attribute<'a>,
-    #[region]
     pub region: Region<'a>,
     #[dtype(is = index)]
     pub map_operands_ty: Type<'a>,
-    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -622,9 +605,7 @@ pub struct AffinePrefetchOp<'a> {
     pub locality_hint: Attribute<'a>,
     #[attr(name = "isDataCache")]
     pub is_data_cache: Attribute<'a>,
-    #[attr]
     pub map: Attribute<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -666,11 +647,8 @@ pub struct AffineStoreOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -721,13 +699,10 @@ pub struct AffineVectorLoadOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -780,11 +755,8 @@ pub struct AffineVectorStoreOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr]
     pub map: Attribute<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -805,7 +777,6 @@ pub struct AffineVectorStoreOp<'a> {
 pub struct AffineYieldOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

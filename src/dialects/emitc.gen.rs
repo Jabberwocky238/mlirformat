@@ -47,11 +47,8 @@ pub struct AddOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -102,9 +99,7 @@ pub struct ApplyOp<'a> {
     pub operand: Value<'a>,
     #[attr(name = "applicableOperator")]
     pub applicable_operator: Attribute<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -133,7 +128,6 @@ pub struct AssignOp<'a> {
     pub value: Value<'a>,
     #[dtype(strip = "emitc.lvalue")]
     pub var_ty: Type<'a>,
-    #[dtype]
     pub value_ty: Type<'a>,
 }
 
@@ -159,11 +153,8 @@ pub struct BitwiseAndOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -189,11 +180,8 @@ pub struct BitwiseLeftShiftOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -217,9 +205,7 @@ pub struct BitwiseLeftShiftOp<'a> {
 pub struct BitwiseNotOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -245,11 +231,8 @@ pub struct BitwiseOrOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -275,11 +258,8 @@ pub struct BitwiseRightShiftOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -305,11 +285,8 @@ pub struct BitwiseXorOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -331,15 +308,10 @@ pub struct BitwiseXorOp<'a> {
 pub struct CallOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub callee: Attribute<'a>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -367,15 +339,10 @@ pub struct CallOp<'a> {
 pub struct CallOpaqueOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr]
     pub callee: Attribute<'a>,
-    #[attr]
     pub args: Option<Attribute<'a>>,
-    #[attr]
     pub template_args: Option<Attribute<'a>>,
-    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -399,9 +366,7 @@ pub struct CallOpaqueOp<'a> {
 pub struct CastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -439,9 +404,7 @@ pub struct CastOp<'a> {
 pub struct ClassOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub final_specifier: bool,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -485,11 +448,8 @@ pub struct CmpOp<'a> {
     pub rhs: Value<'a>,
     #[attr(int = "i64")]
     pub predicate: CmpPredicate,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -527,7 +487,6 @@ pub struct ConditionalOp<'a> {
     pub false_value: Value<'a>,
     #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -554,9 +513,7 @@ pub struct ConditionalOp<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("emitc.constant", results(result))]
 pub struct ConstantOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -594,7 +551,6 @@ pub struct ConstantOp<'a> {
 /// ```
 #[mlir::op("emitc.declare_func", format = "$sym_name attr-dict")]
 pub struct DeclareFuncOp<'a> {
-    #[attr]
     pub sym_name: Attribute<'a>,
 }
 
@@ -647,11 +603,8 @@ pub struct DivOp<'a> {
     pub operand0: Value<'a>,
     #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -781,13 +734,9 @@ pub struct DoOp<'a> {
 pub struct ExpressionOp<'a> {
     #[slot(defs_ty)]
     pub defs: Vec<Value<'a>>,
-    #[attr]
     pub do_not_inline: bool,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub defs_ty: Vec<Type<'a>>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -817,7 +766,6 @@ pub struct FieldOp<'a> {
     pub sym_name: Attribute<'a>,
     #[attr(name = "type")]
     pub type_: Attribute<'a>,
-    #[attr]
     pub initial_value: Option<Attribute<'a>>,
 }
 
@@ -840,7 +788,6 @@ pub struct FieldOp<'a> {
 /// ```
 #[mlir::op("emitc.file", format = "$id attr-dict-with-keyword $bodyRegion")]
 pub struct FileOp<'a> {
-    #[attr]
     pub id: Attribute<'a>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
@@ -886,9 +833,7 @@ pub struct ForOp<'a> {
     pub upper_bound: Value<'a>,
     #[slot(lower_bound_ty)]
     pub step: Value<'a>,
-    #[region]
     pub region: Region<'a>,
-    #[dtype]
     pub lower_bound_ty: Type<'a>,
 }
 
@@ -936,15 +881,10 @@ pub struct ForOp<'a> {
 pub struct FuncOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr]
     pub specifiers: Option<Attribute<'a>>,
-    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[region]
     pub body: Region<'a>,
 }
 
@@ -960,9 +900,7 @@ pub struct FuncOp<'a> {
 /// ```
 #[mlir::op("emitc.get_field", format = "$field_name `:` type($result) attr-dict", results(result))]
 pub struct GetFieldOp<'a> {
-    #[attr]
     pub field_name: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -980,9 +918,7 @@ pub struct GetFieldOp<'a> {
 /// ```
 #[mlir::op("emitc.get_global", format = "$name `:` type($result) attr-dict", results(result))]
 pub struct GetGlobalOp<'a> {
-    #[attr]
     pub name: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1025,13 +961,9 @@ pub struct GlobalOp<'a> {
     pub sym_name: Attribute<'a>,
     #[attr(name = "type")]
     pub type_: Attribute<'a>,
-    #[attr]
     pub initial_value: Option<Attribute<'a>>,
-    #[attr]
     pub extern_specifier: bool,
-    #[attr]
     pub static_specifier: bool,
-    #[attr]
     pub const_specifier: bool,
 }
 
@@ -1091,9 +1023,7 @@ pub struct IfOp<'a> {
 /// Generic form only (custom C++ syntax).
 #[mlir::op("emitc.include")]
 pub struct IncludeOp<'a> {
-    #[attr]
     pub include: Attribute<'a>,
-    #[attr]
     pub is_standard_include: bool,
 }
 
@@ -1114,9 +1044,7 @@ pub struct IncludeOp<'a> {
 /// ```
 #[mlir::op("emitc.literal", format = "$value attr-dict `:` type($result)", results(result))]
 pub struct LiteralOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1167,9 +1095,7 @@ pub struct LogicalAndOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -1195,7 +1121,6 @@ pub struct LogicalAndOp<'a> {
 pub struct LogicalNotOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -1223,9 +1148,7 @@ pub struct LogicalOrOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
@@ -1252,11 +1175,8 @@ pub struct LogicalOrOp<'a> {
 pub struct MemberOfPtrOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[attr]
     pub member: Attribute<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1279,11 +1199,8 @@ pub struct MemberOfPtrOp<'a> {
 pub struct MemberOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[attr]
     pub member: Attribute<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1312,11 +1229,8 @@ pub struct MulOp<'a> {
     pub operand0: Value<'a>,
     #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1343,11 +1257,8 @@ pub struct RemOp<'a> {
     pub operand0: Value<'a>,
     #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1370,7 +1281,6 @@ pub struct RemOp<'a> {
 pub struct ReturnOp<'a> {
     #[slot(operand_ty)]
     pub operand: Vec<Value<'a>>,
-    #[dtype]
     pub operand_ty: Vec<Type<'a>>,
 }
 
@@ -1402,11 +1312,8 @@ pub struct SubOp<'a> {
     pub lhs: Value<'a>,
     #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1433,9 +1340,7 @@ pub struct SubscriptOp<'a> {
     pub value: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype]
     pub indices_ty: Vec<Type<'a>>,
     #[dtype(strip = "emitc.lvalue")]
     pub result: Type<'a>,
@@ -1506,7 +1411,6 @@ pub struct SwitchOp<'a> {
     pub default_region: Region<'a>,
     #[region(name = "caseRegions")]
     pub case_regions: Vec<Region<'a>>,
-    #[dtype]
     pub arg_ty: Type<'a>,
 }
 
@@ -1530,9 +1434,7 @@ pub struct SwitchOp<'a> {
 pub struct UnaryMinusOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1556,9 +1458,7 @@ pub struct UnaryMinusOp<'a> {
 pub struct UnaryPlusOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1598,9 +1498,7 @@ pub struct UnaryPlusOp<'a> {
 /// Generic form only (no assembly format).
 #[mlir::op("emitc.variable", results(result))]
 pub struct VariableOp<'a> {
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1655,9 +1553,7 @@ pub struct VariableOp<'a> {
 pub struct VerbatimOp<'a> {
     #[slot(fmt_args_ty, name = "fmtArgs")]
     pub fmt_args: Vec<Value<'a>>,
-    #[attr]
     pub value: Attribute<'a>,
-    #[dtype]
     pub fmt_args_ty: Vec<Type<'a>>,
 }
 
@@ -1675,7 +1571,6 @@ pub struct VerbatimOp<'a> {
 pub struct YieldOp<'a> {
     #[slot(result_ty)]
     pub result: Vec<Value<'a>>,
-    #[dtype]
     pub result_ty: Vec<Type<'a>>,
 }
 

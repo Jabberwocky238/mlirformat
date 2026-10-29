@@ -7,12 +7,14 @@
 //! pub struct ArithMax<'a> {
 //!     #[slot(result)] pub lhs: Value<'a>,     // operand; its type is type variable `result`
 //!     #[slot(result)] pub rhs: Value<'a>,
-//!     #[dtype] pub result: Type<'a>,          // type variable (result #0 by `results(...)`)
+//!     pub result: Type<'a>,                   // type variable (result #0 by `results(...)`)
 //! }
 //! ```
 //!
-//! Field markers (a `Vec` field is variadic; MLIR names are the field names unless
-//! `name = "..."`):
+//! A field's role is its Rust type: a `Type` is a type variable, a `Region` a region, anything
+//! else but a `Value` a property. A marker is written for an operand (`#[slot(T)]`), a successor,
+//! a role the type does not say (`#[attr]` on a `Type`: a type attribute), or to carry options.
+//! A `Vec` field is variadic; MLIR names are the field names unless `name = "..."`:
 //!
 //! ```text
 //! #[slot(T)]                       operand(s) typed by type variable T
