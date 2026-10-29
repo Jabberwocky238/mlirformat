@@ -190,6 +190,11 @@ mlirformat tblgen --dialect linalg scripts/td/Linalg.td \
     -I $LLVM/mlir/include -I $LLVM_BUILD/tools/mlir/include -o src/dialects
 ```
 
+## Performance
+
+Against `mlir-opt` 22.1.8 (`BENCHMARK.md`): the generic form parses 4.1× faster (54 MB in 0.41 s)
+and prints 1.7–2.4× faster. The custom form is slower, 3.3× to parse and 2.6–2.8× to print.
+
 ## License
 
 MIT
