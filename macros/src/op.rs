@@ -1,4 +1,4 @@
-//! `#[mlir::op]`: spells each field's MLIR role in its serde name and forwards the conversions.
+//! `#[mlir::op]`: each field's MLIR role as a constant (`Op::FIELDS`), the conversions forwarded.
 
 use proc_macro2::TokenStream as Ts;
 use quote::quote;
@@ -174,37 +174,44 @@ impl OpArgs {
         let mlir_name = |id: &Ident| -> syn::Result<String> {
             marked.iter().find(|m| m.ident == *id).map(|m| m.name.clone()).ok_or_else(|| Error::new(id.span(), format!("no field `{id}`")))
         };
-        // `(key, field)` in order: `KEYS` and `from_fields`.
+        // `(key, take, put)` in order: `KEYS`, `from_fields` and `into_fields`; `fields`: `FIELDS`.
         let mut keys = Vec::new();
-        let mut types = Vec::new();
+        let mut fields = Vec::new();
+        let s = |v: &Option<String>| v.as_ref().map_or_else(|| quote!(::core::option::Option::None), |v| quote!(::core::option::Option::Some(#v)));
         for (f, m) in named.named.iter_mut().zip(&marked) {
-            let star = if m.variadic { "*" } else { "" };
-            let key = match &m.kind {
-                Kind::Slot(t) => format!("%{}{star}:{}", m.name, mlir_name(t)?),
+            let role = match &m.kind {
+                Kind::Slot(t) => {
+                    let t = mlir_name(t)?;
+                    quote!(Operand { ty: #t })
+                }
                 Kind::DType(rule, strip) => {
-                    let result = self.results.iter().position(|r| *r == m.ident).map_or(String::new(), |k| format!("={k}"));
-                    let infer = match (rule, &m.fixed) {
-                        (Some((r, _)), Some(ty)) if r == "is" => format!("~is:{ty}"),
-                        (None, _) => String::new(),
-                        (Some((r, None)), _) => format!("~{r}"),
-                        (Some((r, Some(x))), _) => format!("~{r}:{}", mlir_name(x)?),
+                    let result = self.results.iter().position(|r| *r == m.ident).map_or_else(|| quote!(::core::option::Option::None), |k| quote!(::core::option::Option::Some(#k)));
+                    let var = |x: &Option<Ident>| x.as_ref().map(&mlir_name).ok_or_else(|| Error::new(m.ident.span(), "`#[dtype(..)]` rule needs `= field`"))?;
+                    let infer = match rule.as_ref().map(|(r, x)| (r.as_str(), x)) {
+                        None => quote!(::core::option::Option::None),
+                        Some(("is", _)) => {
+                            let ty = m.fixed.as_deref().unwrap_or_default();
+                            quote!(::core::option::Option::Some(::mlirformat::Infer::Is(#ty)))
+                        }
+                        Some(("i1", None)) => quote!(::core::option::Option::Some(::mlirformat::Infer::I1)),
+                        Some((r, x)) => {
+                            let v = var(x)?;
+                            let rule = Ident::new(match r { "i1" => "I1Like", "of" => "TypeOf", "eq" => "Same", "el" => "ElemOf", _ => "Width" }, m.ident.span());
+                            quote!(::core::option::Option::Some(::mlirformat::Infer::#rule(#v)))
+                        }
                     };
-                    let strip = strip.as_ref().map_or(String::new(), |d| format!("@{d}"));
-                    format!("!{}{star}{result}{strip}{infer}", m.name)
+                    let strip = s(strip);
+                    quote!(Type { result: #result, infer: #infer, strip: #strip })
                 }
                 Kind::Prop { int, dialect, default, dense, symbol, bits } => {
-                    let unit = if m.unit { "?" } else { "" };
-                    let dense = dense.as_ref().map_or(String::new(), |e| format!("&{e}"));
-                    let int = int.as_ref().map_or(String::new(), |t| format!(":{t}"));
-                    let dialect = dialect.as_ref().map_or(String::new(), |d| format!("@{d}"));
-                    let default = default.as_ref().map_or(String::new(), |d| format!("|{d}"));
-                    let symbol = if *symbol { "$" } else { "" };
-                    let bits = bits.as_ref().map_or(String::new(), |b| format!("%{b}"));
-                    format!("#{}{unit}{symbol}{dense}{int}{dialect}{default}{bits}", m.name)
+                    let (unit, int, dialect, default, dense, bits) = (m.unit, s(int), s(dialect), s(default), s(dense), s(bits));
+                    quote!(Prop { unit: #unit, int: #int, dialect: #dialect, default: #default, dense: #dense, symbol: #symbol, bits: #bits })
                 }
-                Kind::Region => format!("^{}{star}", m.name),
-                Kind::Successor => format!(">{}{star}", m.name),
+                Kind::Region => quote!(Region),
+                Kind::Successor => quote!(Successor),
             };
+            let (key, variadic, ty) = (&m.name, m.variadic, field_type(&m.kind, &f.ty));
+            fields.push(quote!(::mlirformat::Field { name: #key, variadic: #variadic, role: ::mlirformat::Role::#role, ty: #ty }));
             f.attrs.push(parse_quote!(#[serde(rename = #key)]));
             let id = &m.ident;
             // A region moves through `Content` as itself, never serialized.
@@ -215,7 +222,6 @@ impl OpArgs {
                 _ => (quote!(#id: f.take(#key)?), quote!((#key, ::mlirformat::Content::of(&self.#id)?))),
             };
             keys.push((key.clone(), take, put));
-            types.push(field_type(&m.kind, &f.ty));
         }
         if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(..)))) {
             return Err(Error::new(r.span(), format!("`{r}` is not a #[dtype] field")));
@@ -241,9 +247,11 @@ impl OpArgs {
         });
         // ⭐ 字段一个个从 `Fields` 取，不派生 `Deserialize`：派生的 visitor 每个 op 一套，
         // 九百个 op 的类型检查、借用检查都花在它身上。
+        let extra = |name: &str, role: Ts| quote!(::mlirformat::Field { name: #name, variadic: false, role: ::mlirformat::Role::#role, ty: ::mlirformat::FieldType::Attr { required: false } });
+        fields.extend([extra("{}", quote!(Attrs)), extra("@", quote!(Loc))]);
         let fields = quote! {
             const KEYS: &'static [&'static str] = &[#(#keys),*];
-            const TYPES: &'static [::mlirformat::FieldType] = &[#(#types,)* ::mlirformat::FieldType::Attr { required: false }, ::mlirformat::FieldType::Attr { required: false }];
+            const FIELDS: &'static [::mlirformat::Field] = &[#(#fields),*];
             fn from_fields(f: &mut ::mlirformat::Fields) -> ::core::result::Result<Self, ::mlirformat::Error> {
                 ::core::result::Result::Ok(Self { #(#takes),* })
             }

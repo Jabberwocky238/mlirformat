@@ -213,7 +213,7 @@ impl Template {
     }
 
     fn defaults_of<O: Op>() -> Vec<NamedAttr<'static>> {
-        Schema::of::<O>().map_or_else(|_| Vec::new(), |s| s.defaults())
+        Schema::of::<O>().defaults()
     }
 
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {

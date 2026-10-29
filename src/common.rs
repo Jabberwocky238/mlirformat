@@ -322,11 +322,10 @@ pub trait Parse: Sized {
 pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// Fully qualified name, e.g. `"arith.addi"`.
     const NAME: &'static str;
-    /// The serde key of each field in order: its name with its MLIR role spelled in (see
-    /// [`Field`]); `#[mlir::op]` writes them.
+    /// Each field's serde name, in order ([`Field::name`]): what `Deserialize` asks for.
     const KEYS: &'static [&'static str];
-    /// Each field's Rust type, in the order of [`KEYS`](Self::KEYS); `#[mlir::op]` writes them.
-    const TYPES: &'static [FieldType];
+    /// Each field, in the order of [`KEYS`](Self::KEYS); `#[mlir::op]` writes them.
+    const FIELDS: &'static [Field];
     /// ODS-style assembly format (see [`Elem`]).
     const FORMAT: &'static str;
     /// Whether the op has a custom form; `false` (`#[mlir::op]` without `format`): it always prints
@@ -519,17 +518,7 @@ pub enum Infer {
     Width(&'static str),
 }
 
-/// A field's MLIR role. `#[mlir::op]` spells it in the field's serde name:
-///
-/// ```text
-/// %name[*]:T                      operand(s); their type is type variable `T`
-/// !name[*][=k][~i1|~i1:T|~of:a|~eq:T|~is:ty|~el:T|~width:T]   type variable; `=k`: result #k; `~`: how custom form infers it
-/// #name[?][:iN][@dialect.attr][|default]
-///                                 property; `?`: unit (a `bool`); `:iN`: integer type of an enum's
-///                                 case value (default `i64`); `@`: a dialect attribute spelled
-///                                 without its prefix in custom form; `|`: default body, omitted there
-/// ^name[*]   region(s)      >name[*]   successor(s)      {}   discardable attributes      @   location
-/// ```
+/// A field's MLIR role, as `#[mlir::op]` writes it in [`Op::FIELDS`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     Operand { ty: &'static str },
@@ -542,27 +531,27 @@ pub enum Role {
     Loc,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// One field of a typed op: `#[mlir::op]` writes them as constants ([`Op::FIELDS`]).
+#[derive(Debug, Clone, Copy)]
 pub struct Field {
-    /// The serde key: the whole encoded role.
-    pub key: &'static str,
-    /// The MLIR-facing name (`$name` in the format, the property name).
+    /// The MLIR-facing name (`$name` in the format, the property name), also the serde name;
+    /// `{}` for the discardable attributes, `@` for the location.
     pub name: &'static str,
     pub variadic: bool,
     pub role: Role,
+    /// The field's Rust type.
+    pub ty: FieldType,
 }
 
 /// A typed op's shape: its name (the struct's serde name) and fields.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Schema {
     pub name: &'static str,
-    pub fields: Vec<Field>,
-    /// Each field's Rust type, as [`Op::TYPES`] says it (empty: every one an `Attribute`).
-    pub types: &'static [FieldType],
+    pub fields: &'static [Field],
 }
 
 /// ⭐ How a property field's Rust type holds its attribute: `#[mlir::op]` says it of each field
-/// in [`Op::TYPES`], so an op is read and written through its schema without building the typed
+/// ([`Field::ty`]), so an op is read and written through its schema without building the typed
 /// op — only a field of another Rust type goes through it, and only that field.
 #[derive(Clone, Copy)]
 pub enum FieldType {
@@ -591,66 +580,6 @@ impl fmt::Debug for FieldType {
             Self::Attr { required } => write!(f, "Attr {{ required: {required} }}"),
             Self::Typed(_) => f.write_str("Typed"),
         }
-    }
-}
-
-impl TryFrom<&'static str> for Field {
-    type Error = Error;
-
-    fn try_from(key: &'static str) -> Result<Self, Error> {
-        let bad = || Error(format!("not an op field key: `{key}`"));
-        let split = |s: &'static str, c: char| s.split_once(c).map_or((s, None), |(a, b)| (a, Some(b)));
-        let star = |s: &'static str| s.strip_suffix('*').map_or((s, false), |n| (n, true));
-        let rest = key.get(1..).ok_or_else(bad)?;
-        let (name, variadic, role) = match key.as_bytes()[0] {
-            b'%' => {
-                let (head, ty) = split(rest, ':');
-                let (name, variadic) = star(head);
-                (name, variadic, Role::Operand { ty: ty.ok_or_else(bad)? })
-            }
-            b'!' => {
-                let (head, infer) = split(rest, '~');
-                let (head, strip) = split(head, '@');
-                let (head, result) = split(head, '=');
-                let (name, variadic) = star(head);
-                let infer = match infer.map(|i| split(i, ':')) {
-                    None => None,
-                    Some(("i1", None)) => Some(Infer::I1),
-                    Some(("i1", Some(var))) => Some(Infer::I1Like(var)),
-                    Some(("of", Some(attr))) => Some(Infer::TypeOf(attr)),
-                    Some(("eq", Some(var))) => Some(Infer::Same(var)),
-                    Some(("is", Some(ty))) => Some(Infer::Is(ty)),
-                    Some(("el", Some(var))) => Some(Infer::ElemOf(var)),
-                    Some(("width", Some(var))) => Some(Infer::Width(var)),
-                    Some(_) => return Err(bad()),
-                };
-                (name, variadic, Role::Type { result: result.map(str::parse).transpose().map_err(|_| bad())?, infer, strip })
-            }
-            b'#' => {
-                // `%`: a bit enum, last since its separator may be a `|`.
-                let (rest, bits) = split(rest, '%');
-                let (head, default) = split(rest, '|');
-                let (head, dialect) = split(head, '@');
-                let (name, int) = split(head, ':');
-                let (name, dense) = split(name, '&');
-                // `$`: a `SymbolNameAttr`, a string the custom form spells `@name`.
-                let (name, symbol) = name.strip_suffix('$').map_or((name, false), |n| (n, true));
-                let (name, unit) = name.strip_suffix('?').map_or((name, false), |n| (n, true));
-                (name, false, Role::Prop { unit, int, dialect, default, dense, symbol, bits })
-            }
-            b'^' => {
-                let (name, variadic) = star(rest);
-                (name, variadic, Role::Region)
-            }
-            b'>' => {
-                let (name, variadic) = star(rest);
-                (name, variadic, Role::Successor)
-            }
-            b'{' if rest == "}" => ("", false, Role::Attrs),
-            b'@' => ("", false, Role::Loc),
-            _ => return Err(bad()),
-        };
-        Ok(Self { key, name, variadic, role })
     }
 }
 
@@ -816,7 +745,7 @@ impl<'f> Format<'f> {
     }
 
     pub fn of<O: Op>() -> Result<Format<'static>, Error> {
-        Format::new(O::FORMAT, Schema::of::<O>()?)
+        Format::new(O::FORMAT, Schema::of::<O>())
     }
 
     pub fn field(&self, name: &str) -> Result<&Field, Error> {

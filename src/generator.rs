@@ -858,12 +858,12 @@ impl NamedAttr<'_> {
 impl Operation<'_> {
     /// ⭐ A typed op as an op.
     pub fn of_op<O: Op>(op: &O) -> Result<Operation<'static>, Error> {
-        Self::of_content(&Schema::of::<O>()?, Content::of(op)?)
+        Self::of_content(&Schema::of::<O>(), Content::of(op)?)
     }
 
     /// [`of_op`](Self::of_op) by move: the typed op's regions become the op's without a copy.
     pub fn of_owned_op<O: Op>(op: O) -> Result<Operation<'static>, Error> {
-        Self::of_content(&Schema::of::<O>()?, op.into_content()?)
+        Self::of_content(&Schema::of::<O>(), op.into_content()?)
     }
 
     /// [`of_op`](Self::of_op) from the op's [`Content`]: everything that does not depend on `O`,
@@ -873,7 +873,7 @@ impl Operation<'_> {
         // Regions first, by move: the rest is small and read by clone (a type variable may be read twice).
         let mut regions = Vec::new();
         for f in schema.of_role(|r| *r == Role::Region) {
-            let at = values.iter().position(|(k, _)| *k == f.key).ok_or_else(|| Error(format!("missing field `{}`", f.key)))?;
+            let at = values.iter().position(|(k, _)| *k == f.name).ok_or_else(|| Error(format!("missing field `{}`", f.name)))?;
             match values.swap_remove(at).1 {
                 Content::Seq(xs) if f.variadic => regions.extend(xs.into_iter().map(Content::into_region).collect::<Result<Vec<_>, _>>()?),
                 c if f.variadic => regions.extend(c.to::<Vec<Region<'static>>>()?),
@@ -883,12 +883,12 @@ impl Operation<'_> {
         let take = |key: &str| values.iter().find(|(k, _)| *k == key).map(|(_, v)| v.clone()).ok_or_else(|| Error(format!("missing field `{key}`")));
         let ty_of = |name: &str| -> Result<Bound<'static>, Error> {
             let f = schema.field(name).filter(|f| matches!(f.role, Role::Type { .. })).ok_or_else(|| Error(format!("no type variable `{name}`")))?;
-            Ok(if f.variadic { Bound::Many(take(f.key)?.to()?) } else { Bound::One(take(f.key)?.to()?) })
+            Ok(if f.variadic { Bound::Many(take(f.name)?.to()?) } else { Bound::One(take(f.name)?.to()?) })
         };
         let (mut operands, mut inputs, mut sizes) = (Vec::new(), Vec::new(), Vec::new());
         for f in schema.of_role(|r| matches!(r, Role::Operand { .. })) {
             let Role::Operand { ty } = f.role else { continue };
-            let group: Vec<Value<'static>> = if f.variadic { take(f.key)?.to()? } else { vec![take(f.key)?.to()?] };
+            let group: Vec<Value<'static>> = if f.variadic { take(f.name)?.to()? } else { vec![take(f.name)?.to()?] };
             match ty_of(ty)? {
                 Bound::One(t) => inputs.extend(group.iter().map(|_| t.clone())),
                 Bound::Many(ts) if ts.len() == group.len() => inputs.extend(ts),
@@ -898,7 +898,7 @@ impl Operation<'_> {
             operands.extend(group);
         }
         let mut results: Vec<(usize, Bound<'static>)> = Vec::new();
-        for f in &schema.fields {
+        for f in schema.fields {
             if let Role::Type { result: Some(k), .. } = f.role {
                 results.push((k, ty_of(f.name)?));
             }
@@ -906,20 +906,20 @@ impl Operation<'_> {
         results.sort_by_key(|(k, _)| *k);
         let mut props: Vec<NamedAttr<'static>> = Vec::new();
         for f in schema.of_role(|r| matches!(r, Role::Prop { .. })) {
-            props.extend(f.attr(take(f.key)?)?.map(|a| NamedAttr::of(f.name, a)));
+            props.extend(f.attr(take(f.name)?)?.map(|a| NamedAttr::of(f.name, a)));
         }
         if schema.of_role(|r| matches!(r, Role::Operand { .. })).filter(|f| f.variadic).count() > 1 {
             let values = sizes.iter().map(|n| Cow::Owned(n.to_string())).collect();
             props.push(NamedAttr::of(SEGMENTS, Attribute::DenseArray { ty: Type::int(32), values }));
         }
         props.sort_by(|a, b| a.name.cmp(&b.name));
-        let one = |role: Role| schema.of_role(move |r| *r == role).next().map(|f| take(f.key)).transpose();
+        let one = |role: Role| schema.of_role(move |r| *r == role).next().map(|f| take(f.name)).transpose();
         Ok(Operation {
             name: Cow::Borrowed(name),
             operands,
             successors: schema
                 .of_role(|r| *r == Role::Successor)
-                .map(|f| if f.variadic { take(f.key)?.to() } else { take(f.key)?.to().map(|s| vec![s]) })
+                .map(|f| if f.variadic { take(f.name)?.to() } else { take(f.name)?.to().map(|s| vec![s]) })
                 .collect::<Result<Vec<Vec<_>>, _>>()?
                 .concat(),
             properties: (!props.is_empty()).then_some(Attribute::Dict(props)),

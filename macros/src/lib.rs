@@ -1,5 +1,5 @@
-//! `#[mlir::op]` and `#[mlir::dialect]`. Neither writes conversion code: `op` spells each
-//! field's MLIR role in its serde name (decoded by `mlirformat::Field`) and forwards the
+//! `#[mlir::op]` and `#[mlir::dialect]`. Neither writes conversion code: `op` writes each
+//! field's MLIR role as a constant (`Op::FIELDS`: `mlirformat::Field`) and forwards the
 //! conversions to the runtime; `dialect` turns an enum of ops into a registrable op table.
 //!
 //! ```ignore
