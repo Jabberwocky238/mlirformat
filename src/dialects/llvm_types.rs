@@ -35,18 +35,22 @@ pub enum LlvmType<'a> {
 }
 
 impl<'a> LlvmType<'a> {
+    #[inline]
     pub fn ptr() -> Type<'a> {
         LlvmType::Ptr(0).into()
     }
 
+    #[inline]
     pub fn literal(body: Vec<Type<'a>>) -> Type<'a> {
         LlvmType::Struct { name: None, packed: false, body: Some(body), opaque: false }.into()
     }
 
+    #[inline]
     pub fn array(n: u64, t: Type<'a>) -> Type<'a> {
         LlvmType::Array(n, t.into()).into()
     }
 
+    #[inline]
     pub fn void() -> Type<'a> {
         LlvmType::Void.into()
     }
@@ -221,6 +225,7 @@ impl<'a> LlvmType<'a> {
     }
 
     /// `LLVM::isCompatibleType`.
+    #[inline]
     pub fn compatible(t: &Type<'_>) -> bool {
         Self::compatible_in(t, &mut Vec::new())
     }
@@ -250,6 +255,7 @@ impl<'a> LlvmType<'a> {
 }
 
 impl<'a> From<LlvmType<'a>> for Type<'a> {
+    #[inline]
     fn from(l: LlvmType<'a>) -> Self {
         let (m, body) = l.parts(&mut Vec::new());
         Type::Extended(Extended { name: Cow::Owned(format!("llvm.{m}")), body: body.map(Cow::Owned), params: Vec::new() })
@@ -260,6 +266,7 @@ impl TryFrom<&Type<'_>> for LlvmType<'static> {
     type Error = ();
 
     /// Reads the body text into a type that owns everything.
+    #[inline]
     fn try_from(t: &Type<'_>) -> Result<Self, ()> {
         let Type::Extended(e) = t else { return Err(()) };
         let m = e.name.strip_prefix("llvm.").ok_or(())?;

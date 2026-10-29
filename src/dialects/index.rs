@@ -83,6 +83,7 @@ pub struct CmpOp<'a> {
 
 impl CmpOp<'_> {
     /// `slt` of `#index<cmp_predicate slt>`.
+    #[inline]
     fn predicate(&self) -> Option<&str> {
         let Attribute::Extended { ext: Extended { name, body: Some(body), .. }, ty: None } = &self.pred else { return None };
         (name == "index").then_some(())?;

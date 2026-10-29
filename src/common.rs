@@ -209,6 +209,7 @@ impl Extended<'_> {
 impl Type<'_> {
     pub const I1: Type<'static> = Type::Integer { signedness: Signedness::Signless, width: 1 };
 
+    #[inline]
     pub const fn int(width: u32) -> Type<'static> {
         Type::Integer { signedness: Signedness::Signless, width }
     }
@@ -238,6 +239,7 @@ impl ParseError {
     }
 
     /// At `offset`, its line not looked up yet.
+    #[inline]
     pub fn unplaced(offset: usize, msg: impl Into<String>) -> Self {
         Self { offset, line: 0, col: 0, msg: msg.into() }
     }
@@ -257,24 +259,28 @@ impl ParseError {
 pub struct Error(pub String);
 
 impl From<&str> for Error {
+    #[inline]
     fn from(s: &str) -> Self {
         Self(s.into())
     }
 }
 
 impl From<String> for Error {
+    #[inline]
     fn from(s: String) -> Self {
         Self(s)
     }
 }
 
 impl serde::ser::Error for Error {
+    #[inline]
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Self(format!("{msg}"))
     }
 }
 
 impl serde::de::Error for Error {
+    #[inline]
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Self(format!("{msg}"))
     }
@@ -340,12 +346,23 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// itself ([`Content::region`]); `#[mlir::op]` writes it.
     fn into_fields(self) -> Result<Vec<(&'static str, Content)>, Error>;
 
+    /// The fields borrowed, each serialized (a region too); `#[mlir::op]` writes it.
+    fn fields(&self) -> Result<Vec<(&'static str, Content)>, Error>;
+
+    /// The op's `Serialize`, shared by every op: its [`fields`](Self::fields) as a struct.
+    #[inline]
+    fn serialize_fields<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        Content::Struct(Self::NAME, self.fields().map_err(serde::ser::Error::custom)?).serialize(s)
+    }
+
     /// The op as its [`Content`], by move: what `Serialize` gives, regions left as they are.
+    #[inline]
     fn into_content(self) -> Result<Content, Error> {
         Ok(Content::Struct(Self::NAME, self.into_fields()?))
     }
 
     /// The op out of the [`Content`] of a struct.
+    #[inline]
     fn from_content(c: Content) -> Result<Self, Error> {
         Self::from_fields(&mut Fields::try_from(c)?)
     }
@@ -353,6 +370,7 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// This op written generically. A hand-written [`print`](Self::print) ends here whenever the
     /// custom form cannot say what the op holds — the generic form always can, and is still
     /// valid MLIR.
+    #[inline]
     fn print_generic(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?)
     }
@@ -361,6 +379,7 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     /// out of pieces borrowed from the parser; those borrows end with the call, so the op it
     /// returns has to be owned: its borrowed text is copied, the rest (regions above all) moves.
     /// It takes the borrowed op as an argument rather than `self` because the two differ in lifetime.
+    #[inline]
     fn owned<B: Op>(borrowed: B, p: &mut Parser<'_, '_>) -> R<Self> {
         borrowed.into_content().and_then(Self::from_content).or_else(|e| p.err(e.0))
     }
@@ -426,6 +445,7 @@ pub trait Dialect: Send + Sync {
     fn namespace(&self) -> &'static str;
 
     /// What ODS declares of the dialect itself.
+    #[inline]
     fn traits(&self) -> DialectTraits {
         DialectTraits::default()
     }
@@ -435,12 +455,14 @@ pub trait Dialect: Send + Sync {
 
     /// Its ops' ODS facts (traits, effects, inherent attributes): the upstream rows of its
     /// namespace.
+    #[inline]
     fn op_infos(&self) -> Vec<crate::OpInfo> {
         crate::OpInfos::upstream().of_dialect(self.namespace())
     }
 
     /// Structures the body of `!ns.name<...>` / `#ns.name<...>`, positioned at its opening
     /// delimiter; `None` keeps it raw.
+    #[inline]
     fn parse_params<'a>(&self, kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>> {
         let _ = (kind, name, p);
         None
@@ -565,10 +587,12 @@ pub enum FieldType {
 
 impl FieldType {
     /// [`Typed`](Self::Typed) for a field of type `T`: generic in the field's type, not the op's.
+    #[inline]
     pub const fn of<T: Serialize + DeserializeOwned>() -> Self {
         Self::Typed(Self::through::<T>)
     }
 
+    #[inline]
     fn through<T: Serialize + DeserializeOwned>(c: Content) -> Result<Content, Error> {
         Content::of(&c.to::<T>()?)
     }
@@ -584,15 +608,18 @@ impl fmt::Debug for FieldType {
 }
 
 impl Schema {
+    #[inline]
     pub fn field(&self, name: &str) -> Option<&Field> {
         self.fields.iter().find(|f| f.name == name && !matches!(f.role, Role::Attrs | Role::Loc))
     }
 
+    #[inline]
     pub fn of_role(&self, pick: impl Fn(&Role) -> bool) -> impl Iterator<Item = &Field> {
         self.fields.iter().filter(move |f| pick(&f.role))
     }
 
     /// The properties declaring a default, with it (what an ODS builder sets).
+    #[inline]
     pub fn defaults(&self) -> Vec<NamedAttr<'static>> {
         self.of_role(|r| matches!(r, Role::Prop { .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
     }
@@ -616,6 +643,7 @@ impl Field {
 
     /// A dialect enum spelled by its bare case (`gpu<dim` ⇒ `x` for `#gpu<dim x>`): the
     /// namespace and the mnemonic.
+    #[inline]
     pub fn keyword_dialect(&self) -> Option<(&'static str, &'static str)> {
         let Role::Prop { dialect: Some(d), .. } = self.role else { return None };
         d.split_once('<')
@@ -676,6 +704,7 @@ impl BitEnum {
     }
 
     /// The value of case `word`.
+    #[inline]
     pub fn value(&self, word: &str) -> Option<u64> {
         self.cases.iter().find(|(k, _)| *k == word).map(|(_, v)| *v)
     }
@@ -744,10 +773,12 @@ impl<'f> Format<'f> {
         Ok(Self { elems, schema })
     }
 
+    #[inline]
     pub fn of<O: Op>() -> Result<Format<'static>, Error> {
         Format::new(O::FORMAT, Schema::of::<O>())
     }
 
+    #[inline]
     pub fn field(&self, name: &str) -> Result<&Field, Error> {
         self.schema.field(name).ok_or_else(|| format!("{}: format names no field `{name}`", self.schema.name).into())
     }
@@ -772,6 +803,7 @@ impl<'f> Format<'f> {
     }
 
     /// Is `word` one of the format's literals?
+    #[inline]
     pub fn literal(&self, word: &str) -> bool {
         let mut flat = Vec::new();
         Elem::flatten(&self.elems, &mut flat);
@@ -779,6 +811,7 @@ impl<'f> Format<'f> {
     }
 
     /// Fields the format spells by name (the other properties go through `attr-dict`).
+    #[inline]
     pub fn spelled(&self) -> Vec<&'f str> {
         let mut out = Vec::new();
         Elem::names(&self.elems, &mut out);
@@ -892,6 +925,7 @@ impl<'f> Elem<'f> {
 
     /// Tokenizes without a schema: what `mlirformat tblgen` asks before it keeps a format, so
     /// an unknown directive or a wrong argument count makes the op generic instead of broken.
+    #[inline]
     pub fn check(src: &'f str, op: &str) -> Result<(), Error> {
         let (_, rest) = Self::list(src, op)?;
         if rest.trim().is_empty() { Ok(()) } else { Err(Error(format!("{op}: format: unexpected `{rest}`"))) }

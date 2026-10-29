@@ -99,6 +99,7 @@ impl<'a> Expr<'a> {
     /// The expression with each name replaced by what `args` pairs it with, for an op that prints
     /// its map against its operands: `(d0) -> (d0 + 1)` against `[("d0", "%i")]` is `%i + 1`.
     /// A name `args` does not mention stays as it is.
+    #[inline]
     pub fn show<'s>(&'s self, args: &'s [(&'s str, &'s str)]) -> Shown<'s, 'a> {
         Shown { expr: self, args }
     }
@@ -141,12 +142,14 @@ pub struct Shown<'s, 'a> {
 }
 
 impl Display for Shown<'_, '_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.expr.write(f, self.args, 0)
     }
 }
 
 impl Display for Expr<'_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.write(f, &[], 0)
     }
@@ -183,25 +186,30 @@ struct Cur<'a> {
 }
 
 impl<'a> Cur<'a> {
+    #[inline]
     fn new(src: &'a str) -> Self {
         Self { src, at: 0 }
     }
 
+    #[inline]
     fn ws(&mut self) {
         self.at += self.src[self.at..].len() - self.src[self.at..].trim_start().len();
     }
 
+    #[inline]
     fn rest(&mut self) -> &'a str {
         self.ws();
         &self.src[self.at..]
     }
 
+    #[inline]
     fn eat(&mut self, s: &str) -> bool {
         let hit = self.rest().starts_with(s);
         self.at += if hit { s.len() } else { 0 };
         hit
     }
 
+    #[inline]
     fn expect(&mut self, s: &str) -> Result<(), Error> {
         if self.eat(s) { Ok(()) } else { Err(Error(alloc::format!("affine: expected `{s}` at `{}`", self.rest()))) }
     }
@@ -288,6 +296,7 @@ impl<'a> Cur<'a> {
     }
 
     /// `(d0, d1)` then an optional `[s0]`.
+    #[inline]
     fn header(&mut self) -> Result<(Vec<&'a str>, Option<Vec<&'a str>>), Error> {
         let dims = self.names("(", ")")?;
         let syms = self.rest().starts_with('[').then(|| self.names("[", "]")).transpose()?;
@@ -305,6 +314,7 @@ impl<'a> Cur<'a> {
         Ok(out)
     }
 
+    #[inline]
     fn done(&mut self) -> Result<(), Error> {
         if self.rest().is_empty() { Ok(()) } else { Err(Error(alloc::format!("affine: trailing `{}`", self.rest()))) }
     }

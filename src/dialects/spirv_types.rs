@@ -58,6 +58,7 @@ struct Cursor<'s> {
 }
 
 impl<'s> Cursor<'s> {
+    #[inline]
     fn ws(&mut self) {
         self.s = self.s.trim_start();
     }
@@ -73,6 +74,7 @@ impl<'s> Cursor<'s> {
         }
     }
 
+    #[inline]
     fn expect(&mut self, tok: &str) -> Option<()> {
         self.eat(tok).then_some(())
     }
@@ -130,6 +132,7 @@ impl<'s> Cursor<'s> {
     }
 
     /// `Name` or `Name=value`.
+    #[inline]
     fn decoration(&mut self) -> Option<SpirvDecoration> {
         let name = String::from(self.word()?);
         let value = if self.eat("=") { Some(String::from(self.value()?)) } else { None };
@@ -265,14 +268,17 @@ impl<'s> Cursor<'s> {
 }
 
 impl<'a> SpirvType<'a> {
+    #[inline]
     pub fn ptr(pointee: Type<'a>, storage: &str) -> Type<'a> {
         SpirvType::Ptr { pointee: pointee.into(), storage: String::from(storage) }.into()
     }
 
+    #[inline]
     pub fn array(len: u32, elem: Type<'a>, stride: u32) -> Type<'a> {
         SpirvType::Array { len, elem: elem.into(), stride }.into()
     }
 
+    #[inline]
     pub fn rtarray(elem: Type<'a>, stride: u32) -> Type<'a> {
         SpirvType::RuntimeArray { elem: elem.into(), stride }.into()
     }
@@ -344,6 +350,7 @@ impl<'a> SpirvType<'a> {
 }
 
 impl<'a> From<SpirvType<'a>> for Type<'a> {
+    #[inline]
     fn from(t: SpirvType<'a>) -> Self {
         let (m, body) = t.parts();
         Type::Extended(Extended { name: Cow::Owned(format!("spirv.{m}")), body: Some(Cow::Owned(format!("<{body}>"))), params: Vec::new() })

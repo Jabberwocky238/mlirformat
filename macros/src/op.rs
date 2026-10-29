@@ -212,7 +212,6 @@ impl OpArgs {
             };
             let (key, variadic, ty) = (&m.name, m.variadic, field_type(&m.kind, &f.ty));
             fields.push(quote!(::mlirformat::Field { name: #key, variadic: #variadic, role: ::mlirformat::Role::#role, ty: #ty }));
-            f.attrs.push(parse_quote!(#[serde(rename = #key)]));
             let id = &m.ident;
             // A region moves through `Content` as itself, never serialized.
             let (take, put) = match (&m.kind, m.variadic) {
@@ -221,7 +220,7 @@ impl OpArgs {
                 _ if m.unit => (quote!(#id: f.or_default(#key)?), quote!((#key, ::mlirformat::Content::of(&self.#id)?))),
                 _ => (quote!(#id: f.take(#key)?), quote!((#key, ::mlirformat::Content::of(&self.#id)?))),
             };
-            keys.push((key.clone(), take, put));
+            keys.push((key.clone(), take, put, quote!((#key, ::mlirformat::Content::of(&self.#id)?))));
         }
         if let Some(r) = self.results.iter().find(|r| !marked.iter().any(|m| m.ident == **r && matches!(m.kind, Kind::DType(..)))) {
             return Err(Error::new(r.span(), format!("`{r}` is not a #[dtype] field")));
@@ -235,16 +234,17 @@ impl OpArgs {
             let (id, t) = (&f.ident, &f.ty);
             (quote!(#id: #t), quote!(#id))
         }).unzip();
-        named.named.push(parse_quote!(#[serde(rename = "{}")] pub attrs: ::mlirformat::__Vec<::mlirformat::NamedAttr<#lt>>));
-        named.named.push(parse_quote!(#[serde(rename = "@")] pub loc: ::core::option::Option<::mlirformat::Str<#lt>>));
-        keys.push(("{}".into(), quote!(attrs: f.or_default("{}")?), quote!(("{}", ::mlirformat::Content::of(&self.attrs)?))));
-        keys.push(("@".into(), quote!(loc: f.or_default("@")?), quote!(("@", ::mlirformat::Content::of(&self.loc)?))));
-        let (keys, takes, puts) = keys.into_iter().fold((Vec::new(), Vec::new(), Vec::new()), |(mut k, mut t, mut p), (a, b, c)| {
-            k.push(a);
-            t.push(b);
-            p.push(c);
-            (k, t, p)
-        });
+        named.named.push(parse_quote!(pub attrs: ::mlirformat::__Vec<::mlirformat::NamedAttr<#lt>>));
+        named.named.push(parse_quote!(pub loc: ::core::option::Option<::mlirformat::Str<#lt>>));
+        keys.push(("{}".into(), quote!(attrs: f.or_default("{}")?), quote!(("{}", ::mlirformat::Content::of(&self.attrs)?)), quote!(("{}", ::mlirformat::Content::of(&self.attrs)?))));
+        keys.push(("@".into(), quote!(loc: f.or_default("@")?), quote!(("@", ::mlirformat::Content::of(&self.loc)?)), quote!(("@", ::mlirformat::Content::of(&self.loc)?))));
+        let (mut takes, mut puts, mut refs) = (Vec::new(), Vec::new(), Vec::new());
+        let keys: Vec<String> = keys.into_iter().map(|(k, t, p, r)| {
+            takes.push(t);
+            puts.push(p);
+            refs.push(r);
+            k
+        }).collect();
         // ⭐ 字段一个个从 `Fields` 取，不派生 `Deserialize`：派生的 visitor 每个 op 一套，
         // 九百个 op 的类型检查、借用检查都花在它身上。
         let extra = |name: &str, role: Ts| quote!(::mlirformat::Field { name: #name, variadic: false, role: ::mlirformat::Role::#role, ty: ::mlirformat::FieldType::Attr { required: false } });
@@ -257,6 +257,9 @@ impl OpArgs {
             }
             fn into_fields(self) -> ::core::result::Result<::mlirformat::__Vec<(&'static str, ::mlirformat::Content)>, ::mlirformat::Error> {
                 ::core::result::Result::Ok(::mlirformat::__vec![#(#puts),*])
+            }
+            fn fields(&self) -> ::core::result::Result<::mlirformat::__Vec<(&'static str, ::mlirformat::Content)>, ::mlirformat::Error> {
+                ::core::result::Result::Ok(::mlirformat::__vec![#(#refs),*])
             }
         };
 
@@ -271,12 +274,14 @@ impl OpArgs {
         // 也就自己担保这条法则。
         let dual = quote! {
             impl #ig ::mlirformat::Print for #ty #tg #wc {
+                #[inline]
                 fn print(&self, p: &mut ::mlirformat::Printer<'_, '_>) -> ::core::fmt::Result {
                     ::mlirformat::Op::print_by_format(self, p)
                 }
             }
 
             impl #ig ::mlirformat::Parse for #ty #tg #wc {
+                #[inline]
                 fn parse(p: &mut ::mlirformat::Parser<'_, '_>) -> ::mlirformat::R<Self> {
                     <Self as ::mlirformat::Op>::parse_by_format(p)
                 }
@@ -308,15 +313,23 @@ impl OpArgs {
             }
         };
         Ok(quote! {
-            #[derive(::core::fmt::Debug, ::core::clone::Clone, ::core::cmp::PartialEq, ::mlirformat::__serde::Serialize)]
-            #[serde(crate = "::mlirformat::__serde", rename = #name)]
+            #[derive(::core::fmt::Debug, ::core::clone::Clone, ::core::cmp::PartialEq)]
             #item
 
             #op_impl
 
+            // ⭐ `Serialize` through the fields, as `Deserialize` below: no op derives its own.
+            impl #ig ::mlirformat::__serde::Serialize for #ty #tg #wc {
+                #[inline]
+                fn serialize<S: ::mlirformat::__serde::Serializer>(&self, s: S) -> ::core::result::Result<S::Ok, S::Error> {
+                    ::mlirformat::Op::serialize_fields(self, s)
+                }
+            }
+
             // ⭐ `Content` 中转：只有 `Fields::read` 按格式泛型，所有 op 共用；每个 op 不再有
             // 自己的 visitor。
             impl #de_ig ::mlirformat::__serde::Deserialize<'de> for #ty #tg #wc {
+                #[inline]
                 fn deserialize<D: ::mlirformat::__serde::Deserializer<'de>>(d: D) -> ::core::result::Result<Self, D::Error> {
                     let mut f = ::mlirformat::Fields::read(d, #name, <Self as ::mlirformat::Op>::KEYS)?;
                     <Self as ::mlirformat::Op>::from_fields(&mut f).map_err(<D::Error as ::mlirformat::__serde::de::Error>::custom)
@@ -325,6 +338,7 @@ impl OpArgs {
 
             impl #ig #ty #tg #wc {
                 #[allow(clippy::too_many_arguments)]
+                #[inline]
                 pub fn new(#(#args),*) -> Self {
                     Self { #(#idents,)* attrs: ::mlirformat::__Vec::new(), loc: ::core::option::Option::None }
                 }
@@ -332,6 +346,7 @@ impl OpArgs {
 
             impl #ig ::core::convert::TryFrom<&::mlirformat::Operation<'_>> for #ty #tg #wc {
                 type Error = ::mlirformat::Error;
+                #[inline]
                 fn try_from(op: &::mlirformat::Operation<'_>) -> ::core::result::Result<Self, ::mlirformat::Error> {
                     op.to_op()
                 }
@@ -339,6 +354,7 @@ impl OpArgs {
 
             impl #ig ::core::convert::TryFrom<&#ty #tg> for ::mlirformat::Operation<'static> #wc {
                 type Error = ::mlirformat::Error;
+                #[inline]
                 fn try_from(op: &#ty #tg) -> ::core::result::Result<Self, ::mlirformat::Error> {
                     ::mlirformat::Operation::of_op(op)
                 }
@@ -346,6 +362,7 @@ impl OpArgs {
 
             impl #ig ::core::convert::TryFrom<&str> for #ty #tg #wc {
                 type Error = ::mlirformat::ParseError;
+                #[inline]
                 fn try_from(src: &str) -> ::mlirformat::R<Self> {
                     ::mlirformat::Parser::read(src, |p| {
                         p.op_name(<Self as ::mlirformat::Op>::NAME)?;
@@ -355,6 +372,7 @@ impl OpArgs {
             }
 
             impl #ig ::core::fmt::Display for #ty #tg #wc {
+                #[inline]
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     ::mlirformat::Printer::write(f, |p| ::mlirformat::Print::print(self, p))
                 }

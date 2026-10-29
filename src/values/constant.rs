@@ -85,49 +85,59 @@ impl Scalar {
 }
 
 impl<'a> Const<'a> {
+    #[inline]
     pub fn scalar(value: Scalar, ty: Type<'a>) -> Self {
         Self { ty, values: vec![value], elements: false }
     }
 
     /// A splat of `value` over shaped `ty`.
+    #[inline]
     pub fn splat(value: Scalar, ty: Type<'a>) -> Self {
         Self { ty, values: vec![value], elements: true }
     }
 
+    #[inline]
     pub fn int(value: ApInt, ty: Type<'a>) -> Self {
         Self::scalar(Scalar::Int(value), ty)
     }
 
+    #[inline]
     pub fn is_splat(&self) -> bool {
         self.values.len() == 1
     }
 
     /// The single value of a scalar or a splat.
+    #[inline]
     pub fn splat_value(&self) -> Option<Scalar> {
         self.is_splat().then(|| self.values[0])
     }
 
     /// `m_ConstantInt`: an integer scalar or splat.
+    #[inline]
     pub fn as_int(&self) -> Option<ApInt> {
         self.splat_value()?.int()
     }
 
+    #[inline]
     pub fn as_float(&self) -> Option<ApFloat> {
         self.splat_value()?.float()
     }
 
     /// The same constant with every element through `f` (result element type `ty`).
+    #[inline]
     pub fn map(&self, ty: Type<'a>, f: impl Fn(Scalar) -> Option<Scalar>) -> Option<Self> {
         Some(Self { ty, values: self.values.iter().map(|v| f(*v)).collect::<Option<_>>()?, elements: self.elements })
     }
 
     /// `getValues<int64_t>`: every element as an integer, a splat repeated over the shape.
+    #[inline]
     pub fn ints(&self) -> Option<Vec<i64>> {
         let n = if self.is_splat() { self.ty.element_count()? } else { self.values.len() };
         (0..n).map(|i| self.at(i).int().map(|v| v.signed() as i64)).collect()
     }
 
     /// Element `i` (a splat repeats).
+    #[inline]
     pub fn at(&self, i: usize) -> Scalar {
         if self.is_splat() { self.values[0] } else { self.values[i] }
     }

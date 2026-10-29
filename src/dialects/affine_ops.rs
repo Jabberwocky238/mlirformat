@@ -28,6 +28,7 @@ fn body_of(attr: &Attribute<'_>, kind: &str, alias: &dyn Fn(&str) -> Option<Stri
 }
 
 /// The body of the `affine_map<...>` an attribute stands for.
+#[inline]
 pub(crate) fn map_body(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
     body_of(attr, "affine_map", alias)
 }
@@ -197,6 +198,7 @@ mod indices {
 
     /// `d0` ⇒ the operand it stands for, as [`Map`] substitution wants it; a symbol operand is
     /// written `symbol(%x)`.
+    #[inline]
     pub fn args(map: &Map<'_>, values: &[String]) -> Vec<(String, String)> {
         let dims = map.dims.iter().map(|d| (String::from(*d), false));
         let syms = map.syms.iter().flatten().map(|s| (String::from(*s), true));
@@ -204,6 +206,7 @@ mod indices {
     }
 
     /// The index list as it is printed: the map's results against the operands.
+    #[inline]
     pub fn write(map: &Map<'_>, values: &[String]) -> String {
         let args = args(map, values);
         let args: Vec<(&str, &str)> = args.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();
@@ -211,6 +214,7 @@ mod indices {
     }
 
     /// Every operand's text, for [`args`].
+    #[inline]
     pub fn texts(values: &[Value<'_>]) -> Vec<String> {
         values.iter().map(|v| format!("{v}")).collect()
     }
@@ -357,22 +361,26 @@ mod bound {
         }
     }
 
+    #[inline]
     fn list(vs: &[Value<'_>]) -> String {
         vs.iter().map(|v| format!("{v}")).collect::<Vec<_>>().join(", ")
     }
 
     /// Writes what [`write`] produced.
+    #[inline]
     pub fn put(p: &mut Printer<'_, '_>, text: &str) -> core::fmt::Result {
         p.write_str(text)
     }
 
     /// The attribute and operands a bound stands for, given what was read.
+    #[inline]
     pub fn of_constant<'a>(c: i64, named: &dyn Fn(&str) -> Option<String>) -> Attribute<'a> {
         let body = format!("() -> ({c})");
         indices::attr(&body, named(&format!("affine_map<{body}>")))
     }
 
     /// `(d0) -> (d0)`, the map a bare operand stands for.
+    #[inline]
     pub fn of_operand<'a>(named: &dyn Fn(&str) -> Option<String>) -> Attribute<'a> {
         let body = String::from("(d0) -> (d0)");
         indices::attr(&body, named(&format!("affine_map<{body}>")))

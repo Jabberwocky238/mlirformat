@@ -11,34 +11,41 @@ use crate::common::{Dim, Extended, FloatKind, ShapedKind, Type};
 pub struct EmitcType;
 
 impl EmitcType {
+    #[inline]
     fn named<'a>(name: &'static str) -> Type<'a> {
         Type::Extended(Extended { name: Cow::Borrowed(name), body: None, params: Vec::new() })
     }
 
+    #[inline]
     pub fn size_t<'a>() -> Type<'a> {
         Self::named("emitc.size_t")
     }
 
+    #[inline]
     pub fn ptrdiff_t<'a>() -> Type<'a> {
         Self::named("emitc.ptrdiff_t")
     }
 
     /// `!emitc.<name><body>`.
+    #[inline]
     fn wrapped<'a>(name: &'static str, body: alloc::string::String) -> Type<'a> {
         Type::Extended(Extended { name: Cow::Borrowed(name), body: Some(Cow::Owned(body)), params: Vec::new() })
     }
 
     /// `!emitc.lvalue<ty>`.
+    #[inline]
     pub fn lvalue<'a>(ty: impl Display) -> Type<'a> {
         Self::wrapped("emitc.lvalue", alloc::format!("<{ty}>"))
     }
 
     /// `!emitc.ptr<ty>`.
+    #[inline]
     pub fn ptr<'a>(ty: impl Display) -> Type<'a> {
         Self::wrapped("emitc.ptr", alloc::format!("<{ty}>"))
     }
 
     /// `!emitc.ptr<!emitc.opaque<"void">>`.
+    #[inline]
     pub fn void_ptr<'a>() -> Type<'a> {
         Self::ptr("!emitc.opaque<\"void\">")
     }
@@ -76,21 +83,25 @@ impl EmitcType {
     }
 
     /// `isPointerWideType`: `size_t`, `ssize_t` or `ptrdiff_t`.
+    #[inline]
     pub fn pointer_wide(t: &Type<'_>) -> bool {
         matches!(Self::kind(t), Some("size_t" | "ssize_t" | "ptrdiff_t"))
     }
 
     /// An integer or a pointer-wide type.
+    #[inline]
     pub fn integral(t: &Type<'_>) -> bool {
         matches!(t, Type::Integer { .. }) || Self::pointer_wide(t)
     }
 
     /// `isSupportedIntegerType`.
+    #[inline]
     pub fn supported_int(t: &Type<'_>) -> bool {
         matches!(t, Type::Integer { width: 1 | 8 | 16 | 32 | 64, .. })
     }
 
     /// `isSupportedFloatType`.
+    #[inline]
     pub fn supported_float(t: &Type<'_>) -> bool {
         matches!(t, Type::Float(FloatKind::F16 | FloatKind::BF16 | FloatKind::F32 | FloatKind::F64))
     }

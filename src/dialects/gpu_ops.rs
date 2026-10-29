@@ -35,6 +35,7 @@ const HEAD: [&str; 3] = ["sym_name", "gpu.kernel", "workgroup_attributions"];
 
 impl<'a> Func<'a> {
     /// 可丢弃属性 `name`。
+    #[inline]
     fn attr(&self, name: &str) -> Option<&Option<Attribute<'a>>> {
         self.attrs.iter().find(|a| a.name == name).map(|a| &a.value)
     }
@@ -57,6 +58,7 @@ impl<'a> Func<'a> {
     }
 
     /// `Some([dicts])`，除非每个字典都是空的。
+    #[inline]
     fn dicts(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
         ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
     }
@@ -257,6 +259,7 @@ pub struct LaunchFunc<'a> {
 
 impl<'a> LaunchFunc<'a> {
     /// `!gpu.async.token`。
+    #[inline]
     fn token() -> Type<'a> {
         Type::Extended(crate::common::Extended { name: "gpu.async.token".into(), body: None, params: Vec::new() })
     }

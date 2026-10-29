@@ -25,6 +25,7 @@ pub fn expand(item: &ItemEnum) -> syn::Result<TokenStream> {
             type Error = i64;
 
             /// The case of value `v`; `Err(v)` when no case has it.
+            #[inline]
             fn try_from(v: i64) -> ::core::result::Result<Self, i64> {
                 match v {
                     #(#arms)*

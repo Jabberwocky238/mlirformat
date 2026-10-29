@@ -43,36 +43,43 @@ impl MlirOpt {
     // ---- what the context knows ---------------------------------------------------------
 
     /// Loaded dialect `ns`.
+    #[inline]
     pub fn dialect(&self, ns: &str) -> Option<&dyn Dialect> {
         self.dialects.get(ns).map(|d| &*d.dialect)
     }
 
     /// Op `name`'s ODS facts (traits, effects, inherent attributes).
+    #[inline]
     pub fn op_info(&self, name: &str) -> Option<&crate::OpInfo> {
         self.infos.op_info(name)
     }
 
     /// Whether namespace `ns` is known (loaded, or among the upstream facts).
+    #[inline]
     pub fn knows_dialect(&self, ns: &str) -> bool {
         self.infos.knows_dialect(ns)
     }
 
     /// Whether op `op`'s dialect is known (its ops may still be unregistered).
+    #[inline]
     pub fn knows_dialect_of(&self, op: &str) -> bool {
         op.split_once('.').is_some_and(|(ns, _)| self.knows_dialect(ns))
     }
 
     /// The default-valued properties of op `op`, with their defaults (what its ODS builders set).
+    #[inline]
     pub fn defaults(&self, op: &str) -> Vec<NamedAttr<'static>> {
         self.template(op).map_or_else(Vec::new, |t| (t.defaults)())
     }
 
     /// The op facts this context knows, to register more.
+    #[inline]
     pub fn infos_mut(&mut self) -> &mut crate::OpInfos {
         &mut self.infos
     }
 
     /// No dialects: every op stays generic or raw.
+    #[inline]
     pub const fn new() -> Self {
         Self { dialects: BTreeMap::new(), ops: BTreeMap::new(), infos: crate::OpInfos::new() }
     }
@@ -147,6 +154,7 @@ impl MlirOpt {
     }
 
     /// Unloads dialect `ns` and ejects the ops it brought; whether it was loaded.
+    #[inline]
     pub fn unregister(&mut self, ns: &str) -> bool {
         let Some(loaded) = self.dialects.remove(ns) else { return false };
         self.ops.retain(|name, _| !loaded.ops.contains(name));
@@ -154,26 +162,31 @@ impl MlirOpt {
     }
 
     /// Injects one op's template into the op table.
+    #[inline]
     pub fn inject(&mut self, t: Template) -> &mut Self {
         self.ops.insert(t.name, t);
         self
     }
 
     /// Removes an op from the op table.
+    #[inline]
     pub fn eject(&mut self, name: &str) -> Option<Template> {
         self.ops.remove(name)
     }
 
+    #[inline]
     pub fn template(&self, name: &str) -> Option<&Template> {
         self.ops.get(name)
     }
 
     /// Registered namespaces.
+    #[inline]
     pub fn namespaces(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.dialects.keys().copied()
     }
 
     /// Op names in the table.
+    #[inline]
     pub fn op_names(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.ops.keys().copied()
     }
@@ -181,26 +194,31 @@ impl MlirOpt {
     // ---- conversions -------------------------------------------------------------------
 
     /// Text → module; ops in the table are structured from their custom form.
+    #[inline]
     pub fn parse<'a>(&self, src: &'a str) -> R<Module<'a>> {
         Parser::new(src, self).all(Parser::module)
     }
 
     /// Text → one op.
+    #[inline]
     pub fn parse_op<'a>(&self, src: &'a str) -> R<Operation<'a>> {
         Parser::new(src, self).all(Parser::op)
     }
 
     /// Like [`parse_op`](Self::parse_op), with a module's attribute aliases in scope.
+    #[inline]
     pub fn parse_op_in<'a>(&self, aliases: &[(String, String)], src: &'a str) -> R<Operation<'a>> {
         Parser::new(src, self).with_aliases(aliases).all(Parser::op)
     }
 
     /// Like [`show`](Self::show), with a module's attribute aliases in scope.
+    #[inline]
     pub fn show_in<'x, T: Emit + ?Sized>(&'x self, aliases: &'x [(String, String)], x: &'x T) -> ShownIn<'x, T> {
         ShownIn(self, aliases, x)
     }
 
     /// Module / op → text, ops in the table in custom form: `opt.show(&m).to_string()`.
+    #[inline]
     pub fn show<'x, T: Emit + ?Sized>(&'x self, x: &'x T) -> Shown<'x, T> {
         Shown(self, x)
     }
@@ -208,14 +226,17 @@ impl MlirOpt {
 
 impl Template {
     /// ⭐ The blueprint of typed op `O` (what `O::template()` returns).
+    #[inline]
     pub fn of<O: Op + 'static>() -> Self {
         Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O>, defaults: Self::defaults_of::<O> }
     }
 
+    #[inline]
     fn defaults_of<O: Op>() -> Vec<NamedAttr<'static>> {
         Schema::of::<O>().defaults()
     }
 
+    #[inline]
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
         let op = O::parse(p)?;
         Operation::of_owned_op(op).or_else(|e| p.err(e.0))
@@ -238,12 +259,14 @@ impl Template {
 }
 
 impl fmt::Debug for Template {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Template({})", self.name)
     }
 }
 
 impl fmt::Debug for MlirOpt {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MlirOpt").field("dialects", &self.dialects.keys()).field("ops", &self.ops.keys()).finish()
     }

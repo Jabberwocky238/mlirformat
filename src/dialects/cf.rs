@@ -121,6 +121,7 @@ impl<'a> Switch<'a> {
     }
 
     /// Operands per case.
+    #[inline]
     fn segments(&self) -> Option<Vec<usize>> {
         let Attribute::DenseArray { values, .. } = &self.case_operand_segments else { return None };
         values.iter().map(|v| v.parse().ok()).collect()

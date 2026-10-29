@@ -268,10 +268,12 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         (v, result.unwrap_or(Type::NoneType))
     }
 
+    #[inline]
     fn float(t: &Type<'_>) -> bool {
         matches!(t, Type::Float(_))
     }
 
+    #[inline]
     fn integer(t: &Type<'_>) -> bool {
         matches!(t, Type::Integer { .. })
     }
@@ -508,12 +510,14 @@ impl<'a> Named<'a> {
     }
 
     /// 固有属性 `name` 从字典里拿走。
+    #[inline]
     pub fn take(&mut self, name: &str) -> Option<Attribute<'a>> {
         let at = self.attrs.iter().position(|a| a.name == name)?;
         self.attrs.remove(at).value
     }
 
     /// 照 `yields` 造区域（`fns`：类型函数属性的缺省）。
+    #[inline]
     pub fn region(&self, opt: &crate::MlirOpt, props: &[NamedAttr<'a>], fns: &[(&str, &str)], yields: &[Scalar<'_>]) -> Option<Region<'a>> {
         let types: Vec<Type<'a>> = self.inputs_ty.iter().chain(&self.outputs_ty).cloned().collect();
         RegionBuilder::new(opt, props, fns, &types).region(yields)
@@ -524,6 +528,7 @@ impl<'a> Named<'a> {
 macro_rules! named_ops {
     ($($ty:ident = $name:literal { $($attr:ident = $aname:literal),* } [$(($fname:literal, $fdefault:literal)),*] [$($yield:expr),*];)*) => {
         /// 全部 OpDSL op 的模板（`MlirOpt::upstream` 注入，盖过生成的）。
+        #[inline]
         pub fn named_templates() -> Vec<crate::Template> {
             alloc::vec![$($ty::template()),*]
         }
@@ -544,6 +549,7 @@ macro_rules! named_ops {
         }
 
         impl Print for $ty<'_> {
+            #[inline]
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
                 p.op_name(Self::NAME)?;
                 Named::print(p, &[$(($aname, self.$attr.as_ref())),*], &self.attrs, (&self.inputs, &self.inputs_ty), (&self.outputs, &self.outputs_ty), &self.result_tensors, &[])?;
@@ -591,6 +597,7 @@ struct Contraction;
 
 impl Contraction {
     /// 缺省的映射：`(d0, d1, d2) -> (d0, d2)` 之类的体，拼成数组属性。
+    #[inline]
     fn defaults(maps: &[&str]) -> Option<Attribute<'static>> {
         let text = alloc::format!("[{}]", maps.iter().map(|m| alloc::format!("affine_map<{m}>")).collect::<Vec<_>>().join(", "));
         Attribute::try_from(text.as_str()).ok().map(|a| a.owned())
@@ -620,6 +627,7 @@ impl Contraction {
 macro_rules! contraction_ops {
     ($($ty:ident = $name:literal, $style:ident, [$($map:literal),*], $cast:literal, [$($elide:literal),*];)*) => {
         /// 乘加类的模板（`MlirOpt::upstream` 注入，盖过生成的）。
+        #[inline]
         pub fn contraction_templates() -> Vec<crate::Template> {
             alloc::vec![$($ty::template()),*]
         }
@@ -689,6 +697,7 @@ contraction_ops! {
 
 impl<'o, 'a> RegionBuilder<'o, 'a> {
     /// `buildIdentityRegion`：交出第一个块参数。
+    #[inline]
     fn identity(mut self) -> Region<'a> {
         let first = self.args.first().cloned();
         self.emit("linalg.yield", &first.iter().collect::<Vec<_>>(), None, Vec::new());
@@ -713,6 +722,7 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
     }
 
     /// 一个块：参数、造好的 op。
+    #[inline]
     fn finish(self) -> Region<'a> {
         let args = self.args.into_iter().map(|(v, ty)| crate::common::BlockArg { name: v.name, ty, loc: None }).collect();
         Region { blocks: alloc::vec![crate::common::Block { label: Some(Str::Borrowed("bb0")), args, ops: self.ops }] }
@@ -747,6 +757,7 @@ impl Dst {
     }
 
     /// 结果：outs 里的张量（`parseDstStyleOp`）。
+    #[inline]
     fn results<'a>(outs: &[Type<'a>]) -> Vec<Type<'a>> {
         outs.iter().filter(|t| matches!(t, Type::Shaped(s) if s.kind == crate::common::ShapedKind::Tensor)).cloned().collect()
     }
@@ -1013,6 +1024,7 @@ impl Elementwise<'_> {
     }
 
     /// 缺省映射：arity + 1 个 `rank` 维的恒等。
+    #[inline]
     fn defaults(arity: usize, rank: usize) -> Vec<String> {
         let dims = (0..rank).map(|d| alloc::format!("d{d}")).collect::<Vec<_>>().join(", ");
         alloc::vec![alloc::format!("({dims}) -> ({dims})"); arity + 1]
@@ -1070,6 +1082,7 @@ impl Parse for Elementwise<'_> {
 }
 
 /// 目标式 op 的模板（`MlirOpt::upstream` 注入，盖过生成的）。
+#[inline]
 pub fn dst_templates() -> Vec<crate::Template> {
     alloc::vec![Transpose::template(), Broadcast::template(), Map::template(), Reduce::template(), Elementwise::template()]
 }

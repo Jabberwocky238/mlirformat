@@ -19,31 +19,38 @@ pub struct ApInt {
 }
 
 impl ApInt {
+    #[inline]
     fn mask(width: u32) -> u128 {
         if width >= 128 { u128::MAX } else { (1u128 << width) - 1 }
     }
 
     /// `value` truncated to `width` bits.
+    #[inline]
     pub fn new(width: u32, value: i128) -> Self {
         Self { width, bits: value as u128 & Self::mask(width) }
     }
 
+    #[inline]
     pub fn from_bits(width: u32, bits: u128) -> Self {
         Self { width, bits: bits & Self::mask(width) }
     }
 
+    #[inline]
     pub fn zero(width: u32) -> Self {
         Self { width, bits: 0 }
     }
 
+    #[inline]
     pub fn all_ones(width: u32) -> Self {
         Self { width, bits: Self::mask(width) }
     }
 
+    #[inline]
     pub fn bits(self) -> u128 {
         self.bits
     }
 
+    #[inline]
     pub fn unsigned(self) -> u128 {
         self.bits
     }
@@ -56,138 +63,170 @@ impl ApInt {
         ((self.bits << shift) as i128) >> shift
     }
 
+    #[inline]
     pub fn is_zero(self) -> bool {
         self.bits == 0
     }
 
+    #[inline]
     pub fn is_one(self) -> bool {
         self.bits == 1
     }
 
+    #[inline]
     pub fn is_all_ones(self) -> bool {
         self.bits == Self::mask(self.width)
     }
 
+    #[inline]
     pub fn is_negative(self) -> bool {
         self.width > 0 && (self.bits >> (self.width - 1)) & 1 == 1
     }
 
+    #[inline]
     pub fn signed_min(width: u32) -> Self {
         Self::from_bits(width, 1u128 << (width - 1))
     }
 
+    #[inline]
     pub fn signed_max(width: u32) -> Self {
         Self::from_bits(width, (1u128 << (width - 1)) - 1)
     }
 
+    #[inline]
     pub fn is_signed_min(self) -> bool {
         self == Self::signed_min(self.width)
     }
 
+    #[inline]
     pub fn sext(self, width: u32) -> Self {
         Self::new(width, self.signed())
     }
 
+    #[inline]
     pub fn zext(self, width: u32) -> Self {
         Self::from_bits(width, self.bits)
     }
 
+    #[inline]
     pub fn trunc(self, width: u32) -> Self {
         Self::from_bits(width, self.bits)
     }
 
+    #[inline]
     pub fn add(self, o: Self) -> Self {
         Self::from_bits(self.width, self.bits.wrapping_add(o.bits))
     }
 
+    #[inline]
     pub fn sub(self, o: Self) -> Self {
         Self::from_bits(self.width, self.bits.wrapping_sub(o.bits))
     }
 
+    #[inline]
     pub fn mul(self, o: Self) -> Self {
         Self::from_bits(self.width, self.bits.wrapping_mul(o.bits))
     }
 
+    #[inline]
     pub fn neg(self) -> Self {
         Self::zero(self.width).sub(self)
     }
 
+    #[inline]
     pub fn not(self) -> Self {
         Self::from_bits(self.width, !self.bits)
     }
 
+    #[inline]
     pub fn and(self, o: Self) -> Self {
         Self::from_bits(self.width, self.bits & o.bits)
     }
 
+    #[inline]
     pub fn or(self, o: Self) -> Self {
         Self::from_bits(self.width, self.bits | o.bits)
     }
 
+    #[inline]
     pub fn xor(self, o: Self) -> Self {
         Self::from_bits(self.width, self.bits ^ o.bits)
     }
 
+    #[inline]
     pub fn udiv(self, o: Self) -> Option<Self> {
         (!o.is_zero()).then(|| Self::from_bits(self.width, self.bits / o.bits))
     }
 
+    #[inline]
     pub fn urem(self, o: Self) -> Option<Self> {
         (!o.is_zero()).then(|| Self::from_bits(self.width, self.bits % o.bits))
     }
 
     /// Signed division, wrapping `MIN / -1`.
+    #[inline]
     pub fn sdiv(self, o: Self) -> Option<Self> {
         (!o.is_zero()).then(|| Self::new(self.width, self.signed().wrapping_div(o.signed())))
     }
 
+    #[inline]
     pub fn srem(self, o: Self) -> Option<Self> {
         (!o.is_zero()).then(|| Self::new(self.width, self.signed().wrapping_rem(o.signed())))
     }
 
     /// `sdiv_ov`: also whether it overflowed (`MIN / -1`).
+    #[inline]
     pub fn sdiv_ov(self, o: Self) -> Option<(Self, bool)> {
         let q = self.sdiv(o)?;
         Some((q, self.is_signed_min() && o.is_all_ones()))
     }
 
+    #[inline]
     pub fn shl(self, by: u32) -> Self {
         if by >= self.width { Self::zero(self.width) } else { Self::from_bits(self.width, self.bits << by) }
     }
 
+    #[inline]
     pub fn lshr(self, by: u32) -> Self {
         if by >= self.width { Self::zero(self.width) } else { Self::from_bits(self.width, self.bits >> by) }
     }
 
+    #[inline]
     pub fn ashr(self, by: u32) -> Self {
         let by = by.min(self.width.saturating_sub(1));
         Self::new(self.width, self.signed() >> by)
     }
 
+    #[inline]
     pub fn scmp(self, o: Self) -> Ordering {
         self.signed().cmp(&o.signed())
     }
 
+    #[inline]
     pub fn ucmp(self, o: Self) -> Ordering {
         self.bits.cmp(&o.bits)
     }
 
     /// Signed addition overflowed?
+    #[inline]
     pub fn sadd_ov(self, o: Self) -> (Self, bool) {
         let r = self.add(o);
         (r, self.is_negative() == o.is_negative() && r.is_negative() != self.is_negative())
     }
 
+    #[inline]
     pub fn uadd_ov(self, o: Self) -> (Self, bool) {
         let r = self.add(o);
         (r, r.bits < self.bits)
     }
 
+    #[inline]
     pub fn ssub_ov(self, o: Self) -> (Self, bool) {
         let r = self.sub(o);
         (r, self.is_negative() != o.is_negative() && r.is_negative() != self.is_negative())
     }
 
+    #[inline]
     pub fn usub_ov(self, o: Self) -> (Self, bool) {
         (self.sub(o), o.bits > self.bits)
     }
@@ -210,22 +249,27 @@ impl ApInt {
         (r, ov)
     }
 
+    #[inline]
     pub fn count_leading_zeros(self) -> u32 {
         if self.bits == 0 { self.width } else { self.width - (128 - self.bits.leading_zeros()) }
     }
 
+    #[inline]
     pub fn count_trailing_zeros(self) -> u32 {
         if self.bits == 0 { self.width } else { self.bits.trailing_zeros() }
     }
 
+    #[inline]
     pub fn popcount(self) -> u32 {
         self.bits.count_ones()
     }
 
+    #[inline]
     pub fn is_power_of_two(self) -> bool {
         self.bits != 0 && self.bits & (self.bits - 1) == 0
     }
 
+    #[inline]
     pub fn log2(self) -> u32 {
         127 - self.bits.leading_zeros()
     }
@@ -245,10 +289,12 @@ impl BigUint {
         Self(out)
     }
 
+    #[inline]
     fn is_zero(&self) -> bool {
         self.0.is_empty()
     }
 
+    #[inline]
     fn trim(&mut self) {
         while self.0.last() == Some(&0) {
             self.0.pop();
@@ -366,6 +412,7 @@ impl BigUint {
         self.0[w] |= 1 << (i % 32);
     }
 
+    #[inline]
     fn cmp_big(&self, o: &Self) -> Ordering {
         self.0.len().cmp(&o.0.len()).then_with(|| self.0.iter().rev().cmp(o.0.iter().rev()))
     }
@@ -431,15 +478,18 @@ impl Layout {
         })
     }
 
+    #[inline]
     fn bias(self) -> i32 {
         (1 << (self.exp - 1)) - 1
     }
 
+    #[inline]
     fn width(self) -> u32 {
         1 + self.exp + self.mant
     }
 
     /// Precision, hidden bit included.
+    #[inline]
     fn precision(self) -> u32 {
         self.mant + 1
     }
@@ -529,19 +579,23 @@ pub struct ApFloat {
 }
 
 impl ApFloat {
+    #[inline]
     fn layout(self) -> Layout {
         Layout::of(self.kind).expect("unsupported float format")
     }
 
+    #[inline]
     pub fn supported(kind: FloatKind) -> bool {
         Layout::of(kind).is_some()
     }
 
+    #[inline]
     pub fn from_f64(kind: FloatKind, x: f64) -> Option<Self> {
         let l = Layout::of(kind)?;
         Some(Self { kind, bits: if kind == FloatKind::F64 { x.to_bits() } else { l.round(x) } })
     }
 
+    #[inline]
     pub fn from_bits(kind: FloatKind, bits: u64) -> Option<Self> {
         Layout::of(kind).map(|l| Self { kind, bits: bits & ((1u128 << l.width()) - 1) as u64 })
     }
@@ -557,39 +611,47 @@ impl ApFloat {
         Self::from_f64(kind, lit.parse::<f64>().ok()?)
     }
 
+    #[inline]
     pub fn to_f64(self) -> f64 {
         if self.kind == FloatKind::F64 { f64::from_bits(self.bits) } else { self.layout().to_f64(self.bits) }
     }
 
+    #[inline]
     pub fn is_nan(self) -> bool {
         self.to_f64().is_nan()
     }
 
+    #[inline]
     pub fn is_zero(self) -> bool {
         self.to_f64() == 0.0
     }
 
+    #[inline]
     pub fn is_negative(self) -> bool {
         (self.bits >> (self.layout().width() - 1)) & 1 == 1
     }
 
+    #[inline]
     pub fn is_inf(self) -> bool {
         self.to_f64().is_infinite()
     }
 
     /// The default quiet NaN `APFloat` makes for an invalid operation (positive).
     /// `APFloat::getLargest`.
+    #[inline]
     pub fn largest(kind: FloatKind, negative: bool) -> Self {
         let l = Layout::of(kind).expect("unsupported float format");
         let bits = (((1u64 << l.exp) - 2) << l.mant) | ((1u64 << l.mant) - 1) | (u64::from(negative) << (l.exp + l.mant));
         Self { kind, bits }
     }
 
+    #[inline]
     pub fn nan(kind: FloatKind) -> Self {
         let l = Layout::of(kind).expect("unsupported float format");
         Self { kind, bits: (((1u64 << l.exp) - 1) << l.mant) | (1 << (l.mant - 1)) }
     }
 
+    #[inline]
     pub fn quieted(self) -> Self {
         let l = self.layout();
         Self { kind: self.kind, bits: self.bits | (1 << (l.mant - 1)) }
@@ -613,32 +675,39 @@ impl ApFloat {
         if r.is_nan() { Self::nan(self.kind) } else { r }
     }
 
+    #[inline]
     pub fn add(self, o: Self) -> Self {
         self.binary(o, |a, b| a + b, |a, b| a + b)
     }
 
+    #[inline]
     pub fn sub(self, o: Self) -> Self {
         self.binary(o, |a, b| a - b, |a, b| a - b)
     }
 
+    #[inline]
     pub fn mul(self, o: Self) -> Self {
         self.binary(o, |a, b| a * b, |a, b| a * b)
     }
 
+    #[inline]
     pub fn div(self, o: Self) -> Self {
         self.binary(o, |a, b| a / b, |a, b| a / b)
     }
 
+    #[inline]
     pub fn neg(self) -> Self {
         Self { kind: self.kind, bits: self.bits ^ (1 << (self.layout().width() - 1)) }
     }
 
     /// Converts to another format (round to nearest even).
+    #[inline]
     pub fn convert(self, kind: FloatKind) -> Option<Self> {
         Self::from_f64(kind, self.to_f64())
     }
 
     /// `APFloat::compare`: `None` when unordered.
+    #[inline]
     pub fn compare(self, o: Self) -> Option<Ordering> {
         self.to_f64().partial_cmp(&o.to_f64())
     }

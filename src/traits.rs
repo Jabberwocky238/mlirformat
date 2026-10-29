@@ -72,6 +72,7 @@ pub struct OpInfo {
 }
 
 impl OpInfo {
+    #[inline]
     pub fn has(&self, t: Trait) -> bool {
         self.traits.contains(&t)
     }
@@ -87,6 +88,7 @@ pub struct OpInfos {
 
 impl OpInfos {
     /// Knows nothing.
+    #[inline]
     pub const fn new() -> Self {
         Self { ops: BTreeMap::new(), dialects: BTreeSet::new() }
     }
@@ -105,26 +107,31 @@ impl OpInfos {
     }
 
     /// Registers (or replaces) an op's row.
+    #[inline]
     pub fn insert(&mut self, info: OpInfo) {
         self.ops.insert(info.name, info);
     }
 
     /// The rows of dialect `ns`'s ops.
+    #[inline]
     pub fn of_dialect(&self, ns: &str) -> Vec<OpInfo> {
         self.ops.values().filter(|i| i.name.split_once('.').is_some_and(|(d, _)| d == ns)).copied().collect()
     }
 
     /// Registers a dialect name.
+    #[inline]
     pub fn dialect(&mut self, ns: &'static str) {
         self.dialects.insert(ns);
     }
 
     /// The row for op `name`.
+    #[inline]
     pub fn op_info(&self, name: &str) -> Option<&OpInfo> {
         self.ops.get(name)
     }
 
     /// Whether namespace `ns` is known.
+    #[inline]
     pub fn knows_dialect(&self, ns: &str) -> bool {
         self.dialects.contains(ns)
     }

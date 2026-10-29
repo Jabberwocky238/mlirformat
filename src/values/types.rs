@@ -14,6 +14,7 @@ impl Dim {
 
 impl From<i64> for Dim {
     /// [`Dim::DYNAMIC`] is `?`.
+    #[inline]
     fn from(n: i64) -> Self {
         if n == Dim::DYNAMIC { Dim::Dynamic } else { Dim::Static(n) }
     }
@@ -31,11 +32,13 @@ impl From<&Dim> for i64 {
 
 impl<'a> Type<'a> {
     /// `RankedTensorType::get(dims, elem)` ([`Dim::DYNAMIC`] is `?`).
+    #[inline]
     pub fn tensor(dims: &[i64], elem: Type<'a>) -> Type<'a> {
         Type::Shaped(Shaped { kind: ShapedKind::Tensor, shape: Some(dims.iter().map(|d| Dim::from(*d)).collect()), elem: elem.into(), extras: Vec::new() })
     }
 
     /// `VectorType::get(shape, elem, scalable)`; `scalable` may be shorter than `shape`.
+    #[inline]
     pub fn vector(shape: &[i64], scalable: &[bool], elem: Type<'a>) -> Type<'a> {
         let dims = shape.iter().zip(scalable.iter().chain(core::iter::repeat(&false))).map(|(n, s)| if *s { Dim::Scalable(*n) } else { Dim::Static(*n) }).collect();
         Type::Shaped(Shaped { kind: ShapedKind::Vector, shape: Some(dims), elem: elem.into(), extras: Vec::new() })
@@ -115,6 +118,7 @@ impl<'a> Type<'a> {
 
 impl Shaped<'_> {
     /// `getShape` when ranked ([`Dim::DYNAMIC`] for `?`).
+    #[inline]
     pub fn dims(&self) -> Option<Vec<i64>> {
         Some(self.shape.as_ref()?.iter().map(i64::from).collect())
     }
@@ -122,6 +126,7 @@ impl Shaped<'_> {
 
 impl<'a> Attribute<'a> {
     /// `#ub.poison`.
+    #[inline]
     pub fn is_poison(&self) -> bool {
         matches!(self, Attribute::Extended { ext: Extended { name, .. }, .. } if name == "ub.poison")
     }
@@ -135,16 +140,19 @@ impl<'a> Attribute<'a> {
     }
 
     /// `getIndexAttr(v)`: `v : index`.
+    #[inline]
     pub fn index(v: i64) -> Attribute<'a> {
         Attribute::Int { lit: Cow::Owned(format!("{v}")), ty: Some(Type::Index) }
     }
 
     /// `getDenseI64ArrayAttr`: `array<i64: ...>`.
+    #[inline]
     pub fn dense_i64(v: &[i64]) -> Attribute<'a> {
         Attribute::DenseArray { ty: Type::int(64), values: v.iter().map(|x| Cow::Owned(format!("{x}"))).collect() }
     }
 
     /// `getDenseI32ArrayAttr`: `array<i32: ...>` (of sizes or counts as well).
+    #[inline]
     pub fn dense_i32<T: core::fmt::Display>(v: &[T]) -> Attribute<'a> {
         Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Cow::Owned(format!("{x}"))).collect() }
     }

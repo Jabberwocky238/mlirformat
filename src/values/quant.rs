@@ -28,6 +28,7 @@ pub struct UniformQuantized<'a> {
 impl<'a> UniformQuantized<'a> {
     /// `getStorageElementTypeFromQuantized` (TOSA): the storage integer type, unsigned for
     /// `u` storage (`getStorageType` alone is signless).
+    #[inline]
     pub fn storage_type(&self) -> Type<'a> {
         if self.signed { Type::int(self.width) } else { Type::Integer { width: self.width, signedness: Signedness::Unsigned } }
     }

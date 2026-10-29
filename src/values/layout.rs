@@ -16,6 +16,7 @@ pub struct StridedLayout {
 
 impl StridedLayout {
     /// `isIdentity`: `strided<[]>` or `strided<[1]>`, no offset.
+    #[inline]
     pub fn is_identity(&self) -> bool {
         self.offset == 0 && matches!(self.strides[..], [] | [1])
     }
@@ -54,6 +55,7 @@ impl From<StridedLayout> for Attribute<'_> {
 
 impl Attribute<'_> {
     /// A `MemRefLayoutAttrInterface`: `strided<...>` or `affine_map<...>`.
+    #[inline]
     pub fn is_layout(&self) -> bool {
         matches!(self, Attribute::Builtin { name, .. } if name == "strided" || name == "affine_map")
     }
@@ -61,16 +63,19 @@ impl Attribute<'_> {
 
 impl<'a> Shaped<'a> {
     /// The memref's layout attribute, when it has one.
+    #[inline]
     pub fn layout(&self) -> Option<&Attribute<'a>> {
         self.extras.iter().find(|a| a.is_layout())
     }
 
     /// The memref's `strided` layout, when that is its layout.
+    #[inline]
     pub fn strided(&self) -> Option<StridedLayout> {
         StridedLayout::try_from(self.layout()?).ok()
     }
 
     /// `getMemorySpace`: the attribute after the layout, when there is one.
+    #[inline]
     pub fn memory_space(&self) -> Option<&Attribute<'a>> {
         self.extras.iter().find(|a| !a.is_layout())
     }

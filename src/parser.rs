@@ -46,6 +46,7 @@ pub trait Read<'a>: Sized {
 macro_rules! entry {
     ($($ty:ident => $m:ident),* $(,)?) => {$(
         impl<'a> Read<'a> for $ty<'a> {
+            #[inline]
             fn read(p: &mut Parser<'a, '_>) -> R<Self> {
                 p.$m()
             }
@@ -53,6 +54,7 @@ macro_rules! entry {
 
         impl<'a> TryFrom<&'a str> for $ty<'a> {
             type Error = ParseError;
+            #[inline]
             fn try_from(src: &'a str) -> R<Self> {
                 Parser::read(src, |p| Self::read(p))
             }
@@ -87,26 +89,31 @@ const fn closer(c: u8) -> u8 {
 
 impl<'a, 'd> Parser<'a, 'd> {
     /// The context this parser reads against (an op's custom form may need its ODS facts).
+    #[inline]
     pub fn opt(&self) -> &'d MlirOpt {
         self.opt
     }
 
+    #[inline]
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
         Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 }
     }
 
     /// Parses all of `src` with `f`, no dialects registered.
+    #[inline]
     pub fn read<T>(src: &'a str, f: impl FnOnce(&mut Parser<'a, '_>) -> R<T>) -> R<T> {
         Parser::new(src, &MlirOpt::new()).all(f)
     }
 
     /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
+    #[inline]
     pub fn alias(&self, name: &str) -> Option<&str> {
         self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
     }
 
     /// Which alias spells `text`, if one does — the way back from an attribute an op rebuilt
     /// out of its custom form to the `#map` the module already names it by.
+    #[inline]
     pub fn alias_named(&self, text: &str) -> Option<&str> {
         self.aliases.iter().find(|(_, v)| v == text).map(|(n, _)| &**n)
     }
@@ -114,18 +121,21 @@ impl<'a, 'd> Parser<'a, 'd> {
     /// The same parser with a module's attribute aliases already in scope, for an op read on
     /// its own out of a module.
     #[must_use]
+    #[inline]
     pub fn with_aliases(mut self, aliases: &[(String, String)]) -> Self {
         self.aliases = aliases.to_vec();
         self
     }
 
     /// The op name of a typed op's custom form: `name` itself or its short form.
+    #[inline]
     pub fn op_name(&mut self, name: &str) -> R<()> {
         let id = self.ident()?;
         if id == name || name.split_once('.').is_some_and(|(_, short)| short == id) { Ok(()) } else { self.err(format!("expected `{name}`")) }
     }
 
     /// Runs `f` and requires it to consume the whole input.
+    #[inline]
     pub fn all<T>(mut self, f: impl FnOnce(&mut Self) -> R<T>) -> R<T> {
         let v = f(&mut self).map_err(|e| e.placed(self.src))?;
         self.ws();
@@ -134,34 +144,41 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     // ---- low level -------------------------------------------------------
 
+    #[inline]
     pub fn pos(&self) -> usize {
         self.pos
     }
 
     /// Rewinds (or advances) to a byte offset previously returned by [`Self::pos`].
+    #[inline]
     pub fn seek(&mut self, pos: usize) {
         self.pos = pos;
     }
 
+    #[inline]
     pub fn peek(&self) -> Option<u8> {
         self.src.as_bytes().get(self.pos).copied()
     }
 
+    #[inline]
     fn peek_at(&self, k: usize) -> Option<u8> {
         self.src.as_bytes().get(self.pos + k).copied()
     }
 
     /// Unconsumed input.
+    #[inline]
     pub fn rest(&self) -> &'a str {
         &self.src[self.pos..]
     }
 
     /// Source text between `start` and the current position.
+    #[inline]
     pub fn since(&self, start: usize) -> &'a str {
         &self.src[start..self.pos]
     }
 
     /// An error here; its line is filled in only if it is the one the parse returns ([`all`](Self::all)).
+    #[inline]
     pub fn err<T>(&self, msg: impl Into<String>) -> R<T> {
         Err(ParseError::unplaced(self.pos, msg))
     }
@@ -177,6 +194,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
+    #[inline]
     fn skip_line(&mut self) {
         self.pos = self.rest().find('\n').map_or(self.src.len(), |i| self.pos + i);
     }
@@ -201,20 +219,24 @@ impl<'a, 'd> Parser<'a, 'd> {
         hit
     }
 
+    #[inline]
     pub fn expect(&mut self, s: &str) -> R<()> {
         if self.eat(s) { Ok(()) } else { self.err(format!("expected `{s}`")) }
     }
 
     /// Assembly-format literal: keyword if it starts with a letter or `_`, else punctuation.
+    #[inline]
     pub fn eat_lit(&mut self, s: &str) -> bool {
         if s.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_') { self.eat_kw(s) } else { self.eat(s) }
     }
 
+    #[inline]
     pub fn expect_lit(&mut self, s: &str) -> R<()> {
         if self.eat_lit(s) { Ok(()) } else { self.err(format!("expected `{s}`")) }
     }
 
     /// Is the next non-blank byte `c`?
+    #[inline]
     pub fn at(&mut self, c: u8) -> bool {
         self.ws();
         self.peek() == Some(c)
@@ -235,6 +257,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
+    #[inline]
     pub fn number<T: core::str::FromStr>(&mut self) -> R<T> {
         self.ws();
         let s = self.nonempty("integer", |c| c.is_ascii_digit())?;
@@ -251,6 +274,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// Name after a sigil: `%x`, `^bb0`, `@sym`, `#map`, `!t` → `x`, `bb0`, ...
+    #[inline]
     pub fn sigil(&mut self, c: char) -> R<&'a str> {
         self.expect(c.encode_utf8(&mut [0; 4]))?;
         self.nonempty("name", is_suffix)
@@ -280,6 +304,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// `@name` or `@"name"`; quoted names keep their quotes.
+    #[inline]
     pub fn symbol(&mut self) -> R<&'a str> {
         self.expect("@")?;
         if self.peek() == Some(b'"') { self.skip_string() } else { self.nonempty("symbol", is_suffix) }
@@ -323,6 +348,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// Is a balanced group next (after whitespace)?
+    #[inline]
     fn at_group(&mut self) -> bool {
         self.ws();
         matches!(self.peek(), Some(b'<' | b'(' | b'['))
@@ -353,6 +379,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// `open elem (, elem)* close` if `open` follows, else empty.
+    #[inline]
     pub fn opt_list<T>(&mut self, open: &str, close: &str, f: impl FnMut(&mut Self) -> R<T>) -> R<Vec<T>> {
         if self.eat(open) { self.list(close, f) } else { Ok(Vec::new()) }
     }
@@ -390,6 +417,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// Lets the owning dialect structure an extended type/attribute body.
+    #[inline]
     fn extended(&mut self, kind: SymKind) -> R<Extended<'a>> {
         let name = self.sigil(kind.sigil())?;
         self.extended_body(kind, name)
@@ -397,6 +425,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// A dialect type printed stripped (`<f32>` for `!emitc.lvalue<f32>`): ODS's `type($x)` of
     /// one dialect type.
+    #[inline]
     pub fn stripped_ty(&mut self, name: &'a str) -> R<Type<'a>> {
         self.ws();
         self.extended_body(SymKind::Type, name).map(Type::Extended)
@@ -441,6 +470,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     /// Does `id` name a scalar builtin type (`i32`, `ui8`, `f16`, `bf16`, `index`)? A bare word in
     /// an attribute position is then a type attribute (`pdl.type : i32`), not an enum case;
     /// `none` stays a word: enums use it as a case.
+    #[inline]
     fn scalar_type_word(id: &str) -> bool {
         let split = id.find(|c: char| c.is_ascii_digit()).unwrap_or(id.len());
         id == "index" || FloatKind::try_from(id).is_ok() || (Signedness::try_from(&id[..split]).is_ok() && id[split..].parse::<u32>().is_ok())
@@ -535,6 +565,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// `type` or `(type, ...)` — the right-hand side of `->`.
+    #[inline]
     pub fn results_ty(&mut self) -> R<Vec<Type<'a>>> {
         if self.eat("(") { self.list(")", Self::ty) } else { Ok(vec![self.ty()?]) }
     }
@@ -569,6 +600,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// An attribute's optional `: type`, unless parsing a bare one.
+    #[inline]
     fn suffix(&mut self, bare: bool) -> R<Option<Type<'a>>> {
         if bare { Ok(None) } else { self.opt_ty() }
     }
@@ -665,6 +697,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// Optional attribute dictionary.
+    #[inline]
     pub fn opt_dict(&mut self) -> R<Vec<NamedAttr<'a>>> {
         if self.at(b'{') { self.dict() } else { Ok(Vec::new()) }
     }
@@ -870,6 +903,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
+    #[inline]
     fn push_text(pieces: &mut Vec<Piece<'a>>, text: &'a str) {
         if !text.is_empty() {
             pieces.push(Piece::Text(text.into()));
@@ -895,6 +929,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// A region of an op that sets no default dialect.
+    #[inline]
     pub fn region(&mut self) -> R<Region<'a>> {
         self.region_in(None)
     }
@@ -912,6 +947,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     /// `%name : type loc(...)?` — a block argument or function-signature entry.
+    #[inline]
     pub fn block_arg(&mut self) -> R<BlockArg<'a>> {
         let name = self.sigil('%')?.into();
         self.expect(":")?;
@@ -1002,6 +1038,7 @@ impl Type<'_> {
 
 impl Content {
     /// Deserializes a `T` out of it.
+    #[inline]
     pub fn to<T: DeserializeOwned>(self) -> Result<T, Error> {
         T::deserialize(self)
     }
@@ -1015,6 +1052,7 @@ impl Content {
     }
 
     /// Any serializable value as another type of the same shape (borrowed AST → owned AST).
+    #[inline]
     pub fn convert<T: Serialize + ?Sized, U: DeserializeOwned>(value: &T) -> Result<U, Error> {
         Content::of(value)?.to()
     }
@@ -1133,12 +1171,15 @@ impl<'de> de::Deserializer<'de> for Content {
         deserialize_ignored_any
     );
 
+    #[inline]
     fn deserialize_unit_struct<V: Visitor<'de>>(self, _: &'static str, v: V) -> Result<V::Value, Error> {
         self.deserialize_any(v)
     }
+    #[inline]
     fn deserialize_tuple<V: Visitor<'de>>(self, _: usize, v: V) -> Result<V::Value, Error> {
         self.deserialize_any(v)
     }
+    #[inline]
     fn deserialize_tuple_struct<V: Visitor<'de>>(self, _: &'static str, _: usize, v: V) -> Result<V::Value, Error> {
         self.deserialize_any(v)
     }
@@ -1193,6 +1234,7 @@ impl Content {
 
 impl IntoDeserializer<'_, Error> for Content {
     type Deserializer = Self;
+    #[inline]
     fn into_deserializer(self) -> Self {
         self
     }
@@ -1202,6 +1244,7 @@ struct Items(alloc::vec::IntoIter<Content>);
 
 impl<'de> SeqAccess<'de> for Items {
     type Error = Error;
+    #[inline]
     fn next_element_seed<T: DeserializeSeed<'de>>(&mut self, seed: T) -> Result<Option<T::Value>, Error> {
         self.0.next().map(|x| seed.deserialize(x)).transpose()
     }
@@ -1212,11 +1255,13 @@ struct Pairs<K>(alloc::vec::IntoIter<(K, Content)>, Option<Content>);
 
 impl<'de, K: IntoDeserializer<'de, Error>> MapAccess<'de> for Pairs<K> {
     type Error = Error;
+    #[inline]
     fn next_key_seed<S: DeserializeSeed<'de>>(&mut self, seed: S) -> Result<Option<S::Value>, Error> {
         let Some((k, v)) = self.0.next() else { return Ok(None) };
         self.1 = Some(v);
         seed.deserialize(k.into_deserializer()).map(Some)
     }
+    #[inline]
     fn next_value_seed<S: DeserializeSeed<'de>>(&mut self, seed: S) -> Result<S::Value, Error> {
         seed.deserialize(self.1.take().ok_or_else(|| Error("value before key".into()))?)
     }
@@ -1225,6 +1270,7 @@ impl<'de, K: IntoDeserializer<'de, Error>> MapAccess<'de> for Pairs<K> {
 impl<'de> EnumAccess<'de> for Content {
     type Error = Error;
     type Variant = Payload;
+    #[inline]
     fn variant_seed<T: DeserializeSeed<'de>>(self, seed: T) -> Result<(T::Value, Payload), Error> {
         let Self::Variant(_, _, variant, payload) = self else { return Err("expected an enum".into()) };
         Ok((seed.deserialize(de::value::StrDeserializer::<Error>::new(variant))?, *payload))
@@ -1269,6 +1315,7 @@ struct Tagged(Content, Content);
 impl<'de> EnumAccess<'de> for Tagged {
     type Error = Error;
     type Variant = Payload;
+    #[inline]
     fn variant_seed<T: DeserializeSeed<'de>>(self, seed: T) -> Result<(T::Value, Payload), Error> {
         Ok((seed.deserialize(self.0)?, Payload::Newtype(self.1)))
     }
@@ -1280,6 +1327,7 @@ struct Named(Content);
 impl<'de> EnumAccess<'de> for Named {
     type Error = Error;
     type Variant = Payload;
+    #[inline]
     fn variant_seed<T: DeserializeSeed<'de>>(self, seed: T) -> Result<(T::Value, Payload), Error> {
         Ok((seed.deserialize(self.0)?, Payload::Unit))
     }
@@ -1301,6 +1349,7 @@ macro_rules! capture {
 impl<'de> Visitor<'de> for Capture {
     type Value = Content;
 
+    #[inline]
     fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("any value")
     }
@@ -1312,15 +1361,19 @@ impl<'de> Visitor<'de> for Capture {
         visit_bytes(&[u8]) => Bytes, visit_byte_buf(Vec<u8>) => Bytes,
     }
 
+    #[inline]
     fn visit_none<E: de::Error>(self) -> Result<Content, E> {
         Ok(Content::None)
     }
+    #[inline]
     fn visit_unit<E: de::Error>(self) -> Result<Content, E> {
         Ok(Content::Unit)
     }
+    #[inline]
     fn visit_some<D: de::Deserializer<'de>>(self, d: D) -> Result<Content, D::Error> {
         Content::deserialize(d).map(|x| Content::Some(Box::new(x)))
     }
+    #[inline]
     fn visit_newtype_struct<D: de::Deserializer<'de>>(self, d: D) -> Result<Content, D::Error> {
         Content::deserialize(d)
     }
@@ -1339,6 +1392,7 @@ impl<'de> Visitor<'de> for Capture {
         Ok(Content::Map(xs))
     }
     /// `{variant: payload}`; the payload read as a newtype, the kind being unknown here.
+    #[inline]
     fn visit_enum<A: EnumAccess<'de>>(self, a: A) -> Result<Content, A::Error> {
         let (k, v): (Content, _) = a.variant()?;
         Ok(Content::Map(vec![(k, v.newtype_variant()?)]))
@@ -1348,6 +1402,7 @@ impl<'de> Visitor<'de> for Capture {
 /// ⭐ Any self-describing format (JSON, …) into the data model: how a typed op deserializes
 /// ([`Fields::read`]) without a visitor of its own.
 impl<'de> Deserialize<'de> for Content {
+    #[inline]
     fn deserialize<D: de::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         d.deserialize_any(Capture)
     }
@@ -1359,6 +1414,7 @@ struct Keyed(&'static [&'static str]);
 impl<'de> Visitor<'de> for Keyed {
     type Value = Fields;
 
+    #[inline]
     fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("an op")
     }
@@ -1390,6 +1446,7 @@ impl TryFrom<Content> for Fields {
 }
 
 impl Fields {
+    #[inline]
     fn pop(&mut self, key: &str) -> Option<Content> {
         self.0.iter().position(|(k, _)| *k == key).map(|i| self.0.swap_remove(i).1)
     }
@@ -1404,11 +1461,13 @@ impl Fields {
 
     /// ⭐ An op's fields out of any deserializer: what `#[mlir::op]`'s `Deserialize` reads
     /// before [`Op::from_fields`] — generic in the format only, shared by every op.
+    #[inline]
     pub fn read<'de, D: de::Deserializer<'de>>(d: D, name: &'static str, keys: &'static [&'static str]) -> Result<Self, D::Error> {
         d.deserialize_struct(name, keys, Keyed(keys))
     }
 
     /// Region field `key`, moved out when it was carried as itself.
+    #[inline]
     pub fn region(&mut self, key: &str) -> Result<Region<'static>, Error> {
         self.pop(key).ok_or_else(|| Error(format!("missing field `{key}`")))?.into_region()
     }
@@ -1423,6 +1482,7 @@ impl Fields {
     }
 
     /// Field `key`, its default when missing.
+    #[inline]
     pub fn or_default<T: DeserializeOwned + Default>(&mut self, key: &str) -> Result<T, Error> {
         self.pop(key).map_or_else(|| Ok(T::default()), Content::to)
     }
@@ -1432,6 +1492,7 @@ impl Fields {
 
 impl Schema {
     /// ⭐ `O`'s op name and fields, as `#[mlir::op]` writes them.
+    #[inline]
     pub fn of<O: Op>() -> Self {
         Self { name: O::NAME, fields: O::FIELDS }
     }
@@ -1483,6 +1544,7 @@ pub(crate) struct View<'o, 'a> {
 }
 
 impl<'o, 'a> View<'o, 'a> {
+    #[inline]
     fn slot(&self, f: &Field) -> Option<&Slot<'o, 'a>> {
         self.slots.iter().find(|(g, _)| g.name == f.name).map(|(_, s)| s)
     }
@@ -1515,10 +1577,12 @@ impl<'o, 'a> View<'o, 'a> {
         }
     }
 
+    #[inline]
     pub(crate) fn attrs(&self) -> &'o [NamedAttr<'a>] {
         self.slots.iter().find_map(|(_, s)| if let Slot::Attrs(a) = s { Some(*a) } else { None }).unwrap_or(&[])
     }
 
+    #[inline]
     pub(crate) fn loc(&self) -> Option<&'o Str<'a>> {
         self.slots.iter().find_map(|(_, s)| if let Slot::Loc(l) = s { *l } else { None })
     }
@@ -1546,6 +1610,7 @@ impl<'o, 'a> View<'o, 'a> {
     }
 
     /// The property as the custom form shows it, `None` when absent or its default.
+    #[inline]
     pub(crate) fn prop(&self, f: &Field) -> Result<Option<Cow<'_, Attribute<'a>>>, Error> {
         let (a, _) = self.shown(f)?;
         Ok(a.filter(|a| Some(&**a) != f.default_attr().as_ref()))
@@ -1587,6 +1652,7 @@ impl Content {
 
 impl<'a> Operation<'a> {
     /// ⭐ This op as the typed op `O`; an error if it does not fit (it then stays generic).
+    #[inline]
     pub fn to_op<O: Op>(&self) -> Result<O, Error> {
         let schema = Schema::of::<O>();
         O::from_content(self.view(&schema)?.content(schema.name)?)
@@ -1739,18 +1805,22 @@ struct Slots<'a> {
 }
 
 impl<'a> Slots<'a> {
+    #[inline]
     fn set(&mut self, f: &Field, v: Content) {
         self.fields.push((f.name, v));
     }
 
+    #[inline]
     fn bind(&mut self, name: &'static str, ts: Vec<Type<'a>>) {
         self.types.push((name, ts));
     }
 
+    #[inline]
     fn bound(&self, name: &str) -> Option<&[Type<'a>]> {
         self.types.iter().rev().find(|(n, _)| *n == name).map(|(_, t)| &**t)
     }
 
+    #[inline]
     fn get(&self, f: &Field) -> Option<&Content> {
         self.fields.iter().find(|(k, _)| *k == f.name).map(|(_, v)| v)
     }

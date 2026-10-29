@@ -36,6 +36,7 @@ macro_rules! keywords {
         $vis enum $name { $($var),* }
 
         impl ::core::fmt::Display for $name {
+            #[inline]
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.write_str(match self { $(Self::$var => $s),* })
             }
@@ -43,6 +44,7 @@ macro_rules! keywords {
 
         impl TryFrom<&str> for $name {
             type Error = ();
+            #[inline]
             fn try_from(s: &str) -> Result<Self, ()> {
                 match s { $($s => Ok(Self::$var),)* _ => Err(()) }
             }

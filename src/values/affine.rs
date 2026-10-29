@@ -54,14 +54,17 @@ fn modulo(a: i64, b: i64) -> i64 {
 
 impl AffineExpr {
     /// `std::gcd` on unsigned values.
+    #[inline]
     pub fn gcd(a: u64, b: u64) -> u64 {
         if b == 0 { a } else { Self::gcd(b, a % b) }
     }
 
+    #[inline]
     fn raw(k: Bin, l: AffineExpr, r: AffineExpr) -> Self {
         AffineExpr::Bin(k, Box::new(l), Box::new(r))
     }
 
+    #[inline]
     pub fn as_const(&self) -> Option<i64> {
         if let Const(c) = self { Some(*c) } else { None }
     }
@@ -73,6 +76,7 @@ impl AffineExpr {
         }
     }
 
+    #[inline]
     fn bin_of(&self, k: Bin) -> Option<(&AffineExpr, &AffineExpr)> {
         self.bin().filter(|b| b.0 == k).map(|b| (b.1, b.2))
     }
@@ -161,6 +165,7 @@ impl AffineExpr {
         Self::raw(Bin::Add, l, r)
     }
 
+    #[inline]
     pub fn add_const(self, v: i64) -> Self {
         self.add(Const(v))
     }
@@ -234,6 +239,7 @@ impl AffineExpr {
         Self::raw(Bin::Mul, l, r)
     }
 
+    #[inline]
     pub fn mul_const(self, v: i64) -> Self {
         self.mul(Const(v))
     }
@@ -266,10 +272,12 @@ impl AffineExpr {
     }
 
     /// Unary minus: `* -1`.
+    #[inline]
     pub fn neg(self) -> Self {
         self.mul(Const(-1))
     }
 
+    #[inline]
     pub fn sub(self, o: AffineExpr) -> Self {
         self.add(o.neg())
     }
@@ -612,14 +620,17 @@ struct Flattener {
 }
 
 impl Flattener {
+    #[inline]
     fn new(dims: u32, syms: u32) -> Self {
         Self { dims, syms, stack: Vec::new(), locals: Vec::new() }
     }
 
+    #[inline]
     fn cols(&self) -> usize {
         (self.dims + self.syms) as usize + self.locals.len() + 1
     }
 
+    #[inline]
     fn local_start(&self) -> usize {
         (self.dims + self.syms) as usize
     }
@@ -632,10 +643,12 @@ impl Flattener {
         self.visit(e)
     }
 
+    #[inline]
     fn row(&self) -> Vec<i64> {
         vec![0; self.cols()]
     }
 
+    #[inline]
     fn find_local(&self, e: &AffineExpr) -> Option<usize> {
         self.locals.iter().position(|l| l == e)
     }
@@ -661,6 +674,7 @@ impl Flattener {
         lhs[start + loc.unwrap_or(n - 1)] = 1;
     }
 
+    #[inline]
     fn expr(&self, row: &[i64]) -> AffineExpr {
         AffineExpr::from_flat(row, self.dims, self.syms, &self.locals)
     }
@@ -853,6 +867,7 @@ impl AffineExpr {
 }
 
 impl fmt::Display for AffineExpr {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut s = String::new();
         self.print(&mut s, Strength::Weak);
@@ -907,11 +922,13 @@ impl fmt::Display for IntegerSet {
 
 impl AffineMap {
     /// `AffineMap::replace(expr, replacement, numDims, numSymbols)`.
+    #[inline]
     pub fn replace_expr(&self, from: &AffineExpr, to: &AffineExpr, nd: u32, ns: u32) -> Self {
         Self { dims: nd, syms: ns, results: self.results.iter().map(|r| r.replace_sub(from, to)).collect() }
     }
 
     /// `shiftDims(n)` then `shiftSymbols(m)`.
+    #[inline]
     pub fn shifted(&self, nd: u32, ns: u32) -> Self {
         let dims: Vec<AffineExpr> = (0..self.dims).map(|d| AffineExpr::Dim(d + nd)).collect();
         let syms: Vec<AffineExpr> = (0..self.syms).map(|s| AffineExpr::Sym(s + ns)).collect();
@@ -1076,6 +1093,7 @@ impl AffineExpr {
     }
 
     /// The names of a surface header, as dims and symbols.
+    #[inline]
     fn names<'n>(dims: &[&'n str], syms: Option<&Vec<&'n str>>) -> Vec<(&'n str, AffineExpr)> {
         let dims = dims.iter().enumerate().map(|(i, n)| (*n, Dim(i as u32)));
         dims.chain(syms.into_iter().flatten().enumerate().map(|(i, n)| (*n, Sym(i as u32)))).collect()
@@ -1085,6 +1103,7 @@ impl AffineExpr {
 impl TryFrom<&Map<'_>> for AffineMap {
     type Error = ();
 
+    #[inline]
     fn try_from(m: &Map<'_>) -> Result<Self, ()> {
         let names = AffineExpr::names(&m.dims, m.syms.as_ref());
         let results = m.results.iter().map(|r| AffineExpr::of(r, &names)).collect::<Option<_>>().ok_or(())?;
@@ -1095,6 +1114,7 @@ impl TryFrom<&Map<'_>> for AffineMap {
 impl TryFrom<&Set<'_>> for IntegerSet {
     type Error = ();
 
+    #[inline]
     fn try_from(s: &Set<'_>) -> Result<Self, ()> {
         let names = AffineExpr::names(&s.dims, s.syms.as_ref());
         let constraints = s.constraints.iter().map(|(e, cmp)| Some((AffineExpr::of(e, &names)?.sub(Const(0)), *cmp == Cmp::Eq))).collect::<Option<_>>().ok_or(())?;
@@ -1104,23 +1124,28 @@ impl TryFrom<&Set<'_>> for IntegerSet {
 
 impl AffineMap {
     /// The body of an `affine_map<...>` / `affine_set<...>`, with or without its brackets.
+    #[inline]
     fn unbracket(text: &str) -> &str {
         let t = text.trim();
         t.strip_prefix('<').and_then(|x| x.strip_suffix('>')).unwrap_or(t)
     }
 
     /// Parses `(d0, ...)[s0, ...] -> (exprs)`, with or without the `<`...`>` around it.
+    #[inline]
     pub fn parse(text: &str) -> Option<Self> {
         Self::try_from(&Map::try_from(Self::unbracket(text)).ok()?).ok()
     }
+    #[inline]
     pub fn identity(n: u32) -> Self {
         Self { dims: n, syms: 0, results: (0..n).map(Dim).collect() }
     }
 
+    #[inline]
     pub fn constant(c: i64) -> Self {
         Self { dims: 0, syms: 0, results: vec![Const(c)] }
     }
 
+    #[inline]
     pub fn is_identity(&self) -> bool {
         self.dims as usize == self.results.len() && self.results.iter().enumerate().all(|(i, r)| *r == Dim(i as u32))
     }
@@ -1134,6 +1159,7 @@ impl AffineMap {
     }
 
     /// `simplifyAffineMap`.
+    #[inline]
     pub fn simplified(&self) -> Self {
         Self { results: self.results.iter().map(|r| r.simplify(self.dims, self.syms)).collect(), ..self.clone() }
     }
@@ -1147,21 +1173,25 @@ impl AffineMap {
     }
 
     /// `replaceDimsAndSymbols`, with new dim and symbol counts.
+    #[inline]
     pub fn replace(&self, dims: &[AffineExpr], syms: &[AffineExpr], ndims: u32, nsyms: u32) -> Self {
         Self { dims: ndims, syms: nsyms, results: self.results.iter().map(|r| r.replace(dims, syms)).collect() }
     }
 
     /// Whether dim `d` appears in a result.
+    #[inline]
     pub fn uses_dim(&self, d: u32) -> bool {
         self.results.iter().any(|r| r.is_function_of_dim(d))
     }
 
+    #[inline]
     pub fn uses_sym(&self, s: u32) -> bool {
         self.results.iter().any(|r| r.is_function_of_sym(s))
     }
 }
 
 impl IntegerSet {
+    #[inline]
     pub fn parse(text: &str) -> Option<Self> {
         Self::try_from(&Set::try_from(AffineMap::unbracket(text)).ok()?).ok()
     }
@@ -1193,6 +1223,7 @@ impl TryFrom<&Attribute<'_>> for IntegerSet {
 
 impl From<&AffineMap> for Attribute<'_> {
     /// `AffineMapAttr`.
+    #[inline]
     fn from(m: &AffineMap) -> Self {
         Attribute::Builtin { name: Cow::Borrowed("affine_map"), body: Cow::Owned(format!("<{m}>")), ty: None }
     }
@@ -1200,6 +1231,7 @@ impl From<&AffineMap> for Attribute<'_> {
 
 impl From<&IntegerSet> for Attribute<'_> {
     /// `IntegerSetAttr`.
+    #[inline]
     fn from(s: &IntegerSet) -> Self {
         Attribute::Builtin { name: Cow::Borrowed("affine_set"), body: Cow::Owned(format!("<{s}>")), ty: None }
     }

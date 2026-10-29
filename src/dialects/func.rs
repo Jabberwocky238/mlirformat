@@ -48,6 +48,7 @@ impl<'a> FuncOp<'a> {
     }
 
     /// `Some([dicts])` unless every dictionary is empty.
+    #[inline]
     fn dicts(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
         ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
     }

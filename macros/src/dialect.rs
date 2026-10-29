@@ -63,6 +63,7 @@ impl DialectArgs {
         let ty = &item.ident;
         let params = params.map(|f| {
             quote! {
+                #[inline]
                 fn parse_params<'p>(
                     &self,
                     kind: ::mlirformat::SymKind,
@@ -78,10 +79,12 @@ impl DialectArgs {
             #item
 
             impl ::mlirformat::Dialect for #ty {
+                #[inline]
                 fn namespace(&self) -> &'static str {
                     #ns
                 }
 
+                #[inline]
                 fn traits(&self) -> ::mlirformat::DialectTraits {
                     ::mlirformat::DialectTraits { dependents: &[#(#dependents),*], constant_materializer: #materializer, canonicalizer: #canonicalizer }
                 }

@@ -43,27 +43,32 @@ pub struct Printer<'p, 'd> {
 }
 
 impl Write for Printer<'_, '_> {
+    #[inline]
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.out.write_str(s)
     }
 }
 
 impl<'p, 'd> Printer<'p, 'd> {
+    #[inline]
     pub fn new(out: &'p mut dyn Write, opt: &'d MlirOpt) -> Self {
         Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new() }
     }
 
     /// A printer into `out` in the same state (indentation, default dialect, dialects).
+    #[inline]
     pub fn fork<'q>(&self, out: &'q mut dyn Write) -> Printer<'q, 'd> {
         Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone() }
     }
 
     /// Prints with `f` into `out`, no dialects registered.
+    #[inline]
     pub fn write(out: &mut dyn Write, f: impl FnOnce(&mut Printer<'_, '_>) -> fmt::Result) -> fmt::Result {
         f(&mut Printer::new(out, &MlirOpt::new()))
     }
 
     /// An op name in custom form: without its prefix in its own dialect's regions.
+    #[inline]
     pub fn op_name(&mut self, name: &str) -> fmt::Result {
         let short = name.split_once('.').filter(|(ns, _)| Some(*ns) == self.default_ns).map_or(name, |(_, n)| n);
         self.write_str(short)
@@ -78,16 +83,19 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 
     /// Newline followed by the current indentation.
+    #[inline]
     pub fn nl(&mut self) -> fmt::Result {
         write!(self.out, "\n{:1$}", "", self.indent)
     }
 
     /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
+    #[inline]
     pub fn alias(&self, name: &str) -> Option<&str> {
         self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
     }
 
     /// Prints with the module's aliases already in scope, for one op out of a module.
+    #[inline]
     pub fn write_in(out: &mut dyn Write, opt: &MlirOpt, aliases: &[(String, String)], f: impl FnOnce(&mut Printer<'_, '_>) -> fmt::Result) -> fmt::Result {
         let mut p = Printer::new(out, opt);
         p.aliases = aliases.to_vec();
@@ -154,6 +162,7 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 
     /// `@name`, quoted unless it is a bare identifier.
+    #[inline]
     pub fn sym_name(&mut self, name: &str) -> fmt::Result {
         let bare = name.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_') && name.bytes().all(|c| c.is_ascii_alphanumeric() || b"_$.-".contains(&c));
         if bare { write!(self, "@{name}") } else { write!(self, "@{}", Attribute::str(name)) }
@@ -181,6 +190,7 @@ impl<'p, 'd> Printer<'p, 'd> {
 
     /// `{ blocks }` of an op that sets no default dialect; the entry block label is omitted
     /// unless `entry_label`.
+    #[inline]
     pub fn region(&mut self, r: &Region<'_>, entry_label: bool) -> fmt::Result {
         self.region_in(None, r, entry_label)
     }
@@ -206,11 +216,13 @@ impl<'p, 'd> Printer<'p, 'd> {
         done
     }
 
+    #[inline]
     fn blocks(&mut self, r: &Region<'_>, entry_label: bool) -> fmt::Result {
         self.blocks_eliding(r, entry_label, None)
     }
 
     /// Does `op` say nothing beyond being there? Such a terminator is implied by its region.
+    #[inline]
     fn bare_terminator(op: &Operation<'_>, name: &str) -> bool {
         op.name == name && op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
     }
@@ -251,6 +263,7 @@ pub trait Emit {
 pub struct Shown<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x T);
 
 impl<T: Emit + ?Sized> Display for Shown<'_, T> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.1.emit(&mut Printer::new(f, self.0))
     }
@@ -261,6 +274,7 @@ impl<T: Emit + ?Sized> Display for Shown<'_, T> {
 pub struct ShownIn<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x [(String, String)], pub &'x T);
 
 impl<T: Emit + ?Sized> Display for ShownIn<'_, T> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Printer::write_in(f, self.0, self.1, |p| self.2.emit(p))
     }
@@ -269,12 +283,14 @@ impl<T: Emit + ?Sized> Display for ShownIn<'_, T> {
 macro_rules! emit {
     ($($ty:ident => $m:ident),* $(,)?) => {$(
         impl Emit for $ty<'_> {
+            #[inline]
             fn emit(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
                 p.$m(self)
             }
         }
 
         impl Display for $ty<'_> {
+            #[inline]
             fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
                 Printer::write(f, |p| p.$m(self))
             }
@@ -285,6 +301,7 @@ macro_rules! emit {
 emit!(Module => module, Operation => op);
 
 impl Display for ResultDef<'_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "%{}", self.name)?;
         self.count.map_or(Ok(()), |n| write!(f, ":{n}"))
@@ -292,6 +309,7 @@ impl Display for ResultDef<'_> {
 }
 
 impl Display for Value<'_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "%{}", self.name)?;
         self.index.map_or(Ok(()), |n| write!(f, "#{n}"))
@@ -299,6 +317,7 @@ impl Display for Value<'_> {
 }
 
 impl Display for BlockArg<'_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "%{}: {}", self.name, self.ty)?;
         self.loc.as_ref().map_or(Ok(()), |l| write!(f, " loc({l})"))
@@ -306,6 +325,7 @@ impl Display for BlockArg<'_> {
 }
 
 impl Display for NamedAttr<'_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_str(&self.name)?;
         self.value.as_ref().map_or(Ok(()), |v| write!(f, " = {v}"))
@@ -326,6 +346,7 @@ impl Display for Signature<'_, '_> {
 }
 
 impl Display for FunctionType<'_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Signature(&self.inputs, &self.results).fmt(f)
     }
@@ -385,6 +406,7 @@ impl Display for Type<'_> {
 struct TySuffix<'x, 'a>(&'x Option<Type<'a>>);
 
 impl Display for TySuffix<'_, '_> {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.0.as_ref().map_or(Ok(()), |t| write!(f, " : {t}"))
     }
@@ -445,18 +467,81 @@ struct StructBuilder(&'static str, Vec<(&'static str, Content)>, Option<(u32, &'
 
 impl Content {
     /// ⭐ Serializes any value into a `Content`.
+    #[inline]
     pub fn of<T: Serialize + ?Sized>(value: &T) -> Result<Self, Error> {
         value.serialize(Serializer)
     }
 
     /// A region as itself, by move ([`Content::Region`]).
+    #[inline]
     pub fn region(r: Region<'_>) -> Self {
         Self::Region(Box::new(r.into_static()))
     }
 
     /// Regions, one [`Content::Region`] each.
+    #[inline]
     pub fn regions(rs: Vec<Region<'_>>) -> Self {
         Self::Seq(rs.into_iter().map(Self::region).collect())
+    }
+}
+
+/// ⭐ A `Content` serialized back the way it was made: what a typed op's `Serialize` goes
+/// through ([`Op::serialize_fields`]), so no op derives its own.
+impl Serialize for Content {
+    fn serialize<S: ser::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        use ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTupleVariant};
+        match self {
+            Self::Bool(v) => s.serialize_bool(*v),
+            Self::I8(v) => s.serialize_i8(*v),
+            Self::I16(v) => s.serialize_i16(*v),
+            Self::I32(v) => s.serialize_i32(*v),
+            Self::I64(v) => s.serialize_i64(*v),
+            Self::U8(v) => s.serialize_u8(*v),
+            Self::U16(v) => s.serialize_u16(*v),
+            Self::U32(v) => s.serialize_u32(*v),
+            Self::U64(v) => s.serialize_u64(*v),
+            Self::F32(v) => s.serialize_f32(*v),
+            Self::F64(v) => s.serialize_f64(*v),
+            Self::Char(v) => s.serialize_char(*v),
+            Self::Str(v) => s.serialize_str(v),
+            Self::Bytes(v) => s.serialize_bytes(v),
+            Self::None => s.serialize_none(),
+            Self::Some(v) => s.serialize_some(&**v),
+            Self::Unit => s.serialize_unit(),
+            Self::UnitStruct(n) => s.serialize_unit_struct(n),
+            Self::Newtype(n, v) => s.serialize_newtype_struct(n, &**v),
+            Self::Seq(xs) => {
+                let mut q = s.serialize_seq(Some(xs.len()))?;
+                xs.iter().try_for_each(|x| q.serialize_element(x))?;
+                q.end()
+            }
+            Self::Map(xs) => {
+                let mut m = s.serialize_map(Some(xs.len()))?;
+                xs.iter().try_for_each(|(k, v)| m.serialize_entry(k, v))?;
+                m.end()
+            }
+            Self::Struct(n, xs) => {
+                let mut st = s.serialize_struct(n, xs.len())?;
+                xs.iter().try_for_each(|(k, v)| st.serialize_field(k, v))?;
+                st.end()
+            }
+            Self::Variant(e, i, v, payload) => match &**payload {
+                Payload::Unit => s.serialize_unit_variant(e, *i, v),
+                Payload::Newtype(x) => s.serialize_newtype_variant(e, *i, v, x),
+                Payload::Tuple(xs) => {
+                    let mut t = s.serialize_tuple_variant(e, *i, v, xs.len())?;
+                    xs.iter().try_for_each(|x| t.serialize_field(x))?;
+                    t.end()
+                }
+                Payload::Struct(xs) => {
+                    let mut st = s.serialize_struct_variant(e, *i, v, xs.len())?;
+                    xs.iter().try_for_each(|(k, x)| st.serialize_field(k, x))?;
+                    st.end()
+                }
+            },
+            Self::Attr(a) => a.serialize(s),
+            Self::Region(r) => r.serialize(s),
+        }
     }
 }
 
@@ -486,45 +571,59 @@ impl ser::Serializer for Serializer {
         serialize_str(&str) => Str, serialize_bytes(&[u8]) => Bytes,
     }
 
+    #[inline]
     fn serialize_none(self) -> Result<Content, Error> {
         Ok(Content::None)
     }
+    #[inline]
     fn serialize_some<T: Serialize + ?Sized>(self, v: &T) -> Result<Content, Error> {
         Ok(Content::Some(Box::new(Content::of(v)?)))
     }
+    #[inline]
     fn serialize_unit(self) -> Result<Content, Error> {
         Ok(Content::Unit)
     }
+    #[inline]
     fn serialize_unit_struct(self, name: &'static str) -> Result<Content, Error> {
         Ok(Content::UnitStruct(name))
     }
+    #[inline]
     fn serialize_unit_variant(self, name: &'static str, index: u32, variant: &'static str) -> Result<Content, Error> {
         Ok(Content::Variant(name, index, variant, Box::new(Payload::Unit)))
     }
+    #[inline]
     fn serialize_newtype_struct<T: Serialize + ?Sized>(self, name: &'static str, v: &T) -> Result<Content, Error> {
         Ok(Content::Newtype(name, Box::new(Content::of(v)?)))
     }
+    #[inline]
     fn serialize_newtype_variant<T: Serialize + ?Sized>(self, name: &'static str, index: u32, variant: &'static str, v: &T) -> Result<Content, Error> {
         Ok(Content::Variant(name, index, variant, Box::new(Payload::Newtype(Content::of(v)?))))
     }
+    #[inline]
     fn serialize_seq(self, len: Option<usize>) -> Result<SeqBuilder, Error> {
         Ok(SeqBuilder(Vec::with_capacity(len.unwrap_or(0)), None))
     }
+    #[inline]
     fn serialize_tuple(self, len: usize) -> Result<SeqBuilder, Error> {
         self.serialize_seq(Some(len))
     }
+    #[inline]
     fn serialize_tuple_struct(self, _: &'static str, len: usize) -> Result<SeqBuilder, Error> {
         self.serialize_seq(Some(len))
     }
+    #[inline]
     fn serialize_tuple_variant(self, name: &'static str, index: u32, variant: &'static str, len: usize) -> Result<SeqBuilder, Error> {
         Ok(SeqBuilder(Vec::with_capacity(len), Some((name, index, variant))))
     }
+    #[inline]
     fn serialize_map(self, _: Option<usize>) -> Result<MapBuilder, Error> {
         Ok(MapBuilder(Vec::new(), None))
     }
+    #[inline]
     fn serialize_struct(self, name: &'static str, _: usize) -> Result<StructBuilder, Error> {
         Ok(StructBuilder(name, Vec::new(), None))
     }
+    #[inline]
     fn serialize_struct_variant(self, name: &'static str, index: u32, variant: &'static str, _: usize) -> Result<StructBuilder, Error> {
         Ok(StructBuilder(name, Vec::new(), Some((index, variant))))
     }
@@ -553,14 +652,17 @@ seq_impls!(SerializeSeq::serialize_element, SerializeTuple::serialize_element, S
 impl ser::SerializeMap for MapBuilder {
     type Ok = Content;
     type Error = Error;
+    #[inline]
     fn serialize_key<T: Serialize + ?Sized>(&mut self, k: &T) -> Result<(), Error> {
         self.1 = Some(Content::of(k)?);
         Ok(())
     }
+    #[inline]
     fn serialize_value<T: Serialize + ?Sized>(&mut self, v: &T) -> Result<(), Error> {
         let k = self.1.take().ok_or_else(|| Error("map value without a key".into()))?;
         Ok(self.0.push((k, Content::of(v)?)))
     }
+    #[inline]
     fn end(self) -> Result<Content, Error> {
         Ok(Content::Map(self.0))
     }
@@ -571,6 +673,7 @@ macro_rules! struct_impls {
         impl ser::$tr for StructBuilder {
             type Ok = Content;
             type Error = Error;
+            #[inline]
             fn serialize_field<T: Serialize + ?Sized>(&mut self, key: &'static str, v: &T) -> Result<(), Error> {
                 Ok(self.1.push((key, Content::of(v)?)))
             }
@@ -604,6 +707,7 @@ pub trait IntoStatic {
 
 impl IntoStatic for Str<'_> {
     type Static = Str<'static>;
+    #[inline]
     fn into_static(self) -> Str<'static> {
         Cow::Owned(self.into_owned())
     }
@@ -611,6 +715,7 @@ impl IntoStatic for Str<'_> {
 
 impl<T: IntoStatic> IntoStatic for Option<T> {
     type Static = Option<T::Static>;
+    #[inline]
     fn into_static(self) -> Option<T::Static> {
         self.map(T::into_static)
     }
@@ -618,6 +723,7 @@ impl<T: IntoStatic> IntoStatic for Option<T> {
 
 impl<T: IntoStatic> IntoStatic for Vec<T> {
     type Static = Vec<T::Static>;
+    #[inline]
     fn into_static(self) -> Vec<T::Static> {
         self.into_iter().map(T::into_static).collect()
     }
@@ -625,6 +731,7 @@ impl<T: IntoStatic> IntoStatic for Vec<T> {
 
 impl<T: IntoStatic> IntoStatic for Box<T> {
     type Static = Box<T::Static>;
+    #[inline]
     fn into_static(self) -> Box<T::Static> {
         Box::new((*self).into_static())
     }
@@ -635,6 +742,7 @@ macro_rules! static_as_is {
     ($($t:ty),*) => {$(
         impl IntoStatic for $t {
             type Static = $t;
+            #[inline]
             fn into_static(self) -> $t {
                 self
             }
@@ -649,6 +757,7 @@ macro_rules! static_fields {
     ($($name:ident { $($f:ident),* })*) => {$(
         impl IntoStatic for $name<'_> {
             type Static = $name<'static>;
+            #[inline]
             fn into_static(self) -> $name<'static> {
                 $name { $($f: self.$f.into_static()),* }
             }
@@ -657,6 +766,7 @@ macro_rules! static_fields {
     (@enum $($name:ident { $($v:ident $({ $($f:ident),* })? $(($x:ident))?),* })*) => {$(
         impl IntoStatic for $name<'_> {
             type Static = $name<'static>;
+            #[inline]
             fn into_static(self) -> $name<'static> {
                 match self {
                     $($name::$v $({ $($f),* })? $(($x))? => $name::$v $({ $($f: $f.into_static()),* })? $(($x.into_static()))?),*
@@ -691,6 +801,7 @@ static_fields! {
 
 impl Extended<'_> {
     /// A deep copy that borrows nothing.
+    #[inline]
     pub fn owned(&self) -> Extended<'static> {
         Extended { name: own(&self.name), body: self.body.as_ref().map(own), params: self.params.iter().map(Attribute::owned).collect() }
     }
@@ -734,17 +845,20 @@ impl Attribute<'_> {
     }
 
     /// `#name<body>` (`#name` when `body` is empty): an enum or other dialect attribute.
+    #[inline]
     pub fn dialect(name: &str, body: &str) -> Attribute<'static> {
         let body = (!body.is_empty()).then(|| Cow::Owned(String::from(body)));
         Attribute::Extended { ext: Extended { name: Cow::Owned(name.into()), body, params: Vec::new() }, ty: None }
     }
 
     /// `v : i64`, how ODS stores an integer enum.
+    #[inline]
     pub fn i64(v: i64) -> Attribute<'static> {
         Attribute::of_int(v.into(), Type::int(64))
     }
 
     /// `n : ty`.
+    #[inline]
     pub fn of_int(value: i128, ty: Type<'static>) -> Attribute<'static> {
         Attribute::Int { lit: Cow::Owned(value.to_string()), ty: Some(ty) }
     }
@@ -848,6 +962,7 @@ impl Field {
 }
 
 impl NamedAttr<'_> {
+    #[inline]
     pub fn of(name: &str, value: Attribute<'static>) -> NamedAttr<'static> {
         NamedAttr { name: Cow::Owned(name.into()), value: (value != Attribute::Unit).then_some(value) }
     }
@@ -857,11 +972,13 @@ impl NamedAttr<'_> {
 
 impl Operation<'_> {
     /// ⭐ A typed op as an op.
+    #[inline]
     pub fn of_op<O: Op>(op: &O) -> Result<Operation<'static>, Error> {
-        Self::of_content(&Schema::of::<O>(), Content::of(op)?)
+        Self::of_content(&Schema::of::<O>(), Content::Struct(O::NAME, op.fields()?))
     }
 
     /// [`of_op`](Self::of_op) by move: the typed op's regions become the op's without a copy.
+    #[inline]
     pub fn of_owned_op<O: Op>(op: O) -> Result<Operation<'static>, Error> {
         Self::of_content(&Schema::of::<O>(), op.into_content()?)
     }
@@ -944,6 +1061,7 @@ pub struct Spacer {
 }
 
 impl Default for Spacer {
+    #[inline]
     fn default() -> Self {
         Self { space: true, punct: false }
     }
@@ -985,6 +1103,7 @@ impl Spacer {
     }
 
     /// After `attr-dict` (which writes its own leading space).
+    #[inline]
     pub fn dict(&mut self) {
         self.punct = false;
     }
@@ -992,6 +1111,7 @@ impl Spacer {
 
 impl Format<'_> {
     /// ⭐ Prints a typed op in custom form: the op name, then the format.
+    #[inline]
     pub fn print<O: Op>(&self, op: &O, p: &mut Printer<'_, '_>) -> fmt::Result {
         self.print_op(&Operation::of_op(op).map_err(|_| fmt::Error)?, p)
     }
@@ -1023,6 +1143,7 @@ impl Format<'_> {
     }
 
     /// A type variable's types as `type($x)` prints them: one for a single variable.
+    #[inline]
     fn shown_types<'v, 'a>(f: &Field, v: &'v View<'_, 'a>) -> Result<&'v [Type<'a>], Error> {
         let ts = v.types(f)?;
         Ok(if f.variadic { ts } else { ts.get(..1).ok_or_else(|| Error(format!("no type for `{}`", f.name)))? })
