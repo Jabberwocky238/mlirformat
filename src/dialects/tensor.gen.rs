@@ -17,11 +17,11 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("tensor.bitcast", format = "$source attr-dict `:` type($source) `to` type($dest)", results(dest))]
 pub struct BitcastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -48,11 +48,11 @@ pub struct BitcastOp<'a> {
 /// ```
 #[mlir::op("tensor.cast", format = "$source attr-dict `:` type($source) `to` type($dest)", results(dest))]
 pub struct CastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -75,13 +75,13 @@ pub struct CastOp<'a> {
 /// ```
 #[mlir::op("tensor.collapse_shape", format = "$src $reassociation attr-dict `:` type($src) `into` type($result)", results(result))]
 pub struct CollapseShapeOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr(name = "reassociation")]
+    #[attr]
     pub reassociation: Attribute<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -108,15 +108,15 @@ pub struct CollapseShapeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("tensor.concat", generic, results(result))]
+#[mlir::op("tensor.concat", results(result))]
 pub struct ConcatOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[attr(name = "dim", int = "i64")]
+    #[attr(int = "i64")]
     pub dim: Attribute<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -145,15 +145,15 @@ pub struct ConcatOp<'a> {
 /// ```
 #[mlir::op("tensor.dim", format = "attr-dict $source `,` $index `:` type($source)", results(result))]
 pub struct DimOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(index_ty, name = "index")]
+    #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "index_ty", is = index)]
+    #[dtype(is = index)]
     pub index_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -175,9 +175,9 @@ pub struct DimOp<'a> {
 pub struct EmptyOp<'a> {
     #[slot(dynamic_sizes_ty, name = "dynamicSizes")]
     pub dynamic_sizes: Vec<Value<'a>>,
-    #[dtype(name = "dynamicSizes_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -208,19 +208,19 @@ pub struct EmptyOp<'a> {
 /// ```
 #[mlir::op("tensor.expand_shape", format = "$src $reassociation `output_shape` custom<DynamicIndexList>($output_shape, $static_output_shape) attr-dict `:` type($src) `into` type($result)", results(result))]
 pub struct ExpandShapeOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(output_shape_ty, name = "output_shape")]
+    #[slot(output_shape_ty)]
     pub output_shape: Vec<Value<'a>>,
-    #[attr(name = "reassociation")]
+    #[attr]
     pub reassociation: Attribute<'a>,
-    #[attr(name = "static_output_shape", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_output_shape: Attribute<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "output_shape_ty", is = index)]
+    #[dtype(is = index)]
     pub output_shape_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -239,15 +239,15 @@ pub struct ExpandShapeOp<'a> {
 /// ```
 #[mlir::op("tensor.extract", format = "$tensor `[` $indices `]` attr-dict `:` type($tensor)", results(result))]
 pub struct ExtractOp<'a> {
-    #[slot(tensor_ty, name = "tensor")]
+    #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype(name = "tensor_ty")]
+    #[dtype]
     pub tensor_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result", el = tensor_ty)]
+    #[dtype(el = tensor_ty)]
     pub result: Type<'a>,
 }
 
@@ -311,29 +311,29 @@ pub struct ExtractOp<'a> {
 /// ```
 #[mlir::op("tensor.extract_slice", format = "$source `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct ExtractSliceOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(sizes_ty, name = "sizes")]
+    #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[slot(strides_ty, name = "strides")]
+    #[slot(strides_ty)]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype(name = "strides_ty", is = index)]
+    #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -355,11 +355,11 @@ pub struct ExtractSliceOp<'a> {
 ///  [%d, %e, %f]]
 #[mlir::op("tensor.from_elements", format = "$elements attr-dict `:` type($result)", results(result))]
 pub struct FromElementsOp<'a> {
-    #[slot(elements_ty, name = "elements")]
+    #[slot(elements_ty)]
     pub elements: Vec<Value<'a>>,
-    #[dtype(name = "elements_ty", el = result)]
+    #[dtype(el = result)]
     pub elements_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -460,21 +460,21 @@ pub struct FromElementsOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("tensor.gather", generic, results(result))]
+#[mlir::op("tensor.gather", results(result))]
 pub struct GatherOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[attr(name = "gather_dims", dense = "i64")]
+    #[attr(dense = "i64")]
     pub gather_dims: Attribute<'a>,
-    #[attr(name = "unique")]
+    #[attr]
     pub unique: bool,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "indices_ty")]
+    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -502,11 +502,11 @@ pub struct GatherOp<'a> {
 pub struct GenerateOp<'a> {
     #[slot(dynamic_extents_ty, name = "dynamicExtents")]
     pub dynamic_extents: Vec<Value<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
-    #[dtype(name = "dynamicExtents_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_extents_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -529,17 +529,17 @@ pub struct GenerateOp<'a> {
 /// ```
 #[mlir::op("tensor.insert", format = "$scalar `into` $dest `[` $indices `]` attr-dict `:` type($dest)", results(result))]
 pub struct InsertOp<'a> {
-    #[slot(scalar_ty, name = "scalar")]
+    #[slot(scalar_ty)]
     pub scalar: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype(name = "scalar_ty", el = result)]
+    #[dtype(el = result)]
     pub scalar_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -597,31 +597,31 @@ pub struct InsertOp<'a> {
 /// ```
 #[mlir::op("tensor.insert_slice", format = "$source `into` $dest `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `into` type($dest)", results(result))]
 pub struct InsertSliceOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(sizes_ty, name = "sizes")]
+    #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[slot(strides_ty, name = "strides")]
+    #[slot(strides_ty)]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype(name = "strides_ty", is = index)]
+    #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -713,27 +713,27 @@ pub struct InsertSliceOp<'a> {
 /// ```
 #[mlir::op("tensor.pad", format = "$source (`nofold` $nofold^)? `low` `` custom<DynamicIndexList>($low, $static_low) `high` `` custom<DynamicIndexList>($high, $static_high) $region attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct PadOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(low_ty, name = "low")]
+    #[slot(low_ty)]
     pub low: Vec<Value<'a>>,
-    #[slot(high_ty, name = "high")]
+    #[slot(high_ty)]
     pub high: Vec<Value<'a>>,
-    #[attr(name = "static_low", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_low: Attribute<'a>,
-    #[attr(name = "static_high", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_high: Attribute<'a>,
-    #[attr(name = "nofold")]
+    #[attr]
     pub nofold: bool,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "low_ty", is = index)]
+    #[dtype(is = index)]
     pub low_ty: Type<'a>,
-    #[dtype(name = "high_ty", is = index)]
+    #[dtype(is = index)]
     pub high_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -797,31 +797,31 @@ pub struct PadOp<'a> {
 /// Unlike ExtractSliceOp however, there is no need for a specific inference.
 #[mlir::op("tensor.parallel_insert_slice", format = "$source `into` $dest `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `into` type($dest)")]
 pub struct ParallelInsertSliceOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(dest_ty, name = "dest")]
+    #[slot(dest_ty)]
     pub dest: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(sizes_ty, name = "sizes")]
+    #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[slot(strides_ty, name = "strides")]
+    #[slot(strides_ty)]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest_ty")]
+    #[dtype]
     pub dest_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype(name = "strides_ty", is = index)]
+    #[dtype(is = index)]
     pub strides_ty: Type<'a>,
 }
 
@@ -837,11 +837,11 @@ pub struct ParallelInsertSliceOp<'a> {
 /// ```
 #[mlir::op("tensor.rank", format = "$tensor attr-dict `:` type($tensor)", results(result))]
 pub struct RankOp<'a> {
-    #[slot(tensor_ty, name = "tensor")]
+    #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[dtype(name = "tensor_ty")]
+    #[dtype]
     pub tensor_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -879,17 +879,17 @@ pub struct RankOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("tensor.reshape", generic, results(result))]
+#[mlir::op("tensor.reshape", results(result))]
 pub struct ReshapeOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -993,25 +993,25 @@ pub struct ReshapeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("tensor.scatter", generic, results(result))]
+#[mlir::op("tensor.scatter", results(result))]
 pub struct ScatterOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(dest_ty, name = "dest")]
+    #[slot(dest_ty)]
     pub dest: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[attr(name = "scatter_dims", dense = "i64")]
+    #[attr(dense = "i64")]
     pub scatter_dims: Attribute<'a>,
-    #[attr(name = "unique")]
+    #[attr]
     pub unique: bool,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest_ty")]
+    #[dtype]
     pub dest_ty: Type<'a>,
-    #[dtype(name = "indices_ty")]
+    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1040,15 +1040,15 @@ pub struct ScatterOp<'a> {
 /// ```
 #[mlir::op("tensor.splat", format = "$input (`[` $dynamicSizes^ `]`)? attr-dict `:` type($aggregate)", results(aggregate))]
 pub struct SplatOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
     #[slot(dynamic_sizes_ty, name = "dynamicSizes")]
     pub dynamic_sizes: Vec<Value<'a>>,
-    #[dtype(name = "input_ty", el = aggregate)]
+    #[dtype(el = aggregate)]
     pub input_ty: Type<'a>,
-    #[dtype(name = "dynamicSizes_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype(name = "aggregate")]
+    #[dtype]
     pub aggregate: Type<'a>,
 }
 
@@ -1059,9 +1059,9 @@ pub struct SplatOp<'a> {
 /// (see `tensor.generate` and `tensor.pad` ops).
 #[mlir::op("tensor.yield", format = "$value attr-dict `:` type($value)")]
 pub struct YieldOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
 }
 

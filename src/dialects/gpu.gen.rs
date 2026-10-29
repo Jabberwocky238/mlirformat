@@ -31,17 +31,17 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// need to execute this op in convergence.
 ///
 /// Generic form only (directive `custom<AllReduceOperation>`).
-#[mlir::op("gpu.all_reduce", generic, results(result))]
+#[mlir::op("gpu.all_reduce", results(result))]
 pub struct AllReduceOp<'a> {
-    #[slot(result, name = "value")]
+    #[slot(result)]
     pub value: Value<'a>,
-    #[attr(name = "op", dialect = "gpu<all_reduce_op")]
+    #[attr(dialect = "gpu<all_reduce_op")]
     pub op: Option<Attribute<'a>>,
-    #[attr(name = "uniform")]
+    #[attr]
     pub uniform: bool,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -67,7 +67,7 @@ pub struct AllReduceOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.alloc", generic, results(memref, async_token))]
+#[mlir::op("gpu.alloc", results(memref, async_token))]
 pub struct AllocOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -77,15 +77,15 @@ pub struct AllocOp<'a> {
     pub symbol_operands: Vec<Value<'a>>,
     #[attr(name = "hostShared")]
     pub host_shared: bool,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "dynamicSizes_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype(name = "symbolOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub symbol_operands_ty: Type<'a>,
-    #[dtype(name = "memref")]
+    #[dtype]
     pub memref: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -136,13 +136,13 @@ pub struct BarrierOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<OffloadingHandler>`).
-#[mlir::op("gpu.binary", generic)]
+#[mlir::op("gpu.binary")]
 pub struct BinaryOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
     #[attr(name = "offloadingHandler")]
     pub offloading_handler: Option<Attribute<'a>>,
-    #[attr(name = "objects")]
+    #[attr]
     pub objects: Attribute<'a>,
 }
 
@@ -170,11 +170,11 @@ pub struct BinaryOp<'a> {
 /// There is an implicit upper bound of `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.block_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct BlockDimOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -196,11 +196,11 @@ pub struct BlockDimOp<'a> {
 /// There is an implicit upper bound of `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.block_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct BlockIdOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -220,11 +220,11 @@ pub struct BlockIdOp<'a> {
 /// There is an implicit upper bound of `kMaxClusterDim` (currently 8).
 #[mlir::op("gpu.cluster_block_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterBlockIdOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -245,11 +245,11 @@ pub struct ClusterBlockIdOp<'a> {
 /// There is an implicit upper bound of `kMaxClusterDim` (currently 8).
 #[mlir::op("gpu.cluster_dim_blocks", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterDimBlocksOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -270,11 +270,11 @@ pub struct ClusterDimBlocksOp<'a> {
 /// There is an implicit upper bound of `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.cluster_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterDimOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -295,11 +295,11 @@ pub struct ClusterDimOp<'a> {
 /// There is an implicit upper bound of `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.cluster_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ClusterIdOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -322,29 +322,29 @@ pub struct ClusterIdOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_2to4_spmat", generic, results(sp_mat, async_token))]
+#[mlir::op("gpu.create_2to4_spmat", results(sp_mat, async_token))]
 pub struct Create2To4SpMatOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(rows_ty, name = "rows")]
+    #[slot(rows_ty)]
     pub rows: Value<'a>,
-    #[slot(cols_ty, name = "cols")]
+    #[slot(cols_ty)]
     pub cols: Value<'a>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
     #[attr(name = "pruneFlag", dialect = "gpu<prune_2to4_spmat_flag")]
     pub prune_flag: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "rows_ty", is = index)]
+    #[dtype(is = index)]
     pub rows_ty: Type<'a>,
-    #[dtype(name = "cols_ty", is = index)]
+    #[dtype(is = index)]
     pub cols_ty: Type<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "spMat")]
+    #[dtype]
     pub sp_mat: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -374,15 +374,15 @@ pub struct Create2To4SpMatOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_bsr", generic, results(spmat, async_token))]
+#[mlir::op("gpu.create_bsr", results(spmat, async_token))]
 pub struct CreateBsrOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(brows_ty, name = "brows")]
+    #[slot(brows_ty)]
     pub brows: Value<'a>,
-    #[slot(bcols_ty, name = "bcols")]
+    #[slot(bcols_ty)]
     pub bcols: Value<'a>,
-    #[slot(bnnz_ty, name = "bnnz")]
+    #[slot(bnnz_ty)]
     pub bnnz: Value<'a>,
     #[slot(r_block_size_ty, name = "rBlockSize")]
     pub r_block_size: Value<'a>,
@@ -392,29 +392,29 @@ pub struct CreateBsrOp<'a> {
     pub b_row_pos: Value<'a>,
     #[slot(b_col_idxs_ty, name = "bColIdxs")]
     pub b_col_idxs: Value<'a>,
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "brows_ty", is = index)]
+    #[dtype(is = index)]
     pub brows_ty: Type<'a>,
-    #[dtype(name = "bcols_ty", is = index)]
+    #[dtype(is = index)]
     pub bcols_ty: Type<'a>,
-    #[dtype(name = "bnnz_ty", is = index)]
+    #[dtype(is = index)]
     pub bnnz_ty: Type<'a>,
-    #[dtype(name = "rBlockSize_ty", is = index)]
+    #[dtype(is = index)]
     pub r_block_size_ty: Type<'a>,
-    #[dtype(name = "cBlockSize_ty", is = index)]
+    #[dtype(is = index)]
     pub c_block_size_ty: Type<'a>,
-    #[dtype(name = "bRowPos_ty")]
+    #[dtype]
     pub b_row_pos_ty: Type<'a>,
-    #[dtype(name = "bColIdxs_ty")]
+    #[dtype]
     pub b_col_idxs_ty: Type<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "spmat")]
+    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -440,35 +440,35 @@ pub struct CreateBsrOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_coo_aos", generic, results(spmat, async_token))]
+#[mlir::op("gpu.create_coo_aos", results(spmat, async_token))]
 pub struct CreateCooAoSOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(rows_ty, name = "rows")]
+    #[slot(rows_ty)]
     pub rows: Value<'a>,
-    #[slot(cols_ty, name = "cols")]
+    #[slot(cols_ty)]
     pub cols: Value<'a>,
-    #[slot(nnz_ty, name = "nnz")]
+    #[slot(nnz_ty)]
     pub nnz: Value<'a>,
-    #[slot(idxs_ty, name = "idxs")]
+    #[slot(idxs_ty)]
     pub idxs: Value<'a>,
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "rows_ty", is = index)]
+    #[dtype(is = index)]
     pub rows_ty: Type<'a>,
-    #[dtype(name = "cols_ty", is = index)]
+    #[dtype(is = index)]
     pub cols_ty: Type<'a>,
-    #[dtype(name = "nnz_ty", is = index)]
+    #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype(name = "idxs_ty")]
+    #[dtype]
     pub idxs_ty: Type<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "spmat")]
+    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -492,39 +492,39 @@ pub struct CreateCooAoSOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_coo", generic, results(spmat, async_token))]
+#[mlir::op("gpu.create_coo", results(spmat, async_token))]
 pub struct CreateCooOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(rows_ty, name = "rows")]
+    #[slot(rows_ty)]
     pub rows: Value<'a>,
-    #[slot(cols_ty, name = "cols")]
+    #[slot(cols_ty)]
     pub cols: Value<'a>,
-    #[slot(nnz_ty, name = "nnz")]
+    #[slot(nnz_ty)]
     pub nnz: Value<'a>,
     #[slot(row_idxs_ty, name = "rowIdxs")]
     pub row_idxs: Value<'a>,
     #[slot(col_idxs_ty, name = "colIdxs")]
     pub col_idxs: Value<'a>,
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "rows_ty", is = index)]
+    #[dtype(is = index)]
     pub rows_ty: Type<'a>,
-    #[dtype(name = "cols_ty", is = index)]
+    #[dtype(is = index)]
     pub cols_ty: Type<'a>,
-    #[dtype(name = "nnz_ty", is = index)]
+    #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype(name = "rowIdxs_ty")]
+    #[dtype]
     pub row_idxs_ty: Type<'a>,
-    #[dtype(name = "colIdxs_ty")]
+    #[dtype]
     pub col_idxs_ty: Type<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "spmat")]
+    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -551,39 +551,39 @@ pub struct CreateCooOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_csc", generic, results(spmat, async_token))]
+#[mlir::op("gpu.create_csc", results(spmat, async_token))]
 pub struct CreateCscOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(rows_ty, name = "rows")]
+    #[slot(rows_ty)]
     pub rows: Value<'a>,
-    #[slot(cols_ty, name = "cols")]
+    #[slot(cols_ty)]
     pub cols: Value<'a>,
-    #[slot(nnz_ty, name = "nnz")]
+    #[slot(nnz_ty)]
     pub nnz: Value<'a>,
     #[slot(col_pos_ty, name = "colPos")]
     pub col_pos: Value<'a>,
     #[slot(row_idxs_ty, name = "rowIdxs")]
     pub row_idxs: Value<'a>,
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "rows_ty", is = index)]
+    #[dtype(is = index)]
     pub rows_ty: Type<'a>,
-    #[dtype(name = "cols_ty", is = index)]
+    #[dtype(is = index)]
     pub cols_ty: Type<'a>,
-    #[dtype(name = "nnz_ty", is = index)]
+    #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype(name = "colPos_ty")]
+    #[dtype]
     pub col_pos_ty: Type<'a>,
-    #[dtype(name = "rowIdxs_ty")]
+    #[dtype]
     pub row_idxs_ty: Type<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "spmat")]
+    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -610,39 +610,39 @@ pub struct CreateCscOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_csr", generic, results(spmat, async_token))]
+#[mlir::op("gpu.create_csr", results(spmat, async_token))]
 pub struct CreateCsrOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(rows_ty, name = "rows")]
+    #[slot(rows_ty)]
     pub rows: Value<'a>,
-    #[slot(cols_ty, name = "cols")]
+    #[slot(cols_ty)]
     pub cols: Value<'a>,
-    #[slot(nnz_ty, name = "nnz")]
+    #[slot(nnz_ty)]
     pub nnz: Value<'a>,
     #[slot(row_pos_ty, name = "rowPos")]
     pub row_pos: Value<'a>,
     #[slot(col_idxs_ty, name = "colIdxs")]
     pub col_idxs: Value<'a>,
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "rows_ty", is = index)]
+    #[dtype(is = index)]
     pub rows_ty: Type<'a>,
-    #[dtype(name = "cols_ty", is = index)]
+    #[dtype(is = index)]
     pub cols_ty: Type<'a>,
-    #[dtype(name = "nnz_ty", is = index)]
+    #[dtype(is = index)]
     pub nnz_ty: Type<'a>,
-    #[dtype(name = "rowPos_ty")]
+    #[dtype]
     pub row_pos_ty: Type<'a>,
-    #[dtype(name = "colIdxs_ty")]
+    #[dtype]
     pub col_idxs_ty: Type<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "spmat")]
+    #[dtype]
     pub spmat: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -664,23 +664,23 @@ pub struct CreateCsrOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.create_dn_tensor", generic, results(dn_tensor, async_token))]
+#[mlir::op("gpu.create_dn_tensor", results(dn_tensor, async_token))]
 pub struct CreateDnTensorOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(dims_ty, name = "dims")]
+    #[slot(dims_ty)]
     pub dims: Vec<Value<'a>>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "dims_ty", is = index)]
+    #[dtype(is = index)]
     pub dims_ty: Type<'a>,
-    #[dtype(name = "dnTensor")]
+    #[dtype]
     pub dn_tensor: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -704,17 +704,17 @@ pub struct CreateDnTensorOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.dealloc", generic, results(async_token))]
+#[mlir::op("gpu.dealloc", results(async_token))]
 pub struct DeallocOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -735,17 +735,17 @@ pub struct DeallocOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.destroy_dn_tensor", generic, results(async_token))]
+#[mlir::op("gpu.destroy_dn_tensor", results(async_token))]
 pub struct DestroyDnTensorOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
     #[slot(dn_tensor_ty, name = "dnTensor")]
     pub dn_tensor: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "dnTensor_ty")]
+    #[dtype]
     pub dn_tensor_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -766,17 +766,17 @@ pub struct DestroyDnTensorOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.destroy_sp_mat", generic, results(async_token))]
+#[mlir::op("gpu.destroy_sp_mat", results(async_token))]
 pub struct DestroySpMatOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(spmat_ty, name = "spmat")]
+    #[slot(spmat_ty)]
     pub spmat: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmat_ty")]
+    #[dtype]
     pub spmat_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -871,25 +871,25 @@ pub struct DynamicSharedMemoryOp<'a> {
 /// attribution.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("gpu.func", generic)]
+#[mlir::op("gpu.func")]
 pub struct GPUFuncOp<'a> {
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "workgroup_attrib_attrs")]
+    #[attr]
     pub workgroup_attrib_attrs: Option<Attribute<'a>>,
-    #[attr(name = "private_attrib_attrs")]
+    #[attr]
     pub private_attrib_attrs: Option<Attribute<'a>>,
-    #[attr(name = "known_block_size")]
+    #[attr]
     pub known_block_size: Option<Attribute<'a>>,
-    #[attr(name = "known_grid_size")]
+    #[attr]
     pub known_grid_size: Option<Attribute<'a>>,
-    #[attr(name = "known_cluster_size")]
+    #[attr]
     pub known_cluster_size: Option<Attribute<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -932,9 +932,9 @@ pub struct GPUFuncOp<'a> {
 /// ```
 #[mlir::op("gpu.module", format = "$sym_name (`<` $offloadingHandler^ `>`)? ($targets^)? attr-dict-with-keyword $bodyRegion")]
 pub struct GPUModuleOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "targets")]
+    #[attr]
     pub targets: Option<Attribute<'a>>,
     #[attr(name = "offloadingHandler")]
     pub offloading_handler: Option<Attribute<'a>>,
@@ -959,11 +959,11 @@ pub struct GPUModuleOp<'a> {
 /// a combination of `known_block_size` and `known_grid_size`-type annotations.
 #[mlir::op("gpu.global_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct GlobalIdOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -992,11 +992,11 @@ pub struct GlobalIdOp<'a> {
 /// There is an implicit upper bound of `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.grid_dim", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct GridDimOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -1012,9 +1012,9 @@ pub struct GridDimOp<'a> {
 /// the host after synchronizing with the device kernel completion.
 #[mlir::op("gpu.host_register", format = "$value attr-dict `:` type($value)")]
 pub struct HostRegisterOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
 }
 
@@ -1026,9 +1026,9 @@ pub struct HostRegisterOp<'a> {
 ///     way to check at runtime whether this feature is supported.
 #[mlir::op("gpu.host_unregister", format = "$value attr-dict `:` type($value)")]
 pub struct HostUnregisterOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
 }
 
@@ -1046,9 +1046,9 @@ pub struct HostUnregisterOp<'a> {
 /// target-independent `kMaxSubgroupSize` (currently 128).
 #[mlir::op("gpu.lane_id", format = "(`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct LaneIdOp<'a> {
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -1149,7 +1149,7 @@ pub struct LaneIdOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.launch_func", generic, results(async_token))]
+#[mlir::op("gpu.launch_func", results(async_token))]
 pub struct LaunchFuncOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -1177,25 +1177,25 @@ pub struct LaunchFuncOp<'a> {
     pub kernel_operands: Vec<Value<'a>>,
     #[slot(async_object_ty, name = "asyncObject")]
     pub async_object: Vec<Value<'a>>,
-    #[attr(name = "kernel")]
+    #[attr]
     pub kernel: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "gridSizeX_ty")]
+    #[dtype]
     pub grid_size_x_ty: Type<'a>,
-    #[dtype(name = "clusterSizeX_ty")]
+    #[dtype]
     pub cluster_size_x_ty: Vec<Type<'a>>,
-    #[dtype(name = "clusterSizeY_ty")]
+    #[dtype]
     pub cluster_size_y_ty: Vec<Type<'a>>,
-    #[dtype(name = "clusterSizeZ_ty")]
+    #[dtype]
     pub cluster_size_z_ty: Vec<Type<'a>>,
-    #[dtype(name = "dynamicSharedMemorySize_ty", is = i32)]
+    #[dtype(is = i32)]
     pub dynamic_shared_memory_size_ty: Type<'a>,
-    #[dtype(name = "kernelOperands_ty")]
+    #[dtype]
     pub kernel_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "asyncObject_ty")]
+    #[dtype]
     pub async_object_ty: Vec<Type<'a>>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1317,7 +1317,7 @@ pub struct LaunchFuncOp<'a> {
 /// easier just to have that information by construction.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("gpu.launch", generic, results(async_token))]
+#[mlir::op("gpu.launch", results(async_token))]
 pub struct LaunchOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -1341,35 +1341,35 @@ pub struct LaunchOp<'a> {
     pub cluster_size_z: Vec<Value<'a>>,
     #[slot(dynamic_shared_memory_size_ty, name = "dynamicSharedMemorySize")]
     pub dynamic_shared_memory_size: Vec<Value<'a>>,
-    #[attr(name = "module")]
+    #[attr]
     pub module: Option<Attribute<'a>>,
-    #[attr(name = "function")]
+    #[attr]
     pub function: Option<Attribute<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "gridSizeX_ty", is = index)]
+    #[dtype(is = index)]
     pub grid_size_x_ty: Type<'a>,
-    #[dtype(name = "gridSizeY_ty", is = index)]
+    #[dtype(is = index)]
     pub grid_size_y_ty: Type<'a>,
-    #[dtype(name = "gridSizeZ_ty", is = index)]
+    #[dtype(is = index)]
     pub grid_size_z_ty: Type<'a>,
-    #[dtype(name = "blockSizeX_ty", is = index)]
+    #[dtype(is = index)]
     pub block_size_x_ty: Type<'a>,
-    #[dtype(name = "blockSizeY_ty", is = index)]
+    #[dtype(is = index)]
     pub block_size_y_ty: Type<'a>,
-    #[dtype(name = "blockSizeZ_ty", is = index)]
+    #[dtype(is = index)]
     pub block_size_z_ty: Type<'a>,
-    #[dtype(name = "clusterSizeX_ty", is = index)]
+    #[dtype(is = index)]
     pub cluster_size_x_ty: Type<'a>,
-    #[dtype(name = "clusterSizeY_ty", is = index)]
+    #[dtype(is = index)]
     pub cluster_size_y_ty: Type<'a>,
-    #[dtype(name = "clusterSizeZ_ty", is = index)]
+    #[dtype(is = index)]
     pub cluster_size_z_ty: Type<'a>,
-    #[dtype(name = "dynamicSharedMemorySize_ty", is = i32)]
+    #[dtype(is = i32)]
     pub dynamic_shared_memory_size_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1391,21 +1391,21 @@ pub struct LaunchOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.memcpy", generic, results(async_token))]
+#[mlir::op("gpu.memcpy", results(async_token))]
 pub struct MemcpyOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1427,21 +1427,21 @@ pub struct MemcpyOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.memset", generic, results(async_token))]
+#[mlir::op("gpu.memset", results(async_token))]
 pub struct MemsetOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1459,9 +1459,9 @@ pub struct MemsetOp<'a> {
 /// `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.num_subgroups", format = "(`upper_bound` $upper_bound^)? attr-dict `:` type($result)", results(result))]
 pub struct NumSubgroupsOp<'a> {
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -1474,11 +1474,11 @@ pub struct NumSubgroupsOp<'a> {
 /// imposed by one's target platform.
 #[mlir::op("gpu.printf", format = "$format attr-dict (`,` $args^ `:` type($args))?")]
 pub struct PrintfOp<'a> {
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr(name = "format")]
+    #[attr]
     pub format: Attribute<'a>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
 }
 
@@ -1489,9 +1489,9 @@ pub struct PrintfOp<'a> {
 /// by an invocation of the `gpu.func`.
 #[mlir::op("gpu.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct ReturnOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -1525,15 +1525,15 @@ pub struct ReturnOp<'a> {
 /// For lane `k`, returns the value from lane `(k + cst1) % width`.
 #[mlir::op("gpu.rotate", format = "$value `,` $offset `,` $width attr-dict `:` type($value)", results(rotate_result, valid))]
 pub struct RotateOp<'a> {
-    #[slot(rotate_result, name = "value")]
+    #[slot(rotate_result)]
     pub value: Value<'a>,
-    #[attr(name = "offset", int = "i32")]
+    #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(name = "width", int = "i32")]
+    #[attr(int = "i32")]
     pub width: Attribute<'a>,
-    #[dtype(name = "rotateResult")]
+    #[dtype]
     pub rotate_result: Type<'a>,
-    #[dtype(name = "valid", is = i1)]
+    #[dtype(is = i1)]
     pub valid: Type<'a>,
 }
 
@@ -1559,7 +1559,7 @@ pub struct RotateOp<'a> {
 /// is NON_TRANSPOSE.
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.sddmm_buffer_size", generic, results(buffer_sz, async_token))]
+#[mlir::op("gpu.sddmm_buffer_size", results(buffer_sz, async_token))]
 pub struct SDDMMBufferSizeOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -1575,17 +1575,17 @@ pub struct SDDMMBufferSizeOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "dnmatA_ty")]
+    #[dtype]
     pub dnmat_a_ty: Type<'a>,
-    #[dtype(name = "dnmatB_ty")]
+    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype(name = "spmatC_ty")]
+    #[dtype]
     pub spmat_c_ty: Type<'a>,
-    #[dtype(name = "bufferSz", is = index)]
+    #[dtype(is = index)]
     pub buffer_sz: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1611,7 +1611,7 @@ pub struct SDDMMBufferSizeOp<'a> {
 /// is NON_TRANSPOSE.
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.sddmm", generic, results(async_token))]
+#[mlir::op("gpu.sddmm", results(async_token))]
 pub struct SDDMMOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -1621,7 +1621,7 @@ pub struct SDDMMOp<'a> {
     pub dnmat_b: Value<'a>,
     #[slot(spmat_c_ty, name = "spmatC")]
     pub spmat_c: Value<'a>,
-    #[slot(buffer_ty, name = "buffer")]
+    #[slot(buffer_ty)]
     pub buffer: Value<'a>,
     #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
@@ -1629,17 +1629,17 @@ pub struct SDDMMOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "dnmatA_ty")]
+    #[dtype]
     pub dnmat_a_ty: Type<'a>,
-    #[dtype(name = "dnmatB_ty")]
+    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype(name = "spmatC_ty")]
+    #[dtype]
     pub spmat_c_ty: Type<'a>,
-    #[dtype(name = "buffer_ty")]
+    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1661,29 +1661,29 @@ pub struct SDDMMOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.set_csr_pointers", generic, results(async_token))]
+#[mlir::op("gpu.set_csr_pointers", results(async_token))]
 pub struct SetCsrPointersOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(spmat_ty, name = "spmat")]
+    #[slot(spmat_ty)]
     pub spmat: Value<'a>,
-    #[slot(positions_ty, name = "positions")]
+    #[slot(positions_ty)]
     pub positions: Value<'a>,
-    #[slot(coordinates_ty, name = "coordinates")]
+    #[slot(coordinates_ty)]
     pub coordinates: Value<'a>,
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmat_ty")]
+    #[dtype]
     pub spmat_ty: Type<'a>,
-    #[dtype(name = "positions_ty")]
+    #[dtype]
     pub positions_ty: Type<'a>,
-    #[dtype(name = "coordinates_ty")]
+    #[dtype]
     pub coordinates_ty: Type<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1696,7 +1696,7 @@ pub struct SetCsrPointersOp<'a> {
 pub struct SetDefaultDeviceOp<'a> {
     #[slot(dev_index_ty, name = "devIndex")]
     pub dev_index: Value<'a>,
-    #[dtype(name = "devIndex_ty", is = i32)]
+    #[dtype(is = i32)]
     pub dev_index_ty: Type<'a>,
 }
 
@@ -1753,21 +1753,21 @@ pub struct SetDefaultDeviceOp<'a> {
 /// Broadcasts the value from lane 0 to all lanes.
 #[mlir::op("gpu.shuffle", format = "$mode $value `,` $offset `,` $width attr-dict `:` type($value)", results(shuffle_result, valid))]
 pub struct ShuffleOp<'a> {
-    #[slot(shuffle_result, name = "value")]
+    #[slot(shuffle_result)]
     pub value: Value<'a>,
-    #[slot(offset_ty, name = "offset")]
+    #[slot(offset_ty)]
     pub offset: Value<'a>,
-    #[slot(width_ty, name = "width")]
+    #[slot(width_ty)]
     pub width: Value<'a>,
-    #[attr(name = "mode", dialect = "gpu<shuffle_mode")]
+    #[attr(dialect = "gpu<shuffle_mode")]
     pub mode: Attribute<'a>,
-    #[dtype(name = "offset_ty", is = i32)]
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
-    #[dtype(name = "width_ty", is = i32)]
+    #[dtype(is = i32)]
     pub width_ty: Type<'a>,
-    #[dtype(name = "shuffleResult")]
+    #[dtype]
     pub shuffle_result: Type<'a>,
-    #[dtype(name = "valid", is = i1)]
+    #[dtype(is = i1)]
     pub valid: Type<'a>,
 }
 
@@ -1791,11 +1791,11 @@ pub struct ShuffleOp<'a> {
 /// is NON_TRANSPOSE.
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spgemm_copy", generic, results(async_token))]
+#[mlir::op("gpu.spgemm_copy", results(async_token))]
 pub struct SpGEMMCopyOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(desc_ty, name = "desc")]
+    #[slot(desc_ty)]
     pub desc: Value<'a>,
     #[slot(spmat_a_ty, name = "spmatA")]
     pub spmat_a: Value<'a>,
@@ -1809,17 +1809,17 @@ pub struct SpGEMMCopyOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "desc_ty")]
+    #[dtype]
     pub desc_ty: Type<'a>,
-    #[dtype(name = "spmatA_ty")]
+    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype(name = "spmatB_ty")]
+    #[dtype]
     pub spmat_b_ty: Type<'a>,
-    #[dtype(name = "spmatC_ty")]
+    #[dtype]
     pub spmat_c_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1841,15 +1841,15 @@ pub struct SpGEMMCopyOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spgemm_create_descr", generic, results(desc, async_token))]
+#[mlir::op("gpu.spgemm_create_descr", results(desc, async_token))]
 pub struct SpGEMMCreateDescrOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "desc")]
+    #[dtype]
     pub desc: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1868,17 +1868,17 @@ pub struct SpGEMMCreateDescrOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spgemm_destroy_descr", generic, results(async_token))]
+#[mlir::op("gpu.spgemm_destroy_descr", results(async_token))]
 pub struct SpGEMMDestroyDescrOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(desc_ty, name = "desc")]
+    #[slot(desc_ty)]
     pub desc: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "desc_ty")]
+    #[dtype]
     pub desc_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1911,11 +1911,11 @@ pub struct SpGEMMDestroyDescrOp<'a> {
 /// is NON_TRANSPOSE.
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spgemm_work_estimation_or_compute", generic, results(buffer_sz_new, async_token))]
+#[mlir::op("gpu.spgemm_work_estimation_or_compute", results(buffer_sz_new, async_token))]
 pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(desc_ty, name = "desc")]
+    #[slot(desc_ty)]
     pub desc: Value<'a>,
     #[slot(spmat_a_ty, name = "spmatA")]
     pub spmat_a: Value<'a>,
@@ -1925,7 +1925,7 @@ pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
     pub spmat_c: Value<'a>,
     #[slot(buffer_sz_ty, name = "bufferSz")]
     pub buffer_sz: Value<'a>,
-    #[slot(buffer_ty, name = "buffer")]
+    #[slot(buffer_ty)]
     pub buffer: Value<'a>,
     #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
@@ -1933,25 +1933,25 @@ pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[attr(name = "kind", dialect = "gpu<spgemm_work_estimation_or_compute_kind")]
+    #[attr(dialect = "gpu<spgemm_work_estimation_or_compute_kind")]
     pub kind: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "desc_ty")]
+    #[dtype]
     pub desc_ty: Type<'a>,
-    #[dtype(name = "spmatA_ty")]
+    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype(name = "spmatB_ty")]
+    #[dtype]
     pub spmat_b_ty: Type<'a>,
-    #[dtype(name = "spmatC_ty")]
+    #[dtype]
     pub spmat_c_ty: Type<'a>,
-    #[dtype(name = "bufferSz_ty", is = index)]
+    #[dtype(is = index)]
     pub buffer_sz_ty: Type<'a>,
-    #[dtype(name = "buffer_ty")]
+    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype(name = "bufferSzNew", is = index)]
+    #[dtype(is = index)]
     pub buffer_sz_new: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -1977,7 +1977,7 @@ pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spmm_buffer_size", generic, results(buffer_szs, async_token))]
+#[mlir::op("gpu.spmm_buffer_size", results(buffer_szs, async_token))]
 pub struct SpMMBufferSizeOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -1993,17 +1993,17 @@ pub struct SpMMBufferSizeOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmatA_ty")]
+    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype(name = "dnmatB_ty")]
+    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype(name = "dnmatC_ty")]
+    #[dtype]
     pub dnmat_c_ty: Type<'a>,
-    #[dtype(name = "bufferSzs", is = index)]
+    #[dtype(is = index)]
     pub buffer_szs: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2029,7 +2029,7 @@ pub struct SpMMBufferSizeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spmm", generic, results(async_token))]
+#[mlir::op("gpu.spmm", results(async_token))]
 pub struct SpMMOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -2039,7 +2039,7 @@ pub struct SpMMOp<'a> {
     pub dnmat_b: Value<'a>,
     #[slot(dnmat_c_ty, name = "dnmatC")]
     pub dnmat_c: Value<'a>,
-    #[slot(buffers_ty, name = "buffers")]
+    #[slot(buffers_ty)]
     pub buffers: Vec<Value<'a>>,
     #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
@@ -2047,17 +2047,17 @@ pub struct SpMMOp<'a> {
     pub mode_b: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmatA_ty")]
+    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype(name = "dnmatB_ty")]
+    #[dtype]
     pub dnmat_b_ty: Type<'a>,
-    #[dtype(name = "dnmatC_ty")]
+    #[dtype]
     pub dnmat_c_ty: Type<'a>,
-    #[dtype(name = "buffers_ty")]
+    #[dtype]
     pub buffers_ty: Vec<Type<'a>>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2083,7 +2083,7 @@ pub struct SpMMOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spmv_buffer_size", generic, results(buffer_sz, async_token))]
+#[mlir::op("gpu.spmv_buffer_size", results(buffer_sz, async_token))]
 pub struct SpMVBufferSizeOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -2097,17 +2097,17 @@ pub struct SpMVBufferSizeOp<'a> {
     pub mode_a: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmatA_ty")]
+    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype(name = "dnX_ty")]
+    #[dtype]
     pub dn_x_ty: Type<'a>,
-    #[dtype(name = "dnY_ty")]
+    #[dtype]
     pub dn_y_ty: Type<'a>,
-    #[dtype(name = "bufferSz", is = index)]
+    #[dtype(is = index)]
     pub buffer_sz: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2133,7 +2133,7 @@ pub struct SpMVBufferSizeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spmv", generic, results(async_token))]
+#[mlir::op("gpu.spmv", results(async_token))]
 pub struct SpMVOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
@@ -2143,23 +2143,23 @@ pub struct SpMVOp<'a> {
     pub dn_x: Value<'a>,
     #[slot(dn_y_ty, name = "dnY")]
     pub dn_y: Value<'a>,
-    #[slot(buffer_ty, name = "buffer")]
+    #[slot(buffer_ty)]
     pub buffer: Value<'a>,
     #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
     pub mode_a: Attribute<'a>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmatA_ty")]
+    #[dtype]
     pub spmat_a_ty: Type<'a>,
-    #[dtype(name = "dnX_ty")]
+    #[dtype]
     pub dn_x_ty: Type<'a>,
-    #[dtype(name = "dnY_ty")]
+    #[dtype]
     pub dn_y_ty: Type<'a>,
-    #[dtype(name = "buffer_ty")]
+    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2179,23 +2179,23 @@ pub struct SpMVOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.spmat_get_size", generic, results(rows, cols, nnz, async_token))]
+#[mlir::op("gpu.spmat_get_size", results(rows, cols, nnz, async_token))]
 pub struct SpMatGetSizeOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[slot(spmat_ty, name = "spmat")]
+    #[slot(spmat_ty)]
     pub spmat: Value<'a>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "spmat_ty")]
+    #[dtype]
     pub spmat_ty: Type<'a>,
-    #[dtype(name = "rows", is = index)]
+    #[dtype(is = index)]
     pub rows: Type<'a>,
-    #[dtype(name = "cols", is = index)]
+    #[dtype(is = index)]
     pub cols: Type<'a>,
-    #[dtype(name = "nnz", is = index)]
+    #[dtype(is = index)]
     pub nnz: Type<'a>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2214,15 +2214,15 @@ pub struct SpMatGetSizeOp<'a> {
 /// active.
 #[mlir::op("gpu.subgroup_broadcast", format = "$src `,` $broadcast_type ($lane^)? attr-dict `:` type($result)", results(result))]
 pub struct SubgroupBroadcastOp<'a> {
-    #[slot(result, name = "src")]
+    #[slot(result)]
     pub src: Value<'a>,
-    #[slot(lane_ty, name = "lane")]
+    #[slot(lane_ty)]
     pub lane: Vec<Value<'a>>,
-    #[attr(name = "broadcast_type", dialect = "gpu<broadcast")]
+    #[attr(dialect = "gpu<broadcast")]
     pub broadcast_type: Attribute<'a>,
-    #[dtype(name = "lane_ty", is = i32)]
+    #[dtype(is = i32)]
     pub lane_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2241,9 +2241,9 @@ pub struct SubgroupBroadcastOp<'a> {
 /// (currently uint32_t::max).
 #[mlir::op("gpu.subgroup_id", format = "(`upper_bound` $upper_bound^)? attr-dict `:` type($result)", results(result))]
 pub struct SubgroupIdOp<'a> {
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -2284,15 +2284,15 @@ pub struct SubgroupMmaComputeOp<'a> {
     pub op_b: Value<'a>,
     #[slot(res, name = "opC")]
     pub op_c: Value<'a>,
-    #[attr(name = "a_transpose")]
+    #[attr]
     pub a_transpose: bool,
-    #[attr(name = "b_transpose")]
+    #[attr]
     pub b_transpose: bool,
-    #[dtype(name = "opA_ty")]
+    #[dtype]
     pub op_a_ty: Type<'a>,
-    #[dtype(name = "opB_ty")]
+    #[dtype]
     pub op_b_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2319,11 +2319,11 @@ pub struct SubgroupMmaComputeOp<'a> {
 /// ```
 #[mlir::op("gpu.subgroup_mma_constant_matrix", format = "$value attr-dict `:` type($res)", results(res))]
 pub struct SubgroupMmaConstantMatrixOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype(name = "value_ty", el = res)]
+    #[dtype(el = res)]
     pub value_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2347,13 +2347,13 @@ pub struct SubgroupMmaConstantMatrixOp<'a> {
 /// ```
 #[mlir::op("gpu.subgroup_mma_elementwise", format = "$opType $args attr-dict `:` functional-type($args, $res)", results(res))]
 pub struct SubgroupMmaElementwiseOp<'a> {
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
     #[attr(name = "opType", dialect = "gpu<mma_element_wise")]
     pub op_type: Attribute<'a>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2384,15 +2384,15 @@ pub struct SubgroupMmaElementwiseOp<'a> {
 /// ```
 #[mlir::op("gpu.subgroup_mma_extract_thread_local", format = "$matrix`[`$indices`]` attr-dict `:` type($matrix) `->` type($res)", results(res))]
 pub struct SubgroupMmaExtractThreadLocalOp<'a> {
-    #[slot(matrix_ty, name = "matrix")]
+    #[slot(matrix_ty)]
     pub matrix: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype(name = "matrix_ty")]
+    #[dtype]
     pub matrix_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "res", el = matrix_ty)]
+    #[dtype(el = matrix_ty)]
     pub res: Type<'a>,
 }
 
@@ -2425,19 +2425,19 @@ pub struct SubgroupMmaExtractThreadLocalOp<'a> {
 /// ```
 #[mlir::op("gpu.subgroup_mma_insert_thread_local", format = "$value`,` $matrix`[`$indices`]` attr-dict `:` type($value)`,` type($matrix) `->` type($res)", results(res))]
 pub struct SubgroupMmaInsertThreadLocalOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(matrix_ty, name = "matrix")]
+    #[slot(matrix_ty)]
     pub matrix: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[dtype(name = "value_ty", el = matrix_ty)]
+    #[dtype(el = matrix_ty)]
     pub value_ty: Type<'a>,
-    #[dtype(name = "matrix_ty")]
+    #[dtype]
     pub matrix_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2471,17 +2471,17 @@ pub struct SubgroupMmaInsertThreadLocalOp<'a> {
 pub struct SubgroupMmaLoadMatrixOp<'a> {
     #[slot(src_memref_ty, name = "srcMemref")]
     pub src_memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
     #[attr(name = "leadDimension", int = "index")]
     pub lead_dimension: Attribute<'a>,
-    #[attr(name = "transpose")]
+    #[attr]
     pub transpose: bool,
-    #[dtype(name = "srcMemref_ty")]
+    #[dtype]
     pub src_memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2508,21 +2508,21 @@ pub struct SubgroupMmaLoadMatrixOp<'a> {
 /// ```
 #[mlir::op("gpu.subgroup_mma_store_matrix", format = "$src`,` $dstMemref`[`$indices`]` attr-dict `:` type($src)`,` type($dstMemref)")]
 pub struct SubgroupMmaStoreMatrixOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
     #[slot(dst_memref_ty, name = "dstMemref")]
     pub dst_memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
     #[attr(name = "leadDimension", int = "index")]
     pub lead_dimension: Attribute<'a>,
-    #[attr(name = "transpose")]
+    #[attr]
     pub transpose: bool,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "dstMemref_ty")]
+    #[dtype]
     pub dst_memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -2560,19 +2560,19 @@ pub struct SubgroupMmaStoreMatrixOp<'a> {
 ///    `maximumf`
 ///
 /// Generic form only (directive `custom<AllReduceOperation>`).
-#[mlir::op("gpu.subgroup_reduce", generic, results(result))]
+#[mlir::op("gpu.subgroup_reduce", results(result))]
 pub struct SubgroupReduceOp<'a> {
-    #[slot(result, name = "value")]
+    #[slot(result)]
     pub value: Value<'a>,
-    #[attr(name = "op", dialect = "gpu<all_reduce_op")]
+    #[attr(dialect = "gpu<all_reduce_op")]
     pub op: Attribute<'a>,
-    #[attr(name = "uniform")]
+    #[attr]
     pub uniform: bool,
-    #[attr(name = "cluster_size", int = "i32")]
+    #[attr(int = "i32")]
     pub cluster_size: Option<Attribute<'a>>,
-    #[attr(name = "cluster_stride", int = "i32", default = "1")]
+    #[attr(int = "i32", default = "1")]
     pub cluster_stride: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2591,9 +2591,9 @@ pub struct SubgroupReduceOp<'a> {
 /// 128.
 #[mlir::op("gpu.subgroup_size", format = "(`upper_bound` $upper_bound^)? attr-dict `:` type($result)", results(result))]
 pub struct SubgroupSizeOp<'a> {
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -2623,11 +2623,11 @@ pub struct TerminatorOp<'a> {
 /// There is an implicit upper bound of `kMaxDim` (currently uint32_t::max).
 #[mlir::op("gpu.thread_id", format = "$dimension (`upper_bound` $upper_bound^)? attr-dict", results(result))]
 pub struct ThreadIdOp<'a> {
-    #[attr(name = "dimension", dialect = "gpu<dim")]
+    #[attr(dialect = "gpu<dim")]
     pub dimension: Attribute<'a>,
-    #[attr(name = "upper_bound", int = "index")]
+    #[attr(int = "index")]
     pub upper_bound: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -2664,13 +2664,13 @@ pub struct ThreadIdOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AsyncDependencies>`).
-#[mlir::op("gpu.wait", generic, results(async_token))]
+#[mlir::op("gpu.wait", results(async_token))]
 pub struct WaitOp<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
     pub async_dependencies: Vec<Value<'a>>,
-    #[dtype(name = "asyncDependencies_ty")]
+    #[dtype]
     pub async_dependencies_ty: Vec<Type<'a>>,
-    #[dtype(name = "asyncToken")]
+    #[dtype]
     pub async_token: Vec<Type<'a>>,
 }
 
@@ -2776,21 +2776,21 @@ pub struct WaitOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("gpu.warp_execute_on_lane_0", generic, results(results))]
+#[mlir::op("gpu.warp_execute_on_lane_0", results(results))]
 pub struct WarpExecuteOnLane0Op<'a> {
-    #[slot(laneid_ty, name = "laneid")]
+    #[slot(laneid_ty)]
     pub laneid: Value<'a>,
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr(name = "warp_size", int = "i64")]
+    #[attr(int = "i64")]
     pub warp_size: Attribute<'a>,
     #[region(name = "warpRegion")]
     pub warp_region: Region<'a>,
-    #[dtype(name = "laneid_ty", is = index)]
+    #[dtype(is = index)]
     pub laneid_ty: Type<'a>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -2806,9 +2806,9 @@ pub struct WarpExecuteOnLane0Op<'a> {
 /// ```
 #[mlir::op("gpu.yield", format = "attr-dict ($values^ `:` type($values))?")]
 pub struct YieldOp<'a> {
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Vec<Value<'a>>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Vec<Type<'a>>,
 }
 

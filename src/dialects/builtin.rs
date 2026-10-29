@@ -9,9 +9,9 @@ use crate::{Block, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type
 /// `module @name attributes {...} { ... }`: hand-written syntax.
 #[mlir::op("builtin.module", custom)]
 pub struct ModuleOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr]
     pub sym_name: Option<String>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<String>,
     #[region]
     pub body: Region<'a>,

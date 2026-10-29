@@ -21,9 +21,9 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("ub.poison", format = "attr-dict (`<` $value^ `>`)? `:` type($result)", results(result))]
 pub struct PoisonOp<'a> {
-    #[attr(name = "value", dialect = "ub.poison", default = "")]
+    #[attr(dialect = "ub.poison", default = "")]
     pub value: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 

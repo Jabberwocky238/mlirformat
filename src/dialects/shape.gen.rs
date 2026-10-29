@@ -13,15 +13,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// of type `size` or `index`.
 #[mlir::op("shape.add", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($result)", results(result))]
 pub struct AddOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -41,11 +41,11 @@ pub struct AddOp<'a> {
 /// ```
 #[mlir::op("shape.any", format = "$inputs attr-dict `:` type($inputs) `->` type($result)", results(result))]
 pub struct AnyOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -69,11 +69,11 @@ pub struct AnyOp<'a> {
 /// ```
 #[mlir::op("shape.assuming_all", format = "$inputs attr-dict", results(result))]
 pub struct AssumingAllOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[dtype(name = "inputs_ty", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub inputs_ty: Type<'a>,
-    #[dtype(name = "result", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -87,15 +87,15 @@ pub struct AssumingAllOp<'a> {
 /// ready to execute.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("shape.assuming", generic, results(results))]
+#[mlir::op("shape.assuming", results(results))]
 pub struct AssumingOp<'a> {
-    #[slot(witness_ty, name = "witness")]
+    #[slot(witness_ty)]
     pub witness: Value<'a>,
     #[region(name = "doRegion")]
     pub do_region: Region<'a>,
-    #[dtype(name = "witness_ty", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub witness_ty: Type<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -107,9 +107,9 @@ pub struct AssumingOp<'a> {
 /// the number and types of parent `shape.assuming` results.
 #[mlir::op("shape.assuming_yield", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct AssumingYieldOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -138,13 +138,13 @@ pub struct AssumingYieldOp<'a> {
 /// attribute can be used to describe the error case.
 #[mlir::op("shape.broadcast", format = "$shapes attr-dict `:` type($shapes) `->` type($result)", results(result))]
 pub struct BroadcastOp<'a> {
-    #[slot(shapes_ty, name = "shapes")]
+    #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[attr(name = "error")]
+    #[attr]
     pub error: Option<Attribute<'a>>,
-    #[dtype(name = "shapes_ty")]
+    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -159,15 +159,15 @@ pub struct BroadcastOp<'a> {
 /// concat([], [4,5,6]) -> [4,5,6]
 #[mlir::op("shape.concat", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($result)", results(result))]
 pub struct ConcatOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -184,11 +184,11 @@ pub struct ConcatOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("shape.const_shape", generic, results(result))]
+#[mlir::op("shape.const_shape", results(result))]
 pub struct ConstShapeOp<'a> {
-    #[attr(name = "shape")]
+    #[attr]
     pub shape: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -201,9 +201,9 @@ pub struct ConstShapeOp<'a> {
 /// ```
 #[mlir::op("shape.const_size", format = "$value attr-dict", results(result))]
 pub struct ConstSizeOp<'a> {
-    #[attr(name = "value", int = "index")]
+    #[attr(int = "index")]
     pub value: Attribute<'a>,
-    #[dtype(name = "result", is = "!shape.size")]
+    #[dtype(is = "!shape.size")]
     pub result: Type<'a>,
 }
 
@@ -222,9 +222,9 @@ pub struct ConstSizeOp<'a> {
 /// ```
 #[mlir::op("shape.const_witness", format = "$passing attr-dict", results(result))]
 pub struct ConstWitnessOp<'a> {
-    #[attr(name = "passing")]
+    #[attr]
     pub passing: Attribute<'a>,
-    #[dtype(name = "result", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -243,11 +243,11 @@ pub struct ConstWitnessOp<'a> {
 /// ```
 #[mlir::op("shape.cstr_broadcastable", format = "$shapes attr-dict `:` type($shapes)", results(result))]
 pub struct CstrBroadcastableOp<'a> {
-    #[slot(shapes_ty, name = "shapes")]
+    #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype(name = "shapes_ty")]
+    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -264,11 +264,11 @@ pub struct CstrBroadcastableOp<'a> {
 /// ```
 #[mlir::op("shape.cstr_eq", format = "$shapes attr-dict `:` type($shapes)", results(result))]
 pub struct CstrEqOp<'a> {
-    #[slot(shapes_ty, name = "shapes")]
+    #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype(name = "shapes_ty")]
+    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -291,13 +291,13 @@ pub struct CstrEqOp<'a> {
 /// should clarify the nature of the assertion for users.
 #[mlir::op("shape.cstr_require", format = "$pred `,` $msg attr-dict", results(result))]
 pub struct CstrRequireOp<'a> {
-    #[slot(pred_ty, name = "pred")]
+    #[slot(pred_ty)]
     pub pred: Value<'a>,
-    #[attr(name = "msg")]
+    #[attr]
     pub msg: Attribute<'a>,
-    #[dtype(name = "pred_ty", is = i1)]
+    #[dtype(is = i1)]
     pub pred_ty: Type<'a>,
-    #[dtype(name = "result", is = "!shape.witness")]
+    #[dtype(is = "!shape.witness")]
     pub result: Type<'a>,
 }
 
@@ -308,13 +308,13 @@ pub struct CstrRequireOp<'a> {
 /// Note: This is intended for testing and debugging only.
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("shape.debug_print", generic, results(output))]
+#[mlir::op("shape.debug_print", results(output))]
 pub struct DebugPrintOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -328,15 +328,15 @@ pub struct DebugPrintOp<'a> {
 /// of a shape (e.g., `dim(x, i) == get_extent(shape_of(x), i)`).
 #[mlir::op("shape.dim", format = "$value `,` $index attr-dict `:` type($value) `,`type($index) `->` type($extent)", results(extent))]
 pub struct DimOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(index_ty, name = "index")]
+    #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "index_ty")]
+    #[dtype]
     pub index_ty: Type<'a>,
-    #[dtype(name = "extent")]
+    #[dtype]
     pub extent: Type<'a>,
 }
 
@@ -359,15 +359,15 @@ pub struct DimOp<'a> {
 /// negative value is undefined.
 #[mlir::op("shape.div", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($result)", results(result))]
 pub struct DivOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -378,11 +378,11 @@ pub struct DivOp<'a> {
 /// extents match the values of the elements.
 #[mlir::op("shape.from_extent_tensor", format = "$input attr-dict `:` type($input)", results(result))]
 pub struct FromExtentTensorOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "result", is = "!shape.shape")]
+    #[dtype(is = "!shape.shape")]
     pub result: Type<'a>,
 }
 
@@ -399,11 +399,11 @@ pub struct FromExtentTensorOp<'a> {
 /// ```
 #[mlir::op("shape.from_extents", format = "$extents attr-dict `:` type($extents)", results(shape))]
 pub struct FromExtentsOp<'a> {
-    #[slot(extents_ty, name = "extents")]
+    #[slot(extents_ty)]
     pub extents: Vec<Value<'a>>,
-    #[dtype(name = "extents_ty")]
+    #[dtype]
     pub extents_ty: Vec<Type<'a>>,
-    #[dtype(name = "shape", is = "!shape.shape")]
+    #[dtype(is = "!shape.shape")]
     pub shape: Type<'a>,
 }
 
@@ -414,19 +414,19 @@ pub struct FromExtentsOp<'a> {
 /// function.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("shape.func", generic)]
+#[mlir::op("shape.func")]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -449,15 +449,15 @@ pub struct FuncOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("shape.function_library", generic)]
+#[mlir::op("shape.function_library")]
 pub struct FunctionLibraryOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr(name = "mapping")]
+    #[attr]
     pub mapping: Attribute<'a>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -467,15 +467,15 @@ pub struct FunctionLibraryOp<'a> {
 /// an error then it returns an invalid size.
 #[mlir::op("shape.get_extent", format = "$shape `,` $dim attr-dict `:` type($shape) `,` type($dim) `->` type($extent)", results(extent))]
 pub struct GetExtentOp<'a> {
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[slot(dim_ty, name = "dim")]
+    #[slot(dim_ty)]
     pub dim: Value<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "dim_ty")]
+    #[dtype]
     pub dim_ty: Type<'a>,
-    #[dtype(name = "extent")]
+    #[dtype]
     pub extent: Type<'a>,
 }
 
@@ -488,11 +488,11 @@ pub struct GetExtentOp<'a> {
 /// The behavior is undefined for negative indices.
 #[mlir::op("shape.index_to_size", format = "$arg attr-dict", results(result))]
 pub struct IndexToSizeOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty", is = index)]
+    #[dtype(is = index)]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "result", is = "!shape.size")]
+    #[dtype(is = "!shape.size")]
     pub result: Type<'a>,
 }
 
@@ -514,11 +514,11 @@ pub struct IndexToSizeOp<'a> {
 /// ```
 #[mlir::op("shape.is_broadcastable", format = "$shapes attr-dict `:` type($shapes)", results(result))]
 pub struct IsBroadcastableOp<'a> {
-    #[slot(shapes_ty, name = "shapes")]
+    #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype(name = "shapes_ty")]
+    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result", is = i1)]
+    #[dtype(is = i1)]
     pub result: Type<'a>,
 }
 
@@ -530,15 +530,15 @@ pub struct IsBroadcastableOp<'a> {
 /// result is an error.
 #[mlir::op("shape.max", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($result)", results(result))]
 pub struct MaxOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -569,17 +569,17 @@ pub struct MaxOp<'a> {
 /// ```
 #[mlir::op("shape.meet", format = "$arg0 `,` $arg1 (`,` `error` `=` $error^)? attr-dict `:` type($arg0) `,` type($arg1) `->` type($result)", results(result))]
 pub struct MeetOp<'a> {
-    #[slot(arg0_ty, name = "arg0")]
+    #[slot(arg0_ty)]
     pub arg0: Value<'a>,
-    #[slot(arg1_ty, name = "arg1")]
+    #[slot(arg1_ty)]
     pub arg1: Value<'a>,
-    #[attr(name = "error")]
+    #[attr]
     pub error: Option<Attribute<'a>>,
-    #[dtype(name = "arg0_ty")]
+    #[dtype]
     pub arg0_ty: Type<'a>,
-    #[dtype(name = "arg1_ty")]
+    #[dtype]
     pub arg1_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -591,15 +591,15 @@ pub struct MeetOp<'a> {
 /// result is an error.
 #[mlir::op("shape.min", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($result)", results(result))]
 pub struct MinOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -613,15 +613,15 @@ pub struct MinOp<'a> {
 /// of type `size` or `index`.
 #[mlir::op("shape.mul", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `,` type($rhs) `->` type($result)", results(result))]
 pub struct MulOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -634,11 +634,11 @@ pub struct MulOp<'a> {
 /// type `index`.
 #[mlir::op("shape.num_elements", format = "$shape attr-dict `:` type($shape) `->` type($result)", results(result))]
 pub struct NumElementsOp<'a> {
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -647,11 +647,11 @@ pub struct NumElementsOp<'a> {
 /// Returns the rank of the shape or extent tensor, i.e. the number of extents.
 #[mlir::op("shape.rank", format = "$shape attr-dict `:` type($shape) `->` type($rank)", results(rank))]
 pub struct RankOp<'a> {
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "rank")]
+    #[dtype]
     pub rank: Type<'a>,
 }
 
@@ -689,19 +689,19 @@ pub struct RankOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("shape.reduce", generic, results(result))]
+#[mlir::op("shape.reduce", results(result))]
 pub struct ReduceOp<'a> {
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
     #[slot(init_vals_ty, name = "initVals")]
     pub init_vals: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "initVals_ty")]
+    #[dtype]
     pub init_vals_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -712,9 +712,9 @@ pub struct ReduceOp<'a> {
 /// results.
 #[mlir::op("shape.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct ReturnOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -727,11 +727,11 @@ pub struct ReturnOp<'a> {
 /// equal to itself.
 #[mlir::op("shape.shape_eq", format = "$shapes attr-dict `:` type($shapes)", results(result))]
 pub struct ShapeEqOp<'a> {
-    #[slot(shapes_ty, name = "shapes")]
+    #[slot(shapes_ty)]
     pub shapes: Vec<Value<'a>>,
-    #[dtype(name = "shapes_ty")]
+    #[dtype]
     pub shapes_ty: Vec<Type<'a>>,
-    #[dtype(name = "result", is = i1)]
+    #[dtype(is = i1)]
     pub result: Type<'a>,
 }
 
@@ -741,11 +741,11 @@ pub struct ShapeEqOp<'a> {
 /// returns a shape or extent tensor.
 #[mlir::op("shape.shape_of", format = "$arg attr-dict `:` type($arg) `->` type($result)", results(result))]
 pub struct ShapeOfOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -757,11 +757,11 @@ pub struct ShapeOfOp<'a> {
 /// arguments.
 #[mlir::op("shape.size_to_index", format = "$arg attr-dict `:` type($arg)", results(result))]
 pub struct SizeToIndexOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -789,19 +789,19 @@ pub struct SizeToIndexOp<'a> {
 /// - `index` is in the range [-rank(operand),rank(operand)]
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("shape.split_at", generic, results(head, tail))]
+#[mlir::op("shape.split_at", results(head, tail))]
 pub struct SplitAtOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[slot(index_ty, name = "index")]
+    #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "index_ty")]
+    #[dtype]
     pub index_ty: Type<'a>,
-    #[dtype(name = "head")]
+    #[dtype]
     pub head: Type<'a>,
-    #[dtype(name = "tail")]
+    #[dtype]
     pub tail: Type<'a>,
 }
 
@@ -814,11 +814,11 @@ pub struct SplitAtOp<'a> {
 /// If the shape represents an error, this op's behavior is undefined.
 #[mlir::op("shape.to_extent_tensor", format = "$input attr-dict `:` type($input) `->` type($result)", results(result))]
 pub struct ToExtentTensorOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -840,11 +840,11 @@ pub struct ToExtentTensorOp<'a> {
 /// This operation is the complement of `shape_of` wrt ValueShape values.
 #[mlir::op("shape.value_as_shape", format = "$arg attr-dict `:` type($arg) `->` type($result)", results(result))]
 pub struct ValueAsShapeOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -855,11 +855,11 @@ pub struct ValueAsShapeOp<'a> {
 /// invalid arguments.
 #[mlir::op("shape.value_of", format = "$arg attr-dict `:` type($result)", results(result))]
 pub struct ValueOfOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty", is = "!shape.value_shape")]
+    #[dtype(is = "!shape.value_shape")]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -898,26 +898,26 @@ pub struct ValueOfOp<'a> {
 /// then a join op should be used.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("shape.with_shape", generic, results(result))]
+#[mlir::op("shape.with_shape", results(result))]
 pub struct WithOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "result", is = "!shape.value_shape")]
+    #[dtype(is = "!shape.value_shape")]
     pub result: Type<'a>,
 }
 
 /// `shape.yield`: Returns the value to parent op
 #[mlir::op("shape.yield", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct YieldOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

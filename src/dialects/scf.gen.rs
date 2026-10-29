@@ -11,13 +11,13 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// to the entry block of the region. Otherwise, the loop terminates.
 #[mlir::op("scf.condition", format = "`(` $condition `)` attr-dict ($args^ `:` type($args))?")]
 pub struct ConditionOp<'a> {
-    #[slot(condition_ty, name = "condition")]
+    #[slot(condition_ty)]
     pub condition: Value<'a>,
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[dtype(name = "condition_ty", is = i1)]
+    #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
 }
 
@@ -73,13 +73,13 @@ pub struct ConditionOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.execute_region", generic, results(result))]
+#[mlir::op("scf.execute_region", results(result))]
 pub struct ExecuteRegionOp<'a> {
-    #[attr(name = "no_inline")]
+    #[attr]
     pub no_inline: bool,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -182,25 +182,25 @@ pub struct ExecuteRegionOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.for", generic, results(results))]
+#[mlir::op("scf.for", results(results))]
 pub struct ForOp<'a> {
     #[slot(lower_bound_ty, name = "lowerBound")]
     pub lower_bound: Value<'a>,
     #[slot(lower_bound_ty, name = "upperBound")]
     pub upper_bound: Value<'a>,
-    #[slot(lower_bound_ty, name = "step")]
+    #[slot(lower_bound_ty)]
     pub step: Value<'a>,
     #[slot(init_args_ty, name = "initArgs")]
     pub init_args: Vec<Value<'a>>,
     #[attr(name = "unsignedCmp")]
     pub unsigned_cmp: bool,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "lowerBound_ty")]
+    #[dtype]
     pub lower_bound_ty: Type<'a>,
-    #[dtype(name = "initArgs_ty")]
+    #[dtype]
     pub init_args_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -370,7 +370,7 @@ pub struct ForOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.forall", generic, results(results))]
+#[mlir::op("scf.forall", results(results))]
 pub struct ForallOp<'a> {
     #[slot(dynamic_lower_bound_ty, name = "dynamicLowerBound")]
     pub dynamic_lower_bound: Vec<Value<'a>>,
@@ -378,7 +378,7 @@ pub struct ForallOp<'a> {
     pub dynamic_upper_bound: Vec<Value<'a>>,
     #[slot(dynamic_step_ty, name = "dynamicStep")]
     pub dynamic_step: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
     #[attr(name = "staticLowerBound", dense = "i64")]
     pub static_lower_bound: Attribute<'a>,
@@ -386,19 +386,19 @@ pub struct ForallOp<'a> {
     pub static_upper_bound: Attribute<'a>,
     #[attr(name = "staticStep", dense = "i64")]
     pub static_step: Attribute<'a>,
-    #[attr(name = "mapping")]
+    #[attr]
     pub mapping: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "dynamicLowerBound_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_lower_bound_ty: Type<'a>,
-    #[dtype(name = "dynamicUpperBound_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_upper_bound_ty: Type<'a>,
-    #[dtype(name = "dynamicStep_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_step_ty: Type<'a>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -453,17 +453,17 @@ pub struct ForallOp<'a> {
 /// `scf.if`.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.if", generic, results(results))]
+#[mlir::op("scf.if", results(results))]
 pub struct IfOp<'a> {
-    #[slot(condition_ty, name = "condition")]
+    #[slot(condition_ty)]
     pub condition: Value<'a>,
     #[region(name = "thenRegion")]
     pub then_region: Region<'a>,
     #[region(name = "elseRegion")]
     pub else_region: Region<'a>,
-    #[dtype(name = "condition_ty", is = i1)]
+    #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -478,9 +478,9 @@ pub struct IfOp<'a> {
 /// The result number corresponds to the position of the op in the terminator.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.forall.in_parallel", generic)]
+#[mlir::op("scf.forall.in_parallel")]
 pub struct InParallelOp<'a> {
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
 }
 
@@ -515,19 +515,19 @@ pub struct InParallelOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<SwitchCases>`).
-#[mlir::op("scf.index_switch", generic, results(results))]
+#[mlir::op("scf.index_switch", results(results))]
 pub struct IndexSwitchOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[attr(name = "cases", dense = "i64")]
+    #[attr(dense = "i64")]
     pub cases: Attribute<'a>,
     #[region(name = "defaultRegion")]
     pub default_region: Region<'a>,
     #[region(name = "caseRegions")]
     pub case_regions: Vec<Region<'a>>,
-    #[dtype(name = "arg_ty", is = index)]
+    #[dtype(is = index)]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -586,27 +586,27 @@ pub struct IndexSwitchOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.parallel", generic, results(results))]
+#[mlir::op("scf.parallel", results(results))]
 pub struct ParallelOp<'a> {
     #[slot(lower_bound_ty, name = "lowerBound")]
     pub lower_bound: Vec<Value<'a>>,
     #[slot(upper_bound_ty, name = "upperBound")]
     pub upper_bound: Vec<Value<'a>>,
-    #[slot(step_ty, name = "step")]
+    #[slot(step_ty)]
     pub step: Vec<Value<'a>>,
     #[slot(init_vals_ty, name = "initVals")]
     pub init_vals: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "lowerBound_ty", is = index)]
+    #[dtype(is = index)]
     pub lower_bound_ty: Type<'a>,
-    #[dtype(name = "upperBound_ty", is = index)]
+    #[dtype(is = index)]
     pub upper_bound_ty: Type<'a>,
-    #[dtype(name = "step_ty", is = index)]
+    #[dtype(is = index)]
     pub step_ty: Type<'a>,
-    #[dtype(name = "initVals_ty")]
+    #[dtype]
     pub init_vals_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -644,11 +644,11 @@ pub struct ParallelOp<'a> {
 /// ```
 #[mlir::op("scf.reduce", format = "(`(` $operands^ `:` type($operands) `)`)? $reductions attr-dict")]
 pub struct ReduceOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[region(name = "reductions")]
+    #[region]
     pub reductions: Vec<Region<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -665,9 +665,9 @@ pub struct ReduceOp<'a> {
 /// ```
 #[mlir::op("scf.reduce.return", format = "$result attr-dict `:` type($result)")]
 pub struct ReduceReturnOp<'a> {
-    #[slot(result_ty, name = "result")]
+    #[slot(result_ty)]
     pub result: Value<'a>,
-    #[dtype(name = "result_ty")]
+    #[dtype]
     pub result_ty: Type<'a>,
 }
 
@@ -785,17 +785,17 @@ pub struct ReduceReturnOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("scf.while", generic, results(results))]
+#[mlir::op("scf.while", results(results))]
 pub struct WhileOp<'a> {
-    #[slot(inits_ty, name = "inits")]
+    #[slot(inits_ty)]
     pub inits: Vec<Value<'a>>,
-    #[region(name = "before")]
+    #[region]
     pub before: Region<'a>,
-    #[region(name = "after")]
+    #[region]
     pub after: Region<'a>,
-    #[dtype(name = "inits_ty")]
+    #[dtype]
     pub inits_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -812,9 +812,9 @@ pub struct WhileOp<'a> {
 /// yielded.
 #[mlir::op("scf.yield", format = "attr-dict ($results^ `:` type($results))?")]
 pub struct YieldOp<'a> {
-    #[slot(results_ty, name = "results")]
+    #[slot(results_ty)]
     pub results: Vec<Value<'a>>,
-    #[dtype(name = "results_ty")]
+    #[dtype]
     pub results_ty: Vec<Type<'a>>,
 }
 

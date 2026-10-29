@@ -14,13 +14,13 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("complex.abs", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct AbsOp<'a> {
-    #[slot(complex_ty, name = "complex")]
+    #[slot(complex_ty)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "complex_ty")]
+    #[dtype]
     pub complex_ty: Type<'a>,
-    #[dtype(name = "result", el = complex_ty)]
+    #[dtype(el = complex_ty)]
     pub result: Type<'a>,
 }
 
@@ -35,13 +35,13 @@ pub struct AbsOp<'a> {
 /// ```
 #[mlir::op("complex.add", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct AddOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -56,13 +56,13 @@ pub struct AddOp<'a> {
 /// ```
 #[mlir::op("complex.angle", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct AngleOp<'a> {
-    #[slot(complex_ty, name = "complex")]
+    #[slot(complex_ty)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "complex_ty")]
+    #[dtype]
     pub complex_ty: Type<'a>,
-    #[dtype(name = "result", el = complex_ty)]
+    #[dtype(el = complex_ty)]
     pub result: Type<'a>,
 }
 
@@ -78,13 +78,13 @@ pub struct AngleOp<'a> {
 /// ```
 #[mlir::op("complex.atan2", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct Atan2Op<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -97,11 +97,11 @@ pub struct Atan2Op<'a> {
 /// ```
 #[mlir::op("complex.bitcast", format = "$operand attr-dict `:` type($operand) `to` type($result)", results(result))]
 pub struct BitcastOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -117,11 +117,11 @@ pub struct BitcastOp<'a> {
 /// ```
 #[mlir::op("complex.conj", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct ConjOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -137,9 +137,9 @@ pub struct ConjOp<'a> {
 /// ```
 #[mlir::op("complex.constant", format = "$value attr-dict `:` type($complex)", results(complex))]
 pub struct ConstantOp<'a> {
-    #[attr(name = "value")]
+    #[attr]
     pub value: Attribute<'a>,
-    #[dtype(name = "complex")]
+    #[dtype]
     pub complex: Type<'a>,
 }
 
@@ -155,11 +155,11 @@ pub struct ConstantOp<'a> {
 /// ```
 #[mlir::op("complex.cos", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct CosOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -175,13 +175,13 @@ pub struct CosOp<'a> {
 /// ```
 #[mlir::op("complex.create", format = "$real `,` $imaginary attr-dict `:` type($complex)", results(complex))]
 pub struct CreateOp<'a> {
-    #[slot(real_ty, name = "real")]
+    #[slot(real_ty)]
     pub real: Value<'a>,
-    #[slot(real_ty, name = "imaginary")]
+    #[slot(real_ty)]
     pub imaginary: Value<'a>,
-    #[dtype(name = "real_ty", el = complex)]
+    #[dtype(el = complex)]
     pub real_ty: Type<'a>,
-    #[dtype(name = "complex")]
+    #[dtype]
     pub complex: Type<'a>,
 }
 
@@ -195,13 +195,13 @@ pub struct CreateOp<'a> {
 /// ```
 #[mlir::op("complex.div", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct DivOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -216,13 +216,13 @@ pub struct DivOp<'a> {
 /// ```
 #[mlir::op("complex.eq", format = "$lhs `,` $rhs attr-dict `:` type($lhs)", results(result))]
 pub struct EqualOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(lhs_ty, name = "rhs")]
+    #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "result", is = i1)]
+    #[dtype(is = i1)]
     pub result: Type<'a>,
 }
 
@@ -239,11 +239,11 @@ pub struct EqualOp<'a> {
 /// ```
 #[mlir::op("complex.exp", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct ExpOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -258,11 +258,11 @@ pub struct ExpOp<'a> {
 /// ```
 #[mlir::op("complex.expm1", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct Expm1Op<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -277,13 +277,13 @@ pub struct Expm1Op<'a> {
 /// ```
 #[mlir::op("complex.im", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(imaginary))]
 pub struct ImOp<'a> {
-    #[slot(complex_ty, name = "complex")]
+    #[slot(complex_ty)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "complex_ty")]
+    #[dtype]
     pub complex_ty: Type<'a>,
-    #[dtype(name = "imaginary", el = complex_ty)]
+    #[dtype(el = complex_ty)]
     pub imaginary: Type<'a>,
 }
 
@@ -301,11 +301,11 @@ pub struct ImOp<'a> {
 /// ```
 #[mlir::op("complex.log1p", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct Log1pOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -322,11 +322,11 @@ pub struct Log1pOp<'a> {
 /// ```
 #[mlir::op("complex.log", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct LogOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -339,13 +339,13 @@ pub struct LogOp<'a> {
 /// ```
 #[mlir::op("complex.mul", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct MulOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -360,11 +360,11 @@ pub struct MulOp<'a> {
 /// ```
 #[mlir::op("complex.neg", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct NegOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -380,13 +380,13 @@ pub struct NegOp<'a> {
 /// ```
 #[mlir::op("complex.neq", format = "$lhs `,` $rhs attr-dict `:` type($lhs)", results(result))]
 pub struct NotEqualOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(lhs_ty, name = "rhs")]
+    #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "result", is = i1)]
+    #[dtype(is = i1)]
     pub result: Type<'a>,
 }
 
@@ -402,13 +402,13 @@ pub struct NotEqualOp<'a> {
 /// ```
 #[mlir::op("complex.pow", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct PowOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -425,15 +425,15 @@ pub struct PowOp<'a> {
 /// ```
 #[mlir::op("complex.powi", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result) `,` type($rhs)", results(result))]
 pub struct PowiOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath")]
+    #[attr(dialect = "arith.fastmath")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -448,13 +448,13 @@ pub struct PowiOp<'a> {
 /// ```
 #[mlir::op("complex.re", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(real))]
 pub struct ReOp<'a> {
-    #[slot(complex_ty, name = "complex")]
+    #[slot(complex_ty)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "complex_ty")]
+    #[dtype]
     pub complex_ty: Type<'a>,
-    #[dtype(name = "real", el = complex_ty)]
+    #[dtype(el = complex_ty)]
     pub real: Type<'a>,
 }
 
@@ -469,11 +469,11 @@ pub struct ReOp<'a> {
 /// ```
 #[mlir::op("complex.rsqrt", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct RsqrtOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -489,11 +489,11 @@ pub struct RsqrtOp<'a> {
 /// ```
 #[mlir::op("complex.sign", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct SignOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -509,11 +509,11 @@ pub struct SignOp<'a> {
 /// ```
 #[mlir::op("complex.sin", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct SinOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -528,11 +528,11 @@ pub struct SinOp<'a> {
 /// ```
 #[mlir::op("complex.sqrt", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct SqrtOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -547,13 +547,13 @@ pub struct SqrtOp<'a> {
 /// ```
 #[mlir::op("complex.sub", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct SubOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -569,11 +569,11 @@ pub struct SubOp<'a> {
 /// ```
 #[mlir::op("complex.tan", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct TanOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -589,11 +589,11 @@ pub struct TanOp<'a> {
 /// ```
 #[mlir::op("complex.tanh", format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
 pub struct TanhOp<'a> {
-    #[slot(result, name = "complex")]
+    #[slot(result)]
     pub complex: Value<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 

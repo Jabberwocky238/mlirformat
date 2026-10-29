@@ -13,7 +13,7 @@ use crate::{Attribute, Dim, Op, Parse, Print, Parser, Printer, R, Shaped, Shaped
 pub struct Br<'a> {
     #[successor]
     pub dest: Str<'a>,
-    #[slot(dest_types)]
+    #[slot(dest_types, name = "destOperands")]
     pub dest_operands: Vec<Value<'a>>,
     #[dtype]
     pub dest_types: Vec<Type<'a>>,
@@ -26,15 +26,15 @@ pub struct Br<'a> {
 pub struct CondBr<'a> {
     #[slot(condition_ty)]
     pub condition: Value<'a>,
-    #[attr(name = "branch_weights")]
+    #[attr]
     pub branch_weights: Option<Vec<i32>>,
-    #[successor]
+    #[successor(name = "trueDest")]
     pub true_dest: Str<'a>,
-    #[slot(true_types)]
+    #[slot(true_types, name = "trueDestOperands")]
     pub true_dest_operands: Vec<Value<'a>>,
-    #[successor]
+    #[successor(name = "falseDest")]
     pub false_dest: Str<'a>,
-    #[slot(false_types)]
+    #[slot(false_types, name = "falseDestOperands")]
     pub false_dest_operands: Vec<Value<'a>>,
     #[dtype(i1)]
     pub condition_ty: Type<'a>,
@@ -66,19 +66,19 @@ pub struct Assert<'a> {
 pub struct Switch<'a> {
     #[slot(flag_ty)]
     pub flag: Value<'a>,
-    #[slot(default_types)]
+    #[slot(default_types, name = "defaultOperands")]
     pub default_operands: Vec<Value<'a>>,
-    #[slot(case_types)]
+    #[slot(case_types, name = "caseOperands")]
     pub case_operands: Vec<Value<'a>>,
-    #[successor]
+    #[successor(name = "defaultDestination")]
     pub default_destination: Str<'a>,
-    #[successor]
+    #[successor(name = "caseDestinations")]
     pub case_destinations: Vec<Str<'a>>,
     /// `dense<[v, …]> : vector<NxT>` (absent without cases).
-    #[attr(name = "case_values")]
+    #[attr]
     pub case_values: Option<Attribute<'a>>,
     /// `array<i32: n, …>`: operands per case.
-    #[attr(name = "case_operand_segments")]
+    #[attr]
     pub case_operand_segments: Attribute<'a>,
     #[dtype]
     pub flag_ty: Type<'a>,

@@ -57,23 +57,23 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// `alloc_tensor` without `copy`, followed by a `copy_tensor`.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("bufferization.alloc_tensor", generic, results(result))]
+#[mlir::op("bufferization.alloc_tensor", results(result))]
 pub struct AllocTensorOp<'a> {
-    #[slot(dynamic_sizes_ty, name = "dynamic_sizes")]
+    #[slot(dynamic_sizes_ty)]
     pub dynamic_sizes: Vec<Value<'a>>,
-    #[slot(copy_ty, name = "copy")]
+    #[slot(copy_ty)]
     pub copy: Vec<Value<'a>>,
-    #[slot(size_hint_ty, name = "size_hint")]
+    #[slot(size_hint_ty)]
     pub size_hint: Vec<Value<'a>>,
-    #[attr(name = "memory_space")]
+    #[attr]
     pub memory_space: Option<Attribute<'a>>,
-    #[dtype(name = "dynamic_sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype(name = "copy_ty")]
+    #[dtype]
     pub copy_ty: Vec<Type<'a>>,
-    #[dtype(name = "size_hint_ty", is = index)]
+    #[dtype(is = index)]
     pub size_hint_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -93,11 +93,11 @@ pub struct AllocTensorOp<'a> {
 /// behavior.
 #[mlir::op("bufferization.clone", format = "$input attr-dict `:` type($input) `to` type($output)", results(output))]
 pub struct CloneOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -154,19 +154,19 @@ pub struct CloneOp<'a> {
 /// be optimized away by running the `buffer-deallocation-simplification` pass.
 #[mlir::op("bufferization.dealloc", format = "(` ``(` $memrefs^ `:` type($memrefs) `)` `if` ` ` `(` $conditions `)` )? (`retain` ` ` `(` $retained^ `:` type($retained) `)` )? attr-dict", results(updated_conditions))]
 pub struct DeallocOp<'a> {
-    #[slot(memrefs_ty, name = "memrefs")]
+    #[slot(memrefs_ty)]
     pub memrefs: Vec<Value<'a>>,
-    #[slot(conditions_ty, name = "conditions")]
+    #[slot(conditions_ty)]
     pub conditions: Vec<Value<'a>>,
-    #[slot(retained_ty, name = "retained")]
+    #[slot(retained_ty)]
     pub retained: Vec<Value<'a>>,
-    #[dtype(name = "memrefs_ty")]
+    #[dtype]
     pub memrefs_ty: Vec<Type<'a>>,
-    #[dtype(name = "conditions_ty", is = i1)]
+    #[dtype(is = i1)]
     pub conditions_ty: Type<'a>,
-    #[dtype(name = "retained_ty")]
+    #[dtype]
     pub retained_ty: Vec<Type<'a>>,
-    #[dtype(name = "updatedConditions", is = i1)]
+    #[dtype(is = i1)]
     pub updated_conditions: Type<'a>,
 }
 
@@ -196,9 +196,9 @@ pub struct DeallocOp<'a> {
 /// ```
 #[mlir::op("bufferization.dealloc_tensor", format = "$tensor attr-dict `:` type($tensor)")]
 pub struct DeallocTensorOp<'a> {
-    #[slot(tensor_ty, name = "tensor")]
+    #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[dtype(name = "tensor_ty")]
+    #[dtype]
     pub tensor_ty: Type<'a>,
 }
 
@@ -251,21 +251,21 @@ pub struct DeallocTensorOp<'a> {
 /// materialize in a different buffer.
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("bufferization.materialize_in_destination", generic, results(result))]
+#[mlir::op("bufferization.materialize_in_destination", results(result))]
 pub struct MaterializeInDestinationOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(dest_ty, name = "dest")]
+    #[slot(dest_ty)]
     pub dest: Value<'a>,
-    #[attr(name = "restrict")]
+    #[attr]
     pub restrict: bool,
-    #[attr(name = "writable")]
+    #[attr]
     pub writable: bool,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest_ty")]
+    #[dtype]
     pub dest_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -287,13 +287,13 @@ pub struct MaterializeInDestinationOp<'a> {
 /// the returned buffer) will not be written to.
 #[mlir::op("bufferization.to_buffer", format = "$tensor (`read_only` $read_only^)? attr-dict `:` type($tensor) `to` type($buffer)", results(buffer))]
 pub struct ToBufferOp<'a> {
-    #[slot(tensor_ty, name = "tensor")]
+    #[slot(tensor_ty)]
     pub tensor: Value<'a>,
-    #[attr(name = "read_only")]
+    #[attr]
     pub read_only: bool,
-    #[dtype(name = "tensor_ty")]
+    #[dtype]
     pub tensor_ty: Type<'a>,
-    #[dtype(name = "buffer")]
+    #[dtype]
     pub buffer: Type<'a>,
 }
 
@@ -349,15 +349,15 @@ pub struct ToBufferOp<'a> {
 /// away. However, such IR is no longer bufferizable with One-Shot Bufferize.
 #[mlir::op("bufferization.to_tensor", format = "$buffer (`restrict` $restrict^)? (`writable` $writable^)? attr-dict `:` type($buffer) `to` type($result)", results(result))]
 pub struct ToTensorOp<'a> {
-    #[slot(buffer_ty, name = "buffer")]
+    #[slot(buffer_ty)]
     pub buffer: Value<'a>,
-    #[attr(name = "restrict")]
+    #[attr]
     pub restrict: bool,
-    #[attr(name = "writable")]
+    #[attr]
     pub writable: bool,
-    #[dtype(name = "buffer_ty")]
+    #[dtype]
     pub buffer_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 

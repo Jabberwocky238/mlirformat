@@ -23,14 +23,14 @@ macro_rules! binops {
 
 /// `lhs, rhs <kw><flags> : T` binary ops with a defaulted dialect-attribute property.
 macro_rules! flagged {
-    ($format:literal, $field:ident, $attr:literal: $($ty:ident = $name:literal),* $(,)?) => {$(
+    ($format:literal, $field:ident = $key:literal, $attr:literal: $($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = $format, results(result))]
         pub struct $ty<'a> {
             #[slot(result)]
             pub lhs: Value<'a>,
             #[slot(result)]
             pub rhs: Value<'a>,
-            #[attr(dialect = $attr, default = "<none>")]
+            #[attr(name = $key, dialect = $attr, default = "<none>")]
             pub $field: Option<Attribute<'a>>,
             #[dtype]
             pub result: Type<'a>,
@@ -47,7 +47,7 @@ macro_rules! exact {
             pub lhs: Value<'a>,
             #[slot(result)]
             pub rhs: Value<'a>,
-            #[attr]
+            #[attr(name = "isExact")]
             pub is_exact: bool,
             #[dtype]
             pub result: Type<'a>,
@@ -91,11 +91,11 @@ exact! {
     DivSI = "arith.divsi", DivUI = "arith.divui", ShRSI = "arith.shrsi", ShRUI = "arith.shrui",
 }
 
-flagged! { "$lhs `,` $rhs (`overflow` `` $overflowFlags^)? attr-dict `:` type($result)", overflow_flags, "arith.overflow":
+flagged! { "$lhs `,` $rhs (`overflow` `` $overflowFlags^)? attr-dict `:` type($result)", overflow_flags = "overflowFlags", "arith.overflow":
     AddI = "arith.addi", SubI = "arith.subi", MulI = "arith.muli", ShLI = "arith.shli",
 }
 
-flagged! { "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", fastmath, "arith.fastmath":
+flagged! { "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", fastmath = "fastmath", "arith.fastmath":
     AddF = "arith.addf", SubF = "arith.subf", MulF = "arith.mulf", DivF = "arith.divf", RemF = "arith.remf",
     MaximumF = "arith.maximumf", MinimumF = "arith.minimumf", MaxNumF = "arith.maxnumf", MinNumF = "arith.minnumf",
 }
@@ -161,9 +161,9 @@ pub struct TruncF<'a> {
 pub struct Select<'a> {
     #[slot(condition_ty)]
     pub condition: Value<'a>,
-    #[slot(result)]
+    #[slot(result, name = "trueValue")]
     pub true_value: Value<'a>,
-    #[slot(result)]
+    #[slot(result, name = "falseValue")]
     pub false_value: Value<'a>,
     #[dtype]
     pub condition_ty: Type<'a>,
@@ -253,7 +253,7 @@ pub struct Constant<'a> {
 pub struct TruncI<'a> {
     #[slot(in_ty, name = "in")]
     pub input: Value<'a>,
-    #[attr(dialect = "arith.overflow", default = "<none>")]
+    #[attr(dialect = "arith.overflow", default = "<none>", name = "overflowFlags")]
     pub overflow_flags: Option<Attribute<'a>>,
     #[dtype]
     pub in_ty: Type<'a>,

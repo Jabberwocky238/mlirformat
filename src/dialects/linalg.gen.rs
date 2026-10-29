@@ -19,19 +19,19 @@ pub enum WinogradConv2DFmr {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.abs", generic, results(result_tensors))]
+#[mlir::op("linalg.abs", results(result_tensors))]
 pub struct AbsOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -46,19 +46,19 @@ pub struct AbsOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.add", generic, results(result_tensors))]
+#[mlir::op("linalg.add", results(result_tensors))]
 pub struct AddOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -102,23 +102,23 @@ pub struct AddOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.batch_matmul", generic, results(result_tensors))]
+#[mlir::op("linalg.batch_matmul", results(result_tensors))]
 pub struct BatchMatmulOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -128,19 +128,19 @@ pub struct BatchMatmulOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.batch_matvec", generic, results(result_tensors))]
+#[mlir::op("linalg.batch_matvec", results(result_tensors))]
 pub struct BatchMatvecOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -152,19 +152,19 @@ pub struct BatchMatvecOp<'a> {
 /// description of lingalg.mmt4d.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.batch_mmt4d", generic, results(result_tensors))]
+#[mlir::op("linalg.batch_mmt4d", results(result_tensors))]
 pub struct BatchMmt4DOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -208,23 +208,23 @@ pub struct BatchMmt4DOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.batch_reduce_matmul", generic, results(result_tensors))]
+#[mlir::op("linalg.batch_reduce_matmul", results(result_tensors))]
 pub struct BatchReduceMatmulOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -234,19 +234,19 @@ pub struct BatchReduceMatmulOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.batch_vecmat", generic, results(result_tensors))]
+#[mlir::op("linalg.batch_vecmat", results(result_tensors))]
 pub struct BatchVecmatOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -263,21 +263,21 @@ pub struct BatchVecmatOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.broadcast", generic, results(result))]
+#[mlir::op("linalg.broadcast", results(result))]
 pub struct BroadcastOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(init_ty, name = "init")]
+    #[slot(init_ty)]
     pub init: Value<'a>,
-    #[attr(name = "dimensions", dense = "i64")]
+    #[attr(dense = "i64")]
     pub dimensions: Attribute<'a>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "init_ty")]
+    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -286,19 +286,19 @@ pub struct BroadcastOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.ceil", generic, results(result_tensors))]
+#[mlir::op("linalg.ceil", results(result_tensors))]
 pub struct CeilOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -363,23 +363,23 @@ pub struct CeilOp<'a> {
 ///       multiplication op.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.contract", generic, results(result_tensors))]
+#[mlir::op("linalg.contract", results(result_tensors))]
 pub struct ContractOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region(name = "combiner")]
+    #[region]
     pub combiner: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -393,23 +393,23 @@ pub struct ContractOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_1d_ncw_fcw", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_1d_ncw_fcw", results(result_tensors))]
 pub struct Conv1DNcwFcwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -419,23 +419,23 @@ pub struct Conv1DNcwFcwOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_1d_nwc_wcf", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_1d_nwc_wcf", results(result_tensors))]
 pub struct Conv1DNwcWcfOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -445,19 +445,19 @@ pub struct Conv1DNwcWcfOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_1d", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_1d", results(result_tensors))]
 pub struct Conv1DOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -471,23 +471,23 @@ pub struct Conv1DOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nchw_fchw", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nchw_fchw", results(result_tensors))]
 pub struct Conv2DNchwFchwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -502,23 +502,23 @@ pub struct Conv2DNchwFchwOp<'a> {
 /// point offsets common to quantized operations.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nchw_fchw_q", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nchw_fchw_q", results(result_tensors))]
 pub struct Conv2DNchwFchwQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -532,23 +532,23 @@ pub struct Conv2DNchwFchwQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_ngchw_fgchw", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_ngchw_fgchw", results(result_tensors))]
 pub struct Conv2DNgchwFgchwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -562,23 +562,23 @@ pub struct Conv2DNgchwFgchwOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_ngchw_gfchw", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_ngchw_gfchw", results(result_tensors))]
 pub struct Conv2DNgchwGfchwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -593,23 +593,23 @@ pub struct Conv2DNgchwGfchwOp<'a> {
 /// point offsets common to quantized operations.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_ngchw_gfchw_q", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_ngchw_gfchw_q", results(result_tensors))]
 pub struct Conv2DNgchwGfchwQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -623,23 +623,23 @@ pub struct Conv2DNgchwGfchwQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nhwc_fhwc", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nhwc_fhwc", results(result_tensors))]
 pub struct Conv2DNhwcFhwcOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -654,23 +654,23 @@ pub struct Conv2DNhwcFhwcOp<'a> {
 /// point offsets common to quantized operations.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nhwc_fhwc_q", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nhwc_fhwc_q", results(result_tensors))]
 pub struct Conv2DNhwcFhwcQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -684,23 +684,23 @@ pub struct Conv2DNhwcFhwcQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nhwc_hwcf", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nhwc_hwcf", results(result_tensors))]
 pub struct Conv2DNhwcHwcfOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -715,23 +715,23 @@ pub struct Conv2DNhwcHwcfOp<'a> {
 /// point offsets common to quantized operations.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nhwc_hwcf_q", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nhwc_hwcf_q", results(result_tensors))]
 pub struct Conv2DNhwcHwcfQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -745,23 +745,23 @@ pub struct Conv2DNhwcHwcfQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nhwgc_gfhwc", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nhwgc_gfhwc", results(result_tensors))]
 pub struct Conv2DNhwgcGfhwcOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -776,23 +776,23 @@ pub struct Conv2DNhwgcGfhwcOp<'a> {
 /// point offsets common to quantized operations.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d_nhwgc_gfhwc_q", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d_nhwgc_gfhwc_q", results(result_tensors))]
 pub struct Conv2DNhwgcGfhwcQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -802,19 +802,19 @@ pub struct Conv2DNhwgcGfhwcQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_2d", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_2d", results(result_tensors))]
 pub struct Conv2DOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -824,23 +824,23 @@ pub struct Conv2DOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_3d_ncdhw_fcdhw", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_3d_ncdhw_fcdhw", results(result_tensors))]
 pub struct Conv3DNcdhwFcdhwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -850,23 +850,23 @@ pub struct Conv3DNcdhwFcdhwOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_3d_ndhwc_dhwcf", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_3d_ndhwc_dhwcf", results(result_tensors))]
 pub struct Conv3DNdhwcDhwcfOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -877,23 +877,23 @@ pub struct Conv3DNdhwcDhwcfOp<'a> {
 /// point offsets common to quantized operations.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_3d_ndhwc_dhwcf_q", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_3d_ndhwc_dhwcf_q", results(result_tensors))]
 pub struct Conv3DNdhwcDhwcfQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -903,19 +903,19 @@ pub struct Conv3DNdhwcDhwcfQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.conv_3d", generic, results(result_tensors))]
+#[mlir::op("linalg.conv_3d", results(result_tensors))]
 pub struct Conv3DOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -925,21 +925,21 @@ pub struct Conv3DOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.copy", generic, results(result_tensors))]
+#[mlir::op("linalg.copy", results(result_tensors))]
 pub struct CopyOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -950,23 +950,23 @@ pub struct CopyOp<'a> {
 /// which is a special case for most depthwise convolutions.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_1d_ncw_cw", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_1d_ncw_cw", results(result_tensors))]
 pub struct DepthwiseConv1DNcwCwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -977,23 +977,23 @@ pub struct DepthwiseConv1DNcwCwOp<'a> {
 /// which is a special case for most depthwise convolutions.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_1d_nwc_wc", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_1d_nwc_wc", results(result_tensors))]
 pub struct DepthwiseConv1DNwcWcOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1003,23 +1003,23 @@ pub struct DepthwiseConv1DNwcWcOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_1d_nwc_wcm", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_1d_nwc_wcm", results(result_tensors))]
 pub struct DepthwiseConv1DNwcWcmOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1030,23 +1030,23 @@ pub struct DepthwiseConv1DNwcWcmOp<'a> {
 /// which is a special case for most depthwise convolutions.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_2d_nchw_chw", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_2d_nchw_chw", results(result_tensors))]
 pub struct DepthwiseConv2DNchwChwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1057,23 +1057,23 @@ pub struct DepthwiseConv2DNchwChwOp<'a> {
 /// which is a special case for most depthwise convolutions.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwc", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwc", results(result_tensors))]
 pub struct DepthwiseConv2DNhwcHwcOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1083,23 +1083,23 @@ pub struct DepthwiseConv2DNhwcHwcOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwc_q", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwc_q", results(result_tensors))]
 pub struct DepthwiseConv2DNhwcHwcQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1109,23 +1109,23 @@ pub struct DepthwiseConv2DNhwcHwcQOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwcm", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwcm", results(result_tensors))]
 pub struct DepthwiseConv2DNhwcHwcmOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1135,23 +1135,23 @@ pub struct DepthwiseConv2DNhwcHwcmOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwcm_q", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_2d_nhwc_hwcm_q", results(result_tensors))]
 pub struct DepthwiseConv2DNhwcHwcmQOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1162,23 +1162,23 @@ pub struct DepthwiseConv2DNhwcHwcmQOp<'a> {
 /// which is a special case for most depthwise convolutions.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_3d_ncdhw_cdhw", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_3d_ncdhw_cdhw", results(result_tensors))]
 pub struct DepthwiseConv3DNcdhwCdhwOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1189,23 +1189,23 @@ pub struct DepthwiseConv3DNcdhwCdhwOp<'a> {
 /// which is a special case for most depthwise convolutions.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_3d_ndhwc_dhwc", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_3d_ndhwc_dhwc", results(result_tensors))]
 pub struct DepthwiseConv3DNdhwcDhwcOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1215,23 +1215,23 @@ pub struct DepthwiseConv3DNdhwcDhwcOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.depthwise_conv_3d_ndhwc_dhwcm", generic, results(result_tensors))]
+#[mlir::op("linalg.depthwise_conv_3d_ndhwc_dhwcm", results(result_tensors))]
 pub struct DepthwiseConv3DNdhwcDhwcmOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1246,19 +1246,19 @@ pub struct DepthwiseConv3DNdhwcDhwcmOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.div", generic, results(result_tensors))]
+#[mlir::op("linalg.div", results(result_tensors))]
 pub struct DivOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1273,19 +1273,19 @@ pub struct DivOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.div_unsigned", generic, results(result_tensors))]
+#[mlir::op("linalg.div_unsigned", results(result_tensors))]
 pub struct DivUnsignedOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1295,19 +1295,19 @@ pub struct DivUnsignedOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.dot", generic, results(result_tensors))]
+#[mlir::op("linalg.dot", results(result_tensors))]
 pub struct DotOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1351,23 +1351,23 @@ pub struct DotOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.elementwise", generic, results(result_tensors))]
+#[mlir::op("linalg.elementwise", results(result_tensors))]
 pub struct ElementwiseOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "kind", dialect = "linalg.elementwise_kind")]
+    #[attr(dialect = "linalg.elementwise_kind")]
     pub kind: Attribute<'a>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1376,19 +1376,19 @@ pub struct ElementwiseOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.erf", generic, results(result_tensors))]
+#[mlir::op("linalg.erf", results(result_tensors))]
 pub struct ErfOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1397,19 +1397,19 @@ pub struct ErfOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.exp", generic, results(result_tensors))]
+#[mlir::op("linalg.exp", results(result_tensors))]
 pub struct ExpOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1420,19 +1420,19 @@ pub struct ExpOp<'a> {
 /// type must match the element type of the output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.fill", generic, results(result_tensors))]
+#[mlir::op("linalg.fill", results(result_tensors))]
 pub struct FillOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1447,19 +1447,19 @@ pub struct FillOp<'a> {
 /// the range of the generated random numbers.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.fill_rng_2d", generic, results(result_tensors))]
+#[mlir::op("linalg.fill_rng_2d", results(result_tensors))]
 pub struct FillRng2DOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1468,19 +1468,19 @@ pub struct FillRng2DOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.floor", generic, results(result_tensors))]
+#[mlir::op("linalg.floor", results(result_tensors))]
 pub struct FloorOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1569,27 +1569,27 @@ pub struct FloorOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.generic", generic, results(result_tensors))]
+#[mlir::op("linalg.generic", results(result_tensors))]
 pub struct GenericOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr(name = "iterator_types")]
+    #[attr]
     pub iterator_types: Attribute<'a>,
-    #[attr(name = "doc")]
+    #[attr]
     pub doc: Option<Attribute<'a>>,
-    #[attr(name = "library_call")]
+    #[attr]
     pub library_call: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -1630,9 +1630,9 @@ pub struct GenericOp<'a> {
 /// ```
 #[mlir::op("linalg.index", format = "$dim attr-dict `:` type($result)", results(result))]
 pub struct IndexOp<'a> {
-    #[attr(name = "dim", int = "i64")]
+    #[attr(int = "i64")]
     pub dim: Attribute<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -1737,27 +1737,27 @@ pub struct IndexOp<'a> {
 /// ```
 #[mlir::op("linalg.pack", format = "$source (`padding_value` `(` $padding_value^ `:` type($padding_value) `)`)? (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
 pub struct PackOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[slot(padding_value_ty, name = "padding_value")]
+    #[slot(padding_value_ty)]
     pub padding_value: Vec<Value<'a>>,
-    #[slot(inner_tiles_ty, name = "inner_tiles")]
+    #[slot(inner_tiles_ty)]
     pub inner_tiles: Vec<Value<'a>>,
-    #[attr(name = "outer_dims_perm", dense = "i64")]
+    #[attr(dense = "i64")]
     pub outer_dims_perm: Option<Attribute<'a>>,
-    #[attr(name = "inner_dims_pos", dense = "i64")]
+    #[attr(dense = "i64")]
     pub inner_dims_pos: Attribute<'a>,
-    #[attr(name = "static_inner_tiles", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_inner_tiles: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "padding_value_ty")]
+    #[dtype]
     pub padding_value_ty: Vec<Type<'a>>,
-    #[dtype(name = "inner_tiles_ty", is = index)]
+    #[dtype(is = index)]
     pub inner_tiles_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1781,17 +1781,17 @@ pub struct PackOp<'a> {
 /// softmax.
 #[mlir::op("linalg.softmax", format = "attr-dict `dimension` `(` $dimension `)` `ins` `(` $input `:` type($input) `)` `outs` `(` $output `:` type($output) `)` (`->` type($result)^)?", results(result))]
 pub struct SoftmaxOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(output_ty, name = "output")]
+    #[slot(output_ty)]
     pub output: Value<'a>,
-    #[attr(name = "dimension", int = "i64")]
+    #[attr(int = "i64")]
     pub dimension: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output_ty")]
+    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -1856,23 +1856,23 @@ pub struct SoftmaxOp<'a> {
 /// ```
 #[mlir::op("linalg.unpack", format = "$source (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
 pub struct UnPackOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[slot(inner_tiles_ty, name = "inner_tiles")]
+    #[slot(inner_tiles_ty)]
     pub inner_tiles: Vec<Value<'a>>,
-    #[attr(name = "outer_dims_perm", dense = "i64")]
+    #[attr(dense = "i64")]
     pub outer_dims_perm: Option<Attribute<'a>>,
-    #[attr(name = "inner_dims_pos", dense = "i64")]
+    #[attr(dense = "i64")]
     pub inner_dims_pos: Attribute<'a>,
-    #[attr(name = "static_inner_tiles", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_inner_tiles: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "inner_tiles_ty", is = index)]
+    #[dtype(is = index)]
     pub inner_tiles_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1895,17 +1895,17 @@ pub struct UnPackOp<'a> {
 /// transformation (G x g x G^T) in the Winograd Conv2D algorithm.
 #[mlir::op("linalg.winograd_filter_transform", format = "attr-dict `fmr` `(` $fmr `)` `ins` `(` $filter `:` type($filter) `)` `outs` `(` $output `:` type($output) `)` `->` type($result)", results(result))]
 pub struct WinogradFilterTransformOp<'a> {
-    #[slot(filter_ty, name = "filter")]
+    #[slot(filter_ty)]
     pub filter: Value<'a>,
-    #[slot(output_ty, name = "output")]
+    #[slot(output_ty)]
     pub output: Value<'a>,
-    #[attr(name = "fmr", int = "i32")]
+    #[attr(int = "i32")]
     pub fmr: WinogradConv2DFmr,
-    #[dtype(name = "filter_ty")]
+    #[dtype]
     pub filter_ty: Type<'a>,
-    #[dtype(name = "output_ty")]
+    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1928,17 +1928,17 @@ pub struct WinogradFilterTransformOp<'a> {
 /// transformation (B^T x d x B) in the Winograd Conv2D algorithm.
 #[mlir::op("linalg.winograd_input_transform", format = "attr-dict `fmr` `(` $fmr `)` `ins` `(` $input `:` type($input) `)` `outs` `(` $output `:` type($output) `)` `->` type($result)", results(result))]
 pub struct WinogradInputTransformOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(output_ty, name = "output")]
+    #[slot(output_ty)]
     pub output: Value<'a>,
-    #[attr(name = "fmr", int = "i32")]
+    #[attr(int = "i32")]
     pub fmr: WinogradConv2DFmr,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output_ty")]
+    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1961,17 +1961,17 @@ pub struct WinogradInputTransformOp<'a> {
 /// transformation (A^T x y x A) in the Winograd Conv2D algorithm.
 #[mlir::op("linalg.winograd_output_transform", format = "attr-dict `fmr` `(` $fmr `)` `ins` `(` $value `:` type($value) `)` `outs` `(` $output `:` type($output) `)` `->` type($result)", results(result))]
 pub struct WinogradOutputTransformOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(output_ty, name = "output")]
+    #[slot(output_ty)]
     pub output: Value<'a>,
-    #[attr(name = "fmr", int = "i32")]
+    #[attr(int = "i32")]
     pub fmr: WinogradConv2DFmr,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "output_ty")]
+    #[dtype]
     pub output_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1988,11 +1988,11 @@ pub struct WinogradOutputTransformOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.yield", generic)]
+#[mlir::op("linalg.yield")]
 pub struct YieldOp<'a> {
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Vec<Value<'a>>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Vec<Type<'a>>,
 }
 
@@ -2001,19 +2001,19 @@ pub struct YieldOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.log", generic, results(result_tensors))]
+#[mlir::op("linalg.log", results(result_tensors))]
 pub struct LogOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2046,19 +2046,19 @@ pub struct LogOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.map", generic, results(result))]
+#[mlir::op("linalg.map", results(result))]
 pub struct MapOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(init_ty, name = "init")]
+    #[slot(init_ty)]
     pub init: Value<'a>,
-    #[region(name = "mapper")]
+    #[region]
     pub mapper: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "init_ty")]
+    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -2102,23 +2102,23 @@ pub struct MapOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.matmul", generic, results(result_tensors))]
+#[mlir::op("linalg.matmul", results(result_tensors))]
 pub struct MatmulOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(name = "cast", dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn")]
     pub cast: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2128,19 +2128,19 @@ pub struct MatmulOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.matvec", generic, results(result_tensors))]
+#[mlir::op("linalg.matvec", results(result_tensors))]
 pub struct MatvecOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2155,19 +2155,19 @@ pub struct MatvecOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.max", generic, results(result_tensors))]
+#[mlir::op("linalg.max", results(result_tensors))]
 pub struct MaxOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2182,19 +2182,19 @@ pub struct MaxOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.min", generic, results(result_tensors))]
+#[mlir::op("linalg.min", results(result_tensors))]
 pub struct MinOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2209,19 +2209,19 @@ pub struct MinOp<'a> {
 ///   as: MxK tiles, each of shape M0xK0.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.mmt4d", generic, results(result_tensors))]
+#[mlir::op("linalg.mmt4d", results(result_tensors))]
 pub struct Mmt4DOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2236,19 +2236,19 @@ pub struct Mmt4DOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.mul", generic, results(result_tensors))]
+#[mlir::op("linalg.mul", results(result_tensors))]
 pub struct MulOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2257,19 +2257,19 @@ pub struct MulOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.negf", generic, results(result_tensors))]
+#[mlir::op("linalg.negf", results(result_tensors))]
 pub struct NegFOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2279,23 +2279,23 @@ pub struct NegFOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nchw_max", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nchw_max", results(result_tensors))]
 pub struct PoolingNchwMaxOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2309,23 +2309,23 @@ pub struct PoolingNchwMaxOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nchw_sum", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nchw_sum", results(result_tensors))]
 pub struct PoolingNchwSumOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2335,23 +2335,23 @@ pub struct PoolingNchwSumOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_ncw_max", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_ncw_max", results(result_tensors))]
 pub struct PoolingNcwMaxOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2365,23 +2365,23 @@ pub struct PoolingNcwMaxOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_ncw_sum", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_ncw_sum", results(result_tensors))]
 pub struct PoolingNcwSumOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2391,23 +2391,23 @@ pub struct PoolingNcwSumOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_ndhwc_max", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_ndhwc_max", results(result_tensors))]
 pub struct PoolingNdhwcMaxOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2417,23 +2417,23 @@ pub struct PoolingNdhwcMaxOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_ndhwc_min", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_ndhwc_min", results(result_tensors))]
 pub struct PoolingNdhwcMinOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2443,23 +2443,23 @@ pub struct PoolingNdhwcMinOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_ndhwc_sum", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_ndhwc_sum", results(result_tensors))]
 pub struct PoolingNdhwcSumOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2469,23 +2469,23 @@ pub struct PoolingNdhwcSumOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nhwc_max", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nhwc_max", results(result_tensors))]
 pub struct PoolingNhwcMaxOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2495,23 +2495,23 @@ pub struct PoolingNhwcMaxOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nhwc_max_unsigned", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nhwc_max_unsigned", results(result_tensors))]
 pub struct PoolingNhwcMaxUnsignedOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2521,23 +2521,23 @@ pub struct PoolingNhwcMaxUnsignedOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nhwc_min", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nhwc_min", results(result_tensors))]
 pub struct PoolingNhwcMinOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2547,23 +2547,23 @@ pub struct PoolingNhwcMinOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nhwc_min_unsigned", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nhwc_min_unsigned", results(result_tensors))]
 pub struct PoolingNhwcMinUnsignedOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2577,23 +2577,23 @@ pub struct PoolingNhwcMinUnsignedOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nhwc_sum", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nhwc_sum", results(result_tensors))]
 pub struct PoolingNhwcSumOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2603,23 +2603,23 @@ pub struct PoolingNhwcSumOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nwc_max", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nwc_max", results(result_tensors))]
 pub struct PoolingNwcMaxOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2629,23 +2629,23 @@ pub struct PoolingNwcMaxOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nwc_max_unsigned", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nwc_max_unsigned", results(result_tensors))]
 pub struct PoolingNwcMaxUnsignedOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2655,23 +2655,23 @@ pub struct PoolingNwcMaxUnsignedOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nwc_min", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nwc_min", results(result_tensors))]
 pub struct PoolingNwcMinOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2681,23 +2681,23 @@ pub struct PoolingNwcMinOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nwc_min_unsigned", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nwc_min_unsigned", results(result_tensors))]
 pub struct PoolingNwcMinUnsignedOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2711,23 +2711,23 @@ pub struct PoolingNwcMinUnsignedOp<'a> {
 /// data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.pooling_nwc_sum", generic, results(result_tensors))]
+#[mlir::op("linalg.pooling_nwc_sum", results(result_tensors))]
 pub struct PoolingNwcSumOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Option<Attribute<'a>>,
-    #[attr(name = "dilations")]
+    #[attr]
     pub dilations: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2744,19 +2744,19 @@ pub struct PoolingNwcSumOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.powf", generic, results(result_tensors))]
+#[mlir::op("linalg.powf", results(result_tensors))]
 pub struct PowFOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2768,19 +2768,19 @@ pub struct PowFOp<'a> {
 /// matmul.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.quantized_batch_matmul", generic, results(result_tensors))]
+#[mlir::op("linalg.quantized_batch_matmul", results(result_tensors))]
 pub struct QuantizedBatchMatmulOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2792,19 +2792,19 @@ pub struct QuantizedBatchMatmulOp<'a> {
 /// matmul.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.quantized_matmul", generic, results(result_tensors))]
+#[mlir::op("linalg.quantized_matmul", results(result_tensors))]
 pub struct QuantizedMatmulOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2813,19 +2813,19 @@ pub struct QuantizedMatmulOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.reciprocal", generic, results(result_tensors))]
+#[mlir::op("linalg.reciprocal", results(result_tensors))]
 pub struct ReciprocalOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2862,21 +2862,21 @@ pub struct ReciprocalOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.reduce", generic, results(result))]
+#[mlir::op("linalg.reduce", results(result))]
 pub struct ReduceOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(inits_ty, name = "inits")]
+    #[slot(inits_ty)]
     pub inits: Vec<Value<'a>>,
-    #[attr(name = "dimensions", dense = "i64")]
+    #[attr(dense = "i64")]
     pub dimensions: Attribute<'a>,
-    #[region(name = "combiner")]
+    #[region]
     pub combiner: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "inits_ty")]
+    #[dtype]
     pub inits_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -2885,19 +2885,19 @@ pub struct ReduceOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.round", generic, results(result_tensors))]
+#[mlir::op("linalg.round", results(result_tensors))]
 pub struct RoundOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2906,19 +2906,19 @@ pub struct RoundOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.rsqrt", generic, results(result_tensors))]
+#[mlir::op("linalg.rsqrt", results(result_tensors))]
 pub struct RsqrtOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2933,19 +2933,19 @@ pub struct RsqrtOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.select", generic, results(result_tensors))]
+#[mlir::op("linalg.select", results(result_tensors))]
 pub struct SelectOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2954,19 +2954,19 @@ pub struct SelectOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.sqrt", generic, results(result_tensors))]
+#[mlir::op("linalg.sqrt", results(result_tensors))]
 pub struct SqrtOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -2975,19 +2975,19 @@ pub struct SqrtOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.square", generic, results(result_tensors))]
+#[mlir::op("linalg.square", results(result_tensors))]
 pub struct SquareOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -3002,19 +3002,19 @@ pub struct SquareOp<'a> {
 /// `linalg.generic` with different affine maps for the two operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.sub", generic, results(result_tensors))]
+#[mlir::op("linalg.sub", results(result_tensors))]
 pub struct SubOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -3023,19 +3023,19 @@ pub struct SubOp<'a> {
 /// No numeric casting is performed on the input operand.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.tanh", generic, results(result_tensors))]
+#[mlir::op("linalg.tanh", results(result_tensors))]
 pub struct TanhOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -3056,21 +3056,21 @@ pub struct TanhOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.transpose", generic, results(result))]
+#[mlir::op("linalg.transpose", results(result))]
 pub struct TransposeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(init_ty, name = "init")]
+    #[slot(init_ty)]
     pub init: Value<'a>,
-    #[attr(name = "permutation", dense = "i64")]
+    #[attr(dense = "i64")]
     pub permutation: Attribute<'a>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "init_ty")]
+    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -3080,19 +3080,19 @@ pub struct TransposeOp<'a> {
 /// them to the same data type as the accumulator/output.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("linalg.vecmat", generic, results(result_tensors))]
+#[mlir::op("linalg.vecmat", results(result_tensors))]
 pub struct VecmatOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 

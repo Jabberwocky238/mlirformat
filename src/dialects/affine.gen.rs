@@ -29,15 +29,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.apply", generic, results(result))]
+#[mlir::op("affine.apply", results(result))]
 pub struct AffineApplyOp<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
     pub map_operands: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "mapOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub map_operands_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -95,19 +95,19 @@ pub struct AffineApplyOp<'a> {
 /// - that is, the product of all basis elements is positive as an `index` as well.
 ///
 /// Generic form only (directive `"{}",`).
-#[mlir::op("affine.delinearize_index", generic, results(multi_index))]
+#[mlir::op("affine.delinearize_index", results(multi_index))]
 pub struct AffineDelinearizeIndexOp<'a> {
-    #[slot(linear_index_ty, name = "linear_index")]
+    #[slot(linear_index_ty)]
     pub linear_index: Value<'a>,
-    #[slot(dynamic_basis_ty, name = "dynamic_basis")]
+    #[slot(dynamic_basis_ty)]
     pub dynamic_basis: Vec<Value<'a>>,
-    #[attr(name = "static_basis", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_basis: Attribute<'a>,
-    #[dtype(name = "linear_index_ty", is = index)]
+    #[dtype(is = index)]
     pub linear_index_ty: Type<'a>,
-    #[dtype(name = "dynamic_basis_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_basis_ty: Type<'a>,
-    #[dtype(name = "multi_index", is = index)]
+    #[dtype(is = index)]
     pub multi_index: Type<'a>,
 }
 
@@ -218,29 +218,29 @@ pub struct AffineDelinearizeIndexOp<'a> {
 /// match the initial values in the `iter_args` binding and the yield operands.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.for", generic, results(results))]
+#[mlir::op("affine.for", results(results))]
 pub struct AffineForOp<'a> {
     #[slot(lower_bound_operands_ty, name = "lowerBoundOperands")]
     pub lower_bound_operands: Vec<Value<'a>>,
     #[slot(upper_bound_operands_ty, name = "upperBoundOperands")]
     pub upper_bound_operands: Vec<Value<'a>>,
-    #[slot(inits_ty, name = "inits")]
+    #[slot(inits_ty)]
     pub inits: Vec<Value<'a>>,
     #[attr(name = "lowerBoundMap")]
     pub lower_bound_map: Attribute<'a>,
     #[attr(name = "upperBoundMap")]
     pub upper_bound_map: Attribute<'a>,
-    #[attr(name = "step", int = "index")]
+    #[attr(int = "index")]
     pub step: Attribute<'a>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "lowerBoundOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub lower_bound_operands_ty: Type<'a>,
-    #[dtype(name = "upperBoundOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub upper_bound_operands_ty: Type<'a>,
-    #[dtype(name = "inits_ty")]
+    #[dtype]
     pub inits_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -314,19 +314,19 @@ pub struct AffineForOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.if", generic, results(results))]
+#[mlir::op("affine.if", results(results))]
 pub struct AffineIfOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Vec<Value<'a>>,
-    #[attr(name = "condition")]
+    #[attr]
     pub condition: Attribute<'a>,
     #[region(name = "thenRegion")]
     pub then_region: Region<'a>,
     #[region(name = "elseRegion")]
     pub else_region: Region<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -383,21 +383,21 @@ pub struct AffineIfOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `"{}",`).
-#[mlir::op("affine.linearize_index", generic, results(linear_index))]
+#[mlir::op("affine.linearize_index", results(linear_index))]
 pub struct AffineLinearizeIndexOp<'a> {
-    #[slot(multi_index_ty, name = "multi_index")]
+    #[slot(multi_index_ty)]
     pub multi_index: Vec<Value<'a>>,
-    #[slot(dynamic_basis_ty, name = "dynamic_basis")]
+    #[slot(dynamic_basis_ty)]
     pub dynamic_basis: Vec<Value<'a>>,
-    #[attr(name = "static_basis", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_basis: Attribute<'a>,
-    #[attr(name = "disjoint")]
+    #[attr]
     pub disjoint: bool,
-    #[dtype(name = "multi_index_ty", is = index)]
+    #[dtype(is = index)]
     pub multi_index_ty: Type<'a>,
-    #[dtype(name = "dynamic_basis_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_basis_ty: Type<'a>,
-    #[dtype(name = "linear_index", is = index)]
+    #[dtype(is = index)]
     pub linear_index: Type<'a>,
 }
 
@@ -429,19 +429,19 @@ pub struct AffineLinearizeIndexOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.load", generic, results(result))]
+#[mlir::op("affine.load", results(result))]
 pub struct AffineLoadOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -457,15 +457,15 @@ pub struct AffineLoadOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.max", generic, results(result))]
+#[mlir::op("affine.max", results(result))]
 pub struct AffineMaxOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "operands_ty", is = index)]
+    #[dtype(is = index)]
     pub operands_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -491,15 +491,15 @@ pub struct AffineMaxOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.min", generic, results(result))]
+#[mlir::op("affine.min", results(result))]
 pub struct AffineMinOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "operands_ty", is = index)]
+    #[dtype(is = index)]
     pub operands_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -568,11 +568,11 @@ pub struct AffineMinOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.parallel", generic, results(results))]
+#[mlir::op("affine.parallel", results(results))]
 pub struct AffineParallelOp<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
     pub map_operands: Vec<Value<'a>>,
-    #[attr(name = "reductions")]
+    #[attr]
     pub reductions: Attribute<'a>,
     #[attr(name = "lowerBoundsMap")]
     pub lower_bounds_map: Attribute<'a>,
@@ -582,13 +582,13 @@ pub struct AffineParallelOp<'a> {
     pub upper_bounds_map: Attribute<'a>,
     #[attr(name = "upperBoundsGroups")]
     pub upper_bounds_groups: Attribute<'a>,
-    #[attr(name = "steps")]
+    #[attr]
     pub steps: Attribute<'a>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "mapOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub map_operands_ty: Type<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -610,11 +610,11 @@ pub struct AffineParallelOp<'a> {
 /// instruction cache.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.prefetch", generic)]
+#[mlir::op("affine.prefetch")]
 pub struct AffinePrefetchOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
     #[attr(name = "isWrite")]
     pub is_write: Attribute<'a>,
@@ -622,11 +622,11 @@ pub struct AffinePrefetchOp<'a> {
     pub locality_hint: Attribute<'a>,
     #[attr(name = "isDataCache")]
     pub is_data_cache: Attribute<'a>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -658,21 +658,21 @@ pub struct AffinePrefetchOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.store", generic)]
+#[mlir::op("affine.store")]
 pub struct AffineStoreOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -715,19 +715,19 @@ pub struct AffineStoreOp<'a> {
 /// (see [vector.transfer_read](../Vector/#vectortransfer_read-mlirvectortransferreadop)).
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.vector_load", generic, results(result))]
+#[mlir::op("affine.vector_load", results(result))]
 pub struct AffineVectorLoadOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -772,21 +772,21 @@ pub struct AffineVectorLoadOp<'a> {
 /// (see [vector.transfer_write](../Vector/#vectortransfer_write-mlirvectortransferwriteop)).
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("affine.vector_store", generic)]
+#[mlir::op("affine.vector_store")]
 pub struct AffineVectorStoreOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "map")]
+    #[attr]
     pub map: Attribute<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -803,9 +803,9 @@ pub struct AffineVectorStoreOp<'a> {
 /// yielded.
 #[mlir::op("affine.yield", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct AffineYieldOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

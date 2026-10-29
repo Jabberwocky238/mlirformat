@@ -24,25 +24,25 @@ use core::fmt::{self, Write};
 /// `linalg.generic`。
 #[mlir::op("linalg.generic", custom, results(result_tensors))]
 pub struct Generic<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr(name = "iterator_types")]
+    #[attr]
     pub iterator_types: Attribute<'a>,
-    #[attr(name = "doc")]
+    #[attr]
     pub doc: Option<Attribute<'a>>,
-    #[attr(name = "library_call")]
+    #[attr]
     pub library_call: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 
@@ -152,9 +152,9 @@ impl Parse for Generic<'_> {
 /// `linalg.yield %a, %b : f32, f32`（`YieldOp::print`：值、属性字典、冒号与类型；没有值就只剩名字）。
 #[mlir::op("linalg.yield", custom)]
 pub struct Yield<'a> {
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Vec<Value<'a>>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Vec<Type<'a>>,
 }
 
@@ -540,19 +540,19 @@ macro_rules! named_ops {
         #[doc = concat!("`", $name, "`（OpDSL）。")]
         #[mlir::op($name, custom, results(result_tensors))]
         pub struct $ty<'a> {
-            #[slot(inputs_ty, name = "inputs")]
+            #[slot(inputs_ty)]
             pub inputs: Vec<Value<'a>>,
-            #[slot(outputs_ty, name = "outputs")]
+            #[slot(outputs_ty)]
             pub outputs: Vec<Value<'a>>,
             $(#[attr(name = $aname)]
             pub $attr: Option<Attribute<'a>>,)*
-            #[region(name = "region")]
+            #[region]
             pub region: Region<'a>,
-            #[dtype(name = "inputs_ty")]
+            #[dtype]
             pub inputs_ty: Vec<Type<'a>>,
-            #[dtype(name = "outputs_ty")]
+            #[dtype]
             pub outputs_ty: Vec<Type<'a>>,
-            #[dtype(name = "result_tensors")]
+            #[dtype]
             pub result_tensors: Vec<Type<'a>>,
         }
 
@@ -640,21 +640,21 @@ macro_rules! contraction_ops {
         #[doc = concat!("`", $name, "`。")]
         #[mlir::op($name, custom, results(result_tensors))]
         pub struct $ty<'a> {
-            #[slot(inputs_ty, name = "inputs")]
+            #[slot(inputs_ty)]
             pub inputs: Vec<Value<'a>>,
-            #[slot(outputs_ty, name = "outputs")]
+            #[slot(outputs_ty)]
             pub outputs: Vec<Value<'a>>,
-            #[attr(name = "indexing_maps")]
+            #[attr]
             pub indexing_maps: Option<Attribute<'a>>,
-            #[attr(name = "cast")]
+            #[attr]
             pub cast: Option<Attribute<'a>>,
-            #[region(name = "region")]
+            #[region]
             pub region: Region<'a>,
-            #[dtype(name = "inputs_ty")]
+            #[dtype]
             pub inputs_ty: Vec<Type<'a>>,
-            #[dtype(name = "outputs_ty")]
+            #[dtype]
             pub outputs_ty: Vec<Type<'a>>,
-            #[dtype(name = "result_tensors")]
+            #[dtype]
             pub result_tensors: Vec<Type<'a>>,
         }
 
@@ -853,19 +853,19 @@ macro_rules! identity_ops {
         #[doc = concat!("`", $name, "`。")]
         #[mlir::op($name, custom, results(result))]
         pub struct $ty<'a> {
-            #[slot(input_ty, name = "input")]
+            #[slot(input_ty)]
             pub input: Value<'a>,
-            #[slot(init_ty, name = "init")]
+            #[slot(init_ty)]
             pub init: Value<'a>,
             #[attr(name = $aname)]
             pub $attr: Attribute<'a>,
-            #[region(name = "region")]
+            #[region]
             pub region: Region<'a>,
-            #[dtype(name = "input_ty")]
+            #[dtype]
             pub input_ty: Type<'a>,
-            #[dtype(name = "init_ty")]
+            #[dtype]
             pub init_ty: Type<'a>,
-            #[dtype(name = "result")]
+            #[dtype]
             pub result: Vec<Type<'a>>,
         }
 
@@ -905,17 +905,17 @@ identity_ops! {
 /// `linalg.map`：`{ payload }`（短形式）或换行后 `(参数) { 体 }`（长形式）；init 也是块参数，不进 payload。
 #[mlir::op("linalg.map", custom, results(result))]
 pub struct Map<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(init_ty, name = "init")]
+    #[slot(init_ty)]
     pub init: Value<'a>,
-    #[region(name = "mapper")]
+    #[region]
     pub mapper: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "init_ty")]
+    #[dtype]
     pub init_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -961,15 +961,15 @@ impl Parse for Map<'_> {
 /// 输入与 init 个数相同（`SameVariadicOperandSize`，通用形式里没有 operandSegmentSizes）：并成一组，写的时候对半分。
 #[mlir::op("linalg.reduce", custom, results(result))]
 pub struct Reduce<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr(name = "dimensions")]
+    #[attr]
     pub dimensions: Attribute<'a>,
-    #[region(name = "combiner")]
+    #[region]
     pub combiner: Region<'a>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -1017,21 +1017,21 @@ impl Parse for Reduce<'_> {
 /// 体按 kind 是一元 / 二元 / 三元函数（`ElementwiseOp::regionBuilder`）；映射缺省是 arity + 1 个恒等。
 #[mlir::op("linalg.elementwise", custom, results(result_tensors))]
 pub struct Elementwise<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[slot(outputs_ty, name = "outputs")]
+    #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(name = "kind")]
+    #[attr]
     pub kind: Attribute<'a>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Option<Attribute<'a>>,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "outputs_ty")]
+    #[dtype]
     pub outputs_ty: Vec<Type<'a>>,
-    #[dtype(name = "result_tensors")]
+    #[dtype]
     pub result_tensors: Vec<Type<'a>>,
 }
 

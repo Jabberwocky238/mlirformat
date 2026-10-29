@@ -18,23 +18,23 @@ use core::fmt::{self, Write};
 /// 自定义形式把它们拆进头部；形参的 `{attrs}` 走 `arg_attrs` / `res_attrs`。
 #[mlir::op("gpu.func", custom)]
 pub struct Func<'a> {
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Type<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "workgroup_attrib_attrs")]
+    #[attr]
     pub workgroup_attrib_attrs: Option<Attribute<'a>>,
-    #[attr(name = "private_attrib_attrs")]
+    #[attr]
     pub private_attrib_attrs: Option<Attribute<'a>>,
-    #[attr(name = "known_block_size")]
+    #[attr]
     pub known_block_size: Option<Attribute<'a>>,
-    #[attr(name = "known_grid_size")]
+    #[attr]
     pub known_grid_size: Option<Attribute<'a>>,
-    #[attr(name = "known_cluster_size")]
+    #[attr]
     pub known_cluster_size: Option<Attribute<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -242,7 +242,7 @@ pub struct LaunchFunc<'a> {
     pub kernel_operands: Vec<Value<'a>>,
     #[slot(async_object_ty, name = "asyncObject")]
     pub async_object: Vec<Value<'a>>,
-    #[attr(name = "kernel")]
+    #[attr]
     pub kernel: Attribute<'a>,
     #[dtype(name = "asyncDependencies_ty")]
     pub async_dependencies_ty: Vec<Type<'a>>,

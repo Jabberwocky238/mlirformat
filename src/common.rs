@@ -329,7 +329,7 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     const TYPES: &'static [FieldType];
     /// ODS-style assembly format (see [`Elem`]).
     const FORMAT: &'static str;
-    /// Whether the op has a custom form; `false` (`#[mlir::op(..., generic)]`): it always prints
+    /// Whether the op has a custom form; `false` (`#[mlir::op]` without `format`): it always prints
     /// generic, typed conversions still work.
     const CUSTOM: bool = true;
 

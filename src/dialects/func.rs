@@ -31,17 +31,17 @@ pub struct Call<'a> {
 /// hand-written syntax. The entry block's arguments are the signature's named arguments.
 #[mlir::op("func.func", custom)]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr]
     pub sym_name: String,
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Type<'a>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<String>,
     /// One dictionary per argument.
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
     /// One dictionary per result.
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
     #[region]
     pub body: Region<'a>,
@@ -177,7 +177,7 @@ pub struct Constant<'a> {
 pub struct CallIndirect<'a> {
     #[slot(callee_ty)]
     pub callee: Value<'a>,
-    #[slot(arg_types)]
+    #[slot(arg_types, name = "calleeOperands")]
     pub callee_operands: Vec<Value<'a>>,
     #[dtype]
     pub callee_ty: Type<'a>,

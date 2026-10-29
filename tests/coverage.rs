@@ -3,7 +3,7 @@
 //!
 //! Locked in: every registered dialect covers every one of its ops that the fixtures use, except
 //! the ops upstream defines in C++ instead of ODS (`NOT_IN_ODS`). An op whose typed op is
-//! generic-only (`#[mlir::op(..., generic)]`: ODS syntax the format engine cannot express) prints
+//! generic-only (`#[mlir::op]` without `format`: ODS syntax the format engine cannot express) prints
 //! generic by design and is counted as such, not as a decline.
 //!
 //! A decline (an op with a custom form that its typed op cannot print) fails for the hand-written

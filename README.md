@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Field markers
 
 Each field of a `#[mlir::op]` struct says its MLIR role (a `Vec` field is variadic; the MLIR name
-is the lowerCamelCase field name unless `name = "..."`):
+is the field name unless `name = "..."`, e.g. `overflow_flags` spelled `overflowFlags`):
 
 | marker | the field is |
 |---|---|
@@ -77,9 +77,9 @@ A property with a declared `default` is an `Option`: `None` leaves it absent, an
 the op fills the default (`#arith.overflow<none>`, `0 : i32`) — the same op as one built by name.
 Parsing fills the default and printing drops it, so a round trip keeps it as written.
 
-Op options: `format = "..."` (the ODS assembly format), `results(a, b)`, `generic` (no custom
-form), `custom` (`Print` / `Parse` written by hand). `attrs` (discardable attributes) and `loc`
-fields are added.
+Op options: `format = "..."` (the ODS assembly format), `results(a, b)`, `custom` (`Print` /
+`Parse` written by hand); without `format` the op has no custom form and always prints generic.
+`attrs` (discardable attributes) and `loc` fields are added.
 
 `#[derive(mlir::Cases)]` on an integer enum gives `TryFrom<i64>` by case value (the variant's
 position; the hidden `__N` variants filling gaps take none) — `CmpIPredicate::try_from(2)` is

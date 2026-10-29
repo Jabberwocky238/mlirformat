@@ -20,21 +20,21 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 ///
 /// Generic form only (result type `results` inferred in C++).
-#[mlir::op("func.call_indirect", generic, results(results))]
+#[mlir::op("func.call_indirect", results(results))]
 pub struct CallIndirectOp<'a> {
-    #[slot(callee_ty, name = "callee")]
+    #[slot(callee_ty)]
     pub callee: Value<'a>,
-    #[slot(callee_operands_ty, name = "callee_operands")]
+    #[slot(callee_operands_ty)]
     pub callee_operands: Vec<Value<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "callee_ty")]
+    #[dtype]
     pub callee_ty: Type<'a>,
-    #[dtype(name = "callee_operands_ty")]
+    #[dtype]
     pub callee_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -52,21 +52,21 @@ pub struct CallIndirectOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("func.call", generic, results(result))]
+#[mlir::op("func.call", results(result))]
 pub struct CallOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr(name = "callee")]
+    #[attr]
     pub callee: Attribute<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "no_inline")]
+    #[attr]
     pub no_inline: bool,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -91,11 +91,11 @@ pub struct CallOp<'a> {
 /// ([rationale](../Rationale/Rationale.md#multithreading-the-compiler)).
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("func.constant", generic, results(result))]
+#[mlir::op("func.constant", results(result))]
 pub struct ConstantOp<'a> {
-    #[attr(name = "value")]
+    #[attr]
     pub value: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -138,21 +138,21 @@ pub struct ConstantOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("func.func", generic)]
+#[mlir::op("func.func")]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "no_inline")]
+    #[attr]
     pub no_inline: bool,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -173,9 +173,9 @@ pub struct FuncOp<'a> {
 /// ```
 #[mlir::op("func.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct ReturnOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

@@ -41,19 +41,19 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("amx.tile_load", format = "$base `[` $indices `]` (`,` $stride^ )? attr-dict`:` type($base) `into` qualified(type($res))", results(res))]
 pub struct TileLoadOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(stride_ty, name = "stride")]
+    #[slot(stride_ty)]
     pub stride: Vec<Value<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "stride_ty", is = index)]
+    #[dtype(is = index)]
     pub stride_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -74,17 +74,17 @@ pub struct TileLoadOp<'a> {
 /// ```
 #[mlir::op("amx.tile_mulf", format = "$lhs `,` $rhs `,` $acc attr-dict `:` qualified(type($lhs)) `,` qualified(type($rhs)) `,` qualified(type($acc))", results(res))]
 pub struct TileMulFOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(res, name = "acc")]
+    #[slot(res)]
     pub acc: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -108,21 +108,21 @@ pub struct TileMulFOp<'a> {
 /// ```
 #[mlir::op("amx.tile_muli", format = "$lhs (`zext` $isZextLhs^)? `,` $rhs (`zext` $isZextRhs^)? `,` $acc attr-dict `:` qualified(type($lhs)) `,` qualified(type($rhs)) `,` qualified(type($acc))", results(res))]
 pub struct TileMulIOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(res, name = "acc")]
+    #[slot(res)]
     pub acc: Value<'a>,
     #[attr(name = "isZextLhs")]
     pub is_zext_lhs: bool,
     #[attr(name = "isZextRhs")]
     pub is_zext_rhs: bool,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -161,21 +161,21 @@ pub struct TileMulIOp<'a> {
 /// ```
 #[mlir::op("amx.tile_store", format = "$base `[` $indices `]` `,` $val (`,` $stride^ )?attr-dict `:` type($base) `,` qualified(type($val))")]
 pub struct TileStoreOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(stride_ty, name = "stride")]
+    #[slot(stride_ty)]
     pub stride: Vec<Value<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "stride_ty", is = index)]
+    #[dtype(is = index)]
     pub stride_ty: Type<'a>,
 }
 
@@ -197,7 +197,7 @@ pub struct TileStoreOp<'a> {
 /// ```
 #[mlir::op("amx.tile_zero", format = "attr-dict `:` qualified(type($res))", results(res))]
 pub struct TileZeroOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 

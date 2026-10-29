@@ -17,7 +17,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// them grouped and scaled with the value returned by 'vscale'.
 #[mlir::op("vector.vscale", format = "attr-dict", results(res))]
 pub struct VectorScaleOp<'a> {
-    #[dtype(name = "res", is = index)]
+    #[dtype(is = index)]
     pub res: Type<'a>,
 }
 
@@ -45,11 +45,11 @@ pub struct VectorScaleOp<'a> {
 /// ```
 #[mlir::op("vector.bitcast", format = "$source attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct BitCastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -87,11 +87,11 @@ pub struct BitCastOp<'a> {
 /// ```
 #[mlir::op("vector.broadcast", format = "$source attr-dict `:` type($source) `to` type($vector)", results(vector))]
 pub struct BroadcastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "vector")]
+    #[dtype]
     pub vector: Type<'a>,
 }
 
@@ -141,23 +141,23 @@ pub struct BroadcastOp<'a> {
 /// ```
 #[mlir::op("vector.compressstore", format = "$base `[` $indices `]` `,` $mask `,` $valueToStore attr-dict `:` type($base) `,` type($mask) `,` type($valueToStore)")]
 pub struct CompressStoreOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
 }
 
@@ -195,11 +195,11 @@ pub struct CompressStoreOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("vector.constant_mask", generic, results(result))]
+#[mlir::op("vector.constant_mask", results(result))]
 pub struct ConstantMaskOp<'a> {
-    #[attr(name = "mask_dim_sizes", dense = "i64")]
+    #[attr(dense = "i64")]
     pub mask_dim_sizes: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -317,27 +317,27 @@ pub struct ConstantMaskOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.contract", generic, results(result))]
+#[mlir::op("vector.contract", results(result))]
 pub struct ContractionOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(acc_ty, name = "acc")]
+    #[slot(acc_ty)]
     pub acc: Value<'a>,
-    #[attr(name = "indexing_maps")]
+    #[attr]
     pub indexing_maps: Attribute<'a>,
-    #[attr(name = "iterator_types")]
+    #[attr]
     pub iterator_types: Attribute<'a>,
-    #[attr(name = "kind", dialect = "vector.kind", default = "<add>")]
+    #[attr(dialect = "vector.kind", default = "<add>")]
     pub kind: Option<Attribute<'a>>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "acc_ty")]
+    #[dtype]
     pub acc_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -371,13 +371,13 @@ pub struct ContractionOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("vector.create_mask", generic, results(result))]
+#[mlir::op("vector.create_mask", results(result))]
 pub struct CreateMaskOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty", is = index)]
+    #[dtype(is = index)]
     pub operands_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -412,13 +412,13 @@ pub struct CreateMaskOp<'a> {
 /// ```
 #[mlir::op("vector.deinterleave", format = "$source attr-dict `:` type($source) `->` type($res1)", results(res1, res2))]
 pub struct DeinterleaveOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "res1")]
+    #[dtype]
     pub res1: Type<'a>,
-    #[dtype(name = "res2", eq = res1)]
+    #[dtype(eq = res1)]
     pub res2: Type<'a>,
 }
 
@@ -468,25 +468,25 @@ pub struct DeinterleaveOp<'a> {
 /// ```
 #[mlir::op("vector.expandload", format = "$base `[` $indices `]` `,` $mask `,` $pass_thru attr-dict `:` type($base) `,` type($mask) `,` type($pass_thru) `into` type($result)", results(result))]
 pub struct ExpandLoadOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(pass_thru_ty, name = "pass_thru")]
+    #[slot(pass_thru_ty)]
     pub pass_thru: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "pass_thru_ty")]
+    #[dtype]
     pub pass_thru_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -512,17 +512,17 @@ pub struct ExpandLoadOp<'a> {
 /// ```
 #[mlir::op("vector.extract", format = "$source `` custom<DynamicIndexList>($dynamic_position, $static_position) attr-dict `:` type($result) `from` type($source)", results(result))]
 pub struct ExtractOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(dynamic_position_ty, name = "dynamic_position")]
+    #[slot(dynamic_position_ty)]
     pub dynamic_position: Vec<Value<'a>>,
-    #[attr(name = "static_position", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_position: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dynamic_position_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_position_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -553,19 +553,19 @@ pub struct ExtractOp<'a> {
 /// TODO: Implement support for poison indices.
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("vector.extract_strided_slice", generic, results(result))]
+#[mlir::op("vector.extract_strided_slice", results(result))]
 pub struct ExtractStridedSliceOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[attr(name = "offsets")]
+    #[attr]
     pub offsets: Attribute<'a>,
-    #[attr(name = "sizes")]
+    #[attr]
     pub sizes: Attribute<'a>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -586,13 +586,13 @@ pub struct ExtractStridedSliceOp<'a> {
 /// ```
 #[mlir::op("vector.fma", format = "$lhs `,` $rhs `,` $acc attr-dict `:` type($lhs)", results(result))]
 pub struct FMAOp<'a> {
-    #[slot(result, name = "lhs")]
+    #[slot(result)]
     pub lhs: Value<'a>,
-    #[slot(result, name = "rhs")]
+    #[slot(result)]
     pub rhs: Value<'a>,
-    #[slot(result, name = "acc")]
+    #[slot(result)]
     pub acc: Value<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -625,11 +625,11 @@ pub struct FMAOp<'a> {
 /// ```
 #[mlir::op("vector.from_elements", format = "$elements attr-dict `:` type($dest)", results(dest))]
 pub struct FromElementsOp<'a> {
-    #[slot(elements_ty, name = "elements")]
+    #[slot(elements_ty)]
     pub elements: Vec<Value<'a>>,
-    #[dtype(name = "elements_ty", el = dest)]
+    #[dtype(el = dest)]
     pub elements_ty: Vec<Type<'a>>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -690,29 +690,29 @@ pub struct FromElementsOp<'a> {
 /// ```
 #[mlir::op("vector.gather", format = "$base `[` $offsets `]` `[` $indices `]` `,` $mask `,` $pass_thru attr-dict `:` type($base) `,` type($indices) `,` type($mask) `,` type($pass_thru) `into` type($result)", results(result))]
 pub struct GatherOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(pass_thru_ty, name = "pass_thru")]
+    #[slot(pass_thru_ty)]
     pub pass_thru: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "indices_ty")]
+    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "pass_thru_ty")]
+    #[dtype]
     pub pass_thru_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -740,17 +740,17 @@ pub struct GatherOp<'a> {
 pub struct InsertOp<'a> {
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[slot(dynamic_position_ty, name = "dynamic_position")]
+    #[slot(dynamic_position_ty)]
     pub dynamic_position: Vec<Value<'a>>,
-    #[attr(name = "static_position", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_position: Attribute<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype(name = "dynamic_position_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_position_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -778,15 +778,15 @@ pub struct InsertOp<'a> {
 pub struct InsertStridedSliceOp<'a> {
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[attr(name = "offsets")]
+    #[attr]
     pub offsets: Attribute<'a>,
-    #[attr(name = "strides")]
+    #[attr]
     pub strides: Attribute<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -818,13 +818,13 @@ pub struct InsertStridedSliceOp<'a> {
 /// ```
 #[mlir::op("vector.interleave", format = "$lhs `,` $rhs attr-dict `:` type($lhs) `->` type($result)", results(result))]
 pub struct InterleaveOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(lhs_ty, name = "rhs")]
+    #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -895,19 +895,19 @@ pub struct InterleaveOp<'a> {
 /// triggers immediate undefined behavior.
 #[mlir::op("vector.load", format = "$base `[` $indices `]` attr-dict `:` type($base) `,` type($result)", results(result))]
 pub struct LoadOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -966,19 +966,19 @@ pub struct LoadOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.mask", generic, results(results))]
+#[mlir::op("vector.mask", results(results))]
 pub struct MaskOp<'a> {
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(passthru_ty, name = "passthru")]
+    #[slot(passthru_ty)]
     pub passthru: Vec<Value<'a>>,
     #[region(name = "maskRegion")]
     pub mask_region: Region<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "passthru_ty")]
+    #[dtype]
     pub passthru_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -1021,25 +1021,25 @@ pub struct MaskOp<'a> {
 /// triggers immediate undefined behavior.
 #[mlir::op("vector.maskedload", format = "$base `[` $indices `]` `,` $mask `,` $pass_thru attr-dict `:` type($base) `,` type($mask) `,` type($pass_thru) `into` type($result)", results(result))]
 pub struct MaskedLoadOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(pass_thru_ty, name = "pass_thru")]
+    #[slot(pass_thru_ty)]
     pub pass_thru: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "pass_thru_ty")]
+    #[dtype]
     pub pass_thru_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1082,23 +1082,23 @@ pub struct MaskedLoadOp<'a> {
 /// triggers immediate undefined behavior.
 #[mlir::op("vector.maskedstore", format = "$base `[` $indices `]` `,` $mask `,` $valueToStore attr-dict `:` type($base) `,` type($mask) `,` type($valueToStore)")]
 pub struct MaskedStoreOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
 }
 
@@ -1120,17 +1120,17 @@ pub struct MaskedStoreOp<'a> {
 /// ```
 #[mlir::op("vector.multi_reduction", format = "$kind `,` $source `,` $acc attr-dict $reduction_dims `:` type($source) `to` type($dest)", results(dest))]
 pub struct MultiDimReductionOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(dest, name = "acc")]
+    #[slot(dest)]
     pub acc: Value<'a>,
-    #[attr(name = "kind", dialect = "vector.kind")]
+    #[attr(dialect = "vector.kind")]
     pub kind: Attribute<'a>,
-    #[attr(name = "reduction_dims", dense = "i64")]
+    #[attr(dense = "i64")]
     pub reduction_dims: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -1183,23 +1183,23 @@ pub struct MultiDimReductionOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.outerproduct", generic, results(result))]
+#[mlir::op("vector.outerproduct", results(result))]
 pub struct OuterProductOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(acc_ty, name = "acc")]
+    #[slot(acc_ty)]
     pub acc: Vec<Value<'a>>,
-    #[attr(name = "kind", dialect = "vector.kind", default = "<add>")]
+    #[attr(dialect = "vector.kind", default = "<add>")]
     pub kind: Option<Attribute<'a>>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "acc_ty")]
+    #[dtype]
     pub acc_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1249,15 +1249,15 @@ pub struct OuterProductOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `oilist`).
-#[mlir::op("vector.print", generic)]
+#[mlir::op("vector.print")]
 pub struct PrintOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Vec<Value<'a>>,
-    #[attr(name = "punctuation", dialect = "vector.punctuation", default = "<newline>")]
+    #[attr(dialect = "vector.punctuation", default = "<newline>")]
     pub punctuation: Option<Attribute<'a>>,
     #[attr(name = "stringLiteral")]
     pub string_literal: Option<Attribute<'a>>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Vec<Type<'a>>,
 }
 
@@ -1284,17 +1284,17 @@ pub struct PrintOp<'a> {
 /// ```
 #[mlir::op("vector.reduction", format = "$kind `,` $vector (`,` $acc^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($vector) `into` type($dest)", results(dest))]
 pub struct ReductionOp<'a> {
-    #[slot(vector_ty, name = "vector")]
+    #[slot(vector_ty)]
     pub vector: Value<'a>,
-    #[slot(dest, name = "acc")]
+    #[slot(dest)]
     pub acc: Vec<Value<'a>>,
-    #[attr(name = "kind", dialect = "vector.kind")]
+    #[attr(dialect = "vector.kind")]
     pub kind: Attribute<'a>,
-    #[attr(name = "fastmath", dialect = "arith.fastmath", default = "<none>")]
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
-    #[dtype(name = "vector_ty")]
+    #[dtype]
     pub vector_ty: Type<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -1322,13 +1322,13 @@ pub struct ReductionOp<'a> {
 /// ```
 #[mlir::op("vector.scalable.extract", format = "$source `[` $pos `]` attr-dict `:` type($result) `from` type($source)", results(result))]
 pub struct ScalableExtractOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[attr(name = "pos", int = "i64")]
+    #[attr(int = "i64")]
     pub pos: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1362,13 +1362,13 @@ pub struct ScalableExtractOp<'a> {
 pub struct ScalableInsertOp<'a> {
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[slot(result, name = "dest")]
+    #[slot(result)]
     pub dest: Value<'a>,
-    #[attr(name = "pos", int = "i64")]
+    #[attr(int = "i64")]
     pub pos: Attribute<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1389,19 +1389,19 @@ pub struct ScalableInsertOp<'a> {
 /// ```
 #[mlir::op("vector.scan", format = "$kind `,` $source `,` $initial_value attr-dict `:` type($source) `,` type($initial_value)", results(dest, accumulated_value))]
 pub struct ScanOp<'a> {
-    #[slot(dest, name = "source")]
+    #[slot(dest)]
     pub source: Value<'a>,
-    #[slot(accumulated_value, name = "initial_value")]
+    #[slot(accumulated_value)]
     pub initial_value: Value<'a>,
-    #[attr(name = "kind", dialect = "vector.kind")]
+    #[attr(dialect = "vector.kind")]
     pub kind: Attribute<'a>,
-    #[attr(name = "reduction_dim", int = "i64")]
+    #[attr(int = "i64")]
     pub reduction_dim: Attribute<'a>,
-    #[attr(name = "inclusive")]
+    #[attr]
     pub inclusive: Attribute<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
-    #[dtype(name = "accumulated_value")]
+    #[dtype]
     pub accumulated_value: Type<'a>,
 }
 
@@ -1449,29 +1449,29 @@ pub struct ScanOp<'a> {
 /// ```
 #[mlir::op("vector.scatter", format = "$base `[` $offsets `]` `[` $indices `]` `,` $mask `,` $valueToStore attr-dict `:` type($base) `,` type($indices) `,` type($mask) `,` type($valueToStore) (`->` type($result)^)?", results(result))]
 pub struct ScatterOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "indices_ty")]
+    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -1498,11 +1498,11 @@ pub struct ScatterOp<'a> {
 /// ```
 #[mlir::op("vector.shape_cast", format = "$source attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct ShapeCastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1546,19 +1546,19 @@ pub struct ShapeCastOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("vector.shuffle", generic, results(vector))]
+#[mlir::op("vector.shuffle", results(vector))]
 pub struct ShuffleOp<'a> {
-    #[slot(v1_ty, name = "v1")]
+    #[slot(v1_ty)]
     pub v1: Value<'a>,
-    #[slot(v2_ty, name = "v2")]
+    #[slot(v2_ty)]
     pub v2: Value<'a>,
-    #[attr(name = "mask", dense = "i64")]
+    #[attr(dense = "i64")]
     pub mask: Attribute<'a>,
-    #[dtype(name = "v1_ty")]
+    #[dtype]
     pub v1_ty: Type<'a>,
-    #[dtype(name = "v2_ty")]
+    #[dtype]
     pub v2_ty: Type<'a>,
-    #[dtype(name = "vector")]
+    #[dtype]
     pub vector: Type<'a>,
 }
 
@@ -1578,7 +1578,7 @@ pub struct ShuffleOp<'a> {
 /// ```
 #[mlir::op("vector.step", format = "attr-dict `:` type($result)", results(result))]
 pub struct StepOp<'a> {
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1649,19 +1649,19 @@ pub struct StepOp<'a> {
 pub struct StoreOp<'a> {
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -1705,11 +1705,11 @@ pub struct StoreOp<'a> {
 /// ```
 #[mlir::op("vector.to_elements", format = "$source attr-dict `:` type($source)", results(elements))]
 pub struct ToElementsOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "elements", el = source_ty)]
+    #[dtype(el = source_ty)]
     pub elements: Vec<Type<'a>>,
 }
 
@@ -1898,29 +1898,29 @@ pub struct ToElementsOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.transfer_read", generic, results(vector))]
+#[mlir::op("vector.transfer_read", results(vector))]
 pub struct TransferReadOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(padding_ty, name = "padding")]
+    #[slot(padding_ty)]
     pub padding: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Vec<Value<'a>>,
-    #[attr(name = "permutation_map")]
+    #[attr]
     pub permutation_map: Attribute<'a>,
-    #[attr(name = "in_bounds")]
+    #[attr]
     pub in_bounds: Attribute<'a>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "padding_ty")]
+    #[dtype]
     pub padding_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Vec<Type<'a>>,
-    #[dtype(name = "vector")]
+    #[dtype]
     pub vector: Type<'a>,
 }
 
@@ -2024,29 +2024,29 @@ pub struct TransferReadOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("vector.transfer_write", generic, results(result))]
+#[mlir::op("vector.transfer_write", results(result))]
 pub struct TransferWriteOp<'a> {
     #[slot(value_to_store_ty, name = "valueToStore")]
     pub value_to_store: Value<'a>,
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Vec<Value<'a>>,
-    #[attr(name = "permutation_map")]
+    #[attr]
     pub permutation_map: Attribute<'a>,
-    #[attr(name = "in_bounds")]
+    #[attr]
     pub in_bounds: Attribute<'a>,
-    #[dtype(name = "valueToStore_ty")]
+    #[dtype]
     pub value_to_store_ty: Type<'a>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -2077,13 +2077,13 @@ pub struct TransferWriteOp<'a> {
 /// ```
 #[mlir::op("vector.transpose", format = "$vector `,` $permutation attr-dict `:` type($vector) `to` type($result)", results(result))]
 pub struct TransposeOp<'a> {
-    #[slot(vector_ty, name = "vector")]
+    #[slot(vector_ty)]
     pub vector: Value<'a>,
-    #[attr(name = "permutation", dense = "i64")]
+    #[attr(dense = "i64")]
     pub permutation: Attribute<'a>,
-    #[dtype(name = "vector_ty")]
+    #[dtype]
     pub vector_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2103,11 +2103,11 @@ pub struct TransposeOp<'a> {
 /// ```
 #[mlir::op("vector.type_cast", format = "$memref attr-dict `:` type($memref) `to` type($result)", results(result))]
 pub struct TypeCastOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -2122,9 +2122,9 @@ pub struct TypeCastOp<'a> {
 /// when printing the region.
 #[mlir::op("vector.yield", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct YieldOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

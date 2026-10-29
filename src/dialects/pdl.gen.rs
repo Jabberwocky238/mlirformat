@@ -19,15 +19,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("pdl.apply_native_constraint", format = "$name `(` $args `:` type($args) `)` (`:` type($results)^ )? attr-dict", results(results))]
 pub struct ApplyNativeConstraintOp<'a> {
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr(name = "name")]
+    #[attr]
     pub name: Attribute<'a>,
     #[attr(name = "isNegated", default = "false")]
     pub is_negated: Option<Attribute<'a>>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -59,13 +59,13 @@ pub struct ApplyNativeConstraintOp<'a> {
 /// ```
 #[mlir::op("pdl.apply_native_rewrite", format = "$name (`(` $args^ `:` type($args) `)`)? (`:` type($results)^)? attr-dict", results(results))]
 pub struct ApplyNativeRewriteOp<'a> {
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[attr(name = "name")]
+    #[attr]
     pub name: Attribute<'a>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -96,11 +96,11 @@ pub struct ApplyNativeRewriteOp<'a> {
 pub struct AttributeOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[attr(name = "value")]
+    #[attr]
     pub value: Option<Attribute<'a>>,
-    #[dtype(name = "valueType_ty", is = "!pdl.type")]
+    #[dtype(is = "!pdl.type")]
     pub value_type_ty: Type<'a>,
-    #[dtype(name = "attr", is = "!pdl.attribute")]
+    #[dtype(is = "!pdl.attribute")]
     pub attr: Type<'a>,
 }
 
@@ -119,7 +119,7 @@ pub struct AttributeOp<'a> {
 pub struct EraseOp<'a> {
     #[slot(op_value_ty, name = "opValue")]
     pub op_value: Value<'a>,
-    #[dtype(name = "opValue_ty", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub op_value_ty: Type<'a>,
 }
 
@@ -146,9 +146,9 @@ pub struct EraseOp<'a> {
 pub struct OperandOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[dtype(name = "valueType_ty", is = "!pdl.type")]
+    #[dtype(is = "!pdl.type")]
     pub value_type_ty: Type<'a>,
-    #[dtype(name = "value", is = "!pdl.value")]
+    #[dtype(is = "!pdl.value")]
     pub value: Type<'a>,
 }
 
@@ -175,9 +175,9 @@ pub struct OperandOp<'a> {
 pub struct OperandsOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[dtype(name = "valueType_ty", is = "!pdl.range<type>")]
+    #[dtype(is = "!pdl.range<type>")]
     pub value_type_ty: Type<'a>,
-    #[dtype(name = "value", is = "!pdl.range<value>")]
+    #[dtype(is = "!pdl.range<value>")]
     pub value: Type<'a>,
 }
 
@@ -278,7 +278,7 @@ pub struct OperandsOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<OperationOpAttributes>`).
-#[mlir::op("pdl.operation", generic, results(op))]
+#[mlir::op("pdl.operation", results(op))]
 pub struct OperationOp<'a> {
     #[slot(operand_values_ty, name = "operandValues")]
     pub operand_values: Vec<Value<'a>>,
@@ -290,13 +290,13 @@ pub struct OperationOp<'a> {
     pub op_name: Option<Attribute<'a>>,
     #[attr(name = "attributeValueNames")]
     pub attribute_value_names: Attribute<'a>,
-    #[dtype(name = "operandValues_ty")]
+    #[dtype]
     pub operand_values_ty: Vec<Type<'a>>,
-    #[dtype(name = "attributeValues_ty", is = "!pdl.attribute")]
+    #[dtype(is = "!pdl.attribute")]
     pub attribute_values_ty: Type<'a>,
-    #[dtype(name = "typeValues_ty")]
+    #[dtype]
     pub type_values_ty: Vec<Type<'a>>,
-    #[dtype(name = "op", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub op: Type<'a>,
 }
 
@@ -324,9 +324,9 @@ pub struct OperationOp<'a> {
 /// ```
 #[mlir::op("pdl.pattern", format = "($sym_name^)? `:` `benefit` `(` $benefit `)` attr-dict-with-keyword $bodyRegion")]
 pub struct PatternOp<'a> {
-    #[attr(name = "benefit", int = "i16")]
+    #[attr(int = "i16")]
     pub benefit: Attribute<'a>,
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Option<Attribute<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
@@ -359,13 +359,13 @@ pub struct PatternOp<'a> {
 /// to determine their sizes during constraint time.
 ///
 /// Generic form only (directive `custom<RangeType>`).
-#[mlir::op("pdl.range", generic, results(result))]
+#[mlir::op("pdl.range", results(result))]
 pub struct RangeOp<'a> {
-    #[slot(arguments_ty, name = "arguments")]
+    #[slot(arguments_ty)]
     pub arguments: Vec<Value<'a>>,
-    #[dtype(name = "arguments_ty")]
+    #[dtype]
     pub arguments_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -400,11 +400,11 @@ pub struct ReplaceOp<'a> {
     pub repl_operation: Vec<Value<'a>>,
     #[slot(repl_values_ty, name = "replValues")]
     pub repl_values: Vec<Value<'a>>,
-    #[dtype(name = "opValue_ty", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub op_value_ty: Type<'a>,
-    #[dtype(name = "replOperation_ty", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub repl_operation_ty: Type<'a>,
-    #[dtype(name = "replValues_ty")]
+    #[dtype]
     pub repl_values_ty: Vec<Type<'a>>,
 }
 
@@ -430,13 +430,13 @@ pub struct ReplaceOp<'a> {
 /// ```
 #[mlir::op("pdl.result", format = "$index `of` $parent attr-dict", results(val))]
 pub struct ResultOp<'a> {
-    #[slot(parent_ty, name = "parent")]
+    #[slot(parent_ty)]
     pub parent: Value<'a>,
-    #[attr(name = "index", int = "i32")]
+    #[attr(int = "i32")]
     pub index: Attribute<'a>,
-    #[dtype(name = "parent_ty", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
-    #[dtype(name = "val", is = "!pdl.value")]
+    #[dtype(is = "!pdl.value")]
     pub val: Type<'a>,
 }
 
@@ -469,15 +469,15 @@ pub struct ResultOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<ResultsValueType>`).
-#[mlir::op("pdl.results", generic, results(val))]
+#[mlir::op("pdl.results", results(val))]
 pub struct ResultsOp<'a> {
-    #[slot(parent_ty, name = "parent")]
+    #[slot(parent_ty)]
     pub parent: Value<'a>,
-    #[attr(name = "index", int = "i32")]
+    #[attr(int = "i32")]
     pub index: Option<Attribute<'a>>,
-    #[dtype(name = "parent_ty", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub parent_ty: Type<'a>,
-    #[dtype(name = "val")]
+    #[dtype]
     pub val: Type<'a>,
 }
 
@@ -520,17 +520,17 @@ pub struct ResultsOp<'a> {
 /// ```
 #[mlir::op("pdl.rewrite", format = "($root^)? (`with` $name^ (`(` $externalArgs^ `:` type($externalArgs) `)`)?)? ($bodyRegion^)? attr-dict-with-keyword")]
 pub struct RewriteOp<'a> {
-    #[slot(root_ty, name = "root")]
+    #[slot(root_ty)]
     pub root: Vec<Value<'a>>,
     #[slot(external_args_ty, name = "externalArgs")]
     pub external_args: Vec<Value<'a>>,
-    #[attr(name = "name")]
+    #[attr]
     pub name: Option<Attribute<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
-    #[dtype(name = "root_ty", is = "!pdl.operation")]
+    #[dtype(is = "!pdl.operation")]
     pub root_ty: Type<'a>,
-    #[dtype(name = "externalArgs_ty")]
+    #[dtype]
     pub external_args_ty: Vec<Type<'a>>,
 }
 
@@ -554,7 +554,7 @@ pub struct RewriteOp<'a> {
 pub struct TypeOp<'a> {
     #[attr(name = "constantType")]
     pub constant_type: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = "!pdl.type")]
+    #[dtype(is = "!pdl.type")]
     pub result: Type<'a>,
 }
 
@@ -578,7 +578,7 @@ pub struct TypeOp<'a> {
 pub struct TypesOp<'a> {
     #[attr(name = "constantTypes")]
     pub constant_types: Option<Attribute<'a>>,
-    #[dtype(name = "result", is = "!pdl.range<type>")]
+    #[dtype(is = "!pdl.range<type>")]
     pub result: Type<'a>,
 }
 

@@ -145,6 +145,25 @@ pub struct GenField {
     pub ty: String,
 }
 
+impl GenField {
+    /// The marker as written out: `name = "x"` dropped when `x` is the field's own name, the
+    /// default of `#[mlir::op]`, and on a type variable the format does not spell (`$x`): its
+    /// name never leaves the op.
+    fn shown(&self, format: Option<&str>) -> String {
+        let named = self.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).unwrap_or_default();
+        let spelled = format.is_some_and(|f| f.match_indices(&format!("${named}")).any(|(i, m)| !f[i + m.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_')));
+        let own = if self.marker.starts_with("#[dtype(") && !spelled { format!("name = {named:?}") } else { format!("name = {:?}", self.ident) };
+        let m = &self.marker;
+        if let Some(i) = m.find(&format!("({own})")) {
+            format!("{}{}", &m[..i], &m[i + own.len() + 2..])
+        } else if m.contains(&format!("({own}, ")) {
+            m.replacen(&format!("{own}, "), "", 1)
+        } else {
+            m.replacen(&format!(", {own}"), "", 1)
+        }
+    }
+}
+
 /// An operand / result group or a type variable class member.
 struct Group {
     name: String,
@@ -812,11 +831,11 @@ impl GenDialect {
                 let _ = writeln!(out, "///\n/// Generic form only ({why}).");
             }
             let results = if op.results.is_empty() { String::new() } else { format!(", results({})", op.results.join(", ")) };
-            let syntax = op.format.as_ref().map_or_else(|| ", generic".to_string(), |f| format!(", format = {f:?}"));
+            let syntax = op.format.as_ref().map_or_else(String::new, |f| format!(", format = {f:?}"));
             let _ = writeln!(out, "#[mlir::op({:?}{syntax}{results})]", op.name);
             let _ = writeln!(out, "pub struct {}<'a> {{", op.rust);
             for f in &op.fields {
-                let _ = writeln!(out, "    {}\n    pub {}: {},", f.marker, f.ident, f.ty);
+                let _ = writeln!(out, "    {}\n    pub {}: {},", f.shown(op.format.as_deref()), f.ident, f.ty);
             }
             let _ = writeln!(out, "}}\n");
         }

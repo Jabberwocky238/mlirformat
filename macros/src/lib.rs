@@ -11,8 +11,8 @@
 //! }
 //! ```
 //!
-//! Field markers (a `Vec` field is variadic; MLIR names are the lowerCamelCase field names
-//! unless `name = "..."`):
+//! Field markers (a `Vec` field is variadic; MLIR names are the field names unless
+//! `name = "..."`):
 //!
 //! ```text
 //! #[slot(T)]                       operand(s) typed by type variable T
@@ -26,8 +26,8 @@
 //! ```
 //!
 //! `attrs` (discardable attributes) and `loc` fields are added. Options: `format = "..."`,
-//! `results(a, b)`, `custom` (no `Op` impl: `print` / `parse` written by hand), `generic` (no custom
-//! form: always printed generic).
+//! `results(a, b)`, `custom` (no `Print` / `Parse` impl: written by hand). Without `format` (and
+//! not `custom`) the op has no custom form: always printed generic.
 //!
 //! `#[derive(mlir::Cases)]` on an integer enum: `TryFrom<i64>` by case value (the variant's
 //! position; hidden `__N` gap variants take none).

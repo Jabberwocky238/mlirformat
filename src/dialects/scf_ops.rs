@@ -32,17 +32,17 @@ pub struct For<'a> {
     pub lower_bound: Value<'a>,
     #[slot(lower_bound_ty, name = "upperBound")]
     pub upper_bound: Value<'a>,
-    #[slot(lower_bound_ty, name = "step")]
+    #[slot(lower_bound_ty)]
     pub step: Value<'a>,
     #[slot(results, name = "initArgs")]
     pub init_args: Vec<Value<'a>>,
     #[attr(name = "unsignedCmp")]
     pub unsigned_cmp: bool,
-    #[region(name = "region")]
+    #[region]
     pub region: Region<'a>,
     #[dtype(name = "lowerBound_ty")]
     pub lower_bound_ty: Type<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -126,15 +126,15 @@ impl Parse for For<'_> {
 /// 都不印；else 区域没有块就整个不写。
 #[mlir::op("scf.if", custom, results(results))]
 pub struct If<'a> {
-    #[slot(condition_ty, name = "condition")]
+    #[slot(condition_ty)]
     pub condition: Value<'a>,
     #[region(name = "thenRegion")]
     pub then_region: Region<'a>,
     #[region(name = "elseRegion")]
     pub else_region: Region<'a>,
-    #[dtype(name = "condition_ty", is = i1)]
+    #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 

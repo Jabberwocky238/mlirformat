@@ -11,12 +11,11 @@ pub struct OpArgs {
     format: Option<LitStr>,
     results: Vec<Ident>,
     custom: bool,
-    generic: bool,
 }
 
 impl Parse for OpArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut a = Self { name: input.parse()?, format: None, results: Vec::new(), custom: false, generic: false };
+        let mut a = Self { name: input.parse()?, format: None, results: Vec::new(), custom: false };
         while input.parse::<Option<Token![,]>>()?.is_some() && !input.is_empty() {
             let key: Ident = input.parse()?;
             match key.to_string().as_str() {
@@ -30,8 +29,7 @@ impl Parse for OpArgs {
                     a.results = Punctuated::<Ident, Token![,]>::parse_terminated(&c)?.into_iter().collect();
                 }
                 "custom" => a.custom = true,
-                "generic" => a.generic = true,
-                _ => return Err(Error::new(key.span(), "expected `format = \"...\"`, `results(...)`, `custom` or `generic`")),
+                _ => return Err(Error::new(key.span(), "expected `format = \"...\"`, `results(...)` or `custom`")),
             }
         }
         Ok(a)
@@ -89,21 +87,6 @@ fn field_type(kind: &Kind, ty: &Type) -> Ts {
     }
 }
 
-/// `overflow_flags` → `overflowFlags`.
-fn camel(id: &Ident) -> String {
-    let s = id.to_string();
-    let mut out = String::new();
-    for (i, part) in s.trim_start_matches("r#").split('_').enumerate() {
-        let mut cs = part.chars();
-        match (i, cs.next()) {
-            (0, Some(c)) => out.extend(core::iter::once(c).chain(cs)),
-            (_, Some(c)) => out.extend(c.to_uppercase().chain(cs)),
-            (_, None) => {}
-        }
-    }
-    out
-}
-
 impl Marked {
     fn of(f: &mut syn::Field) -> syn::Result<Self> {
         let ident = f.ident.clone().ok_or_else(|| Error::new_spanned(&*f, "#[mlir::op] needs named fields"))?;
@@ -157,7 +140,7 @@ impl Marked {
         let kind = found.ok_or_else(|| Error::new_spanned(&ident, "field needs #[slot(T)], #[dtype], #[attr], #[region] or #[successor]"))?;
         let seg = last_segment(&f.ty);
         Ok(Self {
-            name: name.unwrap_or_else(|| camel(&ident)),
+            name: name.unwrap_or_else(|| ident.to_string().trim_start_matches("r#").into()),
             ident,
             fixed,
             kind,
@@ -276,17 +259,8 @@ impl OpArgs {
                 }
             }
         };
+        // No format: the op only ever prints generic (`CUSTOM = false`).
         let op_impl = match (&self.format, self.custom) {
-            _ if self.generic => quote! {
-                impl #ig ::mlirformat::Op for #ty #tg #wc {
-                    const NAME: &'static str = #name;
-                    const FORMAT: &'static str = "";
-                    const CUSTOM: bool = false;
-                    #fields
-                }
-
-                #dual
-            },
             // ⛔ `custom`：只挡住 `Print` / `Parse`，`Op` 照常生成。逃生口是关于**两个方向**
             // 的，不是关于这个 op 是谁 —— 名字和「有自定义形式」这两件事没有理由也手写。
             (_, true) => quote! {
@@ -296,16 +270,19 @@ impl OpArgs {
                     #fields
                 }
             },
-            (Some(format), false) => quote! {
-                impl #ig ::mlirformat::Op for #ty #tg #wc {
-                    const NAME: &'static str = #name;
-                    const FORMAT: &'static str = #format;
-                    #fields
-                }
+            (format, false) => {
+                let (format, custom) = format.as_ref().map_or_else(|| (quote!(""), quote!(const CUSTOM: bool = false;)), |f| (quote!(#f), quote!()));
+                quote! {
+                    impl #ig ::mlirformat::Op for #ty #tg #wc {
+                        const NAME: &'static str = #name;
+                        const FORMAT: &'static str = #format;
+                        #custom
+                        #fields
+                    }
 
-                #dual
-            },
-            (None, false) => return Err(Error::new(name.span(), "missing `format = \"...\"` (or `custom` / `generic`)")),
+                    #dual
+                }
+            }
         };
         Ok(quote! {
             #[derive(::core::fmt::Debug, ::core::clone::Clone, ::core::cmp::PartialEq, ::mlirformat::__serde::Serialize)]

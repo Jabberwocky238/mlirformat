@@ -18,15 +18,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("async.add_to_group", format = "$operand `,` $group `:` type($operand) attr-dict", results(rank))]
 pub struct AddToGroupOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[slot(group_ty, name = "group")]
+    #[slot(group_ty)]
     pub group: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "group_ty", is = "!async.group")]
+    #[dtype(is = "!async.group")]
     pub group_ty: Type<'a>,
-    #[dtype(name = "rank", is = index)]
+    #[dtype(is = index)]
     pub rank: Type<'a>,
 }
 
@@ -50,9 +50,9 @@ pub struct AddToGroupOp<'a> {
 /// ```
 #[mlir::op("async.await_all", format = "$operand attr-dict")]
 pub struct AwaitAllOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty", is = "!async.group")]
+    #[dtype(is = "!async.group")]
     pub operand_ty: Type<'a>,
 }
 
@@ -72,13 +72,13 @@ pub struct AwaitAllOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<AwaitResultType>`).
-#[mlir::op("async.await", generic, results(result))]
+#[mlir::op("async.await", results(result))]
 pub struct AwaitOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -96,19 +96,19 @@ pub struct AwaitOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("async.call", generic, results(result))]
+#[mlir::op("async.call", results(result))]
 pub struct CallOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr(name = "callee")]
+    #[attr]
     pub callee: Attribute<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -118,11 +118,11 @@ pub struct CallOp<'a> {
 /// the coroutine.
 #[mlir::op("async.coro.begin", format = "$id attr-dict", results(handle))]
 pub struct CoroBeginOp<'a> {
-    #[slot(id_ty, name = "id")]
+    #[slot(id_ty)]
     pub id: Value<'a>,
-    #[dtype(name = "id_ty", is = "!async.coro.id")]
+    #[dtype(is = "!async.coro.id")]
     pub id_ty: Type<'a>,
-    #[dtype(name = "handle", is = "!async.coro.handle")]
+    #[dtype(is = "!async.coro.handle")]
     pub handle: Type<'a>,
 }
 
@@ -133,9 +133,9 @@ pub struct CoroBeginOp<'a> {
 /// coroutine. It the start part of the coroutine is is no-op.
 #[mlir::op("async.coro.end", format = "$handle attr-dict")]
 pub struct CoroEndOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
+    #[dtype(is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
@@ -145,13 +145,13 @@ pub struct CoroEndOp<'a> {
 /// async.coro.begin operation.
 #[mlir::op("async.coro.free", format = "$id `,` $handle attr-dict")]
 pub struct CoroFreeOp<'a> {
-    #[slot(id_ty, name = "id")]
+    #[slot(id_ty)]
     pub id: Value<'a>,
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "id_ty", is = "!async.coro.id")]
+    #[dtype(is = "!async.coro.id")]
     pub id_ty: Type<'a>,
-    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
+    #[dtype(is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
@@ -160,7 +160,7 @@ pub struct CoroFreeOp<'a> {
 /// The `async.coro.id` returns a switched-resume coroutine identifier.
 #[mlir::op("async.coro.id", format = "attr-dict", results(id))]
 pub struct CoroIdOp<'a> {
-    #[dtype(name = "id", is = "!async.coro.id")]
+    #[dtype(is = "!async.coro.id")]
     pub id: Type<'a>,
 }
 
@@ -169,11 +169,11 @@ pub struct CoroIdOp<'a> {
 /// The `async.coro.saves` saves the coroutine state.
 #[mlir::op("async.coro.save", format = "$handle attr-dict", results(state))]
 pub struct CoroSaveOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
+    #[dtype(is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
-    #[dtype(name = "state", is = "!async.coro.state")]
+    #[dtype(is = "!async.coro.state")]
     pub state: Type<'a>,
 }
 
@@ -189,7 +189,7 @@ pub struct CoroSaveOp<'a> {
 /// `resume` successor skipping the `suspend` successor.
 #[mlir::op("async.coro.suspend", format = "$state `,` $suspendDest `,` $resumeDest `,` $cleanupDest attr-dict")]
 pub struct CoroSuspendOp<'a> {
-    #[slot(state_ty, name = "state")]
+    #[slot(state_ty)]
     pub state: Value<'a>,
     #[successor(name = "suspendDest")]
     pub suspend_dest: Str<'a>,
@@ -197,7 +197,7 @@ pub struct CoroSuspendOp<'a> {
     pub resume_dest: Str<'a>,
     #[successor(name = "cleanupDest")]
     pub cleanup_dest: Str<'a>,
-    #[dtype(name = "state_ty", is = "!async.coro.state")]
+    #[dtype(is = "!async.coro.state")]
     pub state_ty: Type<'a>,
 }
 
@@ -218,11 +218,11 @@ pub struct CoroSuspendOp<'a> {
 /// ```
 #[mlir::op("async.create_group", format = "$size `:` type($result) attr-dict", results(result))]
 pub struct CreateGroupOp<'a> {
-    #[slot(size_ty, name = "size")]
+    #[slot(size_ty)]
     pub size: Value<'a>,
-    #[dtype(name = "size_ty", is = index)]
+    #[dtype(is = index)]
     pub size_ty: Type<'a>,
-    #[dtype(name = "result", is = "!async.group")]
+    #[dtype(is = "!async.group")]
     pub result: Type<'a>,
 }
 
@@ -267,21 +267,21 @@ pub struct CreateGroupOp<'a> {
 ///  attached body region as an %unwrapped value of f32 type.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("async.execute", generic, results(token, body_results))]
+#[mlir::op("async.execute", results(token, body_results))]
 pub struct ExecuteOp<'a> {
-    #[slot(dependencies_ty, name = "dependencies")]
+    #[slot(dependencies_ty)]
     pub dependencies: Vec<Value<'a>>,
     #[slot(body_operands_ty, name = "bodyOperands")]
     pub body_operands: Vec<Value<'a>>,
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
-    #[dtype(name = "dependencies_ty", is = "!async.token")]
+    #[dtype(is = "!async.token")]
     pub dependencies_ty: Type<'a>,
-    #[dtype(name = "bodyOperands_ty")]
+    #[dtype]
     pub body_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "token", is = "!async.token")]
+    #[dtype(is = "!async.token")]
     pub token: Type<'a>,
-    #[dtype(name = "bodyResults", strip = "async.value")]
+    #[dtype(strip = "async.value")]
     pub body_results: Vec<Type<'a>>,
 }
 
@@ -316,19 +316,19 @@ pub struct ExecuteOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("async.func", generic)]
+#[mlir::op("async.func")]
 pub struct FuncOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -345,9 +345,9 @@ pub struct FuncOp<'a> {
 /// ```
 #[mlir::op("async.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct ReturnOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -357,11 +357,11 @@ pub struct ReturnOp<'a> {
 /// (token, value or group).
 #[mlir::op("async.runtime.add_ref", format = "$operand attr-dict `:` type($operand)")]
 pub struct RuntimeAddRefOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[attr(name = "count", int = "i64")]
+    #[attr(int = "i64")]
     pub count: Attribute<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -371,15 +371,15 @@ pub struct RuntimeAddRefOp<'a> {
 /// group. Returns the rank of the added element in the group.
 #[mlir::op("async.runtime.add_to_group", format = "$operand `,` $group attr-dict `:` type($operand)", results(rank))]
 pub struct RuntimeAddToGroupOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[slot(group_ty, name = "group")]
+    #[slot(group_ty)]
     pub group: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "group_ty", is = "!async.group")]
+    #[dtype(is = "!async.group")]
     pub group_ty: Type<'a>,
-    #[dtype(name = "rank", is = index)]
+    #[dtype(is = index)]
     pub rank: Type<'a>,
 }
 
@@ -390,13 +390,13 @@ pub struct RuntimeAddToGroupOp<'a> {
 /// the runtime.
 #[mlir::op("async.runtime.await_and_resume", format = "$operand `,` $handle attr-dict `:` type($operand)")]
 pub struct RuntimeAwaitAndResumeOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
+    #[dtype(is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
@@ -406,9 +406,9 @@ pub struct RuntimeAwaitAndResumeOp<'a> {
 /// operand becomes available or error.
 #[mlir::op("async.runtime.await", format = "$operand attr-dict `:` type($operand)")]
 pub struct RuntimeAwaitOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -418,11 +418,11 @@ pub struct RuntimeAwaitOp<'a> {
 /// of the given size. Group created in the empty state.
 #[mlir::op("async.runtime.create_group", format = "$size `:` type($result) attr-dict", results(result))]
 pub struct RuntimeCreateGroupOp<'a> {
-    #[slot(size_ty, name = "size")]
+    #[slot(size_ty)]
     pub size: Value<'a>,
-    #[dtype(name = "size_ty", is = index)]
+    #[dtype(is = index)]
     pub size_ty: Type<'a>,
-    #[dtype(name = "result", is = "!async.group")]
+    #[dtype(is = "!async.group")]
     pub result: Type<'a>,
 }
 
@@ -432,7 +432,7 @@ pub struct RuntimeCreateGroupOp<'a> {
 /// value. Tokens and values are created in the non-ready state.
 #[mlir::op("async.runtime.create", format = "attr-dict `:` type($result)", results(result))]
 pub struct RuntimeCreateOp<'a> {
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -442,11 +442,11 @@ pub struct RuntimeCreateOp<'a> {
 /// (token, value or group).
 #[mlir::op("async.runtime.drop_ref", format = "$operand attr-dict `:` type($operand)")]
 pub struct RuntimeDropRefOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[attr(name = "count", int = "i64")]
+    #[attr(int = "i64")]
     pub count: Attribute<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -458,11 +458,11 @@ pub struct RuntimeDropRefOp<'a> {
 /// resuming after `await_and_resume`.
 #[mlir::op("async.runtime.is_error", format = "$operand attr-dict `:` type($operand)", results(is_error))]
 pub struct RuntimeIsErrorOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
-    #[dtype(name = "is_error", is = i1)]
+    #[dtype(is = i1)]
     pub is_error: Type<'a>,
 }
 
@@ -472,11 +472,11 @@ pub struct RuntimeIsErrorOp<'a> {
 /// async.value storage.
 #[mlir::op("async.runtime.load", format = "$storage attr-dict `:` type($storage)", results(result))]
 pub struct RuntimeLoadOp<'a> {
-    #[slot(storage_ty, name = "storage")]
+    #[slot(storage_ty)]
     pub storage: Value<'a>,
-    #[dtype(name = "storage_ty", strip = "async.value")]
+    #[dtype(strip = "async.value")]
     pub storage_ty: Type<'a>,
-    #[dtype(name = "result", el = storage_ty)]
+    #[dtype(el = storage_ty)]
     pub result: Type<'a>,
 }
 
@@ -486,7 +486,7 @@ pub struct RuntimeLoadOp<'a> {
 /// in the threadpool from the runtime.
 #[mlir::op("async.runtime.num_worker_threads", format = "attr-dict `:` type($result)", results(result))]
 pub struct RuntimeNumWorkerThreadsOp<'a> {
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -496,9 +496,9 @@ pub struct RuntimeNumWorkerThreadsOp<'a> {
 /// managed by the runtime.
 #[mlir::op("async.runtime.resume", format = "$handle attr-dict")]
 pub struct RuntimeResumeOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty", is = "!async.coro.handle")]
+    #[dtype(is = "!async.coro.handle")]
     pub handle_ty: Type<'a>,
 }
 
@@ -508,9 +508,9 @@ pub struct RuntimeResumeOp<'a> {
 /// state to available.
 #[mlir::op("async.runtime.set_available", format = "$operand attr-dict `:` type($operand)")]
 pub struct RuntimeSetAvailableOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -520,9 +520,9 @@ pub struct RuntimeSetAvailableOp<'a> {
 /// state to error.
 #[mlir::op("async.runtime.set_error", format = "$operand attr-dict `:` type($operand)")]
 pub struct RuntimeSetErrorOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Value<'a>,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Type<'a>,
 }
 
@@ -532,13 +532,13 @@ pub struct RuntimeSetErrorOp<'a> {
 /// async.value storage.
 #[mlir::op("async.runtime.store", format = "$value `,` $storage attr-dict `:` type($storage)")]
 pub struct RuntimeStoreOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(storage_ty, name = "storage")]
+    #[slot(storage_ty)]
     pub storage: Value<'a>,
-    #[dtype(name = "value_ty", el = storage_ty)]
+    #[dtype(el = storage_ty)]
     pub value_ty: Type<'a>,
-    #[dtype(name = "storage_ty", strip = "async.value")]
+    #[dtype(strip = "async.value")]
     pub storage_ty: Type<'a>,
 }
 
@@ -548,9 +548,9 @@ pub struct RuntimeStoreOp<'a> {
 /// `async.execute` operation.
 #[mlir::op("async.yield", format = "($operands^ `:` type($operands))? attr-dict")]
 pub struct YieldOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 

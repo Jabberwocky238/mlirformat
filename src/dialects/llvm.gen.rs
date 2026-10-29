@@ -184,99 +184,99 @@ pub enum Visibility {
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.acos", generic, results(res))]
+#[mlir::op("llvm.intr.acos", results(res))]
 pub struct ACosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.ashr", format = "(`exact` $isExact^)? $lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct AShrOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.asin", generic, results(res))]
+#[mlir::op("llvm.intr.asin", results(res))]
 pub struct ASinOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.atan2", generic, results(res))]
+#[mlir::op("llvm.intr.atan2", results(res))]
 pub struct ATan2Op<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.atan", generic, results(res))]
+#[mlir::op("llvm.intr.atan", results(res))]
 pub struct ATanOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.abs", generic, results(res))]
+#[mlir::op("llvm.intr.abs", results(res))]
 pub struct AbsOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[attr(name = "is_int_min_poison", int = "i1")]
+    #[attr(int = "i1")]
     pub is_int_min_poison: Attribute<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.add", format = "$lhs `,` $rhs ($overflowFlags^)? attr-dict `:` type($res)", results(res))]
 pub struct AddOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.addrspacecast", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct AddrSpaceCastOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -318,9 +318,9 @@ pub struct AddrSpaceCastOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.addressof", format = "$global_name attr-dict `:` qualified(type($res))", results(res))]
 pub struct AddressOfOp<'a> {
-    #[attr(name = "global_name")]
+    #[attr]
     pub global_name: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -360,177 +360,177 @@ pub struct AddressOfOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.mlir.alias", generic)]
+#[mlir::op("llvm.mlir.alias")]
 pub struct AliasOp<'a> {
-    #[attr(name = "alias_type")]
+    #[attr]
     pub alias_type: Attribute<'a>,
-    #[attr(name = "sym_name")]
+    #[attr]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "linkage", dialect = "llvm.linkage")]
+    #[attr(dialect = "llvm.linkage")]
     pub linkage: Attribute<'a>,
-    #[attr(name = "dso_local")]
+    #[attr]
     pub dso_local: bool,
-    #[attr(name = "thread_local_")]
+    #[attr]
     pub thread_local_: bool,
-    #[attr(name = "unnamed_addr", int = "i64")]
+    #[attr(int = "i64")]
     pub unnamed_addr: Option<UnnamedAddr>,
-    #[attr(name = "visibility_", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub visibility_: Option<Visibility>,
-    #[region(name = "initializer")]
+    #[region]
     pub initializer: Region<'a>,
 }
 
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.alloca", generic, results(res))]
+#[mlir::op("llvm.alloca", results(res))]
 pub struct AllocaOp<'a> {
     #[slot(array_size_ty, name = "arraySize")]
     pub array_size: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "elem_type")]
+    #[attr]
     pub elem_type: Attribute<'a>,
-    #[attr(name = "inalloca")]
+    #[attr]
     pub inalloca: bool,
-    #[dtype(name = "arraySize_ty")]
+    #[dtype]
     pub array_size_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.and", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct AndOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.annotation", generic, results(res))]
+#[mlir::op("llvm.intr.annotation", results(res))]
 pub struct Annotation<'a> {
-    #[slot(res, name = "integer")]
+    #[slot(res)]
     pub integer: Value<'a>,
-    #[slot(annotation_ty, name = "annotation")]
+    #[slot(annotation_ty)]
     pub annotation: Value<'a>,
     #[slot(annotation_ty, name = "fileName")]
     pub file_name: Value<'a>,
-    #[slot(line_ty, name = "line")]
+    #[slot(line_ty)]
     pub line: Value<'a>,
-    #[dtype(name = "annotation_ty")]
+    #[dtype]
     pub annotation_ty: Type<'a>,
-    #[dtype(name = "line_ty", is = i32)]
+    #[dtype(is = i32)]
     pub line_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `custom<OpBundles>`).
-#[mlir::op("llvm.intr.assume", generic)]
+#[mlir::op("llvm.intr.assume")]
 pub struct AssumeOp<'a> {
-    #[slot(cond_ty, name = "cond")]
+    #[slot(cond_ty)]
     pub cond: Value<'a>,
-    #[slot(op_bundle_operands_ty, name = "op_bundle_operands")]
+    #[slot(op_bundle_operands_ty)]
     pub op_bundle_operands: Vec<Value<'a>>,
-    #[attr(name = "op_bundle_sizes", dense = "i32")]
+    #[attr(dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
-    #[attr(name = "op_bundle_tags")]
+    #[attr]
     pub op_bundle_tags: Option<Attribute<'a>>,
-    #[dtype(name = "cond_ty", is = i1)]
+    #[dtype(is = i1)]
     pub cond_ty: Type<'a>,
-    #[dtype(name = "op_bundle_operands_ty")]
+    #[dtype]
     pub op_bundle_operands_ty: Vec<Type<'a>>,
 }
 
 ///
 /// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.cmpxchg", generic, results(res))]
+#[mlir::op("llvm.cmpxchg", results(res))]
 pub struct AtomicCmpXchgOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(cmp_ty, name = "cmp")]
+    #[slot(cmp_ty)]
     pub cmp: Value<'a>,
-    #[slot(cmp_ty, name = "val")]
+    #[slot(cmp_ty)]
     pub val: Value<'a>,
-    #[attr(name = "success_ordering", int = "i64")]
+    #[attr(int = "i64")]
     pub success_ordering: AtomicOrdering,
-    #[attr(name = "failure_ordering", int = "i64")]
+    #[attr(int = "i64")]
     pub failure_ordering: AtomicOrdering,
-    #[attr(name = "syncscope")]
+    #[attr]
     pub syncscope: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "weak")]
+    #[attr]
     pub weak: bool,
-    #[attr(name = "volatile_")]
+    #[attr]
     pub volatile_: bool,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "cmp_ty")]
+    #[dtype]
     pub cmp_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.atomicrmw", format = "(`volatile` $volatile_^)? $bin_op $ptr `,` $val (`syncscope` `(` $syncscope^ `)`)? $ordering attr-dict `:` qualified(type($ptr)) `,` type($val)", results(res))]
 pub struct AtomicRMWOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(res, name = "val")]
+    #[slot(res)]
     pub val: Value<'a>,
-    #[attr(name = "bin_op", int = "i64")]
+    #[attr(int = "i64")]
     pub bin_op: AtomicBinOp,
-    #[attr(name = "ordering", int = "i64")]
+    #[attr(int = "i64")]
     pub ordering: AtomicOrdering,
-    #[attr(name = "syncscope")]
+    #[attr]
     pub syncscope: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "volatile_")]
+    #[attr]
     pub volatile_: bool,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.bitreverse", generic, results(res))]
+#[mlir::op("llvm.intr.bitreverse", results(res))]
 pub struct BitReverseOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.bitcast", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct BitcastOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -556,9 +556,9 @@ pub struct BitcastOp<'a> {
 /// ```
 #[mlir::op("llvm.blockaddress", format = "$block_addr attr-dict `:` qualified(type($res))", results(res))]
 pub struct BlockAddressOp<'a> {
-    #[attr(name = "block_addr", dialect = "llvm.blockaddress")]
+    #[attr(dialect = "llvm.blockaddress")]
     pub block_addr: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -583,7 +583,7 @@ pub struct BlockAddressOp<'a> {
 /// ```
 #[mlir::op("llvm.blocktag", format = "$tag attr-dict")]
 pub struct BlockTagOp<'a> {
-    #[attr(name = "tag", dialect = "llvm.blocktag")]
+    #[attr(dialect = "llvm.blocktag")]
     pub tag: Attribute<'a>,
 }
 
@@ -591,21 +591,21 @@ pub struct BlockTagOp<'a> {
 pub struct BrOp<'a> {
     #[slot(dest_operands_ty, name = "destOperands")]
     pub dest_operands: Vec<Value<'a>>,
-    #[attr(name = "loop_annotation", dialect = "llvm.loop_annotation")]
+    #[attr(dialect = "llvm.loop_annotation")]
     pub loop_annotation: Option<Attribute<'a>>,
-    #[successor(name = "dest")]
+    #[successor]
     pub dest: Str<'a>,
-    #[dtype(name = "destOperands_ty")]
+    #[dtype]
     pub dest_operands_ty: Vec<Type<'a>>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.bswap", generic, results(res))]
+#[mlir::op("llvm.intr.bswap", results(res))]
 pub struct ByteSwapOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -615,29 +615,29 @@ pub struct ByteSwapOp<'a> {
 /// the MLIR function type of this op to determine which intrinsic to call.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.call_intrinsic", generic, results(results))]
+#[mlir::op("llvm.call_intrinsic", results(results))]
 pub struct CallIntrinsicOp<'a> {
-    #[slot(args_ty, name = "args")]
+    #[slot(args_ty)]
     pub args: Vec<Value<'a>>,
-    #[slot(op_bundle_operands_ty, name = "op_bundle_operands")]
+    #[slot(op_bundle_operands_ty)]
     pub op_bundle_operands: Vec<Value<'a>>,
-    #[attr(name = "intrin")]
+    #[attr]
     pub intrin: Attribute<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[attr(name = "op_bundle_sizes", dense = "i32")]
+    #[attr(dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
-    #[attr(name = "op_bundle_tags")]
+    #[attr]
     pub op_bundle_tags: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "args_ty")]
+    #[dtype]
     pub args_ty: Vec<Type<'a>>,
-    #[dtype(name = "op_bundle_operands_ty")]
+    #[dtype]
     pub op_bundle_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -685,15 +685,15 @@ pub struct CallIntrinsicOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.call", generic, results(result))]
+#[mlir::op("llvm.call", results(result))]
 pub struct CallOp<'a> {
-    #[slot(callee_operands_ty, name = "callee_operands")]
+    #[slot(callee_operands_ty)]
     pub callee_operands: Vec<Value<'a>>,
-    #[slot(op_bundle_operands_ty, name = "op_bundle_operands")]
+    #[slot(op_bundle_operands_ty)]
     pub op_bundle_operands: Vec<Value<'a>>,
-    #[attr(name = "var_callee_type")]
+    #[attr]
     pub var_callee_type: Option<Attribute<'a>>,
-    #[attr(name = "callee")]
+    #[attr]
     pub callee: Option<Attribute<'a>>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
@@ -701,41 +701,41 @@ pub struct CallOp<'a> {
     pub c_conv: Option<Attribute<'a>>,
     #[attr(name = "TailCallKind", dialect = "llvm.tailcallkind", default = "<none>")]
     pub tail_call_kind: Option<Attribute<'a>>,
-    #[attr(name = "memory_effects", dialect = "llvm.memory_effects")]
+    #[attr(dialect = "llvm.memory_effects")]
     pub memory_effects: Option<Attribute<'a>>,
-    #[attr(name = "convergent")]
+    #[attr]
     pub convergent: bool,
-    #[attr(name = "no_unwind")]
+    #[attr]
     pub no_unwind: bool,
-    #[attr(name = "will_return")]
+    #[attr]
     pub will_return: bool,
-    #[attr(name = "op_bundle_sizes", dense = "i32")]
+    #[attr(dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
-    #[attr(name = "op_bundle_tags")]
+    #[attr]
     pub op_bundle_tags: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "no_inline")]
+    #[attr]
     pub no_inline: bool,
-    #[attr(name = "always_inline")]
+    #[attr]
     pub always_inline: bool,
-    #[attr(name = "inline_hint")]
+    #[attr]
     pub inline_hint: bool,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(name = "callee_operands_ty")]
+    #[dtype]
     pub callee_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "op_bundle_operands_ty")]
+    #[dtype]
     pub op_bundle_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
@@ -752,9 +752,9 @@ pub struct CallOp<'a> {
 /// ```
 #[mlir::op("llvm.comdat", format = "$sym_name $body attr-dict")]
 pub struct ComdatOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
@@ -771,33 +771,33 @@ pub struct ComdatOp<'a> {
 /// ```
 #[mlir::op("llvm.comdat_selector", format = "$sym_name $comdat attr-dict")]
 pub struct ComdatSelectorOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "comdat", int = "i64")]
+    #[attr(int = "i64")]
     pub comdat: Comdat,
 }
 
 #[mlir::op("llvm.cond_br", format = "$condition ( `weights` `(` $branch_weights^ `)` )? `,` $trueDest (`(` $trueDestOperands^ `:` type($trueDestOperands) `)`)? `,` $falseDest (`(` $falseDestOperands^ `:` type($falseDestOperands) `)`)? attr-dict")]
 pub struct CondBrOp<'a> {
-    #[slot(condition_ty, name = "condition")]
+    #[slot(condition_ty)]
     pub condition: Value<'a>,
     #[slot(true_dest_operands_ty, name = "trueDestOperands")]
     pub true_dest_operands: Vec<Value<'a>>,
     #[slot(false_dest_operands_ty, name = "falseDestOperands")]
     pub false_dest_operands: Vec<Value<'a>>,
-    #[attr(name = "branch_weights", dense = "i32")]
+    #[attr(dense = "i32")]
     pub branch_weights: Option<Attribute<'a>>,
-    #[attr(name = "loop_annotation", dialect = "llvm.loop_annotation")]
+    #[attr(dialect = "llvm.loop_annotation")]
     pub loop_annotation: Option<Attribute<'a>>,
     #[successor(name = "trueDest")]
     pub true_dest: Str<'a>,
     #[successor(name = "falseDest")]
     pub false_dest: Str<'a>,
-    #[dtype(name = "condition_ty", is = i1)]
+    #[dtype(is = i1)]
     pub condition_ty: Type<'a>,
-    #[dtype(name = "trueDestOperands_ty")]
+    #[dtype]
     pub true_dest_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "falseDestOperands_ty")]
+    #[dtype]
     pub false_dest_operands_ty: Vec<Type<'a>>,
 }
 
@@ -852,285 +852,285 @@ pub struct CondBrOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.constant", format = "`(` $value `)` attr-dict `:` type($res)", results(res))]
 pub struct ConstantOp<'a> {
-    #[attr(name = "value")]
+    #[attr]
     pub value: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.fpext", generic, results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.fpext", results(res))]
 pub struct ConstrainedFPExtIntr<'a> {
-    #[slot(arg_0_ty, name = "arg_0")]
+    #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
-    #[dtype(name = "arg_0_ty")]
+    #[dtype]
     pub arg_0_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.fptrunc", generic, results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.fptrunc", results(res))]
 pub struct ConstrainedFPTruncIntr<'a> {
-    #[slot(arg_0_ty, name = "arg_0")]
+    #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
-    #[attr(name = "roundingmode")]
+    #[attr]
     pub roundingmode: Attribute<'a>,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
-    #[dtype(name = "arg_0_ty")]
+    #[dtype]
     pub arg_0_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.sitofp", generic, results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.sitofp", results(res))]
 pub struct ConstrainedSIToFP<'a> {
-    #[slot(arg_0_ty, name = "arg_0")]
+    #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
-    #[attr(name = "roundingmode")]
+    #[attr]
     pub roundingmode: Attribute<'a>,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
-    #[dtype(name = "arg_0_ty")]
+    #[dtype]
     pub arg_0_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.uitofp", generic, results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.uitofp", results(res))]
 pub struct ConstrainedUIToFP<'a> {
-    #[slot(arg_0_ty, name = "arg_0")]
+    #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
-    #[attr(name = "roundingmode")]
+    #[attr]
     pub roundingmode: Attribute<'a>,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
-    #[dtype(name = "arg_0_ty")]
+    #[dtype]
     pub arg_0_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.copysign", generic, results(res))]
+#[mlir::op("llvm.intr.copysign", results(res))]
 pub struct CopySignOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.coro.align", format = "attr-dict `:` type($res)", results(res))]
 pub struct CoroAlignOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.begin", generic, results(res))]
+#[mlir::op("llvm.intr.coro.begin", results(res))]
 pub struct CoroBeginOp<'a> {
-    #[slot(token_ty, name = "token")]
+    #[slot(token_ty)]
     pub token: Value<'a>,
-    #[slot(mem_ty, name = "mem")]
+    #[slot(mem_ty)]
     pub mem: Value<'a>,
-    #[dtype(name = "token_ty", is = "!llvm.token")]
+    #[dtype(is = "!llvm.token")]
     pub token_ty: Type<'a>,
-    #[dtype(name = "mem_ty")]
+    #[dtype]
     pub mem_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.end", generic, results(res))]
+#[mlir::op("llvm.intr.coro.end", results(res))]
 pub struct CoroEndOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[slot(unwind_ty, name = "unwind")]
+    #[slot(unwind_ty)]
     pub unwind: Value<'a>,
-    #[slot(retvals_ty, name = "retvals")]
+    #[slot(retvals_ty)]
     pub retvals: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype]
     pub handle_ty: Type<'a>,
-    #[dtype(name = "unwind_ty", is = i1)]
+    #[dtype(is = i1)]
     pub unwind_ty: Type<'a>,
-    #[dtype(name = "retvals_ty", is = "!llvm.token")]
+    #[dtype(is = "!llvm.token")]
     pub retvals_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.free", generic, results(res))]
+#[mlir::op("llvm.intr.coro.free", results(res))]
 pub struct CoroFreeOp<'a> {
-    #[slot(id_ty, name = "id")]
+    #[slot(id_ty)]
     pub id: Value<'a>,
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "id_ty", is = "!llvm.token")]
+    #[dtype(is = "!llvm.token")]
     pub id_ty: Type<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype]
     pub handle_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.id", generic, results(res))]
+#[mlir::op("llvm.intr.coro.id", results(res))]
 pub struct CoroIdOp<'a> {
-    #[slot(align_ty, name = "align")]
+    #[slot(align_ty)]
     pub align: Value<'a>,
-    #[slot(promise_ty, name = "promise")]
+    #[slot(promise_ty)]
     pub promise: Value<'a>,
-    #[slot(coroaddr_ty, name = "coroaddr")]
+    #[slot(coroaddr_ty)]
     pub coroaddr: Value<'a>,
-    #[slot(fnaddrs_ty, name = "fnaddrs")]
+    #[slot(fnaddrs_ty)]
     pub fnaddrs: Value<'a>,
-    #[dtype(name = "align_ty", is = i32)]
+    #[dtype(is = i32)]
     pub align_ty: Type<'a>,
-    #[dtype(name = "promise_ty")]
+    #[dtype]
     pub promise_ty: Type<'a>,
-    #[dtype(name = "coroaddr_ty")]
+    #[dtype]
     pub coroaddr_ty: Type<'a>,
-    #[dtype(name = "fnaddrs_ty")]
+    #[dtype]
     pub fnaddrs_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.promise", generic, results(res))]
+#[mlir::op("llvm.intr.coro.promise", results(res))]
 pub struct CoroPromiseOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[slot(align_ty, name = "align")]
+    #[slot(align_ty)]
     pub align: Value<'a>,
-    #[slot(from_ty, name = "from")]
+    #[slot(from_ty)]
     pub from: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype]
     pub handle_ty: Type<'a>,
-    #[dtype(name = "align_ty", is = i32)]
+    #[dtype(is = i32)]
     pub align_ty: Type<'a>,
-    #[dtype(name = "from_ty", is = i1)]
+    #[dtype(is = i1)]
     pub from_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.coro.resume", format = "$handle attr-dict `:` qualified(type($handle))")]
 pub struct CoroResumeOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype]
     pub handle_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.save", generic, results(res))]
+#[mlir::op("llvm.intr.coro.save", results(res))]
 pub struct CoroSaveOp<'a> {
-    #[slot(handle_ty, name = "handle")]
+    #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(name = "handle_ty")]
+    #[dtype]
     pub handle_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.coro.size", format = "attr-dict `:` type($res)", results(res))]
 pub struct CoroSizeOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.coro.suspend", format = "$save `,` $final attr-dict `:` type($res)", results(res))]
 pub struct CoroSuspendOp<'a> {
-    #[slot(save_ty, name = "save")]
+    #[slot(save_ty)]
     pub save: Value<'a>,
     #[slot(final_ty, name = "final")]
     pub final_: Value<'a>,
-    #[dtype(name = "save_ty", is = "!llvm.token")]
+    #[dtype(is = "!llvm.token")]
     pub save_ty: Type<'a>,
-    #[dtype(name = "final_ty", is = i1)]
+    #[dtype(is = i1)]
     pub final_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.cos", generic, results(res))]
+#[mlir::op("llvm.intr.cos", results(res))]
 pub struct CosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.cosh", generic, results(res))]
+#[mlir::op("llvm.intr.cosh", results(res))]
 pub struct CoshOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.ctlz", generic, results(res))]
+#[mlir::op("llvm.intr.ctlz", results(res))]
 pub struct CountLeadingZerosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
-    #[attr(name = "is_zero_poison", int = "i1")]
+    #[attr(int = "i1")]
     pub is_zero_poison: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.cttz", generic, results(res))]
+#[mlir::op("llvm.intr.cttz", results(res))]
 pub struct CountTrailingZerosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
-    #[attr(name = "is_zero_poison", int = "i1")]
+    #[attr(int = "i1")]
     pub is_zero_poison: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ctpop", generic, results(res))]
+#[mlir::op("llvm.intr.ctpop", results(res))]
 pub struct CtPopOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -1154,46 +1154,46 @@ pub struct CtPopOp<'a> {
 /// ```
 #[mlir::op("llvm.dso_local_equivalent", format = "$function_name attr-dict `:` qualified(type($res))", results(res))]
 pub struct DSOLocalEquivalentOp<'a> {
-    #[attr(name = "function_name")]
+    #[attr]
     pub function_name: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 /// `llvm.intr.dbg.declare`: Describes how the address relates to a source language variable.
 ///
 /// Generic form only (LLVM_DbgDeclareOp: format: unexpected `^)? `=` $addr `:` qualified(type($addr)) attr-dict`).
-#[mlir::op("llvm.intr.dbg.declare", generic)]
+#[mlir::op("llvm.intr.dbg.declare")]
 pub struct DbgDeclareOp<'a> {
-    #[slot(addr_ty, name = "addr")]
+    #[slot(addr_ty)]
     pub addr: Value<'a>,
     #[attr(name = "varInfo", dialect = "llvm.di_local_variable")]
     pub var_info: Attribute<'a>,
     #[attr(name = "locationExpr", dialect = "llvm.di_expression")]
     pub location_expr: Option<Attribute<'a>>,
-    #[dtype(name = "addr_ty")]
+    #[dtype]
     pub addr_ty: Type<'a>,
 }
 
 /// `llvm.intr.dbg.label`: Relates the program to a debug information label.
 #[mlir::op("llvm.intr.dbg.label", format = "$label attr-dict")]
 pub struct DbgLabelOp<'a> {
-    #[attr(name = "label", dialect = "llvm.di_label")]
+    #[attr(dialect = "llvm.di_label")]
     pub label: Attribute<'a>,
 }
 
 /// `llvm.intr.dbg.value`: Describes how the value relates to a source language variable.
 ///
 /// Generic form only (LLVM_DbgValueOp: format: unexpected `^)? `=` $value `:` qualified(type($value)) attr-dict`).
-#[mlir::op("llvm.intr.dbg.value", generic)]
+#[mlir::op("llvm.intr.dbg.value")]
 pub struct DbgValueOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
     #[attr(name = "varInfo", dialect = "llvm.di_local_variable")]
     pub var_info: Attribute<'a>,
     #[attr(name = "locationExpr", dialect = "llvm.di_expression")]
     pub location_expr: Option<Attribute<'a>>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
 }
 
@@ -1203,367 +1203,367 @@ pub struct DebugTrap<'a> {
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.eh.typeid.for", generic, results(res))]
+#[mlir::op("llvm.intr.eh.typeid.for", results(res))]
 pub struct EhTypeidForOp<'a> {
-    #[slot(type_info_ty, name = "type_info")]
+    #[slot(type_info_ty)]
     pub type_info: Value<'a>,
-    #[dtype(name = "type_info_ty")]
+    #[dtype]
     pub type_info_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.exp10", generic, results(res))]
+#[mlir::op("llvm.intr.exp10", results(res))]
 pub struct Exp10Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.exp2", generic, results(res))]
+#[mlir::op("llvm.intr.exp2", results(res))]
 pub struct Exp2Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.exp", generic, results(res))]
+#[mlir::op("llvm.intr.exp", results(res))]
 pub struct ExpOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.expect", format = "$val `,` $expected attr-dict `:` type($val)", results(res))]
 pub struct ExpectOp<'a> {
-    #[slot(res, name = "val")]
+    #[slot(res)]
     pub val: Value<'a>,
-    #[slot(res, name = "expected")]
+    #[slot(res)]
     pub expected: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.expect.with.probability", format = "$val `,` $expected `,` $prob attr-dict `:` type($val)", results(res))]
 pub struct ExpectWithProbabilityOp<'a> {
-    #[slot(res, name = "val")]
+    #[slot(res)]
     pub val: Value<'a>,
-    #[slot(res, name = "expected")]
+    #[slot(res)]
     pub expected: Value<'a>,
-    #[attr(name = "prob")]
+    #[attr]
     pub prob: Attribute<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 /// `llvm.extractelement`: Extract an element from an LLVM vector.
 #[mlir::op("llvm.extractelement", format = "$vector `[` $position `:` type($position) `]` attr-dict `:` type($vector)", results(res))]
 pub struct ExtractElementOp<'a> {
-    #[slot(vector_ty, name = "vector")]
+    #[slot(vector_ty)]
     pub vector: Value<'a>,
-    #[slot(position_ty, name = "position")]
+    #[slot(position_ty)]
     pub position: Value<'a>,
-    #[dtype(name = "vector_ty")]
+    #[dtype]
     pub vector_ty: Type<'a>,
-    #[dtype(name = "position_ty")]
+    #[dtype]
     pub position_ty: Type<'a>,
-    #[dtype(name = "res", el = vector_ty)]
+    #[dtype(el = vector_ty)]
     pub res: Type<'a>,
 }
 
 /// `llvm.extractvalue`: Extract a value from an LLVM struct.
 ///
 /// Generic form only (directive `custom<InsertExtractValueElementType>`).
-#[mlir::op("llvm.extractvalue", generic, results(res))]
+#[mlir::op("llvm.extractvalue", results(res))]
 pub struct ExtractValueOp<'a> {
-    #[slot(container_ty, name = "container")]
+    #[slot(container_ty)]
     pub container: Value<'a>,
-    #[attr(name = "position", dense = "i64")]
+    #[attr(dense = "i64")]
     pub position: Attribute<'a>,
-    #[dtype(name = "container_ty")]
+    #[dtype]
     pub container_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fabs", generic, results(res))]
+#[mlir::op("llvm.intr.fabs", results(res))]
 pub struct FAbsOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fadd", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct FAddOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ceil", generic, results(res))]
+#[mlir::op("llvm.intr.ceil", results(res))]
 pub struct FCeilOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.fcmp", generic, results(res))]
+#[mlir::op("llvm.fcmp", results(res))]
 pub struct FCmpOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(lhs_ty, name = "rhs")]
+    #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[attr(name = "predicate", int = "i64")]
+    #[attr(int = "i64")]
     pub predicate: FCmpPredicate,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "res", i1 = lhs_ty)]
+    #[dtype(i1 = lhs_ty)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fdiv", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct FDivOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.floor", generic, results(res))]
+#[mlir::op("llvm.intr.floor", results(res))]
 pub struct FFloorOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fma", generic, results(res))]
+#[mlir::op("llvm.intr.fma", results(res))]
 pub struct FMAOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[slot(res, name = "c")]
+    #[slot(res)]
     pub c: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fmuladd", generic, results(res))]
+#[mlir::op("llvm.intr.fmuladd", results(res))]
 pub struct FMulAddOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[slot(res, name = "c")]
+    #[slot(res)]
     pub c: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fmul", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct FMulOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fneg", format = "$operand attr-dict `:` type($res)", results(res))]
 pub struct FNegOp<'a> {
-    #[slot(res, name = "operand")]
+    #[slot(res)]
     pub operand: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fpext", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct FPExtOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fptosi", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct FPToSIOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fptoui", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct FPToUIOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fptrunc", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct FPTruncOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.frem", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct FRemOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fsub", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct FSubOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.trunc", generic, results(res))]
+#[mlir::op("llvm.intr.trunc", results(res))]
 pub struct FTruncOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.fence", format = "(`syncscope` `(` $syncscope^ `)`)? $ordering attr-dict")]
 pub struct FenceOp<'a> {
-    #[attr(name = "ordering", int = "i64")]
+    #[attr(int = "i64")]
     pub ordering: AtomicOrdering,
-    #[attr(name = "syncscope")]
+    #[attr]
     pub syncscope: Option<Attribute<'a>>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.frexp", generic, results(res))]
+#[mlir::op("llvm.intr.frexp", results(res))]
 pub struct FractionExpOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.freeze", format = "$val attr-dict `:` type($val)", results(res))]
 pub struct FreezeOp<'a> {
-    #[slot(res, name = "val")]
+    #[slot(res)]
     pub val: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fshl", generic, results(res))]
+#[mlir::op("llvm.intr.fshl", results(res))]
 pub struct FshlOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[slot(res, name = "c")]
+    #[slot(res)]
     pub c: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fshr", generic, results(res))]
+#[mlir::op("llvm.intr.fshr", results(res))]
 pub struct FshrOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[slot(res, name = "c")]
+    #[slot(res)]
     pub c: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -1597,37 +1597,37 @@ pub struct FshrOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<GEPIndices>`).
-#[mlir::op("llvm.getelementptr", generic, results(res))]
+#[mlir::op("llvm.getelementptr", results(res))]
 pub struct GEPOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
     #[slot(dynamic_indices_ty, name = "dynamicIndices")]
     pub dynamic_indices: Vec<Value<'a>>,
     #[attr(name = "rawConstantIndices", dense = "i32")]
     pub raw_constant_indices: Attribute<'a>,
-    #[attr(name = "elem_type")]
+    #[attr]
     pub elem_type: Attribute<'a>,
     #[attr(name = "noWrapFlags", int = "i32", default = "0", bits = "/|/none=0;inbounds_flag=1;nusw=2;nuw=4;inbounds=3")]
     pub no_wrap_flags: Option<Attribute<'a>>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "dynamicIndices_ty")]
+    #[dtype]
     pub dynamic_indices_ty: Vec<Type<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.get.active.lane.mask", format = "$base `,` $n attr-dict `:` type($base) `,` type($n) `to` type($res)", results(res))]
 pub struct GetActiveLaneMaskOp<'a> {
-    #[slot(base_ty, name = "base")]
+    #[slot(base_ty)]
     pub base: Value<'a>,
-    #[slot(n_ty, name = "n")]
+    #[slot(n_ty)]
     pub n: Value<'a>,
-    #[dtype(name = "base_ty")]
+    #[dtype]
     pub base_ty: Type<'a>,
-    #[dtype(name = "n_ty")]
+    #[dtype]
     pub n_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -1653,11 +1653,11 @@ pub struct GetActiveLaneMaskOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.global_ctors", format = "`ctors` `=` $ctors `,` `priorities` `=` $priorities `,` `data` `=` $data attr-dict")]
 pub struct GlobalCtorsOp<'a> {
-    #[attr(name = "ctors")]
+    #[attr]
     pub ctors: Attribute<'a>,
-    #[attr(name = "priorities")]
+    #[attr]
     pub priorities: Attribute<'a>,
-    #[attr(name = "data")]
+    #[attr]
     pub data: Attribute<'a>,
 }
 
@@ -1682,11 +1682,11 @@ pub struct GlobalCtorsOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.global_dtors", format = "`dtors` `=` $dtors `,` `priorities` `=` $priorities `,` `data` `=` $data attr-dict")]
 pub struct GlobalDtorsOp<'a> {
-    #[attr(name = "dtors")]
+    #[attr]
     pub dtors: Attribute<'a>,
-    #[attr(name = "priorities")]
+    #[attr]
     pub priorities: Attribute<'a>,
-    #[attr(name = "data")]
+    #[attr]
     pub data: Attribute<'a>,
 }
 
@@ -1803,57 +1803,57 @@ pub struct GlobalDtorsOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.mlir.global", generic)]
+#[mlir::op("llvm.mlir.global")]
 pub struct GlobalOp<'a> {
-    #[attr(name = "global_type")]
+    #[attr]
     pub global_type: Attribute<'a>,
-    #[attr(name = "constant")]
+    #[attr]
     pub constant: bool,
-    #[attr(name = "sym_name")]
+    #[attr]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "linkage", dialect = "llvm.linkage")]
+    #[attr(dialect = "llvm.linkage")]
     pub linkage: Attribute<'a>,
-    #[attr(name = "dso_local")]
+    #[attr]
     pub dso_local: bool,
-    #[attr(name = "thread_local_")]
+    #[attr]
     pub thread_local_: bool,
-    #[attr(name = "externally_initialized")]
+    #[attr]
     pub externally_initialized: bool,
-    #[attr(name = "value")]
+    #[attr]
     pub value: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "addr_space", int = "i32", default = "0")]
+    #[attr(int = "i32", default = "0")]
     pub addr_space: Option<Attribute<'a>>,
-    #[attr(name = "unnamed_addr", int = "i64")]
+    #[attr(int = "i64")]
     pub unnamed_addr: Option<UnnamedAddr>,
-    #[attr(name = "section")]
+    #[attr]
     pub section: Option<Attribute<'a>>,
-    #[attr(name = "comdat")]
+    #[attr]
     pub comdat: Option<Attribute<'a>>,
-    #[attr(name = "dbg_exprs")]
+    #[attr]
     pub dbg_exprs: Option<Attribute<'a>>,
-    #[attr(name = "visibility_", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub visibility_: Option<Visibility>,
-    #[attr(name = "target_specific_attrs")]
+    #[attr]
     pub target_specific_attrs: Option<Attribute<'a>>,
-    #[region(name = "initializer")]
+    #[region]
     pub initializer: Region<'a>,
 }
 
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.icmp", generic, results(res))]
+#[mlir::op("llvm.icmp", results(res))]
 pub struct ICmpOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(lhs_ty, name = "rhs")]
+    #[slot(lhs_ty)]
     pub rhs: Value<'a>,
-    #[attr(name = "predicate", int = "i64")]
+    #[attr(int = "i64")]
     pub predicate: ICmpPredicate,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "res", i1 = lhs_ty)]
+    #[dtype(i1 = lhs_ty)]
     pub res: Type<'a>,
 }
 
@@ -1891,25 +1891,25 @@ pub struct ICmpOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<LLVMLinkage>`).
-#[mlir::op("llvm.mlir.ifunc", generic)]
+#[mlir::op("llvm.mlir.ifunc")]
 pub struct IFuncOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "i_func_type")]
+    #[attr]
     pub i_func_type: Attribute<'a>,
-    #[attr(name = "resolver")]
+    #[attr]
     pub resolver: Attribute<'a>,
-    #[attr(name = "resolver_type")]
+    #[attr]
     pub resolver_type: Attribute<'a>,
-    #[attr(name = "linkage", dialect = "llvm.linkage")]
+    #[attr(dialect = "llvm.linkage")]
     pub linkage: Attribute<'a>,
-    #[attr(name = "dso_local")]
+    #[attr]
     pub dso_local: bool,
-    #[attr(name = "address_space", int = "i32", default = "0")]
+    #[attr(int = "i32", default = "0")]
     pub address_space: Option<Attribute<'a>>,
-    #[attr(name = "unnamed_addr", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub unnamed_addr: Option<UnnamedAddr>,
-    #[attr(name = "visibility_", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub visibility_: Option<Visibility>,
 }
 
@@ -1944,19 +1944,19 @@ pub struct IFuncOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<IndirectBrOpSucessors>`).
-#[mlir::op("llvm.indirectbr", generic)]
+#[mlir::op("llvm.indirectbr")]
 pub struct IndirectBrOp<'a> {
-    #[slot(addr_ty, name = "addr")]
+    #[slot(addr_ty)]
     pub addr: Value<'a>,
     #[slot(succ_operands_ty, name = "succOperands")]
     pub succ_operands: Vec<Value<'a>>,
-    #[attr(name = "indbr_operand_segments", dense = "i32")]
+    #[attr(dense = "i32")]
     pub indbr_operand_segments: Attribute<'a>,
-    #[successor(name = "successors")]
+    #[successor]
     pub successors: Vec<Str<'a>>,
-    #[dtype(name = "addr_ty")]
+    #[dtype]
     pub addr_ty: Type<'a>,
-    #[dtype(name = "succOperands_ty")]
+    #[dtype]
     pub succ_operands_ty: Vec<Type<'a>>,
 }
 
@@ -1972,169 +1972,169 @@ pub struct IndirectBrOp<'a> {
 /// since it isn't supported by LLVM's inline asm.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.inline_asm", generic, results(res))]
+#[mlir::op("llvm.inline_asm", results(res))]
 pub struct InlineAsmOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[attr(name = "asm_string")]
+    #[attr]
     pub asm_string: Attribute<'a>,
-    #[attr(name = "constraints")]
+    #[attr]
     pub constraints: Attribute<'a>,
-    #[attr(name = "has_side_effects")]
+    #[attr]
     pub has_side_effects: bool,
-    #[attr(name = "is_align_stack")]
+    #[attr]
     pub is_align_stack: bool,
-    #[attr(name = "tail_call_kind", dialect = "llvm.tailcallkind", default = "<none>")]
+    #[attr(dialect = "llvm.tailcallkind", default = "<none>")]
     pub tail_call_kind: Option<Attribute<'a>>,
-    #[attr(name = "asm_dialect")]
+    #[attr]
     pub asm_dialect: Option<Attribute<'a>>,
-    #[attr(name = "operand_attrs")]
+    #[attr]
     pub operand_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Vec<Type<'a>>,
 }
 
 /// `llvm.insertelement`: Insert an element into an LLVM vector.
 #[mlir::op("llvm.insertelement", format = "$value `,` $vector `[` $position `:` type($position) `]` attr-dict `:` type($vector)", results(res))]
 pub struct InsertElementOp<'a> {
-    #[slot(res, name = "vector")]
+    #[slot(res)]
     pub vector: Value<'a>,
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(position_ty, name = "position")]
+    #[slot(position_ty)]
     pub position: Value<'a>,
-    #[dtype(name = "value_ty", el = res)]
+    #[dtype(el = res)]
     pub value_ty: Type<'a>,
-    #[dtype(name = "position_ty")]
+    #[dtype]
     pub position_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 /// `llvm.insertvalue`: Insert a value into an LLVM struct.
 ///
 /// Generic form only (directive `custom<InsertExtractValueElementType>`).
-#[mlir::op("llvm.insertvalue", generic, results(res))]
+#[mlir::op("llvm.insertvalue", results(res))]
 pub struct InsertValueOp<'a> {
-    #[slot(res, name = "container")]
+    #[slot(res)]
     pub container: Value<'a>,
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[attr(name = "position", dense = "i64")]
+    #[attr(dense = "i64")]
     pub position: Attribute<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.inttoptr", format = "$arg (`dereferenceable` `` $dereferenceable^)? attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct IntToPtrOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[attr(name = "dereferenceable", dialect = "llvm.dereferenceable")]
+    #[attr(dialect = "llvm.dereferenceable")]
     pub dereferenceable: Option<Attribute<'a>>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.invariant.end", format = "$start `,` $size `,` $ptr attr-dict `:` qualified(type($ptr))")]
 pub struct InvariantEndOp<'a> {
-    #[slot(start_ty, name = "start")]
+    #[slot(start_ty)]
     pub start: Value<'a>,
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[attr(name = "size", int = "i64")]
+    #[attr(int = "i64")]
     pub size: Attribute<'a>,
-    #[dtype(name = "start_ty", is = "!llvm.ptr")]
+    #[dtype(is = "!llvm.ptr")]
     pub start_ty: Type<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.invariant.start", format = "$size `,` $ptr attr-dict `:` qualified(type($ptr))", results(res))]
 pub struct InvariantStartOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[attr(name = "size", int = "i64")]
+    #[attr(int = "i64")]
     pub size: Attribute<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "res", is = "!llvm.ptr")]
+    #[dtype(is = "!llvm.ptr")]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.invoke", generic, results(result))]
+#[mlir::op("llvm.invoke", results(result))]
 pub struct InvokeOp<'a> {
-    #[slot(callee_operands_ty, name = "callee_operands")]
+    #[slot(callee_operands_ty)]
     pub callee_operands: Vec<Value<'a>>,
     #[slot(normal_dest_operands_ty, name = "normalDestOperands")]
     pub normal_dest_operands: Vec<Value<'a>>,
     #[slot(unwind_dest_operands_ty, name = "unwindDestOperands")]
     pub unwind_dest_operands: Vec<Value<'a>>,
-    #[slot(op_bundle_operands_ty, name = "op_bundle_operands")]
+    #[slot(op_bundle_operands_ty)]
     pub op_bundle_operands: Vec<Value<'a>>,
-    #[attr(name = "var_callee_type")]
+    #[attr]
     pub var_callee_type: Option<Attribute<'a>>,
-    #[attr(name = "callee")]
+    #[attr]
     pub callee: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "branch_weights", dense = "i32")]
+    #[attr(dense = "i32")]
     pub branch_weights: Option<Attribute<'a>>,
     #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
     pub c_conv: Option<Attribute<'a>>,
-    #[attr(name = "op_bundle_sizes", dense = "i32")]
+    #[attr(dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
-    #[attr(name = "op_bundle_tags")]
+    #[attr]
     pub op_bundle_tags: Option<Attribute<'a>>,
     #[successor(name = "normalDest")]
     pub normal_dest: Str<'a>,
     #[successor(name = "unwindDest")]
     pub unwind_dest: Str<'a>,
-    #[dtype(name = "callee_operands_ty")]
+    #[dtype]
     pub callee_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "normalDestOperands_ty")]
+    #[dtype]
     pub normal_dest_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "unwindDestOperands_ty")]
+    #[dtype]
     pub unwind_dest_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "op_bundle_operands_ty")]
+    #[dtype]
     pub op_bundle_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Vec<Type<'a>>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.is.constant", generic, results(res))]
+#[mlir::op("llvm.intr.is.constant", results(res))]
 pub struct IsConstantOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res", is = i1)]
+    #[dtype(is = i1)]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.is.fpclass", generic, results(res))]
+#[mlir::op("llvm.intr.is.fpclass", results(res))]
 pub struct IsFPClass<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[attr(name = "bit", int = "i32")]
+    #[attr(int = "i32")]
     pub bit: Attribute<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2167,165 +2167,165 @@ pub struct IsFPClass<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.func", generic)]
+#[mlir::op("llvm.func")]
 pub struct LLVMFuncOp<'a> {
-    #[attr(name = "sym_name")]
+    #[attr]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
-    #[attr(name = "function_type")]
+    #[attr]
     pub function_type: Attribute<'a>,
-    #[attr(name = "linkage", dialect = "llvm.linkage", default = "<external>")]
+    #[attr(dialect = "llvm.linkage", default = "<external>")]
     pub linkage: Option<Attribute<'a>>,
-    #[attr(name = "dso_local")]
+    #[attr]
     pub dso_local: bool,
     #[attr(name = "CConv", dialect = "llvm.cconv", default = "<ccc>")]
     pub c_conv: Option<Attribute<'a>>,
-    #[attr(name = "comdat")]
+    #[attr]
     pub comdat: Option<Attribute<'a>>,
-    #[attr(name = "convergent")]
+    #[attr]
     pub convergent: bool,
-    #[attr(name = "personality")]
+    #[attr]
     pub personality: Option<Attribute<'a>>,
     #[attr(name = "garbageCollector")]
     pub garbage_collector: Option<Attribute<'a>>,
-    #[attr(name = "passthrough")]
+    #[attr]
     pub passthrough: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(name = "function_entry_count", int = "i64")]
+    #[attr(int = "i64")]
     pub function_entry_count: Option<Attribute<'a>>,
-    #[attr(name = "memory_effects", dialect = "llvm.memory_effects")]
+    #[attr(dialect = "llvm.memory_effects")]
     pub memory_effects: Option<Attribute<'a>>,
-    #[attr(name = "visibility_", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub visibility_: Option<Visibility>,
-    #[attr(name = "arm_streaming")]
+    #[attr]
     pub arm_streaming: bool,
-    #[attr(name = "arm_locally_streaming")]
+    #[attr]
     pub arm_locally_streaming: bool,
-    #[attr(name = "arm_streaming_compatible")]
+    #[attr]
     pub arm_streaming_compatible: bool,
-    #[attr(name = "arm_new_za")]
+    #[attr]
     pub arm_new_za: bool,
-    #[attr(name = "arm_in_za")]
+    #[attr]
     pub arm_in_za: bool,
-    #[attr(name = "arm_out_za")]
+    #[attr]
     pub arm_out_za: bool,
-    #[attr(name = "arm_inout_za")]
+    #[attr]
     pub arm_inout_za: bool,
-    #[attr(name = "arm_preserves_za")]
+    #[attr]
     pub arm_preserves_za: bool,
-    #[attr(name = "section")]
+    #[attr]
     pub section: Option<Attribute<'a>>,
-    #[attr(name = "unnamed_addr", int = "i64")]
+    #[attr(int = "i64")]
     pub unnamed_addr: Option<UnnamedAddr>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "vscale_range", dialect = "llvm.vscale_range")]
+    #[attr(dialect = "llvm.vscale_range")]
     pub vscale_range: Option<Attribute<'a>>,
-    #[attr(name = "frame_pointer", dialect = "llvm.framePointerKind")]
+    #[attr(dialect = "llvm.framePointerKind")]
     pub frame_pointer: Option<Attribute<'a>>,
-    #[attr(name = "target_cpu")]
+    #[attr]
     pub target_cpu: Option<Attribute<'a>>,
-    #[attr(name = "tune_cpu")]
+    #[attr]
     pub tune_cpu: Option<Attribute<'a>>,
-    #[attr(name = "reciprocal_estimates")]
+    #[attr]
     pub reciprocal_estimates: Option<Attribute<'a>>,
-    #[attr(name = "prefer_vector_width")]
+    #[attr]
     pub prefer_vector_width: Option<Attribute<'a>>,
-    #[attr(name = "target_features", dialect = "llvm.target_features")]
+    #[attr(dialect = "llvm.target_features")]
     pub target_features: Option<Attribute<'a>>,
-    #[attr(name = "no_infs_fp_math")]
+    #[attr]
     pub no_infs_fp_math: Option<Attribute<'a>>,
-    #[attr(name = "no_nans_fp_math")]
+    #[attr]
     pub no_nans_fp_math: Option<Attribute<'a>>,
-    #[attr(name = "no_signed_zeros_fp_math")]
+    #[attr]
     pub no_signed_zeros_fp_math: Option<Attribute<'a>>,
-    #[attr(name = "denormal_fp_math")]
+    #[attr]
     pub denormal_fp_math: Option<Attribute<'a>>,
-    #[attr(name = "denormal_fp_math_f32")]
+    #[attr]
     pub denormal_fp_math_f32: Option<Attribute<'a>>,
-    #[attr(name = "fp_contract")]
+    #[attr]
     pub fp_contract: Option<Attribute<'a>>,
-    #[attr(name = "instrument_function_entry")]
+    #[attr]
     pub instrument_function_entry: Option<Attribute<'a>>,
-    #[attr(name = "instrument_function_exit")]
+    #[attr]
     pub instrument_function_exit: Option<Attribute<'a>>,
-    #[attr(name = "no_inline")]
+    #[attr]
     pub no_inline: bool,
-    #[attr(name = "always_inline")]
+    #[attr]
     pub always_inline: bool,
-    #[attr(name = "inline_hint")]
+    #[attr]
     pub inline_hint: bool,
-    #[attr(name = "no_unwind")]
+    #[attr]
     pub no_unwind: bool,
-    #[attr(name = "will_return")]
+    #[attr]
     pub will_return: bool,
-    #[attr(name = "optimize_none")]
+    #[attr]
     pub optimize_none: bool,
-    #[attr(name = "vec_type_hint", dialect = "llvm.vec_type_hint")]
+    #[attr(dialect = "llvm.vec_type_hint")]
     pub vec_type_hint: Option<Attribute<'a>>,
-    #[attr(name = "work_group_size_hint", dense = "i32")]
+    #[attr(dense = "i32")]
     pub work_group_size_hint: Option<Attribute<'a>>,
-    #[attr(name = "reqd_work_group_size", dense = "i32")]
+    #[attr(dense = "i32")]
     pub reqd_work_group_size: Option<Attribute<'a>>,
-    #[attr(name = "intel_reqd_sub_group_size", int = "i32")]
+    #[attr(int = "i32")]
     pub intel_reqd_sub_group_size: Option<Attribute<'a>>,
-    #[attr(name = "uwtable_kind", dialect = "llvm.uwtableKind")]
+    #[attr(dialect = "llvm.uwtableKind")]
     pub uwtable_kind: Option<Attribute<'a>>,
-    #[region(name = "body")]
+    #[region]
     pub body: Region<'a>,
 }
 
 #[mlir::op("llvm.lshr", format = "(`exact` $isExact^)? $lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct LShrOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("llvm.landingpad", generic, results(res))]
+#[mlir::op("llvm.landingpad", results(res))]
 pub struct LandingpadOp<'a> {
-    #[slot(operand_ty, name = "operand")]
+    #[slot(operand_ty)]
     pub operand: Vec<Value<'a>>,
-    #[attr(name = "cleanup")]
+    #[attr]
     pub cleanup: bool,
-    #[dtype(name = "operand_ty")]
+    #[dtype]
     pub operand_ty: Vec<Type<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.launder.invariant.group", format = "$ptr attr-dict `:` qualified(type($ptr))", results(res))]
 pub struct LaunderInvariantGroupOp<'a> {
-    #[slot(res, name = "ptr")]
+    #[slot(res)]
     pub ptr: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.lifetime.end", format = "$ptr attr-dict `:` qualified(type($ptr))")]
 pub struct LifetimeEndOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.lifetime.start", format = "$ptr attr-dict `:` qualified(type($ptr))")]
 pub struct LifetimeStartOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
 }
 
@@ -2345,49 +2345,49 @@ pub struct LifetimeStartOp<'a> {
 /// ```
 #[mlir::op("llvm.linker_options", format = "$options attr-dict")]
 pub struct LinkerOptionsOp<'a> {
-    #[attr(name = "options")]
+    #[attr]
     pub options: Attribute<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.llrint", generic, results(res))]
+#[mlir::op("llvm.intr.llrint", results(res))]
 pub struct LlrintOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.llround", generic, results(res))]
+#[mlir::op("llvm.intr.llround", results(res))]
 pub struct LlroundOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ldexp", generic, results(res))]
+#[mlir::op("llvm.intr.ldexp", results(res))]
 pub struct LoadExpOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(power_ty, name = "power")]
+    #[slot(power_ty)]
     pub power: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "power_ty")]
+    #[dtype]
     pub power_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2416,425 +2416,425 @@ pub struct LoadExpOp<'a> {
 /// https://llvm.org/docs/LangRef.html#load-instruction
 #[mlir::op("llvm.load", format = "(`volatile` $volatile_^)? $addr (`atomic` (`syncscope` `(` $syncscope^ `)`)? $ordering^)? (`invariant` $invariant^)? (`invariant_group` $invariantGroup^)? (`dereferenceable` `` $dereferenceable^)? attr-dict `:` qualified(type($addr)) `->` type($res)", results(res))]
 pub struct LoadOp<'a> {
-    #[slot(addr_ty, name = "addr")]
+    #[slot(addr_ty)]
     pub addr: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "volatile_")]
+    #[attr]
     pub volatile_: bool,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: bool,
-    #[attr(name = "invariant")]
+    #[attr]
     pub invariant: bool,
     #[attr(name = "invariantGroup")]
     pub invariant_group: bool,
-    #[attr(name = "ordering", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub ordering: Option<AtomicOrdering>,
-    #[attr(name = "syncscope")]
+    #[attr]
     pub syncscope: Option<Attribute<'a>>,
-    #[attr(name = "dereferenceable", dialect = "llvm.dereferenceable")]
+    #[attr(dialect = "llvm.dereferenceable")]
     pub dereferenceable: Option<Attribute<'a>>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(name = "addr_ty")]
+    #[dtype]
     pub addr_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.log10", generic, results(res))]
+#[mlir::op("llvm.intr.log10", results(res))]
 pub struct Log10Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.log2", generic, results(res))]
+#[mlir::op("llvm.intr.log2", results(res))]
 pub struct Log2Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.log", generic, results(res))]
+#[mlir::op("llvm.intr.log", results(res))]
 pub struct LogOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.lrint", generic, results(res))]
+#[mlir::op("llvm.intr.lrint", results(res))]
 pub struct LrintOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.lround", generic, results(res))]
+#[mlir::op("llvm.intr.lround", results(res))]
 pub struct LroundOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.masked.load", generic, results(res))]
+#[mlir::op("llvm.intr.masked.load", results(res))]
 pub struct MaskedLoadOp<'a> {
-    #[slot(data_ty, name = "data")]
+    #[slot(data_ty)]
     pub data: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(pass_thru_ty, name = "pass_thru")]
+    #[slot(pass_thru_ty)]
     pub pass_thru: Vec<Value<'a>>,
-    #[attr(name = "alignment", int = "i32")]
+    #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: bool,
-    #[dtype(name = "data_ty")]
+    #[dtype]
     pub data_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "pass_thru_ty")]
+    #[dtype]
     pub pass_thru_ty: Vec<Type<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.masked.store", format = "$value `,` $data `,` $mask attr-dict `:` type($value) `,` type($mask) `into` qualified(type($data))")]
 pub struct MaskedStoreOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(data_ty, name = "data")]
+    #[slot(data_ty)]
     pub data: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[attr(name = "alignment", int = "i32")]
+    #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "data_ty")]
+    #[dtype]
     pub data_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.matrix.column.major.load", format = "$data `,` `<` `stride` `=` $stride `>` attr-dict`:` type($res) `from` qualified(type($data)) `stride` type($stride)", results(res))]
 pub struct MatrixColumnMajorLoadOp<'a> {
-    #[slot(data_ty, name = "data")]
+    #[slot(data_ty)]
     pub data: Value<'a>,
-    #[slot(stride_ty, name = "stride")]
+    #[slot(stride_ty)]
     pub stride: Value<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "rows", int = "i32")]
+    #[attr(int = "i32")]
     pub rows: Attribute<'a>,
-    #[attr(name = "columns", int = "i32")]
+    #[attr(int = "i32")]
     pub columns: Attribute<'a>,
-    #[dtype(name = "data_ty")]
+    #[dtype]
     pub data_ty: Type<'a>,
-    #[dtype(name = "stride_ty")]
+    #[dtype]
     pub stride_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.matrix.column.major.store", format = "$matrix `,` $data `,` `<` `stride` `=` $stride `>` attr-dict`:` type($matrix) `to` qualified(type($data)) `stride` type($stride)")]
 pub struct MatrixColumnMajorStoreOp<'a> {
-    #[slot(matrix_ty, name = "matrix")]
+    #[slot(matrix_ty)]
     pub matrix: Value<'a>,
-    #[slot(data_ty, name = "data")]
+    #[slot(data_ty)]
     pub data: Value<'a>,
-    #[slot(stride_ty, name = "stride")]
+    #[slot(stride_ty)]
     pub stride: Value<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "rows", int = "i32")]
+    #[attr(int = "i32")]
     pub rows: Attribute<'a>,
-    #[attr(name = "columns", int = "i32")]
+    #[attr(int = "i32")]
     pub columns: Attribute<'a>,
-    #[dtype(name = "matrix_ty")]
+    #[dtype]
     pub matrix_ty: Type<'a>,
-    #[dtype(name = "data_ty")]
+    #[dtype]
     pub data_ty: Type<'a>,
-    #[dtype(name = "stride_ty")]
+    #[dtype]
     pub stride_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.matrix.multiply", format = "$lhs `,` $rhs attr-dict `:` `(` type($lhs) `,` type($rhs) `)` `->` type($res)", results(res))]
 pub struct MatrixMultiplyOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[attr(name = "lhs_rows", int = "i32")]
+    #[attr(int = "i32")]
     pub lhs_rows: Attribute<'a>,
-    #[attr(name = "lhs_columns", int = "i32")]
+    #[attr(int = "i32")]
     pub lhs_columns: Attribute<'a>,
-    #[attr(name = "rhs_columns", int = "i32")]
+    #[attr(int = "i32")]
     pub rhs_columns: Attribute<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.matrix.transpose", format = "$matrix attr-dict `:` type($matrix) `into` type($res)", results(res))]
 pub struct MatrixTransposeOp<'a> {
-    #[slot(matrix_ty, name = "matrix")]
+    #[slot(matrix_ty)]
     pub matrix: Value<'a>,
-    #[attr(name = "rows", int = "i32")]
+    #[attr(int = "i32")]
     pub rows: Attribute<'a>,
-    #[attr(name = "columns", int = "i32")]
+    #[attr(int = "i32")]
     pub columns: Attribute<'a>,
-    #[dtype(name = "matrix_ty")]
+    #[dtype]
     pub matrix_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.maxnum", generic, results(res))]
+#[mlir::op("llvm.intr.maxnum", results(res))]
 pub struct MaxNumOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.maximum", generic, results(res))]
+#[mlir::op("llvm.intr.maximum", results(res))]
 pub struct MaximumOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.memcpy.inline", generic)]
+#[mlir::op("llvm.intr.memcpy.inline")]
 pub struct MemcpyInlineOp<'a> {
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr(name = "len")]
+    #[attr]
     pub len: Attribute<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.memcpy", generic)]
+#[mlir::op("llvm.intr.memcpy")]
 pub struct MemcpyOp<'a> {
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(len_ty, name = "len")]
+    #[slot(len_ty)]
     pub len: Value<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "len_ty")]
+    #[dtype]
     pub len_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.memmove", generic)]
+#[mlir::op("llvm.intr.memmove")]
 pub struct MemmoveOp<'a> {
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(len_ty, name = "len")]
+    #[slot(len_ty)]
     pub len: Value<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "len_ty")]
+    #[dtype]
     pub len_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.memset.inline", generic)]
+#[mlir::op("llvm.intr.memset.inline")]
 pub struct MemsetInlineOp<'a> {
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[attr(name = "len")]
+    #[attr]
     pub len: Attribute<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "val_ty", is = i8)]
+    #[dtype(is = i8)]
     pub val_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.memset", generic)]
+#[mlir::op("llvm.intr.memset")]
 pub struct MemsetOp<'a> {
-    #[slot(dst_ty, name = "dst")]
+    #[slot(dst_ty)]
     pub dst: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(len_ty, name = "len")]
+    #[slot(len_ty)]
     pub len: Value<'a>,
     #[attr(name = "isVolatile", int = "i1")]
     pub is_volatile: Attribute<'a>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "dst_ty")]
+    #[dtype]
     pub dst_ty: Type<'a>,
-    #[dtype(name = "val_ty", is = i8)]
+    #[dtype(is = i8)]
     pub val_ty: Type<'a>,
-    #[dtype(name = "len_ty")]
+    #[dtype]
     pub len_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.minnum", generic, results(res))]
+#[mlir::op("llvm.intr.minnum", results(res))]
 pub struct MinNumOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.minimum", generic, results(res))]
+#[mlir::op("llvm.intr.minimum", results(res))]
 pub struct MinimumOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2853,37 +2853,37 @@ pub struct MinimumOp<'a> {
 /// ```
 #[mlir::op("llvm.module_flags", format = "$flags attr-dict")]
 pub struct ModuleFlagsOp<'a> {
-    #[attr(name = "flags")]
+    #[attr]
     pub flags: Attribute<'a>,
 }
 
 #[mlir::op("llvm.mul", format = "$lhs `,` $rhs ($overflowFlags^)? attr-dict `:` type($res)", results(res))]
 pub struct MulOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.nearbyint", generic, results(res))]
+#[mlir::op("llvm.intr.nearbyint", results(res))]
 pub struct NearbyintOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.experimental.noalias.scope.decl", format = "$scope attr-dict")]
 pub struct NoAliasScopeDeclOp<'a> {
-    #[attr(name = "scope", dialect = "llvm.alias_scope")]
+    #[attr(dialect = "llvm.alias_scope")]
     pub scope: Attribute<'a>,
 }
 
@@ -2901,19 +2901,19 @@ pub struct NoAliasScopeDeclOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.none", format = "attr-dict `:` type($res)", results(res))]
 pub struct NoneTokenOp<'a> {
-    #[dtype(name = "res", is = "!llvm.token")]
+    #[dtype(is = "!llvm.token")]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.or", format = "(`disjoint` $isDisjoint^)? $lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct OrOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "isDisjoint")]
     pub is_disjoint: bool,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -2933,333 +2933,333 @@ pub struct OrOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.poison", format = "attr-dict `:` type($res)", results(res))]
 pub struct PoisonOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.powi", generic, results(res))]
+#[mlir::op("llvm.intr.powi", results(res))]
 pub struct PowIOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(power_ty, name = "power")]
+    #[slot(power_ty)]
     pub power: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "power_ty")]
+    #[dtype]
     pub power_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.pow", generic, results(res))]
+#[mlir::op("llvm.intr.pow", results(res))]
 pub struct PowOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.prefetch", generic)]
+#[mlir::op("llvm.intr.prefetch")]
 pub struct Prefetch<'a> {
-    #[slot(addr_ty, name = "addr")]
+    #[slot(addr_ty)]
     pub addr: Value<'a>,
-    #[attr(name = "rw", int = "i32")]
+    #[attr(int = "i32")]
     pub rw: Attribute<'a>,
-    #[attr(name = "hint", int = "i32")]
+    #[attr(int = "i32")]
     pub hint: Attribute<'a>,
-    #[attr(name = "cache", int = "i32")]
+    #[attr(int = "i32")]
     pub cache: Attribute<'a>,
-    #[dtype(name = "addr_ty")]
+    #[dtype]
     pub addr_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.ptr.annotation", generic, results(res))]
+#[mlir::op("llvm.intr.ptr.annotation", results(res))]
 pub struct PtrAnnotation<'a> {
-    #[slot(res, name = "ptr")]
+    #[slot(res)]
     pub ptr: Value<'a>,
-    #[slot(annotation_ty, name = "annotation")]
+    #[slot(annotation_ty)]
     pub annotation: Value<'a>,
     #[slot(annotation_ty, name = "fileName")]
     pub file_name: Value<'a>,
-    #[slot(line_ty, name = "line")]
+    #[slot(line_ty)]
     pub line: Value<'a>,
-    #[slot(annotation_ty, name = "attr")]
+    #[slot(annotation_ty)]
     pub attr: Value<'a>,
-    #[dtype(name = "annotation_ty")]
+    #[dtype]
     pub annotation_ty: Type<'a>,
-    #[dtype(name = "line_ty", is = i32)]
+    #[dtype(is = i32)]
     pub line_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.ptrmask", generic, results(res))]
+#[mlir::op("llvm.intr.ptrmask", results(res))]
 pub struct PtrMaskOp<'a> {
-    #[slot(res, name = "ptr")]
+    #[slot(res)]
     pub ptr: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.ptrtoint", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct PtrToIntOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.resume", format = "$value attr-dict `:` type($value)")]
 pub struct ResumeOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.return", format = "attr-dict ($arg^ `:` type($arg))?")]
 pub struct ReturnOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Vec<Value<'a>>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Vec<Type<'a>>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.rint", generic, results(res))]
+#[mlir::op("llvm.intr.rint", results(res))]
 pub struct RintOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.roundeven", generic, results(res))]
+#[mlir::op("llvm.intr.roundeven", results(res))]
 pub struct RoundEvenOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.round", generic, results(res))]
+#[mlir::op("llvm.intr.round", results(res))]
 pub struct RoundOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sadd.sat", generic, results(res))]
+#[mlir::op("llvm.intr.sadd.sat", results(res))]
 pub struct SAddSat<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.sadd.with.overflow", generic, results(res))]
+#[mlir::op("llvm.intr.sadd.with.overflow", results(res))]
 pub struct SAddWithOverflowOp<'a> {
-    #[slot(operand0_ty, name = "operand0")]
+    #[slot(operand0_ty)]
     pub operand0: Value<'a>,
-    #[slot(operand1_ty, name = "operand1")]
+    #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype(name = "operand0_ty")]
+    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype(name = "operand1_ty")]
+    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.scmp", generic, results(res))]
+#[mlir::op("llvm.intr.scmp", results(res))]
 pub struct SCmpOp<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[slot(a_ty, name = "b")]
+    #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.sdiv", format = "(`exact` $isExact^)? $lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct SDivOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.sext", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct SExtOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.sitofp", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct SIToFPOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.smax", generic, results(res))]
+#[mlir::op("llvm.intr.smax", results(res))]
 pub struct SMaxOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.smin", generic, results(res))]
+#[mlir::op("llvm.intr.smin", results(res))]
 pub struct SMinOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.smul.with.overflow", generic, results(res))]
+#[mlir::op("llvm.intr.smul.with.overflow", results(res))]
 pub struct SMulWithOverflowOp<'a> {
-    #[slot(operand0_ty, name = "operand0")]
+    #[slot(operand0_ty)]
     pub operand0: Value<'a>,
-    #[slot(operand1_ty, name = "operand1")]
+    #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype(name = "operand0_ty")]
+    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype(name = "operand1_ty")]
+    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.srem", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct SRemOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.ssa.copy", format = "$operand attr-dict `:` type($operand)", results(res))]
 pub struct SSACopyOp<'a> {
-    #[slot(res, name = "operand")]
+    #[slot(res)]
     pub operand: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sshl.sat", generic, results(res))]
+#[mlir::op("llvm.intr.sshl.sat", results(res))]
 pub struct SSHLSat<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ssub.sat", generic, results(res))]
+#[mlir::op("llvm.intr.ssub.sat", results(res))]
 pub struct SSubSat<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.ssub.with.overflow", generic, results(res))]
+#[mlir::op("llvm.intr.ssub.with.overflow", results(res))]
 pub struct SSubWithOverflowOp<'a> {
-    #[slot(operand0_ty, name = "operand0")]
+    #[slot(operand0_ty)]
     pub operand0: Value<'a>,
-    #[slot(operand1_ty, name = "operand1")]
+    #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype(name = "operand0_ty")]
+    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype(name = "operand1_ty")]
+    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.select", generic, results(res))]
+#[mlir::op("llvm.select", results(res))]
 pub struct SelectOp<'a> {
-    #[slot(condition_ty, name = "condition")]
+    #[slot(condition_ty)]
     pub condition: Value<'a>,
     #[slot(res, name = "trueValue")]
     pub true_value: Value<'a>,
@@ -3267,108 +3267,108 @@ pub struct SelectOp<'a> {
     pub false_value: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "condition_ty")]
+    #[dtype]
     pub condition_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.shl", format = "$lhs `,` $rhs ($overflowFlags^)? attr-dict `:` type($res)", results(res))]
 pub struct ShlOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 /// `llvm.shufflevector`: Construct a permutation of two vectors.
 ///
 /// Generic form only (directive `custom<ShuffleType>`).
-#[mlir::op("llvm.shufflevector", generic, results(res))]
+#[mlir::op("llvm.shufflevector", results(res))]
 pub struct ShuffleVectorOp<'a> {
-    #[slot(v1_ty, name = "v1")]
+    #[slot(v1_ty)]
     pub v1: Value<'a>,
-    #[slot(v1_ty, name = "v2")]
+    #[slot(v1_ty)]
     pub v2: Value<'a>,
-    #[attr(name = "mask", dense = "i32")]
+    #[attr(dense = "i32")]
     pub mask: Attribute<'a>,
-    #[dtype(name = "v1_ty")]
+    #[dtype]
     pub v1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sin", generic, results(res))]
+#[mlir::op("llvm.intr.sin", results(res))]
 pub struct SinOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sincos", generic, results(res))]
+#[mlir::op("llvm.intr.sincos", results(res))]
 pub struct SincosOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sinh", generic, results(res))]
+#[mlir::op("llvm.intr.sinh", results(res))]
 pub struct SinhOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sqrt", generic, results(res))]
+#[mlir::op("llvm.intr.sqrt", results(res))]
 pub struct SqrtOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.stackrestore", format = "$ptr attr-dict `:` qualified(type($ptr))")]
 pub struct StackRestoreOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.stacksave", format = "attr-dict `:` qualified(type($res))", results(res))]
 pub struct StackSaveOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.stepvector", format = "attr-dict `:` type($res)", results(res))]
 pub struct StepVectorOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -3397,117 +3397,117 @@ pub struct StepVectorOp<'a> {
 /// https://llvm.org/docs/LangRef.html#store-instruction
 #[mlir::op("llvm.store", format = "(`volatile` $volatile_^)? $value `,` $addr (`atomic` (`syncscope` `(` $syncscope^ `)`)? $ordering^)? (`invariant_group` $invariantGroup^)? attr-dict `:` type($value) `,` qualified(type($addr))")]
 pub struct StoreOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(addr_ty, name = "addr")]
+    #[slot(addr_ty)]
     pub addr: Value<'a>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[attr(name = "volatile_")]
+    #[attr]
     pub volatile_: bool,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: bool,
     #[attr(name = "invariantGroup")]
     pub invariant_group: bool,
-    #[attr(name = "ordering", int = "i64", default = "0")]
+    #[attr(int = "i64", default = "0")]
     pub ordering: Option<AtomicOrdering>,
-    #[attr(name = "syncscope")]
+    #[attr]
     pub syncscope: Option<Attribute<'a>>,
-    #[attr(name = "access_groups")]
+    #[attr]
     pub access_groups: Option<Attribute<'a>>,
-    #[attr(name = "alias_scopes")]
+    #[attr]
     pub alias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "noalias_scopes")]
+    #[attr]
     pub noalias_scopes: Option<Attribute<'a>>,
-    #[attr(name = "tbaa")]
+    #[attr]
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "addr_ty")]
+    #[dtype]
     pub addr_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.strip.invariant.group", format = "$ptr attr-dict `:` qualified(type($ptr))", results(res))]
 pub struct StripInvariantGroupOp<'a> {
-    #[slot(res, name = "ptr")]
+    #[slot(res)]
     pub ptr: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.sub", format = "$lhs `,` $rhs ($overflowFlags^)? attr-dict `:` type($res)", results(res))]
 pub struct SubOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `custom<SwitchOpCases>`).
-#[mlir::op("llvm.switch", generic)]
+#[mlir::op("llvm.switch")]
 pub struct SwitchOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
     #[slot(default_operands_ty, name = "defaultOperands")]
     pub default_operands: Vec<Value<'a>>,
     #[slot(case_operands_ty, name = "caseOperands")]
     pub case_operands: Vec<Value<'a>>,
-    #[attr(name = "case_values")]
+    #[attr]
     pub case_values: Option<Attribute<'a>>,
-    #[attr(name = "case_operand_segments", dense = "i32")]
+    #[attr(dense = "i32")]
     pub case_operand_segments: Attribute<'a>,
-    #[attr(name = "branch_weights", dense = "i32")]
+    #[attr(dense = "i32")]
     pub branch_weights: Option<Attribute<'a>>,
     #[successor(name = "defaultDestination")]
     pub default_destination: Str<'a>,
     #[successor(name = "caseDestinations")]
     pub case_destinations: Vec<Str<'a>>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "defaultOperands_ty")]
+    #[dtype]
     pub default_operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "caseOperands_ty")]
+    #[dtype]
     pub case_operands_ty: Vec<Type<'a>>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.tan", generic, results(res))]
+#[mlir::op("llvm.intr.tan", results(res))]
 pub struct TanOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.tanh", generic, results(res))]
+#[mlir::op("llvm.intr.tanh", results(res))]
 pub struct TanhOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.threadlocal.address", generic, results(res))]
+#[mlir::op("llvm.intr.threadlocal.address", results(res))]
 pub struct ThreadlocalAddressOp<'a> {
-    #[slot(global_ty, name = "global")]
+    #[slot(global_ty)]
     pub global: Value<'a>,
-    #[dtype(name = "global_ty")]
+    #[dtype]
     pub global_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -3517,47 +3517,47 @@ pub struct Trap<'a> {
 
 #[mlir::op("llvm.trunc", format = "$arg ($overflowFlags^)? attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct TruncOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
     #[attr(name = "overflowFlags", int = "i32", default = "0", bits = "overflow/, /none=0;nsw=1;nuw=2")]
     pub overflow_flags: Option<Attribute<'a>>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.uadd.sat", generic, results(res))]
+#[mlir::op("llvm.intr.uadd.sat", results(res))]
 pub struct UAddSat<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.uadd.with.overflow", generic, results(res))]
+#[mlir::op("llvm.intr.uadd.with.overflow", results(res))]
 pub struct UAddWithOverflowOp<'a> {
-    #[slot(operand0_ty, name = "operand0")]
+    #[slot(operand0_ty)]
     pub operand0: Value<'a>,
-    #[slot(operand1_ty, name = "operand1")]
+    #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype(name = "operand0_ty")]
+    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype(name = "operand1_ty")]
+    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `prop-dict`).
-#[mlir::op("llvm.intr.ubsantrap", generic)]
+#[mlir::op("llvm.intr.ubsantrap")]
 pub struct UBSanTrap<'a> {
     #[attr(name = "failureKind", int = "i8")]
     pub failure_kind: Attribute<'a>,
@@ -3565,129 +3565,129 @@ pub struct UBSanTrap<'a> {
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ucmp", generic, results(res))]
+#[mlir::op("llvm.intr.ucmp", results(res))]
 pub struct UCmpOp<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[slot(a_ty, name = "b")]
+    #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.udiv", format = "(`exact` $isExact^)? $lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct UDivOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
     #[attr(name = "isExact")]
     pub is_exact: bool,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.uitofp", format = "(`nneg` $nonNeg^)? $arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct UIToFPOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
     #[attr(name = "nonNeg")]
     pub non_neg: bool,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.umax", generic, results(res))]
+#[mlir::op("llvm.intr.umax", results(res))]
 pub struct UMaxOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.umin", generic, results(res))]
+#[mlir::op("llvm.intr.umin", results(res))]
 pub struct UMinOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.umul.with.overflow", generic, results(res))]
+#[mlir::op("llvm.intr.umul.with.overflow", results(res))]
 pub struct UMulWithOverflowOp<'a> {
-    #[slot(operand0_ty, name = "operand0")]
+    #[slot(operand0_ty)]
     pub operand0: Value<'a>,
-    #[slot(operand1_ty, name = "operand1")]
+    #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype(name = "operand0_ty")]
+    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype(name = "operand1_ty")]
+    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.urem", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct URemOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ushl.sat", generic, results(res))]
+#[mlir::op("llvm.intr.ushl.sat", results(res))]
 pub struct USHLSat<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.usub.sat", generic, results(res))]
+#[mlir::op("llvm.intr.usub.sat", results(res))]
 pub struct USubSat<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.usub.with.overflow", generic, results(res))]
+#[mlir::op("llvm.intr.usub.with.overflow", results(res))]
 pub struct USubWithOverflowOp<'a> {
-    #[slot(operand0_ty, name = "operand0")]
+    #[slot(operand0_ty)]
     pub operand0: Value<'a>,
-    #[slot(operand1_ty, name = "operand1")]
+    #[slot(operand1_ty)]
     pub operand1: Value<'a>,
-    #[dtype(name = "operand0_ty")]
+    #[dtype]
     pub operand0_ty: Type<'a>,
-    #[dtype(name = "operand1_ty")]
+    #[dtype]
     pub operand1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -3706,7 +3706,7 @@ pub struct USubWithOverflowOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.undef", format = "attr-dict `:` type($res)", results(res))]
 pub struct UndefOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -3716,1364 +3716,1364 @@ pub struct UnreachableOp<'a> {
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.ashr", generic, results(res))]
+#[mlir::op("llvm.intr.vp.ashr", results(res))]
 pub struct VPAShrOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.add", generic, results(res))]
+#[mlir::op("llvm.intr.vp.add", results(res))]
 pub struct VPAddOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.and", generic, results(res))]
+#[mlir::op("llvm.intr.vp.and", results(res))]
 pub struct VPAndOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fadd", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fadd", results(res))]
 pub struct VPFAddOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fdiv", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fdiv", results(res))]
 pub struct VPFDivOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fmuladd", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fmuladd", results(res))]
 pub struct VPFMulAddOp<'a> {
-    #[slot(op1_ty, name = "op1")]
+    #[slot(op1_ty)]
     pub op1: Value<'a>,
-    #[slot(op2_ty, name = "op2")]
+    #[slot(op2_ty)]
     pub op2: Value<'a>,
-    #[slot(op3_ty, name = "op3")]
+    #[slot(op3_ty)]
     pub op3: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "op1_ty")]
+    #[dtype]
     pub op1_ty: Type<'a>,
-    #[dtype(name = "op2_ty")]
+    #[dtype]
     pub op2_ty: Type<'a>,
-    #[dtype(name = "op3_ty")]
+    #[dtype]
     pub op3_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fmul", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fmul", results(res))]
 pub struct VPFMulOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fneg", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fneg", results(res))]
 pub struct VPFNegOp<'a> {
-    #[slot(op_ty, name = "op")]
+    #[slot(op_ty)]
     pub op: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "op_ty")]
+    #[dtype]
     pub op_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fpext", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fpext", results(res))]
 pub struct VPFPExtOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fptosi", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fptosi", results(res))]
 pub struct VPFPToSIOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fptoui", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fptoui", results(res))]
 pub struct VPFPToUIOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fptrunc", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fptrunc", results(res))]
 pub struct VPFPTruncOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.frem", generic, results(res))]
+#[mlir::op("llvm.intr.vp.frem", results(res))]
 pub struct VPFRemOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fsub", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fsub", results(res))]
 pub struct VPFSubOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.fma", generic, results(res))]
+#[mlir::op("llvm.intr.vp.fma", results(res))]
 pub struct VPFmaOp<'a> {
-    #[slot(op1_ty, name = "op1")]
+    #[slot(op1_ty)]
     pub op1: Value<'a>,
-    #[slot(op2_ty, name = "op2")]
+    #[slot(op2_ty)]
     pub op2: Value<'a>,
-    #[slot(op3_ty, name = "op3")]
+    #[slot(op3_ty)]
     pub op3: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "op1_ty")]
+    #[dtype]
     pub op1_ty: Type<'a>,
-    #[dtype(name = "op2_ty")]
+    #[dtype]
     pub op2_ty: Type<'a>,
-    #[dtype(name = "op3_ty")]
+    #[dtype]
     pub op3_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.inttoptr", generic, results(res))]
+#[mlir::op("llvm.intr.vp.inttoptr", results(res))]
 pub struct VPIntToPtrOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.lshr", generic, results(res))]
+#[mlir::op("llvm.intr.vp.lshr", results(res))]
 pub struct VPLShrOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.load", generic, results(res))]
+#[mlir::op("llvm.intr.vp.load", results(res))]
 pub struct VPLoadOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.merge", generic, results(res))]
+#[mlir::op("llvm.intr.vp.merge", results(res))]
 pub struct VPMergeMinOp<'a> {
-    #[slot(cond_ty, name = "cond")]
+    #[slot(cond_ty)]
     pub cond: Value<'a>,
-    #[slot(true_val_ty, name = "true_val")]
+    #[slot(true_val_ty)]
     pub true_val: Value<'a>,
-    #[slot(false_val_ty, name = "false_val")]
+    #[slot(false_val_ty)]
     pub false_val: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "cond_ty")]
+    #[dtype]
     pub cond_ty: Type<'a>,
-    #[dtype(name = "true_val_ty")]
+    #[dtype]
     pub true_val_ty: Type<'a>,
-    #[dtype(name = "false_val_ty")]
+    #[dtype]
     pub false_val_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.mul", generic, results(res))]
+#[mlir::op("llvm.intr.vp.mul", results(res))]
 pub struct VPMulOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.or", generic, results(res))]
+#[mlir::op("llvm.intr.vp.or", results(res))]
 pub struct VPOrOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.ptrtoint", generic, results(res))]
+#[mlir::op("llvm.intr.vp.ptrtoint", results(res))]
 pub struct VPPtrToIntOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.add", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.add", results(res))]
 pub struct VPReduceAddOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.and", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.and", results(res))]
 pub struct VPReduceAndOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.fadd", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.fadd", results(res))]
 pub struct VPReduceFAddOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.fmax", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.fmax", results(res))]
 pub struct VPReduceFMaxOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.fmin", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.fmin", results(res))]
 pub struct VPReduceFMinOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.fmul", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.fmul", results(res))]
 pub struct VPReduceFMulOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.mul", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.mul", results(res))]
 pub struct VPReduceMulOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.or", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.or", results(res))]
 pub struct VPReduceOrOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.smax", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.smax", results(res))]
 pub struct VPReduceSMaxOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.smin", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.smin", results(res))]
 pub struct VPReduceSMinOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.umax", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.umax", results(res))]
 pub struct VPReduceUMaxOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.umin", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.umin", results(res))]
 pub struct VPReduceUMinOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.reduce.xor", generic, results(res))]
+#[mlir::op("llvm.intr.vp.reduce.xor", results(res))]
 pub struct VPReduceXorOp<'a> {
-    #[slot(satrt_value_ty, name = "satrt_value")]
+    #[slot(satrt_value_ty)]
     pub satrt_value: Value<'a>,
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "satrt_value_ty")]
+    #[dtype]
     pub satrt_value_ty: Type<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.sdiv", generic, results(res))]
+#[mlir::op("llvm.intr.vp.sdiv", results(res))]
 pub struct VPSDivOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.sext", generic, results(res))]
+#[mlir::op("llvm.intr.vp.sext", results(res))]
 pub struct VPSExtOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.sitofp", generic, results(res))]
+#[mlir::op("llvm.intr.vp.sitofp", results(res))]
 pub struct VPSIToFPOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.smax", generic, results(res))]
+#[mlir::op("llvm.intr.vp.smax", results(res))]
 pub struct VPSMaxOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.smin", generic, results(res))]
+#[mlir::op("llvm.intr.vp.smin", results(res))]
 pub struct VPSMinOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.srem", generic, results(res))]
+#[mlir::op("llvm.intr.vp.srem", results(res))]
 pub struct VPSRemOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.select", generic, results(res))]
+#[mlir::op("llvm.intr.vp.select", results(res))]
 pub struct VPSelectMinOp<'a> {
-    #[slot(cond_ty, name = "cond")]
+    #[slot(cond_ty)]
     pub cond: Value<'a>,
-    #[slot(true_val_ty, name = "true_val")]
+    #[slot(true_val_ty)]
     pub true_val: Value<'a>,
-    #[slot(false_val_ty, name = "false_val")]
+    #[slot(false_val_ty)]
     pub false_val: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "cond_ty")]
+    #[dtype]
     pub cond_ty: Type<'a>,
-    #[dtype(name = "true_val_ty")]
+    #[dtype]
     pub true_val_ty: Type<'a>,
-    #[dtype(name = "false_val_ty")]
+    #[dtype]
     pub false_val_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.shl", generic, results(res))]
+#[mlir::op("llvm.intr.vp.shl", results(res))]
 pub struct VPShlOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.store", generic)]
+#[mlir::op("llvm.intr.vp.store")]
 pub struct VPStoreOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.experimental.vp.strided.load", generic, results(res))]
+#[mlir::op("llvm.intr.experimental.vp.strided.load", results(res))]
 pub struct VPStridedLoadOp<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(stride_ty, name = "stride")]
+    #[slot(stride_ty)]
     pub stride: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "stride_ty")]
+    #[dtype]
     pub stride_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.experimental.vp.strided.store", generic)]
+#[mlir::op("llvm.intr.experimental.vp.strided.store")]
 pub struct VPStridedStoreOp<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(stride_ty, name = "stride")]
+    #[slot(stride_ty)]
     pub stride: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "stride_ty")]
+    #[dtype]
     pub stride_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.sub", generic, results(res))]
+#[mlir::op("llvm.intr.vp.sub", results(res))]
 pub struct VPSubOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.trunc", generic, results(res))]
+#[mlir::op("llvm.intr.vp.trunc", results(res))]
 pub struct VPTruncOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.udiv", generic, results(res))]
+#[mlir::op("llvm.intr.vp.udiv", results(res))]
 pub struct VPUDivOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.uitofp", generic, results(res))]
+#[mlir::op("llvm.intr.vp.uitofp", results(res))]
 pub struct VPUIToFPOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.umax", generic, results(res))]
+#[mlir::op("llvm.intr.vp.umax", results(res))]
 pub struct VPUMaxOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.umin", generic, results(res))]
+#[mlir::op("llvm.intr.vp.umin", results(res))]
 pub struct VPUMinOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.urem", generic, results(res))]
+#[mlir::op("llvm.intr.vp.urem", results(res))]
 pub struct VPURemOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.xor", generic, results(res))]
+#[mlir::op("llvm.intr.vp.xor", results(res))]
 pub struct VPXorOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "lhs_ty")]
+    #[dtype]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty")]
+    #[dtype]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vp.zext", generic, results(res))]
+#[mlir::op("llvm.intr.vp.zext", results(res))]
 pub struct VPZExtOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(evl_ty, name = "evl")]
+    #[slot(evl_ty)]
     pub evl: Value<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "evl_ty", is = i32)]
+    #[dtype(is = i32)]
     pub evl_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.va_arg", format = "$arg attr-dict `:` functional-type($arg, $res)", results(res))]
 pub struct VaArgOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 /// `llvm.intr.vacopy`: Copies the current argument position from `src_list` to `dest_list`.
 ///
 /// Generic form only (directive `operands)`).
-#[mlir::op("llvm.intr.vacopy", generic)]
+#[mlir::op("llvm.intr.vacopy")]
 pub struct VaCopyOp<'a> {
-    #[slot(dest_list_ty, name = "dest_list")]
+    #[slot(dest_list_ty)]
     pub dest_list: Value<'a>,
-    #[slot(src_list_ty, name = "src_list")]
+    #[slot(src_list_ty)]
     pub src_list: Value<'a>,
-    #[dtype(name = "dest_list_ty")]
+    #[dtype]
     pub dest_list_ty: Type<'a>,
-    #[dtype(name = "src_list_ty")]
+    #[dtype]
     pub src_list_ty: Type<'a>,
 }
 
 /// `llvm.intr.vaend`: Destroys `arg_list`, which has been initialized by `intr.vastart` or `intr.vacopy`.
 #[mlir::op("llvm.intr.vaend", format = "$arg_list attr-dict `:` qualified(type($arg_list))")]
 pub struct VaEndOp<'a> {
-    #[slot(arg_list_ty, name = "arg_list")]
+    #[slot(arg_list_ty)]
     pub arg_list: Value<'a>,
-    #[dtype(name = "arg_list_ty")]
+    #[dtype]
     pub arg_list_ty: Type<'a>,
 }
 
 /// `llvm.intr.vastart`: Initializes `arg_list` for subsequent variadic argument extractions.
 #[mlir::op("llvm.intr.vastart", format = "$arg_list attr-dict `:` qualified(type($arg_list))")]
 pub struct VaStartOp<'a> {
-    #[slot(arg_list_ty, name = "arg_list")]
+    #[slot(arg_list_ty)]
     pub arg_list: Value<'a>,
-    #[dtype(name = "arg_list_ty")]
+    #[dtype]
     pub arg_list_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.var.annotation", generic)]
+#[mlir::op("llvm.intr.var.annotation")]
 pub struct VarAnnotation<'a> {
-    #[slot(val_ty, name = "val")]
+    #[slot(val_ty)]
     pub val: Value<'a>,
-    #[slot(annotation_ty, name = "annotation")]
+    #[slot(annotation_ty)]
     pub annotation: Value<'a>,
     #[slot(annotation_ty, name = "fileName")]
     pub file_name: Value<'a>,
-    #[slot(line_ty, name = "line")]
+    #[slot(line_ty)]
     pub line: Value<'a>,
-    #[slot(annotation_ty, name = "attr")]
+    #[slot(annotation_ty)]
     pub attr: Value<'a>,
-    #[dtype(name = "val_ty")]
+    #[dtype]
     pub val_ty: Type<'a>,
-    #[dtype(name = "annotation_ty")]
+    #[dtype]
     pub annotation_ty: Type<'a>,
-    #[dtype(name = "line_ty", is = i32)]
+    #[dtype(is = i32)]
     pub line_ty: Type<'a>,
 }
 
 #[mlir::op("llvm.xor", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
 pub struct XOrOp<'a> {
-    #[slot(res, name = "lhs")]
+    #[slot(res)]
     pub lhs: Value<'a>,
-    #[slot(res, name = "rhs")]
+    #[slot(res)]
     pub rhs: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.zext", format = "(`nneg` $nonNeg^)? $arg attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct ZExtOp<'a> {
-    #[slot(arg_ty, name = "arg")]
+    #[slot(arg_ty)]
     pub arg: Value<'a>,
     #[attr(name = "nonNeg")]
     pub non_neg: bool,
-    #[dtype(name = "arg_ty")]
+    #[dtype]
     pub arg_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -5093,353 +5093,353 @@ pub struct ZExtOp<'a> {
 /// ```
 #[mlir::op("llvm.mlir.zero", format = "attr-dict `:` type($res)", results(res))]
 pub struct ZeroOp<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.masked.compressstore", generic)]
+#[mlir::op("llvm.intr.masked.compressstore")]
 pub struct masked_compressstore<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.masked.expandload", generic, results(res))]
+#[mlir::op("llvm.intr.masked.expandload", results(res))]
 pub struct masked_expandload<'a> {
-    #[slot(ptr_ty, name = "ptr")]
+    #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(passthru_ty, name = "passthru")]
+    #[slot(passthru_ty)]
     pub passthru: Value<'a>,
-    #[attr(name = "arg_attrs")]
+    #[attr]
     pub arg_attrs: Option<Attribute<'a>>,
-    #[attr(name = "res_attrs")]
+    #[attr]
     pub res_attrs: Option<Attribute<'a>>,
-    #[dtype(name = "ptr_ty")]
+    #[dtype]
     pub ptr_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "passthru_ty")]
+    #[dtype]
     pub passthru_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.masked.gather", generic, results(res))]
+#[mlir::op("llvm.intr.masked.gather", results(res))]
 pub struct masked_gather<'a> {
-    #[slot(ptrs_ty, name = "ptrs")]
+    #[slot(ptrs_ty)]
     pub ptrs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[slot(pass_thru_ty, name = "pass_thru")]
+    #[slot(pass_thru_ty)]
     pub pass_thru: Vec<Value<'a>>,
-    #[attr(name = "alignment", int = "i32")]
+    #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
-    #[dtype(name = "ptrs_ty")]
+    #[dtype]
     pub ptrs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
-    #[dtype(name = "pass_thru_ty")]
+    #[dtype]
     pub pass_thru_ty: Vec<Type<'a>>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.masked.scatter", format = "$value `,` $ptrs `,` $mask attr-dict `:` type($value) `,` type($mask) `into` type($ptrs)")]
 pub struct masked_scatter<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(ptrs_ty, name = "ptrs")]
+    #[slot(ptrs_ty)]
     pub ptrs: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Value<'a>,
-    #[attr(name = "alignment", int = "i32")]
+    #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "ptrs_ty")]
+    #[dtype]
     pub ptrs_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.deinterleave2", generic, results(res))]
+#[mlir::op("llvm.intr.vector.deinterleave2", results(res))]
 pub struct vector_deinterleave2<'a> {
-    #[slot(vec_ty, name = "vec")]
+    #[slot(vec_ty)]
     pub vec: Value<'a>,
-    #[dtype(name = "vec_ty")]
+    #[dtype]
     pub vec_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.vector.extract", format = "$srcvec `[` $pos `]` attr-dict `:` type($res) `from` type($srcvec)", results(res))]
 pub struct vector_extract<'a> {
-    #[slot(srcvec_ty, name = "srcvec")]
+    #[slot(srcvec_ty)]
     pub srcvec: Value<'a>,
-    #[attr(name = "pos", int = "i64")]
+    #[attr(int = "i64")]
     pub pos: Attribute<'a>,
-    #[dtype(name = "srcvec_ty")]
+    #[dtype]
     pub srcvec_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 #[mlir::op("llvm.intr.vector.insert", format = "$srcvec `,` $dstvec `[` $pos `]` attr-dict `:` type($srcvec) `into` type($res)", results(res))]
 pub struct vector_insert<'a> {
-    #[slot(res, name = "dstvec")]
+    #[slot(res)]
     pub dstvec: Value<'a>,
-    #[slot(srcvec_ty, name = "srcvec")]
+    #[slot(srcvec_ty)]
     pub srcvec: Value<'a>,
-    #[attr(name = "pos", int = "i64")]
+    #[attr(int = "i64")]
     pub pos: Attribute<'a>,
-    #[dtype(name = "srcvec_ty")]
+    #[dtype]
     pub srcvec_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.interleave2", generic, results(res))]
+#[mlir::op("llvm.intr.vector.interleave2", results(res))]
 pub struct vector_interleave2<'a> {
-    #[slot(vec1_ty, name = "vec1")]
+    #[slot(vec1_ty)]
     pub vec1: Value<'a>,
-    #[slot(vec1_ty, name = "vec2")]
+    #[slot(vec1_ty)]
     pub vec2: Value<'a>,
-    #[dtype(name = "vec1_ty")]
+    #[dtype]
     pub vec1_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.add", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.add", results(res))]
 pub struct vector_reduce_add<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.and", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.and", results(res))]
 pub struct vector_reduce_and<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.fadd", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fadd", results(res))]
 pub struct vector_reduce_fadd<'a> {
-    #[slot(start_value_ty, name = "start_value")]
+    #[slot(start_value_ty)]
     pub start_value: Value<'a>,
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "start_value_ty")]
+    #[dtype]
     pub start_value_ty: Type<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fmax", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmax", results(res))]
 pub struct vector_reduce_fmax<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fmaximum", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmaximum", results(res))]
 pub struct vector_reduce_fmaximum<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fmin", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmin", results(res))]
 pub struct vector_reduce_fmin<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fminimum", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fminimum", results(res))]
 pub struct vector_reduce_fminimum<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.fmul", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmul", results(res))]
 pub struct vector_reduce_fmul<'a> {
-    #[slot(start_value_ty, name = "start_value")]
+    #[slot(start_value_ty)]
     pub start_value: Value<'a>,
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
-    #[dtype(name = "start_value_ty")]
+    #[dtype]
     pub start_value_ty: Type<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.mul", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.mul", results(res))]
 pub struct vector_reduce_mul<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.or", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.or", results(res))]
 pub struct vector_reduce_or<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.smax", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.smax", results(res))]
 pub struct vector_reduce_smax<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.smin", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.smin", results(res))]
 pub struct vector_reduce_smin<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.umax", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.umax", results(res))]
 pub struct vector_reduce_umax<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.umin", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.umin", results(res))]
 pub struct vector_reduce_umin<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vector.reduce.xor", generic, results(res))]
+#[mlir::op("llvm.intr.vector.reduce.xor", results(res))]
 pub struct vector_reduce_xor<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("llvm.intr.vscale", generic, results(res))]
+#[mlir::op("llvm.intr.vscale", results(res))]
 pub struct vscale<'a> {
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 

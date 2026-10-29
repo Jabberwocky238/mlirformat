@@ -15,15 +15,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("index.add", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct AddOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -40,15 +40,15 @@ pub struct AddOp<'a> {
 /// ```
 #[mlir::op("index.and", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct AndOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -67,9 +67,9 @@ pub struct AndOp<'a> {
 /// ```
 #[mlir::op("index.bool.constant", format = "attr-dict $value", results(result))]
 pub struct BoolConstantOp<'a> {
-    #[attr(name = "value")]
+    #[attr]
     pub value: Attribute<'a>,
-    #[dtype(name = "result", is = i1)]
+    #[dtype(is = i1)]
     pub result: Type<'a>,
 }
 
@@ -91,11 +91,11 @@ pub struct BoolConstantOp<'a> {
 /// ```
 #[mlir::op("index.casts", format = "$input attr-dict `:` type($input) `to` type($output)", results(output))]
 pub struct CastSOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -117,11 +117,11 @@ pub struct CastSOp<'a> {
 /// ```
 #[mlir::op("index.castu", format = "$input attr-dict `:` type($input) `to` type($output)", results(output))]
 pub struct CastUOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -141,15 +141,15 @@ pub struct CastUOp<'a> {
 /// ```
 #[mlir::op("index.ceildivs", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct CeilDivSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -169,15 +169,15 @@ pub struct CeilDivSOp<'a> {
 /// ```
 #[mlir::op("index.ceildivu", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct CeilDivUOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -214,17 +214,17 @@ pub struct CeilDivUOp<'a> {
 /// ```
 #[mlir::op("index.cmp", format = "`` $pred `(` $lhs `,` $rhs `)` attr-dict", results(result))]
 pub struct CmpOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[attr(name = "pred", dialect = "index<cmp_predicate")]
+    #[attr(dialect = "index<cmp_predicate")]
     pub pred: Attribute<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = i1)]
+    #[dtype(is = i1)]
     pub result: Type<'a>,
 }
 
@@ -240,9 +240,9 @@ pub struct CmpOp<'a> {
 /// ```
 #[mlir::op("index.constant", format = "attr-dict $value", results(result))]
 pub struct ConstantOp<'a> {
-    #[attr(name = "value", int = "index")]
+    #[attr(int = "index")]
     pub value: Attribute<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -262,15 +262,15 @@ pub struct ConstantOp<'a> {
 /// ```
 #[mlir::op("index.divs", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct DivSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -290,15 +290,15 @@ pub struct DivSOp<'a> {
 /// ```
 #[mlir::op("index.divu", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct DivUOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -318,15 +318,15 @@ pub struct DivUOp<'a> {
 /// ```
 #[mlir::op("index.floordivs", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct FloorDivSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -343,15 +343,15 @@ pub struct FloorDivSOp<'a> {
 /// ```
 #[mlir::op("index.maxs", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct MaxSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -369,15 +369,15 @@ pub struct MaxSOp<'a> {
 /// ```
 #[mlir::op("index.maxu", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct MaxUOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -394,15 +394,15 @@ pub struct MaxUOp<'a> {
 /// ```
 #[mlir::op("index.mins", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct MinSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -420,15 +420,15 @@ pub struct MinSOp<'a> {
 /// ```
 #[mlir::op("index.minu", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct MinUOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -444,15 +444,15 @@ pub struct MinUOp<'a> {
 /// ```
 #[mlir::op("index.mul", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct MulOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -469,15 +469,15 @@ pub struct MulOp<'a> {
 /// ```
 #[mlir::op("index.or", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct OrOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -494,15 +494,15 @@ pub struct OrOp<'a> {
 /// ```
 #[mlir::op("index.rems", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct RemSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -520,15 +520,15 @@ pub struct RemSOp<'a> {
 /// ```
 #[mlir::op("index.remu", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct RemUOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -547,15 +547,15 @@ pub struct RemUOp<'a> {
 /// ```
 #[mlir::op("index.shl", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct ShlOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -574,15 +574,15 @@ pub struct ShlOp<'a> {
 /// ```
 #[mlir::op("index.shrs", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct ShrSOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -601,15 +601,15 @@ pub struct ShrSOp<'a> {
 /// ```
 #[mlir::op("index.shru", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct ShrUOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -626,7 +626,7 @@ pub struct ShrUOp<'a> {
 /// ```
 #[mlir::op("index.sizeof", format = "attr-dict", results(result))]
 pub struct SizeOfOp<'a> {
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -643,15 +643,15 @@ pub struct SizeOfOp<'a> {
 /// ```
 #[mlir::op("index.sub", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct SubOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -668,15 +668,15 @@ pub struct SubOp<'a> {
 /// ```
 #[mlir::op("index.xor", format = "$lhs `,` $rhs attr-dict", results(result))]
 pub struct XOrOp<'a> {
-    #[slot(lhs_ty, name = "lhs")]
+    #[slot(lhs_ty)]
     pub lhs: Value<'a>,
-    #[slot(rhs_ty, name = "rhs")]
+    #[slot(rhs_ty)]
     pub rhs: Value<'a>,
-    #[dtype(name = "lhs_ty", is = index)]
+    #[dtype(is = index)]
     pub lhs_ty: Type<'a>,
-    #[dtype(name = "rhs_ty", is = index)]
+    #[dtype(is = index)]
     pub rhs_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 

@@ -58,15 +58,15 @@ fn user_op_converts_both_ways() {
 /// writes `Optional<…>` / `Variadic<…>` operands of an ODS format such as CalVX's `vec.compact`).
 #[mlir::op("test.compact", format = "$input (`,` $mask^)? attr-dict `:` type($input) (`,` type($mask)^)? `->` type($result)", results(result))]
 pub struct Compact<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(mask_ty, name = "mask")]
+    #[slot(mask_ty)]
     pub mask: Vec<Value<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "mask_ty")]
+    #[dtype]
     pub mask_ty: Vec<Type<'a>>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 

@@ -14,13 +14,13 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.abs", generic, results(output))]
+#[mlir::op("tosa.abs", results(output))]
 pub struct AbsOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -40,17 +40,17 @@ pub struct AbsOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.add", generic, results(output))]
+#[mlir::op("tosa.add", results(output))]
 pub struct AddOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -59,17 +59,17 @@ pub struct AddOp<'a> {
 /// Elementwise addition of input1 and input2. Size of shapes must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.add_shape", generic, results(output))]
+#[mlir::op("tosa.add_shape", results(output))]
 pub struct AddShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -83,23 +83,23 @@ pub struct AddShapeOp<'a> {
 /// avoid wider than necessary types.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.apply_scale", generic, results(output))]
+#[mlir::op("tosa.apply_scale", results(output))]
 pub struct ApplyScaleOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(multiplier_ty, name = "multiplier")]
+    #[slot(multiplier_ty)]
     pub multiplier: Value<'a>,
-    #[slot(shift_ty, name = "shift")]
+    #[slot(shift_ty)]
     pub shift: Value<'a>,
-    #[attr(name = "rounding_mode", dialect = "tosa.rounding_mode")]
+    #[attr(dialect = "tosa.rounding_mode")]
     pub rounding_mode: Attribute<'a>,
-    #[dtype(name = "value_ty")]
+    #[dtype]
     pub value_ty: Type<'a>,
-    #[dtype(name = "multiplier_ty")]
+    #[dtype]
     pub multiplier_ty: Type<'a>,
-    #[dtype(name = "shift_ty")]
+    #[dtype]
     pub shift_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -110,17 +110,17 @@ pub struct ApplyScaleOp<'a> {
 /// match along the search axis.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.argmax", generic, results(output))]
+#[mlir::op("tosa.argmax", results(output))]
 pub struct ArgMaxOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -131,19 +131,19 @@ pub struct ArgMaxOp<'a> {
 /// must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.arithmetic_right_shift", generic, results(output))]
+#[mlir::op("tosa.arithmetic_right_shift", results(output))]
 pub struct ArithmeticRightShiftOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[attr(name = "round")]
+    #[attr]
     pub round: Attribute<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -156,29 +156,29 @@ pub struct ArithmeticRightShiftOp<'a> {
 /// used to calculate the divisor.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.avg_pool2d", generic, results(output))]
+#[mlir::op("tosa.avg_pool2d", results(output))]
 pub struct AvgPool2dOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(input_zp_ty, name = "input_zp")]
+    #[slot(input_zp_ty)]
     pub input_zp: Value<'a>,
-    #[slot(output_zp_ty, name = "output_zp")]
+    #[slot(output_zp_ty)]
     pub output_zp: Value<'a>,
-    #[attr(name = "kernel", dense = "i64")]
+    #[attr(dense = "i64")]
     pub kernel: Attribute<'a>,
-    #[attr(name = "stride", dense = "i64")]
+    #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "pad", dense = "i64")]
+    #[attr(dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "acc_type")]
+    #[attr]
     pub acc_type: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "input_zp_ty")]
+    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype(name = "output_zp_ty")]
+    #[dtype]
     pub output_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -188,17 +188,17 @@ pub struct AvgPool2dOp<'a> {
 /// will be broadcast as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_and", generic, results(output))]
+#[mlir::op("tosa.bitwise_and", results(output))]
 pub struct BitwiseAndOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -207,13 +207,13 @@ pub struct BitwiseAndOp<'a> {
 /// Elementwise bitwise NOT of input tensor.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_not", generic, results(output))]
+#[mlir::op("tosa.bitwise_not", results(output))]
 pub struct BitwiseNotOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -223,17 +223,17 @@ pub struct BitwiseNotOp<'a> {
 /// broadcast as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_or", generic, results(output))]
+#[mlir::op("tosa.bitwise_or", results(output))]
 pub struct BitwiseOrOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -243,17 +243,17 @@ pub struct BitwiseOrOp<'a> {
 /// broadcast as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_xor", generic, results(output))]
+#[mlir::op("tosa.bitwise_xor", results(output))]
 pub struct BitwiseXorOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -264,19 +264,19 @@ pub struct BitwiseXorOp<'a> {
 /// of the tensor.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.cast_from_block_scaled", generic, results(output_data))]
+#[mlir::op("tosa.cast_from_block_scaled", results(output_data))]
 pub struct CastFromBlockScaledOp<'a> {
-    #[slot(input_data_ty, name = "input_data")]
+    #[slot(input_data_ty)]
     pub input_data: Value<'a>,
-    #[slot(input_scale_ty, name = "input_scale")]
+    #[slot(input_scale_ty)]
     pub input_scale: Value<'a>,
-    #[attr(name = "block_size", dialect = "tosa.block_size")]
+    #[attr(dialect = "tosa.block_size")]
     pub block_size: Attribute<'a>,
-    #[dtype(name = "input_data_ty")]
+    #[dtype]
     pub input_data_ty: Type<'a>,
-    #[dtype(name = "input_scale_ty")]
+    #[dtype]
     pub input_scale_ty: Type<'a>,
-    #[dtype(name = "output_data")]
+    #[dtype]
     pub output_data: Type<'a>,
 }
 
@@ -336,13 +336,13 @@ pub struct CastFromBlockScaledOp<'a> {
 /// | fp8e5m2 to fp32          | fp8e5m2 | float32 |
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.cast", generic, results(output))]
+#[mlir::op("tosa.cast", results(output))]
 pub struct CastOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -354,17 +354,17 @@ pub struct CastOp<'a> {
 /// of the tensor.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.cast_to_block_scaled", generic, results(output_data, output_scale))]
+#[mlir::op("tosa.cast_to_block_scaled", results(output_data, output_scale))]
 pub struct CastToBlockScaledOp<'a> {
-    #[slot(input_data_ty, name = "input_data")]
+    #[slot(input_data_ty)]
     pub input_data: Value<'a>,
-    #[attr(name = "block_size", dialect = "tosa.block_size")]
+    #[attr(dialect = "tosa.block_size")]
     pub block_size: Attribute<'a>,
-    #[dtype(name = "input_data_ty")]
+    #[dtype]
     pub input_data_ty: Type<'a>,
-    #[dtype(name = "output_data")]
+    #[dtype]
     pub output_data: Type<'a>,
-    #[dtype(name = "output_scale")]
+    #[dtype]
     pub output_scale: Type<'a>,
 }
 
@@ -373,13 +373,13 @@ pub struct CastToBlockScaledOp<'a> {
 /// Elementwise ceiling operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.ceil", generic, results(output))]
+#[mlir::op("tosa.ceil", results(output))]
 pub struct CeilOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -392,19 +392,19 @@ pub struct CeilOp<'a> {
 /// point value, the zero point itself should be supplied as the minimum value.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.clamp", generic, results(output))]
+#[mlir::op("tosa.clamp", results(output))]
 pub struct ClampOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "min_val")]
+    #[attr]
     pub min_val: Attribute<'a>,
-    #[attr(name = "max_val")]
+    #[attr]
     pub max_val: Attribute<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -413,13 +413,13 @@ pub struct ClampOp<'a> {
 /// Elementwise count leading zeros operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.clz", generic, results(output))]
+#[mlir::op("tosa.clz", results(output))]
 pub struct ClzOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -429,15 +429,15 @@ pub struct ClzOp<'a> {
 /// No data conversion happens during a concat operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.concat", generic, results(output))]
+#[mlir::op("tosa.concat", results(output))]
 pub struct ConcatOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Vec<Value<'a>>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Vec<Type<'a>>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -447,13 +447,13 @@ pub struct ConcatOp<'a> {
 /// of the lengths of the inputs.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.concat_shape", generic, results(output))]
+#[mlir::op("tosa.concat_shape", results(output))]
 pub struct ConcatShapeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Vec<Value<'a>>,
-    #[dtype(name = "input_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input_ty: Vec<Type<'a>>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -470,11 +470,11 @@ pub struct ConcatShapeOp<'a> {
 /// ```
 ///
 /// Generic form only (no assembly format).
-#[mlir::op("tosa.const", generic, results(output))]
+#[mlir::op("tosa.const", results(output))]
 pub struct ConstOp<'a> {
-    #[attr(name = "values")]
+    #[attr]
     pub values: Attribute<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -490,11 +490,11 @@ pub struct ConstOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.const_shape", generic, results(output))]
+#[mlir::op("tosa.const_shape", results(output))]
 pub struct ConstShapeOp<'a> {
-    #[attr(name = "values")]
+    #[attr]
     pub values: Attribute<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -505,39 +505,39 @@ pub struct ConstShapeOp<'a> {
 /// the padding area.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.conv2d", generic, results(output))]
+#[mlir::op("tosa.conv2d", results(output))]
 pub struct Conv2DOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(weight_ty, name = "weight")]
+    #[slot(weight_ty)]
     pub weight: Value<'a>,
-    #[slot(bias_ty, name = "bias")]
+    #[slot(bias_ty)]
     pub bias: Value<'a>,
-    #[slot(input_zp_ty, name = "input_zp")]
+    #[slot(input_zp_ty)]
     pub input_zp: Value<'a>,
-    #[slot(weight_zp_ty, name = "weight_zp")]
+    #[slot(weight_zp_ty)]
     pub weight_zp: Value<'a>,
-    #[attr(name = "pad", dense = "i64")]
+    #[attr(dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "stride", dense = "i64")]
+    #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "dilation", dense = "i64")]
+    #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
-    #[attr(name = "acc_type")]
+    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr(name = "local_bound")]
+    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "weight_ty")]
+    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype(name = "bias_ty")]
+    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype(name = "input_zp_ty")]
+    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype(name = "weight_zp_ty")]
+    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -547,39 +547,39 @@ pub struct Conv2DOp<'a> {
 /// may choose to skip calculation of multiplies in the padding area.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.conv3d", generic, results(output))]
+#[mlir::op("tosa.conv3d", results(output))]
 pub struct Conv3DOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(weight_ty, name = "weight")]
+    #[slot(weight_ty)]
     pub weight: Value<'a>,
-    #[slot(bias_ty, name = "bias")]
+    #[slot(bias_ty)]
     pub bias: Value<'a>,
-    #[slot(input_zp_ty, name = "input_zp")]
+    #[slot(input_zp_ty)]
     pub input_zp: Value<'a>,
-    #[slot(weight_zp_ty, name = "weight_zp")]
+    #[slot(weight_zp_ty)]
     pub weight_zp: Value<'a>,
-    #[attr(name = "pad", dense = "i64")]
+    #[attr(dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "stride", dense = "i64")]
+    #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "dilation", dense = "i64")]
+    #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
-    #[attr(name = "acc_type")]
+    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr(name = "local_bound")]
+    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "weight_ty")]
+    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype(name = "bias_ty")]
+    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype(name = "input_zp_ty")]
+    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype(name = "weight_zp_ty")]
+    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -588,13 +588,13 @@ pub struct Conv3DOp<'a> {
 /// Elementwise cosine operation for values given in radians.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.cos", generic, results(output))]
+#[mlir::op("tosa.cos", results(output))]
 pub struct CosOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -628,19 +628,19 @@ pub struct CosOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.custom", generic, results(output_list))]
+#[mlir::op("tosa.custom", results(output_list))]
 pub struct CustomOp<'a> {
-    #[slot(input_list_ty, name = "input_list")]
+    #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
-    #[attr(name = "operator_name")]
+    #[attr]
     pub operator_name: Attribute<'a>,
-    #[attr(name = "domain_name")]
+    #[attr]
     pub domain_name: Attribute<'a>,
-    #[attr(name = "implementation_attrs")]
+    #[attr]
     pub implementation_attrs: Attribute<'a>,
-    #[dtype(name = "input_list_ty")]
+    #[dtype]
     pub input_list_ty: Vec<Type<'a>>,
-    #[dtype(name = "output_list")]
+    #[dtype]
     pub output_list: Vec<Type<'a>>,
 }
 
@@ -651,39 +651,39 @@ pub struct CustomOp<'a> {
 /// calculation of multiplies in the padding area.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.depthwise_conv2d", generic, results(output))]
+#[mlir::op("tosa.depthwise_conv2d", results(output))]
 pub struct DepthwiseConv2DOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(weight_ty, name = "weight")]
+    #[slot(weight_ty)]
     pub weight: Value<'a>,
-    #[slot(bias_ty, name = "bias")]
+    #[slot(bias_ty)]
     pub bias: Value<'a>,
-    #[slot(input_zp_ty, name = "input_zp")]
+    #[slot(input_zp_ty)]
     pub input_zp: Value<'a>,
-    #[slot(weight_zp_ty, name = "weight_zp")]
+    #[slot(weight_zp_ty)]
     pub weight_zp: Value<'a>,
-    #[attr(name = "pad", dense = "i64")]
+    #[attr(dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "stride", dense = "i64")]
+    #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "dilation", dense = "i64")]
+    #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
-    #[attr(name = "acc_type")]
+    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr(name = "local_bound")]
+    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "weight_ty")]
+    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype(name = "bias_ty")]
+    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype(name = "input_zp_ty")]
+    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype(name = "weight_zp_ty")]
+    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -692,15 +692,15 @@ pub struct DepthwiseConv2DOp<'a> {
 /// Returns a length 1 shape_t of the size of the input tensor for the given axis.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.dim", generic, results(output))]
+#[mlir::op("tosa.dim", results(output))]
 pub struct DimOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -709,17 +709,17 @@ pub struct DimOp<'a> {
 /// Elementwise divide of input1 by input2. The result of the divide is rounded up.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.div_ceil_shape", generic, results(output))]
+#[mlir::op("tosa.div_ceil_shape", results(output))]
 pub struct DivCeilShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -728,17 +728,17 @@ pub struct DivCeilShapeOp<'a> {
 /// Elementwise integer divide of input1 by input2. The result of the divide is rounded down.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.div_floor_shape", generic, results(output))]
+#[mlir::op("tosa.div_floor_shape", results(output))]
 pub struct DivFloorShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -747,17 +747,17 @@ pub struct DivFloorShapeOp<'a> {
 /// Elementwise comparison operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.equal", generic, results(output))]
+#[mlir::op("tosa.equal", results(output))]
 pub struct EqualOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -769,13 +769,13 @@ pub struct EqualOp<'a> {
 /// 16-bit precision and covering the input range -4.0 to +4.0 in steps of 1/64.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.erf", generic, results(output))]
+#[mlir::op("tosa.erf", results(output))]
 pub struct ErfOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -784,13 +784,13 @@ pub struct ErfOp<'a> {
 /// Computation of raising two to the power of each element in input.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.exp2_shape", generic, results(output))]
+#[mlir::op("tosa.exp2_shape", results(output))]
 pub struct Exp2ShapeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -799,13 +799,13 @@ pub struct Exp2ShapeOp<'a> {
 /// Elementwise e to the x operation
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.exp", generic, results(output))]
+#[mlir::op("tosa.exp", results(output))]
 pub struct ExpOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -824,23 +824,23 @@ pub struct ExpOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.fft2d", generic, results(output_real, output_imag))]
+#[mlir::op("tosa.fft2d", results(output_real, output_imag))]
 pub struct FFT2dOp<'a> {
-    #[slot(input_real_ty, name = "input_real")]
+    #[slot(input_real_ty)]
     pub input_real: Value<'a>,
-    #[slot(input_imag_ty, name = "input_imag")]
+    #[slot(input_imag_ty)]
     pub input_imag: Value<'a>,
-    #[attr(name = "inverse")]
+    #[attr]
     pub inverse: Attribute<'a>,
-    #[attr(name = "local_bound")]
+    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype(name = "input_real_ty")]
+    #[dtype]
     pub input_real_ty: Type<'a>,
-    #[dtype(name = "input_imag_ty")]
+    #[dtype]
     pub input_imag_ty: Type<'a>,
-    #[dtype(name = "output_real")]
+    #[dtype]
     pub output_real: Type<'a>,
-    #[dtype(name = "output_imag")]
+    #[dtype]
     pub output_imag: Type<'a>,
 }
 
@@ -849,13 +849,13 @@ pub struct FFT2dOp<'a> {
 /// Elementwise floor operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.floor", generic, results(output))]
+#[mlir::op("tosa.floor", results(output))]
 pub struct FloorOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -867,17 +867,17 @@ pub struct FloorOp<'a> {
 /// channels for each index.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.gather", generic, results(output))]
+#[mlir::op("tosa.gather", results(output))]
 pub struct GatherOp<'a> {
-    #[slot(values_ty, name = "values")]
+    #[slot(values_ty)]
     pub values: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[dtype(name = "values_ty")]
+    #[dtype]
     pub values_ty: Type<'a>,
-    #[dtype(name = "indices_ty")]
+    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -886,17 +886,17 @@ pub struct GatherOp<'a> {
 /// Elementwise comparison operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.greater_equal", generic, results(output))]
+#[mlir::op("tosa.greater_equal", results(output))]
 pub struct GreaterEqualOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -905,17 +905,17 @@ pub struct GreaterEqualOp<'a> {
 /// Elementwise greater than comparison operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.greater", generic, results(output))]
+#[mlir::op("tosa.greater", results(output))]
 pub struct GreaterOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -924,13 +924,13 @@ pub struct GreaterOp<'a> {
 /// Returns a tensor with the same shape, type, and contents as the input.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.identity", generic, results(output))]
+#[mlir::op("tosa.identity", results(output))]
 pub struct IdentityOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -940,21 +940,21 @@ pub struct IdentityOp<'a> {
 /// paths. This implements the semantic If-then-else structure.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.cond_if", generic, results(output_list))]
+#[mlir::op("tosa.cond_if", results(output_list))]
 pub struct IfOp<'a> {
-    #[slot(condition_ty, name = "condition")]
+    #[slot(condition_ty)]
     pub condition: Value<'a>,
-    #[slot(input_list_ty, name = "input_list")]
+    #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
-    #[region(name = "then_graph")]
+    #[region]
     pub then_graph: Region<'a>,
-    #[region(name = "else_graph")]
+    #[region]
     pub else_graph: Region<'a>,
-    #[dtype(name = "condition_ty")]
+    #[dtype]
     pub condition_ty: Type<'a>,
-    #[dtype(name = "input_list_ty")]
+    #[dtype]
     pub input_list_ty: Vec<Type<'a>>,
-    #[dtype(name = "output_list")]
+    #[dtype]
     pub output_list: Vec<Type<'a>>,
 }
 
@@ -967,17 +967,17 @@ pub struct IfOp<'a> {
 /// Quantized integer divide should use TABLE (for 1/x) and MUL.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.intdiv", generic, results(output))]
+#[mlir::op("tosa.intdiv", results(output))]
 pub struct IntDivOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -986,13 +986,13 @@ pub struct IntDivOp<'a> {
 /// Computation of the base two logarithm of each element in input. Result is rounded up.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.log2_ceil_shape", generic, results(output))]
+#[mlir::op("tosa.log2_ceil_shape", results(output))]
 pub struct Log2CeilShapeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1001,13 +1001,13 @@ pub struct Log2CeilShapeOp<'a> {
 /// Computation of the base two logarithm of each element in input. Result is rounded down.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.log2_floor_shape", generic, results(output))]
+#[mlir::op("tosa.log2_floor_shape", results(output))]
 pub struct Log2FloorShapeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1016,13 +1016,13 @@ pub struct Log2FloorShapeOp<'a> {
 /// Elementwise natural logarithm operation
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.log", generic, results(output))]
+#[mlir::op("tosa.log", results(output))]
 pub struct LogOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1032,17 +1032,17 @@ pub struct LogOp<'a> {
 /// broadcast, as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_and", generic, results(output))]
+#[mlir::op("tosa.logical_and", results(output))]
 pub struct LogicalAndOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1053,17 +1053,17 @@ pub struct LogicalAndOp<'a> {
 /// Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_left_shift", generic, results(output))]
+#[mlir::op("tosa.logical_left_shift", results(output))]
 pub struct LogicalLeftShiftOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1072,13 +1072,13 @@ pub struct LogicalLeftShiftOp<'a> {
 /// Elementwise logical NOT of input.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_not", generic, results(output))]
+#[mlir::op("tosa.logical_not", results(output))]
 pub struct LogicalNotOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1088,17 +1088,17 @@ pub struct LogicalNotOp<'a> {
 /// broadcast as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_or", generic, results(output))]
+#[mlir::op("tosa.logical_or", results(output))]
 pub struct LogicalOrOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1109,17 +1109,17 @@ pub struct LogicalOrOp<'a> {
 /// match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_right_shift", generic, results(output))]
+#[mlir::op("tosa.logical_right_shift", results(output))]
 pub struct LogicalRightShiftOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1129,17 +1129,17 @@ pub struct LogicalRightShiftOp<'a> {
 /// broadcast as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_xor", generic, results(output))]
+#[mlir::op("tosa.logical_xor", results(output))]
 pub struct LogicalXorOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1148,25 +1148,25 @@ pub struct LogicalXorOp<'a> {
 /// Performs two dimensional matrix multiplications.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.matmul", generic, results(output))]
+#[mlir::op("tosa.matmul", results(output))]
 pub struct MatMulOp<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[slot(b_ty, name = "b")]
+    #[slot(b_ty)]
     pub b: Value<'a>,
-    #[slot(a_zp_ty, name = "a_zp")]
+    #[slot(a_zp_ty)]
     pub a_zp: Value<'a>,
-    #[slot(b_zp_ty, name = "b_zp")]
+    #[slot(b_zp_ty)]
     pub b_zp: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "b_ty")]
+    #[dtype]
     pub b_ty: Type<'a>,
-    #[dtype(name = "a_zp_ty")]
+    #[dtype]
     pub a_zp_ty: Type<'a>,
-    #[dtype(name = "b_zp_ty")]
+    #[dtype]
     pub b_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1178,27 +1178,27 @@ pub struct MatMulOp<'a> {
 /// size 1, the B matrix will be broadcast.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.matmul_t_block_scaled", generic, results(output_data))]
+#[mlir::op("tosa.matmul_t_block_scaled", results(output_data))]
 pub struct MatmulTBlockScaledOp<'a> {
-    #[slot(a_data_ty, name = "a_data")]
+    #[slot(a_data_ty)]
     pub a_data: Value<'a>,
-    #[slot(a_scale_ty, name = "a_scale")]
+    #[slot(a_scale_ty)]
     pub a_scale: Value<'a>,
-    #[slot(b_data_ty, name = "b_data")]
+    #[slot(b_data_ty)]
     pub b_data: Value<'a>,
-    #[slot(b_scale_ty, name = "b_scale")]
+    #[slot(b_scale_ty)]
     pub b_scale: Value<'a>,
-    #[attr(name = "block_size", dialect = "tosa.block_size")]
+    #[attr(dialect = "tosa.block_size")]
     pub block_size: Attribute<'a>,
-    #[dtype(name = "a_data_ty")]
+    #[dtype]
     pub a_data_ty: Type<'a>,
-    #[dtype(name = "a_scale_ty")]
+    #[dtype]
     pub a_scale_ty: Type<'a>,
-    #[dtype(name = "b_data_ty")]
+    #[dtype]
     pub b_data_ty: Type<'a>,
-    #[dtype(name = "b_scale_ty")]
+    #[dtype]
     pub b_scale_ty: Type<'a>,
-    #[dtype(name = "output_data")]
+    #[dtype]
     pub output_data: Type<'a>,
 }
 
@@ -1210,21 +1210,21 @@ pub struct MatmulTBlockScaledOp<'a> {
 /// output tensor.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.max_pool2d", generic, results(output))]
+#[mlir::op("tosa.max_pool2d", results(output))]
 pub struct MaxPool2dOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "kernel", dense = "i64")]
+    #[attr(dense = "i64")]
     pub kernel: Attribute<'a>,
-    #[attr(name = "stride", dense = "i64")]
+    #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "pad", dense = "i64")]
+    #[attr(dense = "i64")]
     pub pad: Attribute<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1233,17 +1233,17 @@ pub struct MaxPool2dOp<'a> {
 /// Elementwise maximum of input1 and input2.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.max_shape", generic, results(output))]
+#[mlir::op("tosa.max_shape", results(output))]
 pub struct MaxShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1253,19 +1253,19 @@ pub struct MaxShapeOp<'a> {
 /// necessary. Rank of input tensors must match.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.maximum", generic, results(output))]
+#[mlir::op("tosa.maximum", results(output))]
 pub struct MaximumOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1274,17 +1274,17 @@ pub struct MaximumOp<'a> {
 /// Elementwise minimum of input1 and input2.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.min_shape", generic, results(output))]
+#[mlir::op("tosa.min_shape", results(output))]
 pub struct MinShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1294,19 +1294,19 @@ pub struct MinShapeOp<'a> {
 /// will be broadcast, as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.minimum", generic, results(output))]
+#[mlir::op("tosa.minimum", results(output))]
 pub struct MinimumOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1315,17 +1315,17 @@ pub struct MinimumOp<'a> {
 /// Elementwise modulo of input1 divided by input2.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.mod_shape", generic, results(output))]
+#[mlir::op("tosa.mod_shape", results(output))]
 pub struct ModShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1336,21 +1336,21 @@ pub struct ModShapeOp<'a> {
 /// match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.mul", generic, results(output))]
+#[mlir::op("tosa.mul", results(output))]
 pub struct MulOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[slot(shift_ty, name = "shift")]
+    #[slot(shift_ty)]
     pub shift: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "shift_ty")]
+    #[dtype]
     pub shift_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1359,17 +1359,17 @@ pub struct MulOp<'a> {
 /// Elementwise multiplication of input1 and input2.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.mul_shape", generic, results(output))]
+#[mlir::op("tosa.mul_shape", results(output))]
 pub struct MulShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1378,21 +1378,21 @@ pub struct MulShapeOp<'a> {
 /// Elementwise negation operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.negate", generic, results(output))]
+#[mlir::op("tosa.negate", results(output))]
 pub struct NegateOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input1_zp_ty, name = "input1_zp")]
+    #[slot(input1_zp_ty)]
     pub input1_zp: Value<'a>,
-    #[slot(output_zp_ty, name = "output_zp")]
+    #[slot(output_zp_ty)]
     pub output_zp: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input1_zp_ty")]
+    #[dtype]
     pub input1_zp_ty: Type<'a>,
-    #[dtype(name = "output_zp_ty")]
+    #[dtype]
     pub output_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1419,21 +1419,21 @@ pub struct NegateOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.pad", generic, results(output))]
+#[mlir::op("tosa.pad", results(output))]
 pub struct PadOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(padding_ty, name = "padding")]
+    #[slot(padding_ty)]
     pub padding: Value<'a>,
-    #[slot(pad_const_ty, name = "pad_const")]
+    #[slot(pad_const_ty)]
     pub pad_const: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "padding_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub padding_ty: Type<'a>,
-    #[dtype(name = "pad_const_ty")]
+    #[dtype]
     pub pad_const_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1444,17 +1444,17 @@ pub struct PadOp<'a> {
 /// match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.pow", generic, results(output))]
+#[mlir::op("tosa.pow", results(output))]
 pub struct PowOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1476,17 +1476,17 @@ pub struct PowOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.rfft2d", generic, results(output_real, output_imag))]
+#[mlir::op("tosa.rfft2d", results(output_real, output_imag))]
 pub struct RFFT2dOp<'a> {
-    #[slot(input_real_ty, name = "input_real")]
+    #[slot(input_real_ty)]
     pub input_real: Value<'a>,
-    #[attr(name = "local_bound")]
+    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype(name = "input_real_ty")]
+    #[dtype]
     pub input_real_ty: Type<'a>,
-    #[dtype(name = "output_real")]
+    #[dtype]
     pub output_real: Type<'a>,
-    #[dtype(name = "output_imag")]
+    #[dtype]
     pub output_imag: Type<'a>,
 }
 
@@ -1496,13 +1496,13 @@ pub struct RFFT2dOp<'a> {
 /// used with the appropriate ranges.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reciprocal", generic, results(output))]
+#[mlir::op("tosa.reciprocal", results(output))]
 pub struct ReciprocalOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1511,15 +1511,15 @@ pub struct ReciprocalOp<'a> {
 /// Reduce a tensor along the given axis with a logical AND operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_all", generic, results(output))]
+#[mlir::op("tosa.reduce_all", results(output))]
 pub struct ReduceAllOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1528,15 +1528,15 @@ pub struct ReduceAllOp<'a> {
 /// Reduce a tensor along the given axis with a logical OR operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_any", generic, results(output))]
+#[mlir::op("tosa.reduce_any", results(output))]
 pub struct ReduceAnyOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1545,17 +1545,17 @@ pub struct ReduceAnyOp<'a> {
 /// Reduce a tensor along the given axis with a maximum operation.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.reduce_max", generic, results(output))]
+#[mlir::op("tosa.reduce_max", results(output))]
 pub struct ReduceMaxOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1564,17 +1564,17 @@ pub struct ReduceMaxOp<'a> {
 /// Reduce a tensor along the given axis with a minimum operation.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.reduce_min", generic, results(output))]
+#[mlir::op("tosa.reduce_min", results(output))]
 pub struct ReduceMinOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[attr(name = "nan_mode", dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
     pub nan_mode: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1583,15 +1583,15 @@ pub struct ReduceMinOp<'a> {
 /// Reduce a tensor along the given axis by computing the product of the axis.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_product", generic, results(output))]
+#[mlir::op("tosa.reduce_product", results(output))]
 pub struct ReduceProductOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1600,15 +1600,15 @@ pub struct ReduceProductOp<'a> {
 /// Reduce a tensor along the given axis by computing the sum of the axis.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_sum", generic, results(output))]
+#[mlir::op("tosa.reduce_sum", results(output))]
 pub struct ReduceSumOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1648,39 +1648,39 @@ pub struct ReduceSumOp<'a> {
 /// | signed 8 to unsigned 8 | int8  | uint8  |  false         |  true           |
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.rescale", generic, results(output))]
+#[mlir::op("tosa.rescale", results(output))]
 pub struct RescaleOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(multiplier_ty, name = "multiplier")]
+    #[slot(multiplier_ty)]
     pub multiplier: Value<'a>,
-    #[slot(shift_ty, name = "shift")]
+    #[slot(shift_ty)]
     pub shift: Value<'a>,
-    #[slot(input_zp_ty, name = "input_zp")]
+    #[slot(input_zp_ty)]
     pub input_zp: Value<'a>,
-    #[slot(output_zp_ty, name = "output_zp")]
+    #[slot(output_zp_ty)]
     pub output_zp: Value<'a>,
-    #[attr(name = "scale32")]
+    #[attr]
     pub scale32: Attribute<'a>,
-    #[attr(name = "rounding_mode", dialect = "tosa.rounding_mode")]
+    #[attr(dialect = "tosa.rounding_mode")]
     pub rounding_mode: Attribute<'a>,
-    #[attr(name = "per_channel")]
+    #[attr]
     pub per_channel: Attribute<'a>,
-    #[attr(name = "input_unsigned")]
+    #[attr]
     pub input_unsigned: Attribute<'a>,
-    #[attr(name = "output_unsigned")]
+    #[attr]
     pub output_unsigned: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "multiplier_ty")]
+    #[dtype]
     pub multiplier_ty: Type<'a>,
-    #[dtype(name = "shift_ty")]
+    #[dtype]
     pub shift_ty: Type<'a>,
-    #[dtype(name = "input_zp_ty")]
+    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype(name = "output_zp_ty")]
+    #[dtype]
     pub output_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1691,17 +1691,17 @@ pub struct RescaleOp<'a> {
 /// No data conversion happens during a reshape operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reshape", generic, results(output))]
+#[mlir::op("tosa.reshape", results(output))]
 pub struct ReshapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "shape_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1733,27 +1733,27 @@ pub struct ReshapeOp<'a> {
 /// larger than MAX_SCALE.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.resize", generic, results(output))]
+#[mlir::op("tosa.resize", results(output))]
 pub struct ResizeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(scale_ty, name = "scale")]
+    #[slot(scale_ty)]
     pub scale: Value<'a>,
-    #[slot(offset_ty, name = "offset")]
+    #[slot(offset_ty)]
     pub offset: Value<'a>,
-    #[slot(border_ty, name = "border")]
+    #[slot(border_ty)]
     pub border: Value<'a>,
-    #[attr(name = "mode", dialect = "tosa.resize_mode")]
+    #[attr(dialect = "tosa.resize_mode")]
     pub mode: Attribute<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "scale_ty")]
+    #[dtype]
     pub scale_ty: Type<'a>,
-    #[dtype(name = "offset_ty")]
+    #[dtype]
     pub offset_ty: Type<'a>,
-    #[dtype(name = "border_ty")]
+    #[dtype]
     pub border_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1764,15 +1764,15 @@ pub struct ResizeOp<'a> {
 /// operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.reverse", generic, results(output))]
+#[mlir::op("tosa.reverse", results(output))]
 pub struct ReverseOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[attr(name = "axis", int = "i32")]
+    #[attr(int = "i32")]
     pub axis: Attribute<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1782,13 +1782,13 @@ pub struct ReverseOp<'a> {
 /// should be used with the appropriate ranges.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.rsqrt", generic, results(output))]
+#[mlir::op("tosa.rsqrt", results(output))]
 pub struct RsqrtOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1804,21 +1804,21 @@ pub struct RsqrtOp<'a> {
 /// output position, these must be decomposed into multiple SCATTER operations.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.scatter", generic, results(values_out))]
+#[mlir::op("tosa.scatter", results(values_out))]
 pub struct ScatterOp<'a> {
-    #[slot(values_in_ty, name = "values_in")]
+    #[slot(values_in_ty)]
     pub values_in: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Value<'a>,
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "values_in_ty")]
+    #[dtype]
     pub values_in_ty: Type<'a>,
-    #[dtype(name = "indices_ty")]
+    #[dtype]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "values_out")]
+    #[dtype]
     pub values_out: Type<'a>,
 }
 
@@ -1827,21 +1827,21 @@ pub struct ScatterOp<'a> {
 /// Elementwise select of the output based on a condition.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.select", generic, results(output))]
+#[mlir::op("tosa.select", results(output))]
 pub struct SelectOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[slot(input3_ty, name = "input3")]
+    #[slot(input3_ty)]
     pub input3: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "input3_ty")]
+    #[dtype]
     pub input3_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1856,13 +1856,13 @@ pub struct SelectOp<'a> {
 /// based on the input tensor to the sigmoid function.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.sigmoid", generic, results(output))]
+#[mlir::op("tosa.sigmoid", results(output))]
 pub struct SigmoidOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1871,13 +1871,13 @@ pub struct SigmoidOp<'a> {
 /// Elementwise sine operation for values given in radians.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.sin", generic, results(output))]
+#[mlir::op("tosa.sin", results(output))]
 pub struct SinOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1888,21 +1888,21 @@ pub struct SinOp<'a> {
 /// No data conversion happens during a slice operation.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.slice", generic, results(output))]
+#[mlir::op("tosa.slice", results(output))]
 pub struct SliceOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(start_ty, name = "start")]
+    #[slot(start_ty)]
     pub start: Value<'a>,
-    #[slot(size_ty, name = "size")]
+    #[slot(size_ty)]
     pub size: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "start_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub start_ty: Type<'a>,
-    #[dtype(name = "size_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub size_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1911,21 +1911,21 @@ pub struct SliceOp<'a> {
 /// Extract a shape of size from input.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.slice_shape", generic, results(output))]
+#[mlir::op("tosa.slice_shape", results(output))]
 pub struct SliceShapeOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(start_ty, name = "start")]
+    #[slot(start_ty)]
     pub start: Value<'a>,
-    #[slot(size_ty, name = "size")]
+    #[slot(size_ty)]
     pub size: Value<'a>,
-    #[dtype(name = "input_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input_ty: Type<'a>,
-    #[dtype(name = "start_ty")]
+    #[dtype]
     pub start_ty: Type<'a>,
-    #[dtype(name = "size_ty")]
+    #[dtype]
     pub size_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1935,17 +1935,17 @@ pub struct SliceShapeOp<'a> {
 /// broadcast as necessary. Rank of input tensors must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.sub", generic, results(output))]
+#[mlir::op("tosa.sub", results(output))]
 pub struct SubOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty")]
+    #[dtype]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -1954,17 +1954,17 @@ pub struct SubOp<'a> {
 /// Elementwise subtraction of input1 and input2. Size of shapes must match.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.sub_shape", generic, results(output))]
+#[mlir::op("tosa.sub_shape", results(output))]
 pub struct SubShapeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(input2_ty, name = "input2")]
+    #[slot(input2_ty)]
     pub input2: Value<'a>,
-    #[dtype(name = "input1_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "input2_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub input2_ty: Type<'a>,
-    #[dtype(name = "output", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub output: Type<'a>,
 }
 
@@ -1986,17 +1986,17 @@ pub struct SubShapeOp<'a> {
 ///   scale the output to int16_t range (or alternate scale as required)
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.table", generic, results(output))]
+#[mlir::op("tosa.table", results(output))]
 pub struct TableOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(table_ty, name = "table")]
+    #[slot(table_ty)]
     pub table: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "table_ty")]
+    #[dtype]
     pub table_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2010,13 +2010,13 @@ pub struct TableOp<'a> {
 /// based on the input tensor to the tanh function.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.tanh", generic, results(output))]
+#[mlir::op("tosa.tanh", results(output))]
 pub struct TanhOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2025,17 +2025,17 @@ pub struct TanhOp<'a> {
 /// Replicates input1 multiples times along each dimension.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.tile", generic, results(output))]
+#[mlir::op("tosa.tile", results(output))]
 pub struct TileOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[slot(multiples_ty, name = "multiples")]
+    #[slot(multiples_ty)]
     pub multiples: Value<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "multiples_ty", strip = "tosa.shape")]
+    #[dtype(strip = "tosa.shape")]
     pub multiples_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2046,37 +2046,37 @@ pub struct TileOp<'a> {
 /// by zero at fractional input positions.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.transpose_conv2d", generic, results(output))]
+#[mlir::op("tosa.transpose_conv2d", results(output))]
 pub struct TransposeConv2DOp<'a> {
-    #[slot(input_ty, name = "input")]
+    #[slot(input_ty)]
     pub input: Value<'a>,
-    #[slot(weight_ty, name = "weight")]
+    #[slot(weight_ty)]
     pub weight: Value<'a>,
-    #[slot(bias_ty, name = "bias")]
+    #[slot(bias_ty)]
     pub bias: Value<'a>,
-    #[slot(input_zp_ty, name = "input_zp")]
+    #[slot(input_zp_ty)]
     pub input_zp: Value<'a>,
-    #[slot(weight_zp_ty, name = "weight_zp")]
+    #[slot(weight_zp_ty)]
     pub weight_zp: Value<'a>,
-    #[attr(name = "out_pad", dense = "i64")]
+    #[attr(dense = "i64")]
     pub out_pad: Attribute<'a>,
-    #[attr(name = "stride", dense = "i64")]
+    #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
-    #[attr(name = "acc_type")]
+    #[attr]
     pub acc_type: Attribute<'a>,
-    #[attr(name = "local_bound")]
+    #[attr]
     pub local_bound: Option<Attribute<'a>>,
-    #[dtype(name = "input_ty")]
+    #[dtype]
     pub input_ty: Type<'a>,
-    #[dtype(name = "weight_ty")]
+    #[dtype]
     pub weight_ty: Type<'a>,
-    #[dtype(name = "bias_ty")]
+    #[dtype]
     pub bias_ty: Type<'a>,
-    #[dtype(name = "input_zp_ty")]
+    #[dtype]
     pub input_zp_ty: Type<'a>,
-    #[dtype(name = "weight_zp_ty")]
+    #[dtype]
     pub weight_zp_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2087,15 +2087,15 @@ pub struct TransposeConv2DOp<'a> {
 /// input tensor and may not be repeated.
 ///
 /// Generic form only (directive `operands`).
-#[mlir::op("tosa.transpose", generic, results(output))]
+#[mlir::op("tosa.transpose", results(output))]
 pub struct TransposeOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[attr(name = "perms", dense = "i32")]
+    #[attr(dense = "i32")]
     pub perms: Attribute<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
-    #[dtype(name = "output")]
+    #[dtype]
     pub output: Type<'a>,
 }
 
@@ -2105,15 +2105,15 @@ pub struct TransposeOp<'a> {
 /// TOSA graph invocations. Modifications are expressed using read/write semantics.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.variable", generic)]
+#[mlir::op("tosa.variable")]
 pub struct VariableOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "var_shape")]
+    #[attr]
     pub var_shape: Attribute<'a>,
     #[attr(name = "type")]
     pub type_: Attribute<'a>,
-    #[attr(name = "initial_value")]
+    #[attr]
     pub initial_value: Option<Attribute<'a>>,
 }
 
@@ -2122,9 +2122,9 @@ pub struct VariableOp<'a> {
 /// Reads the value from a pseudo-buffer resource holding a persistent mutable tensor.
 #[mlir::op("tosa.variable_read", format = "$name attr-dict `:` type($output1)", results(output1))]
 pub struct VariableReadOp<'a> {
-    #[attr(name = "name", symbol)]
+    #[attr(symbol)]
     pub name: Attribute<'a>,
-    #[dtype(name = "output1")]
+    #[dtype]
     pub output1: Type<'a>,
 }
 
@@ -2133,11 +2133,11 @@ pub struct VariableReadOp<'a> {
 /// Assigns a value to the pseudo-buffer resource holding a persistent mutable tensor.
 #[mlir::op("tosa.variable_write", format = "$name attr-dict `,` $input1 `:` type($input1)")]
 pub struct VariableWriteOp<'a> {
-    #[slot(input1_ty, name = "input1")]
+    #[slot(input1_ty)]
     pub input1: Value<'a>,
-    #[attr(name = "name", symbol)]
+    #[attr(symbol)]
     pub name: Attribute<'a>,
-    #[dtype(name = "input1_ty")]
+    #[dtype]
     pub input1_ty: Type<'a>,
 }
 
@@ -2149,17 +2149,17 @@ pub struct VariableWriteOp<'a> {
 /// implements the semantic foreach or while iterative loop structure.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("tosa.while_loop", generic, results(output_list))]
+#[mlir::op("tosa.while_loop", results(output_list))]
 pub struct WhileOp<'a> {
-    #[slot(input_list_ty, name = "input_list")]
+    #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
-    #[region(name = "cond_graph")]
+    #[region]
     pub cond_graph: Region<'a>,
-    #[region(name = "body_graph")]
+    #[region]
     pub body_graph: Region<'a>,
-    #[dtype(name = "input_list_ty")]
+    #[dtype]
     pub input_list_ty: Vec<Type<'a>>,
-    #[dtype(name = "output_list")]
+    #[dtype]
     pub output_list: Vec<Type<'a>>,
 }
 
@@ -2170,9 +2170,9 @@ pub struct WhileOp<'a> {
 /// but produces no results of its own.
 #[mlir::op("tosa.yield", format = "$inputs attr-dict `:` type($inputs)")]
 pub struct YieldOp<'a> {
-    #[slot(inputs_ty, name = "inputs")]
+    #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
-    #[dtype(name = "inputs_ty")]
+    #[dtype]
     pub inputs_ty: Vec<Type<'a>>,
 }
 

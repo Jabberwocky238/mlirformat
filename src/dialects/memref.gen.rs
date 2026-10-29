@@ -54,11 +54,11 @@ pub enum AtomicRMWKind {
 /// alignment assumption. The optimization is best-effort.
 #[mlir::op("memref.assume_alignment", format = "$memref `,` $alignment attr-dict `:` type($memref)", results(result))]
 pub struct AssumeAlignmentOp<'a> {
-    #[slot(result, name = "memref")]
+    #[slot(result)]
     pub memref: Value<'a>,
-    #[attr(name = "alignment", int = "i32")]
+    #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -79,19 +79,19 @@ pub struct AssumeAlignmentOp<'a> {
 /// ```
 #[mlir::op("memref.atomic_rmw", format = "$kind $value `,` $memref `[` $indices `]` attr-dict `:` `(` type($value) `,` type($memref) `)` `->` type($result)", results(result))]
 pub struct AtomicRMWOp<'a> {
-    #[slot(result, name = "value")]
+    #[slot(result)]
     pub value: Value<'a>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "kind", int = "i64")]
+    #[attr(int = "i64")]
     pub kind: AtomicRMWKind,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result", el = memref_ty)]
+    #[dtype(el = memref_ty)]
     pub result: Type<'a>,
 }
 
@@ -101,9 +101,9 @@ pub struct AtomicRMWOp<'a> {
 /// GenericAtomicRMWOp region.
 #[mlir::op("memref.atomic_yield", format = "$result attr-dict `:` type($result)")]
 pub struct AtomicYieldOp<'a> {
-    #[slot(result_ty, name = "result")]
+    #[slot(result_ty)]
     pub result: Value<'a>,
-    #[dtype(name = "result_ty")]
+    #[dtype]
     pub result_ty: Type<'a>,
 }
 
@@ -120,13 +120,13 @@ pub struct AtomicYieldOp<'a> {
 /// Otherwise, the result is undefined. They may have different layouts.
 #[mlir::op("memref.copy", format = "$source `,` $target attr-dict `:` type($source) `to` type($target)")]
 pub struct CopyOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(target_ty, name = "target")]
+    #[slot(target_ty)]
     pub target: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "target_ty")]
+    #[dtype]
     pub target_ty: Type<'a>,
 }
 
@@ -150,13 +150,13 @@ pub struct CopyOp<'a> {
 /// ```
 ///
 /// Generic form only (result type `results` inferred in C++).
-#[mlir::op("memref.distinct_objects", generic, results(results))]
+#[mlir::op("memref.distinct_objects", results(results))]
 pub struct DistinctObjectsOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -184,19 +184,19 @@ pub struct DistinctObjectsOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("memref.generic_atomic_rmw", generic, results(result))]
+#[mlir::op("memref.generic_atomic_rmw", results(result))]
 pub struct GenericAtomicRMWOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[region(name = "atomic_body")]
+    #[region]
     pub atomic_body: Region<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result", el = memref_ty)]
+    #[dtype(el = memref_ty)]
     pub result: Type<'a>,
 }
 
@@ -231,19 +231,19 @@ pub struct GenericAtomicRMWOp<'a> {
 /// ```
 #[mlir::op("memref.load", format = "$memref `[` $indices `]` attr-dict `:` type($memref)", results(result))]
 pub struct LoadOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
-    #[dtype(name = "result", el = memref_ty)]
+    #[dtype(el = memref_ty)]
     pub result: Type<'a>,
 }
 
@@ -292,13 +292,13 @@ pub struct AllocOp<'a> {
     pub dynamic_sizes: Vec<Value<'a>>,
     #[slot(symbol_operands_ty, name = "symbolOperands")]
     pub symbol_operands: Vec<Value<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "dynamicSizes_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype(name = "symbolOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub symbol_operands_ty: Type<'a>,
-    #[dtype(name = "memref")]
+    #[dtype]
     pub memref: Type<'a>,
 }
 
@@ -343,13 +343,13 @@ pub struct AllocaOp<'a> {
     pub dynamic_sizes: Vec<Value<'a>>,
     #[slot(symbol_operands_ty, name = "symbolOperands")]
     pub symbol_operands: Vec<Value<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "dynamicSizes_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_sizes_ty: Type<'a>,
-    #[dtype(name = "symbolOperands_ty", is = index)]
+    #[dtype(is = index)]
     pub symbol_operands_ty: Type<'a>,
-    #[dtype(name = "memref")]
+    #[dtype]
     pub memref: Type<'a>,
 }
 
@@ -388,11 +388,11 @@ pub struct AllocaOp<'a> {
 /// be left out, and will be inserted implicitly.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("memref.alloca_scope", generic, results(results))]
+#[mlir::op("memref.alloca_scope", results(results))]
 pub struct AllocaScopeOp<'a> {
     #[region(name = "bodyRegion")]
     pub body_region: Region<'a>,
-    #[dtype(name = "results")]
+    #[dtype]
     pub results: Vec<Type<'a>>,
 }
 
@@ -408,9 +408,9 @@ pub struct AllocaScopeOp<'a> {
 /// ```
 #[mlir::op("memref.alloca_scope.return", format = "attr-dict ($results^ `:` type($results))?")]
 pub struct AllocaScopeReturnOp<'a> {
-    #[slot(results_ty, name = "results")]
+    #[slot(results_ty)]
     pub results: Vec<Value<'a>>,
-    #[dtype(name = "results_ty")]
+    #[dtype]
     pub results_ty: Vec<Type<'a>>,
 }
 
@@ -464,11 +464,11 @@ pub struct AllocaScopeReturnOp<'a> {
 /// ```
 #[mlir::op("memref.cast", format = "$source attr-dict `:` type($source) `to` type($dest)", results(dest))]
 pub struct CastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -515,13 +515,13 @@ pub struct CastOp<'a> {
 /// source/result layout map are the faster-varying ones.
 #[mlir::op("memref.collapse_shape", format = "$src $reassociation attr-dict `:` type($src) `into` type($result)", results(result))]
 pub struct CollapseShapeOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr(name = "reassociation")]
+    #[attr]
     pub reassociation: Attribute<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -540,9 +540,9 @@ pub struct CollapseShapeOp<'a> {
 /// ```
 #[mlir::op("memref.dealloc", format = "$memref attr-dict `:` type($memref)")]
 pub struct DeallocOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
 }
 
@@ -571,15 +571,15 @@ pub struct DeallocOp<'a> {
 /// ```
 #[mlir::op("memref.dim", format = "attr-dict $source `,` $index `:` type($source)", results(result))]
 pub struct DimOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(index_ty, name = "index")]
+    #[slot(index_ty)]
     pub index: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "index_ty", is = index)]
+    #[dtype(is = index)]
     pub index_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -639,11 +639,11 @@ pub struct DimOp<'a> {
 /// * TODO: Consider replacing src/dst memref indices with view memrefs.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("memref.dma_start", generic)]
+#[mlir::op("memref.dma_start")]
 pub struct DmaStartOp<'a> {
-    #[slot(operands_ty, name = "operands")]
+    #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
-    #[dtype(name = "operands_ty")]
+    #[dtype]
     pub operands_ty: Vec<Type<'a>>,
 }
 
@@ -673,11 +673,11 @@ pub struct DmaWaitOp<'a> {
     pub tag_indices: Vec<Value<'a>>,
     #[slot(num_elements_ty, name = "numElements")]
     pub num_elements: Value<'a>,
-    #[dtype(name = "tagMemRef_ty")]
+    #[dtype]
     pub tag_mem_ref_ty: Type<'a>,
-    #[dtype(name = "tagIndices_ty", is = index)]
+    #[dtype(is = index)]
     pub tag_indices_ty: Type<'a>,
-    #[dtype(name = "numElements_ty", is = index)]
+    #[dtype(is = index)]
     pub num_elements_ty: Type<'a>,
 }
 
@@ -726,19 +726,19 @@ pub struct DmaWaitOp<'a> {
 /// source/result layout map are the faster-varying ones.
 #[mlir::op("memref.expand_shape", format = "$src $reassociation `output_shape` custom<DynamicIndexList>($output_shape, $static_output_shape) attr-dict `:` type($src) `into` type($result)", results(result))]
 pub struct ExpandShapeOp<'a> {
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Value<'a>,
-    #[slot(output_shape_ty, name = "output_shape")]
+    #[slot(output_shape_ty)]
     pub output_shape: Vec<Value<'a>>,
-    #[attr(name = "reassociation")]
+    #[attr]
     pub reassociation: Attribute<'a>,
-    #[attr(name = "static_output_shape", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_output_shape: Attribute<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Type<'a>,
-    #[dtype(name = "output_shape_ty", is = index)]
+    #[dtype(is = index)]
     pub output_shape_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -764,13 +764,13 @@ pub struct ExpandShapeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("memref.extract_aligned_pointer_as_index", generic, results(aligned_pointer))]
+#[mlir::op("memref.extract_aligned_pointer_as_index", results(aligned_pointer))]
 pub struct ExtractAlignedPointerAsIndexOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "aligned_pointer", is = index)]
+    #[dtype(is = index)]
     pub aligned_pointer: Type<'a>,
 }
 
@@ -818,19 +818,19 @@ pub struct ExtractAlignedPointerAsIndexOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("memref.extract_strided_metadata", generic, results(base_buffer, offset, sizes, strides))]
+#[mlir::op("memref.extract_strided_metadata", results(base_buffer, offset, sizes, strides))]
 pub struct ExtractStridedMetadataOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "base_buffer")]
+    #[dtype]
     pub base_buffer: Type<'a>,
-    #[dtype(name = "offset", is = index)]
+    #[dtype(is = index)]
     pub offset: Type<'a>,
-    #[dtype(name = "sizes", is = index)]
+    #[dtype(is = index)]
     pub sizes: Type<'a>,
-    #[dtype(name = "strides", is = index)]
+    #[dtype(is = index)]
     pub strides: Type<'a>,
 }
 
@@ -848,9 +848,9 @@ pub struct ExtractStridedMetadataOp<'a> {
 /// ```
 #[mlir::op("memref.get_global", format = "$name `:` type($result) attr-dict", results(result))]
 pub struct GetGlobalOp<'a> {
-    #[attr(name = "name")]
+    #[attr]
     pub name: Attribute<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -892,19 +892,19 @@ pub struct GetGlobalOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `custom<GlobalMemrefOpTypeAndInitialValue>`).
-#[mlir::op("memref.global", generic)]
+#[mlir::op("memref.global")]
 pub struct GlobalOp<'a> {
-    #[attr(name = "sym_name", symbol)]
+    #[attr(symbol)]
     pub sym_name: Attribute<'a>,
-    #[attr(name = "sym_visibility")]
+    #[attr]
     pub sym_visibility: Option<Attribute<'a>>,
     #[attr(name = "type")]
     pub type_: Attribute<'a>,
-    #[attr(name = "initial_value")]
+    #[attr]
     pub initial_value: Option<Attribute<'a>>,
-    #[attr(name = "constant")]
+    #[attr]
     pub constant: bool,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
 }
 
@@ -937,11 +937,11 @@ pub struct GlobalOp<'a> {
 /// ```
 #[mlir::op("memref.memory_space_cast", format = "$source attr-dict `:` type($source) `to` type($dest)", results(dest))]
 pub struct MemorySpaceCastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dest")]
+    #[dtype]
     pub dest: Type<'a>,
 }
 
@@ -963,11 +963,11 @@ pub struct MemorySpaceCastOp<'a> {
 /// instruction cache.
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("memref.prefetch", generic)]
+#[mlir::op("memref.prefetch")]
 pub struct PrefetchOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
     #[attr(name = "isWrite")]
     pub is_write: Attribute<'a>,
@@ -975,9 +975,9 @@ pub struct PrefetchOp<'a> {
     pub locality_hint: Attribute<'a>,
     #[attr(name = "isDataCache")]
     pub is_data_cache: Attribute<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -993,11 +993,11 @@ pub struct PrefetchOp<'a> {
 /// ```
 #[mlir::op("memref.rank", format = "$memref attr-dict `:` type($memref)", results(result))]
 pub struct RankOp<'a> {
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "result", is = index)]
+    #[dtype(is = index)]
     pub result: Type<'a>,
 }
 
@@ -1059,19 +1059,19 @@ pub struct RankOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("memref.realloc", generic, results(result))]
+#[mlir::op("memref.realloc", results(result))]
 pub struct ReallocOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
     #[slot(dynamic_result_size_ty, name = "dynamicResultSize")]
     pub dynamic_result_size: Vec<Value<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "dynamicResultSize_ty", is = index)]
+    #[dtype(is = index)]
     pub dynamic_result_size_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1186,29 +1186,29 @@ pub struct ReallocOp<'a> {
 /// ```
 #[mlir::op("memref.reinterpret_cast", format = "$source `to` `offset` `` `:` custom<DynamicIndexList>($offsets, $static_offsets) `` `,` `sizes` `` `:` custom<DynamicIndexList>($sizes, $static_sizes) `` `,` `strides` `` `:` custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct ReinterpretCastOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(sizes_ty, name = "sizes")]
+    #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[slot(strides_ty, name = "strides")]
+    #[slot(strides_ty)]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype(name = "strides_ty", is = index)]
+    #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1247,17 +1247,17 @@ pub struct ReinterpretCastOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `operands,`).
-#[mlir::op("memref.reshape", generic, results(result))]
+#[mlir::op("memref.reshape", results(result))]
 pub struct ReshapeOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(shape_ty, name = "shape")]
+    #[slot(shape_ty)]
     pub shape: Value<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "shape_ty")]
+    #[dtype]
     pub shape_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1289,21 +1289,21 @@ pub struct ReshapeOp<'a> {
 /// ```
 #[mlir::op("memref.store", format = "$value `,` $memref `[` $indices `]` attr-dict `:` type($memref)")]
 pub struct StoreOp<'a> {
-    #[slot(value_ty, name = "value")]
+    #[slot(value_ty)]
     pub value: Value<'a>,
-    #[slot(memref_ty, name = "memref")]
+    #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[slot(indices_ty, name = "indices")]
+    #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
-    #[attr(name = "nontemporal")]
+    #[attr]
     pub nontemporal: Option<Attribute<'a>>,
-    #[attr(name = "alignment", int = "i64")]
+    #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
-    #[dtype(name = "value_ty", el = memref_ty)]
+    #[dtype(el = memref_ty)]
     pub value_ty: Type<'a>,
-    #[dtype(name = "memref_ty")]
+    #[dtype]
     pub memref_ty: Type<'a>,
-    #[dtype(name = "indices_ty", is = index)]
+    #[dtype(is = index)]
     pub indices_ty: Type<'a>,
 }
 
@@ -1320,15 +1320,15 @@ pub struct StoreOp<'a> {
 /// ```
 ///
 /// Generic form only (custom C++ syntax).
-#[mlir::op("memref.transpose", generic, results(result))]
+#[mlir::op("memref.transpose", results(result))]
 pub struct TransposeOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
-    #[attr(name = "permutation")]
+    #[attr]
     pub permutation: Attribute<'a>,
-    #[dtype(name = "in_ty")]
+    #[dtype]
     pub in_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1370,21 +1370,21 @@ pub struct TransposeOp<'a> {
 /// ```
 ///
 /// Generic form only (directive `results)`).
-#[mlir::op("memref.view", generic, results(result))]
+#[mlir::op("memref.view", results(result))]
 pub struct ViewOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(byte_shift_ty, name = "byte_shift")]
+    #[slot(byte_shift_ty)]
     pub byte_shift: Value<'a>,
-    #[slot(sizes_ty, name = "sizes")]
+    #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "byte_shift_ty", is = index)]
+    #[dtype(is = index)]
     pub byte_shift_ty: Type<'a>,
-    #[dtype(name = "sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 
@@ -1533,29 +1533,29 @@ pub struct ViewOp<'a> {
 /// ```
 #[mlir::op("memref.subview", format = "$source `` custom<DynamicIndexList>($offsets, $static_offsets) custom<DynamicIndexList>($sizes, $static_sizes) custom<DynamicIndexList>($strides, $static_strides) attr-dict `:` type($source) `to` type($result)", results(result))]
 pub struct SubViewOp<'a> {
-    #[slot(source_ty, name = "source")]
+    #[slot(source_ty)]
     pub source: Value<'a>,
-    #[slot(offsets_ty, name = "offsets")]
+    #[slot(offsets_ty)]
     pub offsets: Vec<Value<'a>>,
-    #[slot(sizes_ty, name = "sizes")]
+    #[slot(sizes_ty)]
     pub sizes: Vec<Value<'a>>,
-    #[slot(strides_ty, name = "strides")]
+    #[slot(strides_ty)]
     pub strides: Vec<Value<'a>>,
-    #[attr(name = "static_offsets", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_offsets: Attribute<'a>,
-    #[attr(name = "static_sizes", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_sizes: Attribute<'a>,
-    #[attr(name = "static_strides", dense = "i64")]
+    #[attr(dense = "i64")]
     pub static_strides: Attribute<'a>,
-    #[dtype(name = "source_ty")]
+    #[dtype]
     pub source_ty: Type<'a>,
-    #[dtype(name = "offsets_ty", is = index)]
+    #[dtype(is = index)]
     pub offsets_ty: Type<'a>,
-    #[dtype(name = "sizes_ty", is = index)]
+    #[dtype(is = index)]
     pub sizes_ty: Type<'a>,
-    #[dtype(name = "strides_ty", is = index)]
+    #[dtype(is = index)]
     pub strides_ty: Type<'a>,
-    #[dtype(name = "result")]
+    #[dtype]
     pub result: Type<'a>,
 }
 

@@ -19,11 +19,11 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// ```
 #[mlir::op("x86vector.avx.bcst_to_f32.packed", format = "$a attr-dict`:` type($a)`->` type($dst)", results(dst))]
 pub struct BcstToPackedF32Op<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -42,11 +42,11 @@ pub struct BcstToPackedF32Op<'a> {
 /// ```
 #[mlir::op("x86vector.avx.cvt.packed.even.indexed_to_f32", format = "$a attr-dict`:` type($a)`->` type($dst)", results(dst))]
 pub struct CvtPackedEvenIndexedToF32Op<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -67,11 +67,11 @@ pub struct CvtPackedEvenIndexedToF32Op<'a> {
 /// ```
 #[mlir::op("x86vector.avx512.cvt.packed.f32_to_bf16", format = "$a attr-dict `:` type($a) `->` type($dst)", results(dst))]
 pub struct CvtPackedF32ToBF16Op<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -90,11 +90,11 @@ pub struct CvtPackedF32ToBF16Op<'a> {
 /// ```
 #[mlir::op("x86vector.avx.cvt.packed.odd.indexed_to_f32", format = "$a attr-dict`:` type($a)`->` type($dst)", results(dst))]
 pub struct CvtPackedOddIndexedToF32Op<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -116,15 +116,15 @@ pub struct CvtPackedOddIndexedToF32Op<'a> {
 /// ```
 #[mlir::op("x86vector.avx512.dot", format = "$src `,` $a `,` $b attr-dict `:` type($a) `->` type($src)", results(dst))]
 pub struct DotBF16Op<'a> {
-    #[slot(dst, name = "src")]
+    #[slot(dst)]
     pub src: Value<'a>,
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[slot(a_ty, name = "b")]
+    #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -147,15 +147,15 @@ pub struct DotBF16Op<'a> {
 /// ```
 #[mlir::op("x86vector.avx.dot.i8", format = "$w `,` $a `,` $b attr-dict `:` type($a) `->` type($w)", results(dst))]
 pub struct DotInt8Op<'a> {
-    #[slot(dst, name = "w")]
+    #[slot(dst)]
     pub w: Value<'a>,
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[slot(a_ty, name = "b")]
+    #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -177,11 +177,11 @@ pub struct DotInt8Op<'a> {
 /// ```
 #[mlir::op("x86vector.avx.intr.dot", format = "$a `,` $b attr-dict `:` type($res)", results(res))]
 pub struct DotOp<'a> {
-    #[slot(res, name = "a")]
+    #[slot(res)]
     pub a: Value<'a>,
-    #[slot(res, name = "b")]
+    #[slot(res)]
     pub b: Value<'a>,
-    #[dtype(name = "res")]
+    #[dtype]
     pub res: Type<'a>,
 }
 
@@ -200,19 +200,19 @@ pub struct DotOp<'a> {
 /// remaining elements from `src`.
 #[mlir::op("x86vector.avx512.mask.compress", format = "$k `,` $a (`,` $src^)? attr-dict `:` type($dst) (`,` type($src)^)?", results(dst))]
 pub struct MaskCompressOp<'a> {
-    #[slot(k_ty, name = "k")]
+    #[slot(k_ty)]
     pub k: Value<'a>,
-    #[slot(dst, name = "a")]
+    #[slot(dst)]
     pub a: Value<'a>,
-    #[slot(src_ty, name = "src")]
+    #[slot(src_ty)]
     pub src: Vec<Value<'a>>,
-    #[attr(name = "constant_src")]
+    #[attr]
     pub constant_src: Option<Attribute<'a>>,
-    #[dtype(name = "k_ty", i1 = dst)]
+    #[dtype(i1 = dst)]
     pub k_ty: Type<'a>,
-    #[dtype(name = "src_ty")]
+    #[dtype]
     pub src_ty: Vec<Type<'a>>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -230,23 +230,23 @@ pub struct MaskCompressOp<'a> {
 /// (elements are copied from src when the corresponding mask bit is not set).
 #[mlir::op("x86vector.avx512.mask.rndscale", format = "$src `,` $k `,` $a `,` $imm `,` $rounding attr-dict `:` type($dst)", results(dst))]
 pub struct MaskRndScaleOp<'a> {
-    #[slot(dst, name = "src")]
+    #[slot(dst)]
     pub src: Value<'a>,
-    #[slot(k_ty, name = "k")]
+    #[slot(k_ty)]
     pub k: Value<'a>,
-    #[slot(dst, name = "a")]
+    #[slot(dst)]
     pub a: Value<'a>,
-    #[slot(imm_ty, name = "imm")]
+    #[slot(imm_ty)]
     pub imm: Value<'a>,
-    #[slot(rounding_ty, name = "rounding")]
+    #[slot(rounding_ty)]
     pub rounding: Value<'a>,
-    #[dtype(name = "k_ty", is = i32)]
+    #[dtype(is = i32)]
     pub k_ty: Type<'a>,
-    #[dtype(name = "imm_ty", width = dst)]
+    #[dtype(width = dst)]
     pub imm_ty: Type<'a>,
-    #[dtype(name = "rounding_ty", is = i32)]
+    #[dtype(is = i32)]
     pub rounding_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
@@ -264,30 +264,30 @@ pub struct MaskRndScaleOp<'a> {
 /// when the corresponding mask bit is not set).
 #[mlir::op("x86vector.avx512.mask.scalef", format = "$src `,` $a `,` $b `,` $k `,` $rounding attr-dict `:` type($dst)", results(dst))]
 pub struct MaskScaleFOp<'a> {
-    #[slot(dst, name = "src")]
+    #[slot(dst)]
     pub src: Value<'a>,
-    #[slot(dst, name = "a")]
+    #[slot(dst)]
     pub a: Value<'a>,
-    #[slot(dst, name = "b")]
+    #[slot(dst)]
     pub b: Value<'a>,
-    #[slot(k_ty, name = "k")]
+    #[slot(k_ty)]
     pub k: Value<'a>,
-    #[slot(rounding_ty, name = "rounding")]
+    #[slot(rounding_ty)]
     pub rounding: Value<'a>,
-    #[dtype(name = "k_ty", width = dst)]
+    #[dtype(width = dst)]
     pub k_ty: Type<'a>,
-    #[dtype(name = "rounding_ty", is = i32)]
+    #[dtype(is = i32)]
     pub rounding_ty: Type<'a>,
-    #[dtype(name = "dst")]
+    #[dtype]
     pub dst: Type<'a>,
 }
 
 /// `x86vector.avx.rsqrt`: Rsqrt
 #[mlir::op("x86vector.avx.rsqrt", format = "$a attr-dict `:` type($a)", results(b))]
 pub struct RsqrtOp<'a> {
-    #[slot(b, name = "a")]
+    #[slot(b)]
     pub a: Value<'a>,
-    #[dtype(name = "b")]
+    #[dtype]
     pub b: Type<'a>,
 }
 
@@ -307,15 +307,15 @@ pub struct RsqrtOp<'a> {
 /// registers.
 #[mlir::op("x86vector.avx512.vp2intersect", format = "$a `,` $b attr-dict `:` type($a)", results(k1, k2))]
 pub struct Vp2IntersectOp<'a> {
-    #[slot(a_ty, name = "a")]
+    #[slot(a_ty)]
     pub a: Value<'a>,
-    #[slot(a_ty, name = "b")]
+    #[slot(a_ty)]
     pub b: Value<'a>,
-    #[dtype(name = "a_ty")]
+    #[dtype]
     pub a_ty: Type<'a>,
-    #[dtype(name = "k1", i1 = a_ty)]
+    #[dtype(i1 = a_ty)]
     pub k1: Type<'a>,
-    #[dtype(name = "k2", i1 = a_ty)]
+    #[dtype(i1 = a_ty)]
     pub k2: Type<'a>,
 }
 
