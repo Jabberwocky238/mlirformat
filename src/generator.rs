@@ -33,32 +33,123 @@ impl<T: Display> Display for Sep<'_, T> {
 
 /// Indentation-aware MLIR writer; typed ops print through it.
 pub struct Printer<'p, 'd> {
-    out: &'p mut dyn Write,
+    out: Sink<'p>,
     indent: usize,
     opt: &'d MlirOpt,
     /// Dialect whose op names print without their prefix (`return` in `func.func`).
     default_ns: Option<&'static str>,
     /// The enclosing module's attribute aliases; empty when printing an op on its own.
     aliases: Vec<(String, String)>,
+    /// The regions of the op a hand-written print is printing: its typed op holds them hollow
+    /// ([`Region::hollow`]), and a hollow region prints as the one it stands for.
+    lent: &'p [Region<'p>],
+    /// Where the regions handed over by reference ([`Region::sourced`]) are read.
+    source: Option<&'d dyn Source>,
+}
+
+/// Where a printer's text goes: any writer, or a string it can take text back out of (a custom
+/// form that turns out not to fit is undone in place instead of printed aside and copied).
+enum Sink<'p> {
+    Write(&'p mut dyn Write),
+    Text(&'p mut String),
+}
+
+/// ⭐ An IR the printer reads as it goes, instead of a whole [`Module`] built for it: the ops it
+/// hands over hold their regions by reference ([`Region::sourced`]), and the printer asks for
+/// each one when it gets to it. Only the path being printed exists as mlirformat's IR.
+pub trait Source {
+    /// Region `id`, one level deep: its blocks and their ops, whose own regions are references
+    /// again.
+    fn region(&self, id: u32) -> Region<'_>;
+
+    /// Region `id`'s blocks, labels and arguments only (their ops are left out).
+    fn blocks(&self, id: u32) -> Vec<Block<'_>> {
+        self.region(id).blocks.into_iter().map(|b| Block { ops: Vec::new(), ..b }).collect()
+    }
+
+    /// How many ops block `b` of region `id` holds.
+    fn len(&self, id: u32, b: usize) -> usize {
+        self.region(id).blocks[b].ops.len()
+    }
+
+    /// Op `k` of block `b` of region `id`, its regions by reference: the printer reads a region
+    /// it only prints one op at a time.
+    fn op(&self, id: u32, b: usize, k: usize) -> Operation<'_> {
+        self.region(id).blocks.swap_remove(b).ops.swap_remove(k)
+    }
 }
 
 impl Write for Printer<'_, '_> {
     #[inline]
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.out.write_str(s)
+        match &mut self.out {
+            Sink::Write(w) => w.write_str(s),
+            Sink::Text(t) => {
+                t.push_str(s);
+                Ok(())
+            }
+        }
     }
 }
 
 impl<'p, 'd> Printer<'p, 'd> {
     #[inline]
     pub fn new(out: &'p mut dyn Write, opt: &'d MlirOpt) -> Self {
-        Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new() }
+        Self::into(Sink::Write(out), opt)
+    }
+
+    /// A printer into string `out`.
+    #[inline]
+    pub fn text(out: &'p mut String, opt: &'d MlirOpt) -> Self {
+        Self::into(Sink::Text(out), opt)
+    }
+
+    #[inline]
+    fn into(out: Sink<'p>, opt: &'d MlirOpt) -> Self {
+        Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new(), lent: &[], source: None }
     }
 
     /// A printer into `out` in the same state (indentation, default dialect, dialects).
     #[inline]
     pub fn fork<'q>(&self, out: &'q mut dyn Write) -> Printer<'q, 'd> {
-        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone() }
+        self.lend(out, &[])
+    }
+
+    /// [`fork`](Self::fork), lending it the regions that the hollow regions it meets stand for.
+    #[inline]
+    pub(crate) fn lend<'q>(&self, out: &'q mut dyn Write, lent: &'q [Region<'q>]) -> Printer<'q, 'd> {
+        self.with(Sink::Write(out), lent)
+    }
+
+    fn with<'q>(&self, out: Sink<'q>, lent: &'q [Region<'q>]) -> Printer<'q, 'd> {
+        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source }
+    }
+
+    /// ⭐ Prints with `f` on a printer in the same state, lent `lent`, writing in place; when
+    /// `f` gives `None` or an error, what it wrote is taken back and the answer is `None`. Into a
+    /// writer (which cannot take text back) it prints aside and copies.
+    pub(crate) fn attempt(&mut self, lent: &[Region<'_>], f: impl FnOnce(&mut Printer<'_, 'd>) -> Option<fmt::Result>) -> Option<fmt::Result> {
+        let mut aside = String::new();
+        let (text, at) = match &mut self.out {
+            Sink::Text(t) => {
+                let at = t.len();
+                (&mut **t, Some(at))
+            }
+            Sink::Write(_) => (&mut aside, None),
+        };
+        let mut q = Printer { out: Sink::Text(text), indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source };
+        let done = f(&mut q).and_then(Result::ok);
+        match (done, at) {
+            (Some(()), Some(_)) => Some(Ok(())),
+            (Some(()), None) => Some(self.write_str(&aside)),
+            (None, Some(at)) => {
+                if let Sink::Text(t) = &mut self.out {
+                    t.truncate(at);
+                }
+                None
+            }
+            (None, None) => None,
+        }
     }
 
     /// Prints with `f` into `out`, no dialects registered.
@@ -85,7 +176,8 @@ impl<'p, 'd> Printer<'p, 'd> {
     /// Newline followed by the current indentation.
     #[inline]
     pub fn nl(&mut self) -> fmt::Result {
-        write!(self.out, "\n{:1$}", "", self.indent)
+        let indent = self.indent;
+        write!(self, "\n{:1$}", "", indent)
     }
 
     /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
@@ -221,6 +313,51 @@ impl<'p, 'd> Printer<'p, 'd> {
         self.blocks_eliding(r, entry_label, None)
     }
 
+    /// A block's `^label(args):` line, unless it is an entry block printed without one.
+    fn block_head(&mut self, b: &Block<'_>, i: usize, entry_label: bool) -> fmt::Result {
+        if let Some(label) = b.label.as_ref().filter(|_| i > 0 || entry_label) {
+            self.nl()?;
+            write!(self, "^{label}")?;
+            if !b.args.is_empty() {
+                write!(self, "({})", Sep(&b.args, ", "))?;
+            }
+            self.write_char(':')?;
+        }
+        Ok(())
+    }
+
+    /// [`blocks_eliding`](Self::blocks_eliding) of region `id` of `src`, read one op at a time.
+    fn blocks_from(&mut self, src: &dyn Source, id: u32, entry_label: bool, elide: Option<&str>) -> fmt::Result {
+        self.write_char('{')?;
+        for (i, b) in src.blocks(id).iter().enumerate() {
+            self.block_head(b, i, entry_label)?;
+            self.indent += 2;
+            let n = src.len(id, i);
+            for k in 0..n {
+                let op = src.op(id, i, k);
+                if k + 1 == n && elide.is_some_and(|t| Self::bare_terminator(&op, t)) {
+                    break;
+                }
+                self.nl()?;
+                self.op(&op)?;
+            }
+            self.indent -= 2;
+        }
+        self.nl()?;
+        self.write_char('}')
+    }
+
+    /// `op` with its regions by reference read one level deep, for whatever looks into them.
+    pub(crate) fn expanded<'o>(&self, op: &'o Operation<'_>) -> Option<Operation<'o>>
+    where
+        'd: 'o,
+    {
+        let src = self.source?;
+        op.regions.iter().any(|r| r.source_id().is_some()).then_some(())?;
+        let regions = op.regions.iter().map(|r| r.source_id().map_or_else(|| r.reborrow(), |id| src.region(id))).collect();
+        Some(Operation { regions, ..op.shallow() })
+    }
+
     /// Does `op` say nothing beyond being there? Such a terminator is implied by its region.
     #[inline]
     fn bare_terminator(op: &Operation<'_>, name: &str) -> bool {
@@ -228,16 +365,15 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 
     fn blocks_eliding(&mut self, r: &Region<'_>, entry_label: bool, elide: Option<&str>) -> fmt::Result {
+        if let Some(lent) = r.lent().and_then(|i| self.lent.get(i)) {
+            return self.blocks_eliding(lent, entry_label, elide);
+        }
+        if let Some((src, id)) = self.source.zip(r.source_id()) {
+            return self.blocks_from(src, id, entry_label, elide);
+        }
         self.write_char('{')?;
         for (i, b) in r.blocks.iter().enumerate() {
-            if let Some(label) = b.label.as_ref().filter(|_| i > 0 || entry_label) {
-                self.nl()?;
-                write!(self, "^{label}")?;
-                if !b.args.is_empty() {
-                    write!(self, "({})", Sep(&b.args, ", "))?;
-                }
-                self.write_char(':')?;
-            }
+            self.block_head(b, i, entry_label)?;
             self.indent += 2;
             let last = b.ops.len().saturating_sub(1);
             for (k, op) in b.ops.iter().enumerate() {
@@ -254,6 +390,82 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 }
 
+/// The first block label of a hollow region: a NUL, which no parsed label holds, and the index.
+const HOLLOW: char = '\0';
+/// The only block label of a region by reference ([`Region::sourced`]), before its id.
+const SOURCED: char = '\u{1}';
+
+impl<'a> Region<'a> {
+    /// What a hand-written print reads of region `i` of its op, without copying the IR below:
+    /// the blocks with their arguments and ops, the ops without their regions. It prints as the
+    /// region the printer was lent ([`Printer::lend`]); an empty region is just empty.
+    pub(crate) fn hollow(&self, i: usize) -> Self {
+        let mut blocks: Vec<Block<'a>> = self.blocks.iter().map(|b| Block { label: b.label.clone(), args: b.args.clone(), ops: b.ops.iter().map(Operation::without_regions).collect() }).collect();
+        if let Some(b) = blocks.first_mut() {
+            b.label = Some(Str::Owned(alloc::format!("{HOLLOW}{i}")));
+        }
+        Region { blocks }
+    }
+
+    /// Which lent region this hollow region stands for.
+    fn lent(&self) -> Option<usize> {
+        self.blocks.first()?.label.as_deref()?.strip_prefix(HOLLOW)?.parse().ok()
+    }
+
+    /// Region `id` of a [`Source`], by reference: what an op handed to the printer holds instead
+    /// of its region (a region with no blocks is just empty, not a reference).
+    pub fn sourced(id: u32) -> Self {
+        Region { blocks: alloc::vec![Block { label: Some(Cow::Owned(format!("{SOURCED}{id}"))), args: Vec::new(), ops: Vec::new() }] }
+    }
+
+    /// The id of a region by reference.
+    fn source_id(&self) -> Option<u32> {
+        match &self.blocks[..] {
+            [b] => b.label.as_deref()?.strip_prefix(SOURCED)?.parse().ok(),
+            _ => None,
+        }
+    }
+}
+
+impl<'a> Operation<'a> {
+    /// Everything but the regions, borrowed.
+    fn shallow(&self) -> Operation<'_> {
+        Operation {
+            results: self.results.reborrow(),
+            name: self.name.reborrow(),
+            operands: self.operands.reborrow(),
+            successors: self.successors.reborrow(),
+            properties: self.properties.reborrow(),
+            regions: Vec::new(),
+            attributes: self.attributes.reborrow(),
+            ty: self.ty.reborrow(),
+            loc: self.loc.reborrow(),
+            raw: self.raw.reborrow(),
+        }
+    }
+
+    /// A copy of everything but the regions.
+    fn without_regions(&self) -> Self {
+        Operation {
+            results: self.results.clone(),
+            name: self.name.clone(),
+            operands: self.operands.clone(),
+            successors: self.successors.clone(),
+            properties: self.properties.clone(),
+            regions: Vec::new(),
+            attributes: self.attributes.clone(),
+            ty: self.ty.clone(),
+            loc: self.loc.clone(),
+            raw: self.raw.clone(),
+        }
+    }
+
+    /// The op with its regions hollow ([`Region::hollow`]), for its typed op to print.
+    pub(crate) fn hollow(&self) -> Self {
+        Operation { regions: self.regions.iter().enumerate().map(|(i, r)| r.hollow(i)).collect(), ..self.without_regions() }
+    }
+}
+
 /// IR nodes a [`Printer`] writes whole.
 pub trait Emit {
     fn emit(&self, p: &mut Printer<'_, '_>) -> fmt::Result;
@@ -263,9 +475,35 @@ pub trait Emit {
 pub struct Shown<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x T);
 
 impl<T: Emit + ?Sized> Display for Shown<'_, T> {
+    /// Printed into a string first, so that a custom form that does not fit is taken back in
+    /// place rather than printed aside.
     #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        self.1.emit(&mut Printer::new(f, self.0))
+        let mut out = String::new();
+        self.1.emit(&mut Printer::text(&mut out, self.0))?;
+        f.write_str(&out)
+    }
+}
+
+/// Like [`Shown`], the regions handed over by reference read from a [`Source`]
+/// (`opt.show_from(&module, &source)`).
+pub struct ShownFrom<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x T, pub &'x dyn Source);
+
+impl<T: Emit + ?Sized> ShownFrom<'_, T> {
+    /// The text, printed straight into the string it returns.
+    pub fn text(&self) -> Result<String, fmt::Error> {
+        let mut out = String::new();
+        let mut p = Printer::text(&mut out, self.0);
+        p.source = Some(self.2);
+        self.1.emit(&mut p)?;
+        Ok(out)
+    }
+}
+
+impl<T: Emit + ?Sized> Display for ShownFrom<'_, T> {
+    #[inline]
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.text()?)
     }
 }
 
@@ -790,6 +1028,110 @@ static_fields! {
 }
 
 static_fields! {
+    @enum
+    Piece { Text(x), Region(x) }
+    Type { Integer { signedness, width }, Float(x), Index, NoneType, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }
+    Attribute {
+        Unit, Bool(x), Int { lit, ty }, Float { lit, ty }, Str { lit, ty }, Type(x), Array(x), Dict(x),
+        SymbolRef(x), DenseArray { ty, values }, Builtin { name, body, ty }, Extended { ext, ty }
+    }
+}
+
+/// ⭐ The same value borrowing everything it can from `self`: text is never copied, only the
+/// lists that hold it. What an IR that keeps its own text hands to the printer
+/// (`mlirpass`'s export), instead of a deep copy.
+pub trait Reborrow {
+    type Of<'s>
+    where
+        Self: 's;
+    fn reborrow(&self) -> Self::Of<'_>;
+}
+
+impl Reborrow for Str<'_> {
+    type Of<'s> = Str<'s> where Self: 's;
+    #[inline]
+    fn reborrow(&self) -> Str<'_> {
+        Cow::Borrowed(self)
+    }
+}
+
+impl<T: Reborrow> Reborrow for Option<T> {
+    type Of<'s> = Option<T::Of<'s>> where Self: 's;
+    #[inline]
+    fn reborrow(&self) -> Self::Of<'_> {
+        self.as_ref().map(T::reborrow)
+    }
+}
+
+impl<T: Reborrow> Reborrow for Vec<T> {
+    type Of<'s> = Vec<T::Of<'s>> where Self: 's;
+    #[inline]
+    fn reborrow(&self) -> Self::Of<'_> {
+        self.iter().map(T::reborrow).collect()
+    }
+}
+
+impl<T: Reborrow> Reborrow for Box<T> {
+    type Of<'s> = Box<T::Of<'s>> where Self: 's;
+    #[inline]
+    fn reborrow(&self) -> Self::Of<'_> {
+        Box::new((**self).reborrow())
+    }
+}
+
+/// Plain data: a copy.
+macro_rules! reborrow_as_is {
+    ($($t:ty),*) => {$(
+        impl Reborrow for $t {
+            type Of<'s> = $t;
+            #[inline]
+            fn reborrow(&self) -> $t {
+                self.clone()
+            }
+        }
+    )*};
+}
+
+reborrow_as_is!(u32, bool, Signedness, FloatKind, ShapedKind, Dim);
+
+/// A struct field by field, or an enum variant by variant, as [`static_fields`].
+macro_rules! reborrow_fields {
+    ($($name:ident { $($f:ident),* })*) => {$(
+        impl Reborrow for $name<'_> {
+            type Of<'s> = $name<'s> where Self: 's;
+            #[inline]
+            fn reborrow(&self) -> $name<'_> {
+                $name { $($f: self.$f.reborrow()),* }
+            }
+        }
+    )*};
+    (@enum $($name:ident { $($v:ident $({ $($f:ident),* })? $(($x:ident))?),* })*) => {$(
+        impl Reborrow for $name<'_> {
+            type Of<'s> = $name<'s> where Self: 's;
+            #[inline]
+            fn reborrow(&self) -> $name<'_> {
+                match self {
+                    $($name::$v $({ $($f),* })? $(($x))? => $name::$v $({ $($f: $f.reborrow()),* })? $(($x.reborrow()))?),*
+                }
+            }
+        }
+    )*};
+}
+
+reborrow_fields! {
+    Operation { results, name, operands, successors, properties, regions, attributes, ty, loc, raw }
+    ResultDef { name, count }
+    Value { name, index }
+    Region { blocks }
+    Block { label, args, ops }
+    BlockArg { name, ty, loc }
+    NamedAttr { name, value }
+    FunctionType { inputs, results }
+    Shaped { kind, shape, elem, extras }
+    Extended { name, body, params }
+}
+
+reborrow_fields! {
     @enum
     Piece { Text(x), Region(x) }
     Type { Integer { signedness, width }, Float(x), Index, NoneType, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }

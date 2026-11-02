@@ -20,7 +20,7 @@ use core::fmt;
 
 pub use crate::common::*;
 pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector};
-pub use crate::generator::{Emit, Printer, Sep, Shown, ShownIn, Signature, Spacer, Untyped};
+pub use crate::generator::{Emit, IntoStatic, Printer, Reborrow, Sep, Shown, ShownFrom, ShownIn, Source, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
 /// A loaded dialect, and the ops it brought.
@@ -217,6 +217,13 @@ impl MlirOpt {
         ShownIn(self, aliases, x)
     }
 
+    /// Like [`show`](Self::show), the regions `x` holds by reference ([`Region::sourced`]) read
+    /// from `source` as the printer reaches them.
+    #[inline]
+    pub fn show_from<'x, T: Emit + ?Sized>(&'x self, x: &'x T, source: &'x dyn Source) -> ShownFrom<'x, T> {
+        ShownFrom(self, x, source)
+    }
+
     /// Module / op → text, ops in the table in custom form: `opt.show(&m).to_string()`.
     #[inline]
     pub fn show<'x, T: Emit + ?Sized>(&'x self, x: &'x T) -> Shown<'x, T> {
@@ -246,15 +253,21 @@ impl Template {
     /// cannot print it.
     fn print_as<O: Op>(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
         O::CUSTOM.then_some(())?;
-        let mut text = alloc::string::String::new();
-        let mut fork = p.fork(&mut text);
-        // A format prints the op's fields in place; only a hand-written print needs the typed op.
+        // A format prints the op's fields in place, its regions read as it reaches them. Only a
+        // hand-written print needs the typed op, which may look into its regions: they are read
+        // one level deep, and the typed op holds them hollow, lent to the printer, not copied.
         match O::FORMAT {
-            "" => op.to_op::<O>().ok()?.print(&mut fork),
-            _ => Format::of::<O>().ok()?.print_op(op, &mut fork),
+            "" => {
+                let expanded = p.expanded(op);
+                let op = expanded.as_ref().unwrap_or(op);
+                let typed = op.hollow().to_op::<O>().ok()?;
+                p.attempt(&op.regions, |q| Some(typed.print(q)))
+            }
+            _ => {
+                let format = Format::of::<O>().ok()?;
+                p.attempt(&[], |q| Some(format.print_op(op, q).map_err(|_| fmt::Error)))
+            }
         }
-        .ok()?;
-        Some(fmt::Write::write_str(p, &text))
     }
 }
 

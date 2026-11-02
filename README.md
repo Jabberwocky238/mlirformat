@@ -163,6 +163,14 @@ canonical form built from it through MLIR's simplifying constructors (`AffineMap
 `AffineMap::parse(text)`): that is the form to fold, compose and simplify, and it prints what
 `mlir-opt` prints for a map it built.
 
+### Borrowed and owned IR
+
+`Module`, `Operation` and the rest borrow their text (`Cow<'a, str>`) from the source they were
+read from. `IntoStatic::into_static` makes a value own all of it (by move: owned text moves, only
+borrowed text is copied). `Reborrow::reborrow` goes the other way: a view of a value that borrows
+all its text from it, copying only the lists that hold it, so that an IR keeping its own text can
+hand it to the printer without a deep copy.
+
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
