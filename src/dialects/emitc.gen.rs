@@ -1176,6 +1176,7 @@ pub struct MemberOfPtrOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
     pub member: Attribute<'a>,
+    #[dtype(strip = "emitc.lvalue")]
     pub operand_ty: Type<'a>,
     pub result: Type<'a>,
 }
@@ -1200,6 +1201,7 @@ pub struct MemberOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
     pub member: Attribute<'a>,
+    #[dtype(strip = "emitc.lvalue")]
     pub operand_ty: Type<'a>,
     pub result: Type<'a>,
 }

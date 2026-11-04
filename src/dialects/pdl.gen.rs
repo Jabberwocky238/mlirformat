@@ -168,9 +168,9 @@ pub struct OperandOp<'a> {
 pub struct OperandsOp<'a> {
     #[slot(value_type_ty, name = "valueType")]
     pub value_type: Vec<Value<'a>>,
-    #[dtype(is = "!pdl.range<type>")]
+    #[dtype(is = "!pdl.range<type>", strip = "pdl.range")]
     pub value_type_ty: Type<'a>,
-    #[dtype(is = "!pdl.range<value>")]
+    #[dtype(is = "!pdl.range<value>", strip = "pdl.range")]
     pub value: Type<'a>,
 }
 
@@ -355,6 +355,7 @@ pub struct RangeOp<'a> {
     #[slot(arguments_ty)]
     pub arguments: Vec<Value<'a>>,
     pub arguments_ty: Vec<Type<'a>>,
+    #[dtype(strip = "pdl.range")]
     pub result: Type<'a>,
 }
 
@@ -563,7 +564,7 @@ pub struct TypeOp<'a> {
 pub struct TypesOp<'a> {
     #[attr(name = "constantTypes")]
     pub constant_types: Option<Attribute<'a>>,
-    #[dtype(is = "!pdl.range<type>")]
+    #[dtype(is = "!pdl.range<type>", strip = "pdl.range")]
     pub result: Type<'a>,
 }
 

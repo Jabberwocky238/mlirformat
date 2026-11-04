@@ -114,7 +114,7 @@ impl Marked {
                             fixed = Some(if v.peek(LitStr) { v.parse::<LitStr>()?.value() } else { v.parse::<Ident>()?.to_string() });
                             rule = Some((key, None));
                         }
-                        ("dtype", "i1" | "of" | "eq" | "el" | "width") => {
+                        ("dtype", "i1" | "of" | "eq" | "el" | "width" | "svbool") => {
                             let arg = if m.input.peek(Token![=]) { Some(m.value()?.parse::<Ident>()?) } else { None };
                             rule = Some((key, arg));
                         }
@@ -196,7 +196,7 @@ impl OpArgs {
                         Some(("i1", None)) => quote!(::core::option::Option::Some(::mlirformat::Infer::I1)),
                         Some((r, x)) => {
                             let v = var(x)?;
-                            let rule = Ident::new(match r { "i1" => "I1Like", "of" => "TypeOf", "eq" => "Same", "el" => "ElemOf", _ => "Width" }, m.ident.span());
+                            let rule = Ident::new(match r { "i1" => "I1Like", "of" => "TypeOf", "eq" => "Same", "el" => "ElemOf", "svbool" => "Svbool", _ => "Width" }, m.ident.span());
                             quote!(::core::option::Option::Some(::mlirformat::Infer::#rule(#v)))
                         }
                     };

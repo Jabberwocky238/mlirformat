@@ -3,13 +3,14 @@
 mod records;
 mod td;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use records::Records;
 
 #[derive(clap::Args)]
 pub struct Args {
-    /// The dialects' ops files, e.g. `mlir/include/mlir/Dialect/Arith/IR/ArithOps.td` (several run in parallel).
+    /// The dialects' ops files, e.g. `mlir/include/mlir/Dialect/Arith/IR/ArithOps.td` (several run in
+    /// parallel; with `--dialect`, they are one run: the dialect's ops over several upstream files).
     #[arg(required = true)]
     td: Vec<PathBuf>,
     /// Include directories for TableGen (usually `mlir/include`).
@@ -24,7 +25,8 @@ pub struct Args {
     /// Print the resolved records as `llvm-tblgen --dump-json` would (byte for byte) instead of generating (one `.td` only).
     #[arg(long)]
     dump_json: bool,
-    /// Only this dialect (namespace, e.g. `arith`), with its ops from every file the `.td` includes
+    /// Only this dialect (namespace, e.g. `arith`), with its ops from every file read: the `.td`
+    /// files given (`LinalgOps.td LinalgStructuredOps.td LinalgRelayoutOps.td`) and what they include
     #[arg(long)]
     dialect: Option<String>,
     /// A dialect's type / attribute parameter hook, `<namespace>=<path>`
@@ -44,11 +46,14 @@ impl Args {
         }
         if self.dump_json {
             let [td] = self.td.as_slice() else { return Err("--dump-json takes exactly one `.td` file".into()) };
-            print!("{}", td::dump_json(td, &self.includes).map_err(|e| e.to_string())?);
+            print!("{}", td::dump_json(core::slice::from_ref(td), &self.includes).map_err(|e| e.to_string())?);
             return Ok(());
         }
+        if self.dialect.is_some() {
+            return self.one(&self.td).map(|lines| lines.iter().for_each(|l| println!("{l}")));
+        }
         let reports: Vec<Result<Vec<String>, String>> = std::thread::scope(|s| {
-            let workers: Vec<_> = self.td.iter().map(|td| s.spawn(|| self.one(td))).collect();
+            let workers: Vec<_> = self.td.iter().map(|td| s.spawn(|| self.one(core::slice::from_ref(td)))).collect();
             workers.into_iter().map(|w| w.join().unwrap_or_else(|_| Err("generator thread panicked".into()))).collect()
         });
         let mut failed = Vec::new();
@@ -61,14 +66,14 @@ impl Args {
         if failed.is_empty() { Ok(()) } else { Err(failed.join("\n")) }
     }
 
-    /// Writes one `<dialect>.gen.rs` per dialect with ops defined in `td`; the summary lines.
-    fn one(&self, td: &Path) -> Result<Vec<String>, String> {
+    /// Writes one `<dialect>.gen.rs` per dialect with ops defined in `tds` (one run); the summary lines.
+    fn one(&self, tds: &[PathBuf]) -> Result<Vec<String>, String> {
         let records = match &self.json {
-            Some(path) => Records::from_json(&std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?, td),
-            None => Records::parse(td, &self.includes),
+            Some(path) => Records::from_json(&std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?, &tds[0]),
+            None => Records::parse(tds, &self.includes),
         }
         .map_err(|e| e.to_string())?;
-        let source = td.file_name().map_or_else(String::new, |f| f.to_string_lossy().into_owned());
+        let source = tds.iter().filter_map(|td| td.file_name()).map(|f| f.to_string_lossy()).collect::<Vec<_>>().join("`, `");
         let dialects: Vec<_> = records.dialects(self.dialect.as_deref()).into_iter().filter(|d| !d.ops.is_empty()).collect();
         if dialects.is_empty() {
             return Err("no dialect with ops defined in it".into());

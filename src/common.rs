@@ -538,6 +538,9 @@ pub enum Infer {
     /// The signless integer as wide as type variable `.0`'s leading dimension
     /// (`x86vector.avx512.mask.scalef`'s mask: `vector<16xf32>` ⇒ `i16`).
     Width(&'static str),
+    /// Type variable `.0`'s vector with its trailing dim widened to 16 (`arm_sve.convert_from_svbool`'s
+    /// source: `vector<2x[4]xi1>` ⇒ `vector<2x[16]xi1>`).
+    Svbool(&'static str),
 }
 
 /// A field's MLIR role, as `#[mlir::op]` writes it in [`Op::FIELDS`].
@@ -790,6 +793,16 @@ impl<'f> Format<'f> {
             Role::Operand { ty } => self.field(ty),
             Role::Type { .. } => Ok(f),
             _ => Err(format!("`type(${name})`: not an operand or type variable").into()),
+        }
+    }
+
+    /// How many times `type($name)` spells its type variable `var`: once per operand when `name`
+    /// is a variadic group whose operands share one type (`amdgpu.raw_buffer_load`'s
+    /// `type($indices)`: `i32, i32`), else once. `len`: the group's operand count.
+    pub fn shared_count(&self, name: &str, var: &Field, len: impl FnOnce(&Field) -> usize) -> usize {
+        match self.schema.field(name) {
+            Some(f) if f.variadic && !var.variadic && matches!(f.role, Role::Operand { .. }) => len(f).max(1),
+            _ => 1,
         }
     }
 

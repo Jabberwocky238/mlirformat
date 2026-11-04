@@ -1601,6 +1601,9 @@ impl Format<'_> {
                     s.elem(p).map_err(io)?;
                     let f = self.type_var(n)?;
                     let ts = Self::shown_types(f, v)?;
+                    let k = self.shared_count(n, f, |g| v.values(g).map_or(1, <[_]>::len));
+                    let ts: Cow<'_, [Type<'_>]> = if k > 1 { ts.iter().cycle().take(k).cloned().collect() } else { Cow::Borrowed(ts) };
+                    let ts = &*ts;
                     match f.role {
                         Role::Type { strip: Some(d), .. } if !*qualified => {
                             for (i, t) in ts.iter().enumerate() {

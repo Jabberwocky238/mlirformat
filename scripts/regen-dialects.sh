@@ -1,18 +1,44 @@
 #!/bin/sh
 # Regenerates every tblgen dialect in src/dialects from LLVM 22.1.8's ODS.
-#   LLVM=<llvm-project> LLVM_BUILD=<its build dir> scripts/regen-dialects.sh [out dir]
-# LLVM_BUILD only provides the generated `LinalgNamedStructuredOps.yamlgen.td`.
+#   scripts/regen-dialects.sh [out dir]
+# `td/` is `mlir/include` as llvm-project 22.1.8 has it, cut down to what these dialects include:
+# the upstream files, unchanged, at their own paths, and `-I td` is the root their
+# `include "mlir/..."` lines read from. `LinalgNamedStructuredOps.yamlgen.td` is the one file a
+# 22.1.8 build generates (from the OpDSL YAML) instead of keeping in the source tree.
+# A dialect whose ops upstream splits over several files is one run over those files.
 set -e
-: "${LLVM:?set LLVM to the llvm-project checkout}"
-: "${LLVM_BUILD:?set LLVM_BUILD to its build directory}"
 cd "$(dirname "$0")/.."
-D=$LLVM/mlir/include/mlir/Dialect
-I="-I $LLVM/mlir/include -I $LLVM_BUILD/tools/mlir/include"
 OUT=${1:-src/dialects}
-cargo run -q -- tblgen $I -o "$OUT" \
-    $D/Affine/IR/AffineOps.td $D/Async/IR/AsyncOps.td $D/Bufferization/IR/BufferizationOps.td \
-    $D/EmitC/IR/EmitC.td $D/GPU/IR/GPUOps.td $D/MemRef/IR/MemRefOps.td $D/PDL/IR/PDLOps.td \
-    $D/SCF/IR/SCFOps.td $D/Shape/IR/ShapeOps.td $D/Tensor/IR/TensorOps.td $D/Tosa/IR/TosaOps.td \
-    $D/Vector/IR/VectorOps.td $D/X86Vector/X86Vector.td $D/AMX/AMX.td
-cargo run -q -- tblgen --dialect llvm $I -o "$OUT" scripts/td/LLVM.td
-cargo run -q -- tblgen --dialect linalg $I -o "$OUT" scripts/td/Linalg.td
+mkdir -p "$OUT"
+cargo build -q --release --bin mlirformat
+D=td/mlir/Dialect
+while read -r ns files; do
+    # shellcheck disable=SC2086
+    target/release/mlirformat tblgen --dialect "$ns" -I td -o "$OUT" $files
+done <<EOF
+affine $D/Affine/IR/AffineOps.td
+amdgpu $D/AMDGPU/IR/AMDGPU.td
+amx $D/AMX/AMX.td
+arm_neon $D/ArmNeon/ArmNeon.td
+arm_sme $D/ArmSME/IR/ArmSMEOps.td $D/ArmSME/IR/ArmSMEIntrinsicOps.td
+arm_sve $D/ArmSVE/IR/ArmSVE.td
+async $D/Async/IR/AsyncOps.td
+bufferization $D/Bufferization/IR/BufferizationOps.td
+emitc $D/EmitC/IR/EmitC.td
+gpu $D/GPU/IR/GPUOps.td
+linalg $D/Linalg/IR/LinalgOps.td $D/Linalg/IR/LinalgStructuredOps.td $D/Linalg/IR/LinalgRelayoutOps.td
+llvm $D/LLVMIR/LLVMOps.td $D/LLVMIR/LLVMIntrinsicOps.td
+memref $D/MemRef/IR/MemRefOps.td
+nvgpu $D/NVGPU/IR/NVGPUOps.td
+nvvm $D/LLVMIR/NVVMOps.td $D/LLVMIR/LLVMTypes.td
+pdl $D/PDL/IR/PDLOps.td
+rocdl $D/LLVMIR/ROCDLOps.td $D/LLVMIR/LLVMTypes.td
+scf $D/SCF/IR/SCFOps.td
+shape $D/Shape/IR/ShapeOps.td
+tensor $D/Tensor/IR/TensorOps.td
+tosa $D/Tosa/IR/TosaOps.td
+vector $D/Vector/IR/VectorOps.td
+x86vector $D/X86Vector/X86Vector.td
+xegpu $D/XeGPU/IR/XeGPUOps.td
+xevm $D/LLVMIR/XeVMOps.td $D/LLVMIR/LLVMTypes.td
+EOF

@@ -91,7 +91,8 @@ position; the hidden `__N` variants filling gaps take none) — `CmpIPredicate::
 
 Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
 `builtin`, `cf`, `complex`, `emitc`, `func`, `gpu`, `index`, `linalg`, `llvm`, `math`, `memref`,
-`pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`, and the x86 CPU's `x86vector` and `amx`. `arith`, `builtin`, `cf`, `complex`,
+`pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`; the CPUs' `x86vector`, `amx`, `arm_neon`,
+`arm_sve` and `arm_sme`; the GPU vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`. `arith`, `builtin`, `cf`, `complex`,
 `func`, `index`, `math` and `ub` are written by hand; the rest are generated from ODS by
 `mlirformat tblgen`; `llvm_types::LlvmType` and `emitc_types::EmitcType` read and build those
 dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name
@@ -188,15 +189,21 @@ mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
     -I $LLVM/mlir/include -o src/dialects
 ```
 
-`scripts/regen-dialects.sh` regenerates every one of them (`LLVM=… LLVM_BUILD=…`).
-
-A dialect whose ops upstream splits over several files is generated from a wrapper that includes
-them, with `--dialect` (`scripts/td/Linalg.td`, `scripts/td/LLVM.td`):
+Every built-in generated dialect has one entry file under `td/`, which mirrors `mlir/include`:
+`td/mlir/Dialect/<Dir>/<namespace>.td` sits where the upstream files it includes sit, and says
+which they are (`td/mlir/Dialect/ArmSME/IR/arm_sme.td`: the ops and the intrinsics, two upstream
+files). Each is generated with `--dialect <namespace>`. An `include` the upstream `.td` declares
+relative to itself (`ArmSMEOps.td`'s `include "ArmSME.td"`) is found beside its includer, as each
+upstream build passes its own directory as `-I`:
 
 ```sh
-mlirformat tblgen --dialect linalg scripts/td/Linalg.td \
-    -I $LLVM/mlir/include -I $LLVM_BUILD/tools/mlir/include -o src/dialects
+mlirformat tblgen --dialect linalg td/mlir/Dialect/Linalg/IR/linalg.td \
+    -I $LLVM/mlir/include -I $MLIR_GEN -o src/dialects
 ```
+
+`scripts/regen-dialects.sh` regenerates every one of them (`LLVM=… MLIR_GEN=…`; `MLIR_GEN` holds
+the generated `LinalgNamedStructuredOps.yamlgen.td`: a build's `tools/mlir/include`, or an
+installed LLVM's `include`).
 
 ## Performance
 

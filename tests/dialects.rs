@@ -40,7 +40,11 @@ macro_rules! dialects {
 
 dialects! {
     affine: "affine" => mlirformat::affine::AffineDialect,
+    amdgpu: "amdgpu" => mlirformat::amdgpu::AmdgpuDialect,
     amx: "amx" => mlirformat::amx::AmxDialect,
+    arm_neon: "arm_neon" => mlirformat::arm_neon::ArmNeonDialect,
+    arm_sme: "arm_sme" => mlirformat::arm_sme::ArmSmeDialect,
+    arm_sve: "arm_sve" => mlirformat::arm_sve::ArmSveDialect,
     r#async: "async" => mlirformat::r#async::AsyncDialect,
     bufferization: "bufferization" => mlirformat::bufferization::BufferizationDialect,
     emitc: "emitc" => mlirformat::emitc::EmitcDialect,
@@ -48,6 +52,9 @@ dialects! {
     linalg: "linalg" => mlirformat::linalg::LinalgDialect,
     llvm: "llvm" => mlirformat::llvm::LlvmDialect,
     memref: "memref" => mlirformat::memref::MemrefDialect,
+    nvgpu: "nvgpu" => mlirformat::nvgpu::NvgpuDialect,
+    nvvm: "nvvm" => mlirformat::nvvm::NvvmDialect,
+    rocdl: "rocdl" => mlirformat::rocdl::RocdlDialect,
     pdl: "pdl" => mlirformat::pdl::PdlDialect,
     scf: "scf" => mlirformat::scf::ScfDialect,
     shape: "shape" => mlirformat::shape::ShapeDialect,
@@ -55,4 +62,6 @@ dialects! {
     tosa: "tosa" => mlirformat::tosa::TosaDialect,
     vector: "vector" => mlirformat::vector::VectorDialect,
     x86vector: "x86vector" => mlirformat::x86vector::X86vectorDialect,
+    xegpu: "xegpu" => mlirformat::xegpu::XegpuDialect,
+    xevm: "xevm" => mlirformat::xevm::XevmDialect,
 }

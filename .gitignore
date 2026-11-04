@@ -1,3 +1,4 @@
 target
 sampleplugin/Cargo.lock
 tests/nostd/Cargo.lock
+__pycache__/

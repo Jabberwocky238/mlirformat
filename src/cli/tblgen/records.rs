@@ -184,9 +184,10 @@ const KEYWORDS: &[&str] = &[
 
 impl Records {
     /// Parses `td` with the include directories (the in-process TableGen front end, [`super::td`]).
-    pub fn parse(td: &Path, includes: &[PathBuf]) -> Result<Self, TdError> {
-        let json = super::td::dump_json(td, includes).map_err(|e| TdError::Tblgen(e.to_string()))?;
-        Self::from_json(&json, td)
+    /// The records of `tds`, one TableGen run; the first file is the one ops are "defined in".
+    pub fn parse(tds: &[PathBuf], includes: &[PathBuf]) -> Result<Self, TdError> {
+        let json = super::td::dump_json(tds, includes).map_err(|e| TdError::Tblgen(e.to_string()))?;
+        Self::from_json(&json, &tds[0])
     }
 
     /// Records already dumped (`llvm-tblgen --dump-json` output) for `td`.
@@ -234,22 +235,35 @@ impl Records {
     /// ⭐ 这决定了一个结果类型能不能写进**描述**里。写不进去，解析时就填不出结果类型，
     /// 整条退回原文 —— pdl 整个方言的 `matched` 为 0 就是这么来的。
     fn buildable(&self, constraint: &str) -> Option<String> {
-        let call = self.text(constraint, "builderCall").filter(|c| !c.is_empty())?;
+        self.buildable_call(self.text(constraint, "builderCall").filter(|c| !c.is_empty())?, Some(constraint))
+    }
+
+    /// [`Self::buildable`] of a builder call; `constraint`: the record it came from, if any.
+    fn buildable_call(&self, call: &str, constraint: Option<&str>) -> Option<String> {
         let inner = |p: &str| call.split_once(p).and_then(|(_, r)| r.split_once(')')).map(|(n, _)| n.trim());
+        let packed = call.split_whitespace().collect::<String>();
         Some(match () {
+            // `VectorType::get({2}, $_builder.getI16Type())` ⇒ `vector<2xi16>`: before the scalar
+            // cases, which its element call would match.
+            _ if let Some((dims, elem)) = packed.strip_prefix("::mlir::VectorType::get({").and_then(|r| r.strip_suffix(')')).and_then(|r| r.split_once("},")) => {
+                format!("vector<{}x{}>", dims.replace(',', "x"), self.buildable_call(elem, None)?)
+            }
             _ if call.contains("getIndexType") => "index".into(),
             _ if call.contains("getNoneType") => "none".into(),
             _ if call.contains("getIntegerType(") => format!("i{}", inner("getIntegerType(")?),
+            // `$_builder.getI16Type()`.
+            _ if let Some(w) = packed.split_once(".getI").and_then(|(_, r)| r.strip_suffix("Type()")).filter(|w| w.parse::<u32>().is_ok()) => format!("i{w}"),
+            // Before `f16`: `BFloat16Type>` contains `Float16Type>`.
+            _ if call.contains("getBF16Type") || call.contains("BFloat16Type>") => "bf16".into(),
             _ if call.contains("getF16Type") || call.contains("Float16Type>") => "f16".into(),
             _ if call.contains("getF32Type") || call.contains("Float32Type>") => "f32".into(),
             _ if call.contains("getF64Type") || call.contains("Float64Type>") => "f64".into(),
-            _ if call.contains("getBF16Type") || call.contains("BFloat16Type>") => "bf16".into(),
             // LLVM's opaque pointer in address space 0, and its token.
             _ if call.contains("LLVMPointerType>(0)") => "!llvm.ptr".into(),
             _ if call.contains("LLVMTokenType::get(") => "!llvm.token".into(),
             // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
-            _ if call.trim_end().ends_with(">()") && let Some(m) = self.text(constraint, "mnemonic").filter(|m| !m.is_empty()) => {
-                let dialect = self.field(constraint, "dialect").and_then(Self::def_of)?;
+            _ if call.trim_end().ends_with(">()") && let Some(c) = constraint && let Some(m) = self.text(c, "mnemonic").filter(|m| !m.is_empty()) => {
+                let dialect = self.field(c, "dialect").and_then(Self::def_of)?;
                 format!("!{}.{m}", self.text(dialect, "name")?)
             }
             _ => return self.spell(call.trim()),
@@ -274,8 +288,7 @@ impl Records {
 
     /// The (dialect, mnemonic) of the type definition whose C++ class is `cpp` (`::mlir::pdl::RangeType`).
     fn type_def_by_cpp(&self, cpp: &str) -> Option<(String, String)> {
-        let defs = self.all.get("!instanceof").and_then(|i| i.get("TypeDef")).and_then(Json::as_array)?;
-        let def = defs.iter().filter_map(Json::as_str).find(|d| self.text(d, "cppType") == Some(cpp))?;
+        let def = self.type_def_of_cpp(cpp)?;
         let mnemonic = self.text(def, "mnemonic").filter(|m| !m.is_empty())?;
         let dialect = self.field(def, "dialect").and_then(Self::def_of)?;
         Some((self.text(dialect, "name")?.into(), mnemonic.into()))
@@ -409,8 +422,19 @@ impl Records {
     fn type_def(&self, constraint: &str) -> Option<String> {
         let c = self.field(constraint, "constraint").and_then(Self::def_of).unwrap_or(constraint);
         let c = self.field(c, "baseType").and_then(Self::def_of).unwrap_or(c);
-        let custom = self.field(c, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(c, "mnemonic").is_some_and(|m| !m.is_empty());
-        (self.is_a(c, "TypeDef") && (custom || self.text(c, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`")))).then(|| self.text(c, "typeName").map(String::from)).flatten()
+        // ODS prints `type($x)` stripped whenever the constraint's C++ class is a dialect type,
+        // not only for the `TypeDef` itself: `LLVM_PointerInAddressSpace<3>` is an
+        // `LLVMPointerType`, so `<3>`.
+        let def = if self.is_a(c, "TypeDef") { c } else { self.type_def_of_cpp(self.text(c, "cppType")?)? };
+        let custom = self.field(def, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(def, "mnemonic").is_some_and(|m| !m.is_empty());
+        let angled = self.text(def, "assemblyFormat").map(str::trim_start).is_some_and(|f| f.starts_with("`<`") || f.starts_with("(`<`"));
+        (custom || angled).then(|| self.text(def, "typeName").map(String::from)).flatten()
+    }
+
+    /// The `TypeDef` whose C++ class is `cpp` (`::mlir::LLVM::LLVMPointerType`).
+    fn type_def_of_cpp(&self, cpp: &str) -> Option<&str> {
+        let defs = self.all.get("!instanceof").and_then(|i| i.get("TypeDef")).and_then(Json::as_array)?;
+        defs.iter().filter_map(Json::as_str).find(|d| self.text(d, "cppType") == Some(cpp))
     }
 
     /// The value of an integer enum's case `symbol`.
@@ -457,10 +481,12 @@ impl Records {
         // The constraint and what it wraps (`DefaultValuedAttr<ConfinedAttr<I32Attr, ..>, "0">`).
         let chain: Vec<&str> = core::iter::successors(Some(constraint), |c| self.field(c, "baseAttr").and_then(Self::def_of)).collect();
         let optional = self.field(constraint, "isOptional").and_then(Json::as_i64) == Some(1) || self.is_a(constraint, "OptionalAttr");
-        let defaulted = self.is_a(constraint, "DefaultValuedAttr") || self.is_a(constraint, "DefaultValuedOptionalAttr");
-        // Only a `DefaultValuedAttr` is filled in when absent; a `DefaultValuedOptionalAttr`'s
+        // As ODS's `Attribute::hasDefaultValue`: a `defaultValue` set, by `DefaultValuedAttr` or on
+        // the attribute itself (`ArmSME_TileSliceLayoutAttr`: `TileSliceLayout::Horizontal`).
+        let defaulted = self.text(constraint, "defaultValue").is_some_and(|v| !v.is_empty());
+        // Only a non-optional one is filled in when absent; a `DefaultValuedOptionalAttr`'s
         // default is for its getter alone (`memref.load` parses without `nontemporal`).
-        let filled = defaulted && !self.is_a(constraint, "DefaultValuedOptionalAttr");
+        let filled = defaulted && !optional;
         let name = format!("name = {ods:?}");
         if unit(constraint) || unit(base) {
             return (format!("#[attr({name})]"), "bool".into());
@@ -503,7 +529,9 @@ impl Records {
         }
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
         // An attribute of one `AttrDef`: ODS prints it stripped (`<function = @f, tag = <id = 1>>`).
-        if self.is_a(base, "AttrDef") && self.text(base, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`")) && let Some(attr) = self.text(base, "attrName") {
+        // A custom printer too (`LLVM_ConstantRangeAttr`: `range <i32, 0, 32>`).
+        let custom = self.field(base, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(base, "mnemonic").is_some_and(|m| !m.is_empty());
+        if self.is_a(base, "AttrDef") && (custom || self.text(base, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`"))) && let Some(attr) = self.text(base, "attrName") {
             return (format!("#[attr({name}, dialect = {attr:?})]"), ty.into());
         }
         if let Some(el) = Self::dense_array(base).or_else(|| Self::dense_array(constraint)) {
@@ -642,6 +670,18 @@ impl Records {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
+                        // `cloneWith({}, i1)`: the same shape, scalable dims included, of `i1`
+                        // (`arm_sme.tile_load`'s mask).
+                        _ if plain.split_whitespace().collect::<String>().ends_with("($_self).cloneWith({},IntegerType::get($_ctxt,1))") => {
+                            infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
+                            Vec::new()
+                        }
+                        // The trailing dim widened to 16 (`arm_sve.convert_from_svbool`'s source:
+                        // `vector<2x[4]xi1>` ⇒ `vector<2x[16]xi1>`).
+                        _ if plain.split_whitespace().collect::<String>() == "VectorType(VectorType::Builder(::llvm::cast<VectorType>($_self)).setDim(::llvm::cast<VectorType>($_self).getRank()-1,16))" => {
+                            infer.insert(rhs, format!("svbool = {}", groups[lhs].name));
+                            Vec::new()
+                        }
                         // `IntegerType::get(ctx, shape[0])`: as many bits as lanes.
                         _ if plain.split_whitespace().collect::<String>() == "IntegerType::get($_self.getContext(),(::llvm::cast<VectorType>($_self).getShape()[0]))" => {
                             infer.insert(rhs, format!("width = {}", groups[lhs].name));
@@ -688,7 +728,7 @@ impl Records {
                 format!("{kind} = {}", Self::ident(&var_name(target)))
             });
             // 方言类型（`!pdl.type`）不是合法的 Rust 标识符，加引号走字符串那条路。
-            rule.or_else(|| class_fixed(c).map(|t| if t.starts_with('!') { format!("is = {t:?}") } else { format!("is = {t}") }))
+            rule.or_else(|| class_fixed(c).map(|t| if t.contains(['!', '<']) { format!("is = {t:?}") } else { format!("is = {t}") }))
         };
         let mut fields = Vec::new();
         for (i, g) in groups.iter().enumerate().filter(|(_, g)| !g.result) {

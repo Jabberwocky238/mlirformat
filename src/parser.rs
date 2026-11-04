@@ -1990,10 +1990,22 @@ impl Format<'_> {
                 }
                 Elem::TypeOf(n, qualified) => {
                     let var = ty_var(p, n)?;
-                    let ts = match var.role {
-                        Role::Type { strip: Some(d), .. } if !*qualified && { p.ws(); p.at(b'<') } => vec![p.stripped_ty(d)?],
-                        _ => self.types(&var, p)?,
+                    let one = |p: &mut Parser<'a, '_>| match var.role {
+                        Role::Type { strip: Some(d), .. } if !*qualified && { p.ws(); p.at(b'<') } => p.stripped_ty(d).map(|t| vec![t]),
+                        _ => self.types(&var, p),
                     };
+                    let ts = one(p)?;
+                    // `type($indices)` of a variadic group sharing one type variable: a type per
+                    // operand (`i32, i32`), all of them the one type.
+                    for _ in 1..self.shared_count(n, &var, |f| match r.get(f) {
+                        Some(Content::Seq(vs)) => vs.len(),
+                        _ => 0,
+                    }) {
+                        p.expect(",")?;
+                        if one(p)? != ts {
+                            return p.err(format!("`type(${n})`: the types differ"));
+                        }
+                    }
                     r.bind(var.name, ts);
                 }
                 Elem::FnType(a, b) => {
@@ -2132,7 +2144,8 @@ impl Format<'_> {
             let ts: Vec<Type<'static>> = match (r.bound(f.name), f.role) {
                 (Some(ts), _) => Content::convert(ts)?,
                 (None, Role::Type { infer: Some(Infer::I1), .. }) => vec![Type::I1],
-                (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like()],
+                // One per operand of a variadic group (none for an absent optional one: `arm_sme.tile_load`'s mask).
+                (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like(); if f.variadic { self.arity(f, &r, results) } else { 1 }],
                 (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => {
                     let elem: Type<'static> = match r.bound(var).and_then(|t| t.first()) {
                         Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => Content::convert(&**elem)?,
@@ -2148,6 +2161,17 @@ impl Format<'_> {
                         Some(Dim::Static(n)) => vec![Type::int(u32::try_from(*n).map_err(|_| undetermined())?)],
                         _ => return Err(undetermined()),
                     },
+                    _ => return Err(undetermined()),
+                },
+                (None, Role::Type { infer: Some(Infer::Svbool(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
+                    Some(Type::Shaped(sh @ Shaped { shape: Some(shape), .. })) if let Some((last, outer)) = shape.split_last() => {
+                        let last = match last {
+                            Dim::Scalable(_) => Dim::Scalable(16),
+                            _ => Dim::Static(16),
+                        };
+                        let shape = outer.iter().cloned().chain([last]).collect();
+                        vec![Content::convert(&Type::Shaped(Shaped { shape: Some(shape), ..sh.clone() }))?]
+                    }
                     _ => return Err(undetermined()),
                 },
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],

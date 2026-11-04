@@ -2,8 +2,8 @@
 //! allowed to `pub mod`.
 //!
 //! The `*.gen.rs` files come straight out of `mlirformat tblgen` (ODS `.td` ⇒ Rust) and are not
-//! edited by hand; regenerate them with, e.g.
-//! `mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/SCF/IR/SCFOps.td -I $LLVM/mlir/include -o src/dialects`.
+//! edited by hand; each comes from its entry file under `td/` (`td/mlir/Dialect/SCF/IR/scf.td`), and
+//! `scripts/regen-dialects.sh` regenerates them all.
 
 pub mod arith;
 pub mod builtin;
@@ -53,3 +53,21 @@ pub mod tosa;
 pub mod vector;
 #[path = "x86vector.gen.rs"]
 pub mod x86vector;
+#[path = "amdgpu.gen.rs"]
+pub mod amdgpu;
+#[path = "arm_neon.gen.rs"]
+pub mod arm_neon;
+#[path = "arm_sme.gen.rs"]
+pub mod arm_sme;
+#[path = "arm_sve.gen.rs"]
+pub mod arm_sve;
+#[path = "nvgpu.gen.rs"]
+pub mod nvgpu;
+#[path = "nvvm.gen.rs"]
+pub mod nvvm;
+#[path = "rocdl.gen.rs"]
+pub mod rocdl;
+#[path = "xegpu.gen.rs"]
+pub mod xegpu;
+#[path = "xevm.gen.rs"]
+pub mod xevm;

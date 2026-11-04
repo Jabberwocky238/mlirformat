@@ -325,8 +325,8 @@ pub struct Create2To4SpMatOp<'a> {
     pub cols: Value<'a>,
     #[slot(memref_ty)]
     pub memref: Value<'a>,
-    #[attr(name = "pruneFlag", dialect = "gpu<prune_2to4_spmat_flag")]
-    pub prune_flag: Attribute<'a>,
+    #[attr(name = "pruneFlag", dialect = "gpu<prune_2to4_spmat_flag", default = "PRUNE_AND_CHECK")]
+    pub prune_flag: Option<Attribute<'a>>,
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
     pub rows_ty: Type<'a>,
@@ -1478,10 +1478,10 @@ pub struct SDDMMBufferSizeOp<'a> {
     pub dnmat_b: Value<'a>,
     #[slot(spmat_c_ty, name = "spmatC")]
     pub spmat_c: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
-    pub mode_b: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_b: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -1527,10 +1527,10 @@ pub struct SDDMMOp<'a> {
     pub spmat_c: Value<'a>,
     #[slot(buffer_ty)]
     pub buffer: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
-    pub mode_b: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_b: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -1694,10 +1694,10 @@ pub struct SpGEMMCopyOp<'a> {
     pub spmat_b: Value<'a>,
     #[slot(spmat_c_ty, name = "spmatC")]
     pub spmat_c: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
-    pub mode_b: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_b: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -1806,10 +1806,10 @@ pub struct SpGEMMWorkEstimationOrComputeOp<'a> {
     pub buffer_sz: Value<'a>,
     #[slot(buffer_ty)]
     pub buffer: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
-    pub mode_b: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_b: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     #[attr(dialect = "gpu<spgemm_work_estimation_or_compute_kind")]
@@ -1859,10 +1859,10 @@ pub struct SpMMBufferSizeOp<'a> {
     pub dnmat_b: Value<'a>,
     #[slot(dnmat_c_ty, name = "dnmatC")]
     pub dnmat_c: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
-    pub mode_b: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_b: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -1908,10 +1908,10 @@ pub struct SpMMOp<'a> {
     pub dnmat_c: Value<'a>,
     #[slot(buffers_ty)]
     pub buffers: Vec<Value<'a>>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
-    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode")]
-    pub mode_b: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
+    #[attr(name = "modeB", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_b: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -1954,8 +1954,8 @@ pub struct SpMVBufferSizeOp<'a> {
     pub dn_x: Value<'a>,
     #[slot(dn_y_ty, name = "dnY")]
     pub dn_y: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
@@ -2001,8 +2001,8 @@ pub struct SpMVOp<'a> {
     pub dn_y: Value<'a>,
     #[slot(buffer_ty)]
     pub buffer: Value<'a>,
-    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode")]
-    pub mode_a: Attribute<'a>,
+    #[attr(name = "modeA", dialect = "gpu<mat_transpose_mode", default = "NON_TRANSPOSE")]
+    pub mode_a: Option<Attribute<'a>>,
     #[attr(name = "computeType")]
     pub compute_type: Attribute<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,

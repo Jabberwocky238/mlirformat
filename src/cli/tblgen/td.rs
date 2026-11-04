@@ -30,9 +30,13 @@ impl std::fmt::Display for Error {
     }
 }
 
-/// `llvm-tblgen --dump-json td -I includes…`, in process.
-pub fn dump_json(td: &Path, includes: &[PathBuf]) -> Result<String, Error> {
-    let src = Sources::new(td, includes)?;
+/// `llvm-tblgen --dump-json td -I includes…`, in process. Several `.td` files are one run, read
+/// in order (as a main file including each of them would be).
+pub fn dump_json(tds: &[PathBuf], includes: &[PathBuf]) -> Result<String, Error> {
+    let src = match tds {
+        [td] => Sources::new(td, includes)?,
+        _ => Sources::joined(tds, includes),
+    };
     let mut p = Parser::new(src, &[]);
     p.parse_file()?;
     Ok(p.k.json(&p.lex.src))
@@ -54,7 +58,7 @@ pub struct Buffer {
     parent: Option<Loc>,
 }
 
-/// All buffers (as `llvm::SourceMgr`): an `include` is looked up as given (relative to the current directory), then in each `-I`.
+/// All buffers (as `llvm::SourceMgr`): an `include` is looked up as given (relative to the current directory), then in each `-I`, then beside the file including it.
 pub struct Sources {
     pub bufs: Vec<Buffer>,
     includes: Vec<PathBuf>,
@@ -66,9 +70,19 @@ impl Sources {
         Ok(Self { bufs: vec![Buffer { name: main.display().to_string(), text, parent: None }], includes: includes.to_vec() })
     }
 
-    /// Opens an included file: the new buffer number, `None` if not found.
+    /// One run over several files: an unnamed main buffer that includes each, in order.
+    pub fn joined(tds: &[PathBuf], includes: &[PathBuf]) -> Self {
+        let text = tds.iter().map(|td| format!("include \"{}\"\n", td.display())).collect::<String>().into_bytes();
+        Self { bufs: vec![Buffer { name: String::new(), text, parent: None }], includes: includes.to_vec() }
+    }
+
+    /// Opens an included file: the new buffer number, `None` if not found. Last, a name is looked
+    /// up next to the file that includes it, as each upstream build passes its own source
+    /// directory as `-I` (`ArmSMEOps.td`'s `include "ArmSME.td"`): a path the `.td` declares
+    /// relative to itself resolves wherever it is entered from.
     fn include(&mut self, name: &str, at: Loc) -> Option<u32> {
-        let found = std::iter::once(PathBuf::from(name)).chain(self.includes.iter().map(|d| d.join(name))).find_map(|p| std::fs::read(&p).ok().map(|t| (p, t)));
+        let beside = Path::new(&self.bufs[at.buf as usize].name).parent().map(|d| d.join(name));
+        let found = std::iter::once(PathBuf::from(name)).chain(self.includes.iter().map(|d| d.join(name))).chain(beside).find_map(|p| std::fs::read(&p).ok().map(|t| (p, t)));
         let (path, text) = found?;
         self.bufs.push(Buffer { name: path.display().to_string(), text, parent: Some(at) });
         Some(self.bufs.len() as u32 - 1)

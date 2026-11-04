@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector};
+pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
 pub use crate::generator::{Emit, IntoStatic, Printer, Reborrow, Sep, Shown, ShownFrom, ShownIn, Source, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
@@ -86,7 +86,8 @@ impl MlirOpt {
 
     /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
     /// `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`,
-    /// `vector`, and the CPU's `x86vector` and `amx`.
+    /// `vector`, the CPU's `x86vector`, `amx`, `arm_neon`, `arm_sve` and `arm_sme`, and the GPU
+    /// vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
         opt.infos = crate::OpInfos::upstream();
@@ -113,7 +114,16 @@ impl MlirOpt {
             .load(tosa::TosaDialect)
             .load(vector::VectorDialect)
             .load(amx::AmxDialect)
-            .load(x86vector::X86vectorDialect);
+            .load(x86vector::X86vectorDialect)
+            .load(arm_neon::ArmNeonDialect)
+            .load(arm_sve::ArmSveDialect)
+            .load(arm_sme::ArmSmeDialect)
+            .load(nvgpu::NvgpuDialect)
+            .load(nvvm::NvvmDialect)
+            .load(amdgpu::AmdgpuDialect)
+            .load(rocdl::RocdlDialect)
+            .load(xegpu::XegpuDialect)
+            .load(xevm::XevmDialect);
         // Hand-written forms for ops ODS describes in C++; injected by name over the generated
         // templates, so the generated files stay exactly as `mlirformat tblgen` wrote them.
         opt.inject(affine_ops::Apply::template())
