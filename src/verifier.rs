@@ -8,13 +8,15 @@
 //!
 //! This file is the structure every dialect shares: the walk, aliases, locations, SSA scopes.
 //! What one dialect's types and attributes must be is its [`DialectRules`], one file each under
-//! `verifier/` (`builtin.rs`, `quant.rs`, `spirv.rs`, `xegpu.rs`), listed in [`DIALECTS`].
+//! `verifier/` (`builtin.rs`, `llvm.rs`, `quant.rs`, `spirv.rs`, `xegpu.rs`), listed in [`DIALECTS`].
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 /// The builtin types and attributes.
 mod builtin;
+/// LLVM dialect ops and attributes.
+mod llvm;
 /// ODS constraints of inherent attributes.
 mod ods;
 /// `quant` types.
@@ -75,6 +77,9 @@ pub enum Invalid {
     /// A dialect type's body its dialect would not read (`!quant.uniform<i33:f32, 1.0>`).
     #[error("invalid type `{ty}`: {why}")]
     DialectType { ty: String, why: String },
+    /// An op's custom form its dialect's parser would not read (`llvm.func @f(..., i32)`).
+    #[error("`{op}`: {why}")]
+    DialectOp { op: String, why: String },
     /// A dialect attribute its dialect would not read or verify (`#xegpu.layout<sg_data = [8]>`).
     #[error("invalid attribute `{attr}`: {why}")]
     DialectAttr { attr: String, why: String },
@@ -374,6 +379,7 @@ impl<'x> Verify<'x> for Operation<'x> {
         for (i, u) in self.operands.iter().enumerate() {
             v.use_value(u, typed.then(|| &self.ty.inputs[i]))?;
         }
+        rules(&self.name).map_or(Ok(()), |d| d.op(v, self))?;
         // Each inherent attribute present, against its ODS constraint (`verifyInherentAttrs`).
         let props = match &self.properties {
             Some(Attribute::Dict(xs)) => xs.as_slice(),
@@ -515,10 +521,16 @@ trait DialectRules: Sync {
     fn attr(&self, _v: &Verifier<'_>, _a: &Attribute<'_>) -> Result<(), Invalid> {
         Ok(())
     }
+
+    /// One of its ops, before the walk goes into it (a raw custom form included).
+    #[inline]
+    fn op(&self, _v: &Verifier<'_>, _op: &Operation<'_>) -> Result<(), Invalid> {
+        Ok(())
+    }
 }
 
 /// Every dialect with rules.
-const DIALECTS: &[&dyn DialectRules] = &[&builtin::Builtin, &quant::Quant, &spirv::Spirv, &xegpu::XeGpu];
+const DIALECTS: &[&dyn DialectRules] = &[&builtin::Builtin, &llvm::Llvm, &quant::Quant, &spirv::Spirv, &xegpu::XeGpu];
 
 /// The rules of the dialect owning `!ns.mnemonic` / `#ns.mnemonic`; an alias (`!t`, `#map`)
 /// has none: its definition is checked.
