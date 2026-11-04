@@ -1,0 +1,9 @@
+2	verify	'test.op_with_property_predicates' op property 'scalar' failed to satisfy constraint: non-negative int64_t
+3	verify	'test.op_with_property_predicates' op property 'optional' failed to satisfy constraint: optional non-negative int64_t
+4	verify	'test.op_with_property_predicates' op property 'defaulted' failed to satisfy constraint: non-negative int64_t
+5	verify	'test.op_with_property_predicates' op property 'more_constrained' failed to satisfy constraint: between 0 and 5
+6	verify	'test.op_with_property_predicates' op property 'array' failed to satisfy constraint: array of non-negative int64_t
+7	verify	'test.op_with_property_predicates' op property 'non_empty_unconstrained' failed to satisfy constraint: non-empty array of int64_t
+8	verify	'test.op_with_property_predicates' op property 'non_empty_constrained' failed to satisfy constraint: non-empty array of non-negative int64_t
+9	verify	'test.op_with_property_predicates' op property 'non_empty_constrained' failed to satisfy constraint: non-empty array of non-negative int64_t
+10	verify	'test.op_with_property_predicates' op property 'non_empty_optional' failed to satisfy constraint: optional non-empty array of non-negative int64_t

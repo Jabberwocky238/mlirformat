@@ -1,0 +1,7 @@
+2	verify	expected layout attribute for '!llvm.ptr' to be a dense integer elements attribute with 3 or 4 elements
+3	verify	preferred alignment is expected to be at least as large as ABI alignment
+4	verify	expected i64 parameters for '!llvm.ptr'
+8	verify	unexpected layout attribute for struct '!llvm.struct<(i8)>'
+9	verify	expected layout attribute for '!llvm.struct<()>' to be a dense integer elements attribute of 1 or 2 elements
+10	verify	preferred alignment is expected to be at least as large as ABI alignment
+13	verify	expected i64 entries for '!llvm.struct<()>'

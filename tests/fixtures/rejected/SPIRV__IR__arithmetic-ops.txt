@@ -1,0 +1,32 @@
+1	verify	'spirv.FAdd' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'bf16'
+3	verify	'spirv.FDiv' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'bf16'
+5	verify	'spirv.FMod' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'bf16'
+7	verify	'spirv.FMul' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'i32'
+8	verify	'spirv.FMul' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'bf16'
+9	verify	'spirv.FMul' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'vector<4xbf16>'
+10	verify	'spirv.FMul' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'tensor<4xf32>'
+12	verify	'spirv.FNegate' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'bf16'
+14	verify	'spirv.FRem' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'bf16'
+16	verify	'spirv.FSub' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or Cooperative Matrix of 16/32/64-bit float values, but got 'bf16'
+21	parse	custom op 'spirv.IAddCarry' expected spirv.struct type with two members
+22	verify	'spirv.IAddCarry' op expected result struct type containing two members
+23	verify	'spirv.IAddCarry' op expected all operand types and struct member types are the same
+24	verify	'spirv.IAddCarry' op expected all operand types and struct member types are the same
+26	parse	custom op 'spirv.ISubBorrow' expected spirv.struct type with two members
+27	verify	'spirv.ISubBorrow' op expected result struct type containing two members
+28	verify	'spirv.ISubBorrow' op expected all operand types and struct member types are the same
+29	verify	'spirv.ISubBorrow' op expected all operand types and struct member types are the same
+32	parse	use of value '%arg1' expects different type than prior uses: 'vector<4xf32>' vs 'vector<3xf32>'
+33	verify	'spirv.Dot' op failed to verify that all of {vector1, result} have same element type
+34	verify	'spirv.Dot' op operand #0 must be fixed-length vector of 16/32/64-bit float or BFloat16 values of length 2/3/4/8/16, but got 'vector<4xi32>'
+36	parse	custom op 'spirv.SMulExtended' expected spirv.struct type with two members
+37	verify	'spirv.SMulExtended' op expected result struct type containing two members
+38	verify	'spirv.SMulExtended' op expected all operand types and struct member types are the same
+39	verify	'spirv.SMulExtended' op expected all operand types and struct member types are the same
+41	parse	custom op 'spirv.UMulExtended' expected spirv.struct type with two members
+42	verify	'spirv.UMulExtended' op expected result struct type containing two members
+43	verify	'spirv.UMulExtended' op expected all operand types and struct member types are the same
+44	verify	'spirv.UMulExtended' op expected all operand types and struct member types are the same
+52	verify	'spirv.VectorTimesScalar' op scalar operand and result element type match
+53	verify	'spirv.VectorTimesScalar' op vector operand and result type mismatch
+54	verify	'spirv.VectorTimesScalar' op operand #0 must be vector of 16/32/64-bit float values of length 2/3/4, but got 'vector<4xbf16>'

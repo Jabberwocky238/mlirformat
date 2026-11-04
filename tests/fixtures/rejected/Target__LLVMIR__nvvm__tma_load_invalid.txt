@@ -1,0 +1,11 @@
+1	verify	to use im2col mode, the tensor has to be at least 3-dimensional
+2	verify	expects coordinates between 1 to 5 dimension
+3	verify	Gather4 mode expects 5 coordinates
+4	verify	Predicate is supported only for Tile and Im2col modes.
+5	verify	Predicate is supported only for shared::cluster mode.
+6	verify	expects coordinates between 1 to 5 dimension
+7	verify	Multicast is not supported with shared::cta mode.
+8	verify	CTAGroup is not supported with shared::cta mode.
+9	verify	Shared::cta destination requires address-space 3.
+10	verify	Shared::cluster destination requires address-space 7.
+11	verify	 im2col offsets expected 2 (provided 1)

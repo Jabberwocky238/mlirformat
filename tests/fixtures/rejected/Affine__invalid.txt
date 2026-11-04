@@ -1,0 +1,61 @@
+1	verify	'affine.apply' op operand #0 must be variadic of index, but got 'i32'
+2	verify	'affine.apply' op result #0 must be index, but got 'i32'
+3	verify	'affine.load' op operand cannot be used as a dimension id
+4	verify	'affine.for' op operand cannot be used as a symbol
+5	verify	'affine.for' op operand cannot be used as a symbol
+6	verify	'affine.if' op operand cannot be used as a symbol
+7	verify	'affine.if' op operand cannot be used as a symbol
+8	parse	expected '[' in affine map
+9	verify	'affine.store' op value to store must have the same type as memref element type
+10	verify	'affine.min' op operand count and affine map dimension and symbol count must match
+11	verify	'affine.min' op operand count and affine map dimension and symbol count must match
+12	verify	'affine.min' op operand count and affine map dimension and symbol count must match
+13	verify	'affine.min' op affine map expect at least one result
+14	verify	'affine.min' op affine map expect at least one result
+15	verify	'affine.max' op operand count and affine map dimension and symbol count must match
+16	verify	'affine.max' op operand count and affine map dimension and symbol count must match
+17	verify	'affine.max' op operand count and affine map dimension and symbol count must match
+18	verify	'affine.max' op affine map expect at least one result
+19	verify	'affine.max' op affine map expect at least one result
+20	verify	'affine.parallel' op the number of region arguments (1) and the number of map groups for lower (2) and upper bound (2), and the number of steps (2) must all match
+21	verify	'affine.parallel' op the number of region arguments (2) and the number of map groups for lower (1) and upper bound (2), and the number of steps (2) must all match
+22	verify	'affine.parallel' op the number of region arguments (2) and the number of map groups for lower (2) and upper bound (1), and the number of steps (2) must all match
+23	verify	'affine.parallel' op the number of region arguments (2) and the number of map groups for lower (2) and upper bound (2), and the number of steps (1) must all match
+24	verify	'affine.parallel' op operand cannot be used as a dimension id
+25	verify	'affine.parallel' op operand cannot be used as a symbol
+26	verify	'affine.parallel' op a reduction must be specified for each output
+27	parse	custom op 'affine.parallel' invalid reduction value: "bad"
+28	verify	'affine.yield' op types mismatch between yield op and its parent
+29	verify	'affine.parallel' op result type cannot match reduction attribute
+30	verify	'affine.parallel' op expected lower bound map to have at least one result
+31	verify	'affine.parallel' op expected upper bound map to have at least one result
+32	verify	'affine.vector_load' op requires memref and vector types of the same elemental type
+33	verify	'affine.vector_store' op requires memref and vector types of the same elemental type
+34	verify	'affine.vector_load' op requires memref and vector types of the same elemental type
+35	verify	'affine.vector_store' op requires memref and vector types of the same elemental type
+36	verify	'affine.if' op region #0 should have no arguments
+37	verify	'affine.if' op region #1 should have no arguments
+38	parse	custom op 'affine.for' mismatch between the number of loop-carried values and results
+39	parse	result number not allowed in argument list
+40	parse	expected SSA operand
+41	parse	expected '='
+42	parse	custom op 'affine.for' expected 'to' between bounds
+43	parse	expected '{' to begin a region
+44	parse	region entry argument '%i0' is already in use
+45	parse	expected attribute value
+46	parse	custom op 'affine.for' expected step to be representable as a positive signed integer
+47	parse	expected affine expression
+48	parse	expected affine expression
+49	parse	expected '== affine-expr' or '>= affine-expr' at end of affine constraint
+50	parse	expected '== affine-expr' or '>= affine-expr' at end of affine constraint
+51	parse	custom op 'affine.for' lower loop bound affine map with multiple results requires 'max' prefix
+52	parse	custom op 'affine.for' upper loop bound affine map with multiple results requires 'min' prefix
+53	verify	'affine.delinearize_index' op should return an index for each basis element and up to one extra index
+54	verify	'affine.delinearize_index' op no basis element may be statically non-positive
+55	verify	'affine.linearize_index' op should be passed a basis element for each index except possibly the first
+56	verify	'affine.load' op operand cannot be used as a dimension id
+57	verify	'affine.load' op operand cannot be used as a dimension id
+58	verify	'affine.load' op operand cannot be used as a dimension id
+59	verify	'affine.for' op expected lower bound map to have at least one result
+60	verify	'affine.for' op expected upper bound map to have at least one result
+61	verify	dimensional operand cannot be used as a symbol

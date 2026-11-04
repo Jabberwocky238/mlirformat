@@ -1,0 +1,5 @@
+1	verify	to use im2col mode, the tensor has to be at least 3-dimensional
+2	verify	expects coordinates between 1 to 5 dimension
+3	verify	Scatter4 mode expects 5 coordinates
+4	verify	Inline-ptx lowering unsupported with L2 cache-hint.
+5	verify	Inline-ptx lowering supported only for Tile mode.

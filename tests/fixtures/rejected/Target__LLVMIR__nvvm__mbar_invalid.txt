@@ -1,0 +1,17 @@
+1	verify	mbarrier in shared_cluster space cannot return any value
+2	verify	mbarrier scope must be either CTA or Cluster
+3	verify	mbarrier in shared_cluster space cannot return any value
+4	verify	mbarrier scope must be either CTA or Cluster
+5	verify	mbarrier scope must be either CTA or Cluster
+6	verify	mbarrier scope must be either CTA or Cluster
+7	verify	mbarrier scope must be either CTA or Cluster
+8	verify	mbarrier in shared_cluster space cannot return any value
+9	verify	return-value is not supported when using predicate
+10	verify	mbarrier with relaxed semantics is not supported when using predicate
+11	verify	mbarrier scope must be CTA when using predicate
+12	verify	mbarrier in shared_cluster space is not supported when using predicate
+13	verify	mbarrier scope must be either CTA or Cluster
+14	verify	mbarrier in shared_cluster space cannot return any value
+15	verify	mbarrier scope must be either CTA or Cluster
+16	verify	mbarrier scope must be either CTA or Cluster
+17	verify	mbarrier scope must be either CTA or Cluster

@@ -1,0 +1,15 @@
+1	parse	custom op 'func.func' expected valid '@'-identifier for symbol name
+2	parse	custom op 'func.func' expected type instead of SSA identifier
+3	parse	custom op 'func.func' expected SSA identifier
+4	verify	'func.func' op symbol's parent must have the SymbolTable trait
+5	verify	'func.func' op symbol's parent must have the SymbolTable trait
+6	parse	expected non-function type
+7	parse	expected attribute name
+8	verify	invalid to use 'test.invalid_attr'
+9	verify	invalid to use 'test.invalid_attr'
+10	verify	'func.func' op symbol declaration cannot have public visibility
+11	parse	custom op 'func.func' 'sym_visibility' is an inferred attribute and should not be specified in the explicit attribute dictionary
+12	parse	custom op 'func.func' 'sym_name' is an inferred attribute and should not be specified in the explicit attribute dictionary
+13	parse	custom op 'func.func' 'function_type' is an inferred attribute and should not be specified in the explicit attribute dictionary
+14	verify	'func.func' op expects argument attribute array to have the same number of elements as the number of function arguments, got 1, but expected 0
+15	verify	'func.func' op expects result attribute array to have the same number of elements as the number of function results, got 1, but expected 0

@@ -1,0 +1,5 @@
+1	parse	unexpected decimal integer literal for a floating point value
+2	parse	hexadecimal float constant out of range for type
+3	parse	hexadecimal float constant out of range for type
+4	parse	hexadecimal float constant out of range for type
+5	parse	expected floating point literal

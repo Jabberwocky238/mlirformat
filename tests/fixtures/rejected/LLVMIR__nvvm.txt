@@ -1,0 +1,4 @@
+1	verify	'nvvm.kernel' attribute attached to unexpected op
+4	verify	'"nvvm.grid_constant"' attribute must be present only on kernel arguments
+5	verify	'"nvvm.grid_constant"' attribute requires the argument to also have attribute 'llvm.byval'
+6	verify	'"nvvm.grid_constant"' must be a unit attribute

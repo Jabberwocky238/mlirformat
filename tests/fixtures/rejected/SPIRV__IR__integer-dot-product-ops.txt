@@ -1,0 +1,8 @@
+1	parse	use of value '%b' expects different type than prior uses: 'i32' vs 'i64'
+2	verify	'spirv.SDot' op with invalid format attribute for vector operands of type 'vector<4xi8>'
+3	verify	'spirv.SDot' op result type has insufficient bit-width (16 bits) for the specified vector operand type (32 bits)
+4	verify	'spirv.SDot' op with specified Packed Vector Format (PackedVectorFormat4x8Bit) requires integer vector operands to be 32-bits wide
+8	parse	use of value '%b' expects different type than prior uses: 'i32' vs 'i64'
+9	verify	'spirv.SDotAccSat' op result type has insufficient bit-width (16 bits) for the specified vector operand type (32 bits)
+10	verify	'spirv.SDotAccSat' op with specified Packed Vector Format (PackedVectorFormat4x8Bit) requires integer vector operands to be 32-bits wide
+11	parse	use of value '%acc' expects different type than prior uses: 'i64' vs 'i32'

@@ -1,0 +1,46 @@
+1	verify	'spirv.AccessChain' op cannot extract from non-composite type 'f32' with index 0
+2	parse	custom op 'spirv.AccessChain' number of operands and types do not match: got 0 operands and 1 types
+3	parse	expected ','
+4	parse	custom op 'spirv.AccessChain' number of operands and types do not match: got 1 operands and 2 types
+5	parse	custom op 'spirv.AccessChain' number of operands and types do not match: got 2 operands and 1 types
+6	verify	'spirv.AccessChain' op operand #0 must be any SPIR-V pointer type, but got '!spirv.array<4 x !spirv.array<4 x f32>>'
+7	parse	expected SSA operand
+8	verify	'spirv.AccessChain' op index must be an integer spirv.Constant to access element of spirv.struct
+9	verify	'spirv.AccessChain' index must be an integer spirv.Constant to access element of spirv.struct, but provided arith.constant
+10	verify	'spirv.AccessChain' op index 12 out of bounds for '!spirv.struct<(f32, !spirv.array<4 x f32>)>'
+11	verify	'spirv.AccessChain' op cannot extract from non-composite type 'f32' with index 0
+14	parse	expected attribute value
+15	parse	expected SSA operand
+16	parse	expected ':'
+17	parse	expected ':'
+18	parse	expected ']'
+19	parse	expected ','
+20	parse	expected ','
+21	parse	expected ']'
+22	parse	custom op 'spirv.Load' invalid memory_access attribute specification: "Something"
+23	parse	custom op 'spirv.Load' invalid memory_access attribute specification: "Volatile|Something"
+24	parse	'spirv.Load' op attribute 'memory_access' failed to satisfy constraint: valid SPIR-V MemoryAccess
+25	parse	expected ']'
+29	parse	expected attribute value
+30	parse	expected operand
+31	parse	custom op 'spirv.Store' expected 2 operands
+32	parse	expected ':'
+33	parse	expected ']'
+34	parse	expected ','
+35	parse	expected ','
+36	parse	expected ']'
+37	parse	expected ']'
+44	verify	'spirv.Variable' op  with physical buffer pointer must be decorated either 'AliasedPointer' or 'RestrictPointer'
+45	verify	'spirv.Variable' op  with physical buffer pointer must have exactly one aliasing decoration
+47	verify	'spirv.Variable' op  with physical buffer pointer must be decorated either 'AliasedPointer' or 'RestrictPointer'
+48	verify	'spirv.Variable' op  with physical buffer pointer must have exactly one aliasing decoration
+49	verify	'spirv.Variable' op cannot have 'descriptor_set' attribute (only allowed in spirv.GlobalVariable)
+50	verify	'spirv.Variable' op cannot have 'binding' attribute (only allowed in spirv.GlobalVariable)
+51	verify	'spirv.Variable' op cannot have 'built_in' attribute (only allowed in spirv.GlobalVariable)
+52	parse	custom op 'spirv.Variable' expected spirv.ptr type
+53	verify	'spirv.Variable' op initializer must be the result of a constant or spirv.GlobalVariable op
+54	verify	'spirv.Variable' op can only be used to model function-level variables. Use spirv.GlobalVariable for module-level variables.
+55	verify	'spirv.CopyMemory' op both operands must be pointers to the same type
+56	verify	'spirv.CopyMemory' op missing alignment value
+57	verify	'spirv.CopyMemory' op invalid alignment specification with non-aligned memory access specification
+58	verify	'spirv.CopyMemory' op missing alignment value

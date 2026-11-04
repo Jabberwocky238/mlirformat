@@ -1,0 +1,15 @@
+1	verify	'spirv.AtomicAnd' op failed to verify that `value` type matches pointee type of `pointer`
+2	verify	'spirv.AtomicAnd' op failed to verify that `value` type matches pointee type of `pointer`
+3	verify	expected at most one of these four memory constraints to be set: `Acquire`, `Release`,`AcquireRelease` or `SequentiallyConsistent`
+5	verify	'spirv.AtomicCompareExchange' op failed to verify that `value` type matches pointee type of `pointer`
+6	verify	'spirv.AtomicCompareExchange' op failed to verify that `comparator` type matches pointee type of `pointer`
+7	verify	'spirv.AtomicCompareExchange' op failed to verify that `result` type matches pointee type of `pointer`
+9	verify	'spirv.AtomicCompareExchangeWeak' op failed to verify that `value` type matches pointee type of `pointer`
+10	verify	'spirv.AtomicCompareExchangeWeak' op failed to verify that `comparator` type matches pointee type of `pointer`
+11	verify	'spirv.AtomicCompareExchangeWeak' op failed to verify that `result` type matches pointee type of `pointer`
+13	verify	'spirv.AtomicExchange' op failed to verify that `value` type matches pointee type of `pointer`
+14	verify	'spirv.AtomicExchange' op failed to verify that `value` type matches pointee type of `pointer`
+17	verify	'spirv.EXT.AtomicFAdd' op failed to verify that `result` type matches pointee type of `pointer`
+18	verify	'spirv.EXT.AtomicFAdd' op failed to verify that `result` type matches pointee type of `pointer`
+19	verify	expected at most one of these four memory constraints to be set: `Acquire`, `Release`,`AcquireRelease` or `SequentiallyConsistent`
+20	verify	'spirv.EXT.AtomicFAdd' op operand #1 must be 16/32/64-bit float, but got 'bf16'

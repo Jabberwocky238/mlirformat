@@ -1,0 +1,52 @@
+1	verify	'test.same_operand_element_type' op requires the same element type for all operands
+2	verify	'test.same_operand_element_type' op expected 2 operands, but found 0
+3	verify	'test.same_operand_element_type' op requires the same element type for all operands
+5	verify	'test.same_operand_and_result_element_type' op requires the same element type for all operands and results
+6	verify	'test.same_operand_and_result_element_type' op requires the same element type for all operands and results
+7	verify	'test.same_operand_and_result_element_type' op requires the same element type for all operands and results
+8	verify	'test.same_operand_and_result_element_type' op expected 1 or more operands, but found 0
+9	verify	'test.same_operand_and_result_element_type' op expected 1 or more results
+11	verify	'test.same_operand_shape' op requires the same shape for all operands
+12	verify	'test.same_operand_shape' op expected 1 or more operands, but found 0
+14	verify	'test.same_operand_and_result_shape' op requires the same shape for all operands and results
+15	verify	'test.same_operand_and_result_shape' op requires the same shape for all operands and results
+16	verify	'test.same_operand_and_result_shape' op expected 1 or more operands, but found 0
+17	verify	'test.same_operand_and_result_shape' op expected 1 or more results
+19	verify	'test.same_operand_and_result_type' op requires the same type for all operands and results
+20	verify	'test.same_operand_and_result_type' op requires the same encoding for all operands and results
+21	verify	'test.elementwise_mappable' op all non-scalar operands/results must have the same shape and base type
+22	verify	'test.elementwise_mappable' op all non-scalar operands/results must have the same shape and base type
+24	verify	'test.elementwise_mappable' op all non-scalar operands/results must have the same shape and base type
+25	verify	'test.elementwise_mappable' op if an operand is non-scalar, then there must be at least one non-scalar result
+26	verify	'test.elementwise_mappable' op if a result is non-scalar, then at least one operand must be non-scalar
+27	verify	'test.elementwise_mappable' op if an operand is non-scalar, then all results must be non-scalar
+28	verify	'test.elementwise_mappable' op if an operand is non-scalar, then there must be at least one non-scalar result
+29	verify	'test.elementwise_mappable' op if a result is non-scalar, then at least one operand must be non-scalar
+31	verify	'test.child' op expects parent op 'test.parent'
+34	verify	'test.child_with_parent_one_of' op expects parent op to be one of 'test.parent, test.parent1'
+35	verify	'test.SingleBlockImplicitTerminator' op expects a non-empty block
+36	verify	'test.SingleBlockImplicitTerminator' op expects region #0 to have 0 or 1 blocks
+37	verify	'test.SingleBlockImplicitTerminator' op expects regions to end with 'test.finish', found 'test.non_existent_op'
+38	verify	'test.symbol' op requires attribute 'sym_name'
+39	parse	invalid properties {sym_name = "foo_2", sym_visibility} for op test.symbol: Invalid attribute `sym_visibility` in property conversion: unit
+40	verify	'test.symbol' op visibility expected to be one of ["public", "private", "nested"], but got "foo"
+43	verify	'test.symbol_scope' op expects region #0 to have 0 or 1 blocks
+44	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+45	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+46	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+47	verify	'test.attr_sized_operands' op 'operandSegmentSizes' attribute cannot have negative elements
+48	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (3) specified in attribute 'operandSegmentSizes'
+49	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+51	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+52	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+53	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+54	verify	'test.attr_sized_results' op 'resultSegmentSizes' attribute cannot have negative elements
+55	verify	'test.attr_sized_results' op result count (4) does not match with the total size (3) specified in attribute 'resultSegmentSizes'
+56	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+63	verify	operand #0 does not dominate this use
+64	verify	operand #0 does not dominate this use
+65	verify	operand #0 does not dominate this use
+66	parse	use of undeclared SSA value name
+67	verify	'test.graph_region' op expects graph region #0 to have 0 or 1 blocks
+69	verify	result type should have trait 'TestTypeTrait'
+71	verify	'attr' attribute should have trait 'TestAttrTrait'

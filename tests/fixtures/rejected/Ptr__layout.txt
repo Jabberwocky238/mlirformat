@@ -1,0 +1,5 @@
+2	parse	preferred alignment is expected to be at least as large as ABI alignment
+3	parse	size entry must be divisible by 8
+4	parse	abi entry must be divisible by 8
+5	parse	preferred entry must be divisible by 8
+6	parse	index entry must be divisible by 8

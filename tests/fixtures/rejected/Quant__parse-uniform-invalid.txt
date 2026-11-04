@@ -1,0 +1,44 @@
+1	parse	unknown quantized type foobar
+2	parse	unknown quantized type __
+3	parse	expected '>'
+4	parse	expected ':'
+5	parse	unbalanced '<' character in pretty dialect name
+6	parse	expected ':'
+7	parse	expected ','
+8	parse	illegal storage type prefix
+9	parse	illegal storage type prefix
+10	parse	illegal storage type size: 33
+11	parse	illegal storage type prefix
+12	parse	invalid integer width
+13	parse	illegal storage min and storage max: (2:1)
+14	parse	illegal storage min and storage max: (1:1)
+15	parse	illegal storage type maximum: 9
+16	parse	illegal storage type minimum: -9
+17	parse	expected floating point literal
+18	parse	expected '>'
+19	parse	expected integer value
+20	parse	expected integer value
+21	parse	expected non-function type
+22	parse	scale -1.000000e+00 out of expressed type range [1.401298e-45, 3.402823e+38]
+23	parse	expected integer value
+24	parse	expected floating point literal
+25	parse	illegal quantized dimension: -1
+26	parse	scale 5.800000e-08 out of expressed type range [5.960464e-08, 6.550400e+04]
+27	parse	scale 6.600000e+04 out of expressed type range [5.960464e-08, 6.550400e+04]
+28	parse	scale 5.800000e-08 out of expressed type range [5.960464e-08, 6.550400e+04]
+29	parse	scale 6.600000e+04 out of expressed type range [5.960464e-08, 6.550400e+04]
+30	parse	illegal quantized dimension: -1
+31	parse	illegal block size: 0
+32	parse	illegal block size: -1
+33	parse	expected ':'
+34	parse	expected integer value
+35	parse	expected '>'
+36	parse	tensor literal is invalid; ranks are not consistent between elements
+37	parse	expected ','
+38	parse	unbalanced '{' character in pretty dialect name
+39	parse	unbalanced '<' character in pretty dialect name
+40	parse	expected integer value
+41	parse	expected floating point literal
+42	parse	expected integer value
+43	parse	expected floating point literal
+44	parse	scale 6.600000e+04 out of expressed type range [5.960464e-08, 6.550400e+04]

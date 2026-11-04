@@ -1,0 +1,6 @@
+5	verify	'spirv.func' op with physical buffer pointer must be decorated either 'Aliased' or 'Restrict'
+6	verify	'spirv.func' op with a pointer points to a physical buffer pointer must be decorated either 'AliasedPointer' or 'RestrictPointer'
+7	verify	'spirv.func' op with physical buffer pointer must be decorated either 'Aliased' or 'Restrict'
+8	verify	'spirv.func' op arguments may only have dialect attributes
+9	verify	'spirv.func' op entry block must have 1 arguments to match function signature
+10	verify	'spirv.func' op type of entry block argument #0('f64') must match the type of the corresponding argument in function signature('f32')

@@ -1,0 +1,16 @@
+1	verify	'arm_neon.2d.sdot' op failed to verify that operand `a` should be 1-dimensional
+2	verify	'arm_neon.2d.sdot' op failed to verify that operand `b` should be 2-dimensional
+3	verify	'arm_neon.2d.sdot' op failed to verify that operand `b` should have 4 columns
+4	verify	'arm_neon.2d.sdot' op failed to verify that operand `b` should have as many rows as the size of operand `a`
+5	verify	'arm_neon.intr.smmla' op operand #1 must be a vector with length 16 of 8-bit signless integer values, but got 'vector<16xi4>'
+6	verify	'arm_neon.intr.smmla' op operand #0 must be a vector with length 4 of 32-bit signless integer values, but got 'vector<8xi32>'
+7	verify	'arm_neon.intr.ummla' op operand #1 must be a vector with length 16 of 8-bit signless integer values, but got 'vector<16xi4>'
+8	verify	'arm_neon.intr.ummla' op operand #0 must be a vector with length 4 of 32-bit signless integer values, but got 'vector<8xi32>'
+9	verify	'arm_neon.intr.usmmla' op operand #1 must be a vector with length 16 of 8-bit signless integer values, but got 'vector<16xi4>'
+10	verify	'arm_neon.intr.usmmla' op operand #0 must be a vector with length 4 of 32-bit signless integer values, but got 'vector<8xi32>'
+11	verify	'arm_neon.intr.bfmmla' op operand #1 must be a vector with length 8 of bfloat16 type values, but got 'vector<8xf16>'
+12	verify	'arm_neon.intr.bfmmla' op operand #1 must be a vector with length 8 of bfloat16 type values, but got 'vector<4xbf16>'
+13	verify	'arm_neon.intr.bfmmla' op operand #1 must be a vector with length 8 of bfloat16 type values, but got 'vector<[8]xbf16>'
+14	verify	'arm_neon.intr.bfmmla' op operand #0 must be a vector with length 4 of 32-bit float values, but got 'vector<4xi32>'
+15	verify	'arm_neon.intr.bfmmla' op operand #0 must be a vector with length 4 of 32-bit float values, but got 'vector<8xf32>'
+16	verify	'arm_neon.intr.bfmmla' op operand #0 must be a vector with length 4 of 32-bit float values, but got 'vector<[4]xf32>'

@@ -1,0 +1,6 @@
+1	verify	'nvvm.redux.sync' op abs attribute is supported only for f32 type
+2	verify	'nvvm.redux.sync' op nan attribute is supported only for f32 type
+3	verify	'nvvm.redux.sync' op 'add' redux kind unsupported with 'f32' type. Only supported type is 'i32'.
+4	verify	'nvvm.redux.sync' op 'and' redux kind unsupported with 'f32' type. Only supported type is 'i32'.
+5	verify	'nvvm.redux.sync' op 'fmin' redux kind unsupported with 'i32' type. Only supported type is 'f32'.
+6	verify	'nvvm.redux.sync' op failed to verify that all of {res, val} have same type

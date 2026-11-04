@@ -1,0 +1,30 @@
+2	verify	'spirv.KHR.CooperativeMatrixLoad' op Pointer must point to a scalar or vector type but provided '!spirv.struct<(f32 [0])>'
+3	parse	expected ','
+4	verify	'spirv.KHR.CooperativeMatrixLoad' op not compatible with memory operand 'MakePointerAvailable'
+5	verify	'spirv.KHR.CooperativeMatrixLoad' op missing value for the 'Aligned' memory operand
+6	verify	'spirv.KHR.CooperativeMatrixLoad' op missing value for the 'Aligned' memory operand
+7	parse	expected ','
+8	parse	expected '<'
+9	verify	'spirv.KHR.CooperativeMatrixStore' op operand #1 must be any SPIR-V cooperative matrix type, but got 'i32'
+10	verify	'spirv.KHR.CooperativeMatrixStore' op not compatible with memory operand 'MakePointerVisible'
+11	verify	'spirv.KHR.CooperativeMatrixStore' op missing value for the 'Aligned' memory operand
+12	verify	'spirv.KHR.CooperativeMatrixLoad' op found alignment attribute for non-'Aligned' memory operand
+14	verify	'spirv.KHR.CooperativeMatrixMulAdd' op operand #0 must be of use 'MatrixA'
+15	parse	expected ','
+16	parse	expected SSA operand
+17	parse	expected '<'
+18	verify	'spirv.KHR.CooperativeMatrixMulAdd' op operand #1 must be of use 'MatrixB'
+19	verify	'spirv.KHR.CooperativeMatrixMulAdd' op operand #2 must be of use 'MatrixAcc'
+20	verify	'spirv.KHR.CooperativeMatrixMulAdd' op matrix size mismatch on dimension 'M'
+21	verify	'spirv.KHR.CooperativeMatrixMulAdd' op matrix size mismatch on dimension 'N'
+22	verify	'spirv.KHR.CooperativeMatrixMulAdd' op matrix size mismatch on dimension 'K'
+23	verify	'spirv.KHR.CooperativeMatrixMulAdd' op matrix scope mismatch
+24	verify	'spirv.KHR.CooperativeMatrixMulAdd' op Matrix Operands require all matrix element types to be Integer Types
+26	verify	'spirv.IAdd' op failed to verify that all of {operand1, operand2, result} have same type
+27	verify	'spirv.FAdd' op failed to verify that all of {operand1, operand2, result} have same type
+28	verify	'spirv.MatrixTimesScalar' op input matrix components' type and scaling value must have the same type
+29	verify	'spirv.FMod' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got '!spirv.coopmatrix<2x2xf32, Subgroup, MatrixA>'
+30	verify	'spirv.FRem' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got '!spirv.coopmatrix<2x2xf32, Subgroup, MatrixA>'
+31	verify	'spirv.SMod' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got '!spirv.coopmatrix<2x2xi32, Subgroup, MatrixA>'
+32	verify	'spirv.SRem' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got '!spirv.coopmatrix<2x2xi32, Subgroup, MatrixA>'
+33	verify	'spirv.UMod' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got '!spirv.coopmatrix<2x2xi32, Subgroup, MatrixA>'

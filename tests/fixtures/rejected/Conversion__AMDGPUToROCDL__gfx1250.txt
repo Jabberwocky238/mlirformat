@@ -1,0 +1,8 @@
+1	verify	'amdgpu.scaled_ext_packed_matrix' op blockSize of 16 can only have firstScaleByte be 0 or 1 for f4 and f6.
+2	verify	'amdgpu.scaled_ext_packed_matrix' op blockSize of 32 can only have firstScaleByte be 0 or 2 for f4 and f6.
+3	verify	'amdgpu.scaled_ext_packed_matrix' op blockSize of 16 can only have (firstScaleLane, firstScaleByte) be (0, 0) or (16, 2) for f8.
+4	verify	'amdgpu.scaled_ext_packed_matrix' op failed to verify that all of {source, res} have same shape
+5	verify	'amdgpu.scaled_ext_packed_matrix' op operand #0 must be vector<8xF4E2M1FN> of f4E2M1FN type values or vector<8xF8E4M3FN> of f8E4M3FN type values or vector<8xF8E5M2> of f8E5M2 type values or vector<16xF6E2M3FN> of f6E2M3FN type values or vector<16xF6E3M2FN> of f6E3M2FN type values, but got 'vector<16xf16>'
+6	verify	'amdgpu.scaled_ext_packed_matrix' op result #0 must be vector<8xF32> of 32-bit float values or vector<8xF16> of 16-bit float values or vector<8xBF16> of bfloat16 type values or vector<16xF32> of 32-bit float values or vector<16xF16> of 16-bit float values or vector<16xBF16> of bfloat16 type values, but got 'vector<16xf64>'
+7	verify	'amdgpu.make_dma_base' op failed to verify that all of {global, lds} have same element type
+8	verify	'amdgpu.make_dma_base' op element type must be 1, 2, 4, or 8 bytes long but type was 7 bits long.

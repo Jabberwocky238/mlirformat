@@ -1,0 +1,2 @@
+17	verify	'transform.structured.pack_transpose' op "outer_perm" is not a valid permutation
+18	verify	'transform.structured.pack_transpose' op "inner_perm" is not a valid permutation

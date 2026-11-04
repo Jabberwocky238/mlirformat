@@ -1,0 +1,7 @@
+1	parse	struct is missing required parameter: value
+2	parse	expected valid keyword
+3	parse	expected valid keyword
+4	parse	expected valid keyword
+5	parse	duplicate or unknown struct parameter name: type_str2
+6	parse	duplicate or unknown struct parameter name: type_str
+7	parse	expected '='

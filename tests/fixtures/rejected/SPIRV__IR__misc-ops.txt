@@ -1,0 +1,3 @@
+1	parse	expected non-function type
+2	parse	expected ':'
+4	parse	use of value '%arg' expects different type than prior uses: 'i1' vs 'f32'

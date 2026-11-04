@@ -1,0 +1,32 @@
+1	parse	'test.any_attr_of_i32_str' op attribute 'attr' failed to satisfy constraint: 32-bit signless integer attribute or string attribute
+6	parse	integer constant out of range for attribute
+7	parse	integer constant out of range for attribute
+8	parse	'test.int_attrs' op attribute 'si32_attr' failed to satisfy constraint: 32-bit signed integer attribute
+9	parse	'test.int_attrs' op attribute 'ui32_attr' failed to satisfy constraint: 32-bit unsigned integer attribute
+10	parse	'test.int_attrs' op attribute 'any_i32_attr' failed to satisfy constraint: 32-bit integer attribute
+12	parse	'test.non_negative_int_attr' op attribute 'i32attr' failed to satisfy constraint: 32-bit signless integer attribute whose value is non-negative
+13	parse	'test.non_negative_int_attr' op attribute 'i64attr' failed to satisfy constraint: 64-bit signless integer attribute whose value is non-negative
+15	parse	'test.positive_int_attr' op attribute 'i32attr' failed to satisfy constraint: 32-bit signless integer attribute whose value is positive
+16	parse	'test.positive_int_attr' op attribute 'i64attr' failed to satisfy constraint: 64-bit signless integer attribute whose value is positive
+17	parse	'test.positive_int_attr' op attribute 'i32attr' failed to satisfy constraint: 32-bit signless integer attribute whose value is positive
+18	parse	'test.positive_int_attr' op attribute 'i64attr' failed to satisfy constraint: 64-bit signless integer attribute whose value is positive
+20	parse	'test.type_array_attr' op attribute 'attr' failed to satisfy constraint: type array attribute
+22	verify	'test.string_attr_with_type' op attribute 'attr' failed to satisfy constraint: string attribute of integer
+25	parse	'test.i32_enum_attr' op attribute 'attr' failed to satisfy constraint: allowed 32-bit signless integer cases: 5, 10, 2147483648, 4294967295
+26	parse	'test.i32_enum_attr' op attribute 'attr' failed to satisfy constraint: allowed 32-bit signless integer cases: 5, 10, 2147483648, 4294967295
+28	parse	'test.i64_enum_attr' op attribute 'attr' failed to satisfy constraint: allowed 64-bit signless integer cases: 5, 10, 4294967296
+29	parse	'test.i64_enum_attr' op attribute 'attr' failed to satisfy constraint: allowed 64-bit signless integer cases: 5, 10, 4294967296
+32	parse	expected one of [read, write, execute] for a test bit enum, got: sticky
+34	parse	'test.float_elements_attr' op attribute 'scalar_f32_attr' failed to satisfy constraint: 32-bit float elements attribute of shape [2]
+35	parse	'test.float_elements_attr' op attribute 'tensor_f64_attr' failed to satisfy constraint: 64-bit float elements attribute of shape [4, 8]
+41	parse	element type bitwidth must be a multiple of 8
+43	parse	'test.confined_dense_array_attr' op attribute 'i64attr' failed to satisfy constraint: i64 dense array attribute should be in increasing order
+44	parse	'test.confined_dense_array_attr' op attribute 'i32attr' failed to satisfy constraint: i32 dense array attribute should be in non-decreasing order
+46	parse	'test.confined_strictly_positive_attr' op attribute 'i64attr' failed to satisfy constraint: i64 dense array attribute whose value is positive
+48	parse	'test.confined_non_negative_attr' op attribute 'i64attr' failed to satisfy constraint: i64 dense array attribute whose value is non-negative
+51	parse	'test.int_elements_attr' op attribute 'any_i32_attr' failed to satisfy constraint: 32-bit integer elements attribute
+52	parse	'test.int_elements_attr' op attribute 'i32_attr' failed to satisfy constraint: 32-bit signless integer elements attribute
+54	parse	'test.ranked_int_elements_attr' op attribute 'vector_i32_attr' failed to satisfy constraint: 32-bit signless int elements attribute of shape [2]
+55	parse	'test.ranked_int_elements_attr' op attribute 'matrix_i64_attr' failed to satisfy constraint: 64-bit signless int elements attribute of shape [4, 8]
+56	parse	'test.ranked_int_elements_attr' op attribute 'vector_i32_attr' failed to satisfy constraint: 32-bit signless int elements attribute of shape [2]
+58	verify	'test.type_attr_of' op attribute 'type' failed to satisfy constraint: type attribute of 64-bit signless integer

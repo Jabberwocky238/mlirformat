@@ -1,0 +1,53 @@
+1	verify	'spirv.GL.Exp' op operand #0 must be 16/32-bit float or fixed-length vector of 16/32-bit float values of length 2/3/4/8/16, but got 'i32'
+2	verify	'spirv.GL.Exp' op operand #0 must be 16/32-bit float or fixed-length vector of 16/32-bit float values of length 2/3/4/8/16, but got 'vector<5xf32>'
+3	parse	expected ':'
+4	parse	expected non-function type
+5	verify	'spirv.GL.Exp' op operand #0 must be 16/32-bit float or fixed-length vector of 16/32-bit float values of length 2/3/4/8/16, but got 'bf16'
+7	verify	'spirv.GL.FMax' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<3xbf16>'
+22	verify	member zero of the resulting struct type must be the same type as the operand
+23	verify	'spirv.GL.FrexpStruct' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+24	verify	member one of the resulting struct type must have the same number of components as the operand type
+25	verify	member one of the resulting struct type must be a scalar or vector of 32 bit integer type
+28	verify	'spirv.GL.Ldexp' op operands must both be scalars or vectors
+29	verify	'spirv.GL.Ldexp' op operands must both be scalars or vectors
+30	verify	'spirv.GL.Ldexp' op operands must have the same number of elements
+33	verify	'spirv.GL.FindILsb' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'f32'
+35	verify	'spirv.GL.FindSMsb' op operand #0 must be Int32 or fixed-length vector of Int32 values of length 2/3/4/8/16, but got 'i64'
+37	verify	'spirv.GL.FindUMsb' op operand #0 must be Int32 or fixed-length vector of Int32 values of length 2/3/4/8/16, but got 'i64'
+39	verify	'spirv.GL.Distance' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+40	verify	'spirv.GL.Distance' op failed to verify that all of {p0, p1} have same type
+41	verify	'spirv.GL.Distance' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<5xf32>'
+42	verify	'spirv.GL.Distance' op result #0 must be 16/32/64-bit float, but got 'i32'
+44	verify	'spirv.GL.Cross' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<3xi32>'
+46	verify	'spirv.GL.Normalize' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+48	verify	'spirv.GL.Reflect' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+50	verify	'spirv.GL.Fract' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+52	verify	'spirv.GL.Log2' op operand #0 must be 16/32-bit float or fixed-length vector of 16/32-bit float values of length 2/3/4/8/16, but got 'i32'
+54	verify	'spirv.GL.Tanh' op operand #0 must be 16/32-bit float or fixed-length vector of 16/32-bit float values of length 2/3/4/8/16, but got 'i32'
+56	verify	'spirv.GL.Exp2' op operand #0 must be 16/32-bit float or fixed-length vector of 16/32-bit float values of length 2/3/4/8/16, but got 'i32'
+58	verify	'spirv.GL.PackHalf2x16' op result #0 must be Int32, but got 'i16'
+59	verify	'spirv.GL.PackHalf2x16' op operand #0 must be vector of Float32 values of length 2, but got 'vector<3xf32>'
+60	verify	'spirv.GL.PackHalf2x16' op operand #0 must be vector of Float32 values of length 2, but got 'vector<2xi32>'
+61	parse	custom op 'spirv.GL.PackHalf2x16' invalid kind of type specified: expected builtin.vector, but found 'f32'
+62	parse	custom op 'spirv.GL.PackHalf2x16' invalid kind of type specified: expected builtin.integer, but found 'vector<2xi32>'
+64	verify	'spirv.GL.UnpackHalf2x16' op operand #0 must be Int32, but got 'i16'
+65	verify	'spirv.GL.UnpackHalf2x16' op result #0 must be vector of Float32 values of length 2, but got 'vector<3xf32>'
+66	verify	'spirv.GL.UnpackHalf2x16' op result #0 must be vector of Float32 values of length 2, but got 'vector<2xi32>'
+67	parse	custom op 'spirv.GL.UnpackHalf2x16' invalid kind of type specified: expected builtin.integer, but found 'vector<2xf32>'
+68	parse	custom op 'spirv.GL.UnpackHalf2x16' invalid kind of type specified: expected builtin.vector, but found 'f32'
+70	verify	'spirv.GL.PackSnorm4x8' op result #0 must be Int32, but got 'i16'
+71	verify	'spirv.GL.PackSnorm4x8' op operand #0 must be vector of Float32 values of length 4, but got 'vector<3xf32>'
+72	verify	'spirv.GL.PackSnorm4x8' op operand #0 must be vector of Float32 values of length 4, but got 'vector<4xi32>'
+73	parse	custom op 'spirv.GL.PackSnorm4x8' invalid kind of type specified: expected builtin.vector, but found 'f32'
+74	parse	custom op 'spirv.GL.PackSnorm4x8' invalid kind of type specified: expected builtin.integer, but found 'vector<4xi32>'
+76	verify	'spirv.GL.UnpackSnorm4x8' op operand #0 must be Int32, but got 'i16'
+77	verify	'spirv.GL.UnpackSnorm4x8' op result #0 must be vector of Float32 values of length 4, but got 'vector<3xf32>'
+78	verify	'spirv.GL.UnpackSnorm4x8' op result #0 must be vector of Float32 values of length 4, but got 'vector<4xi32>'
+79	parse	custom op 'spirv.GL.UnpackSnorm4x8' invalid kind of type specified: expected builtin.integer, but found 'vector<4xf32>'
+80	parse	custom op 'spirv.GL.UnpackSnorm4x8' invalid kind of type specified: expected builtin.vector, but found 'f32'
+82	verify	'spirv.GL.Length' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+83	verify	'spirv.GL.Length' op failed to verify that result type must match operand element type
+84	verify	'spirv.GL.Length' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<3xi32>'
+85	verify	'spirv.GL.Length' op failed to verify that result type must match operand element type
+86	verify	'spirv.GL.Length' op result #0 must be 16/32/64-bit float, but got 'i32'
+87	verify	'spirv.GL.Length' op result #0 must be 16/32/64-bit float, but got 'vector<3xf32>'

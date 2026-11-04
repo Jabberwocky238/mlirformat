@@ -1,0 +1,18 @@
+1	verify	'llvm.mlir.global' op requires attribute 'sym_name'
+2	verify	'llvm.mlir.global' op requires attribute 'global_type'
+3	verify	'llvm.mlir.global' op expects type to be a valid element type for an LLVM global
+4	parse	'llvm.mlir.global' op attribute 'addr_space' failed to satisfy constraint: 32-bit signless integer attribute whose value is non-negative
+5	parse	'llvm.mlir.global' op attribute 'addr_space' failed to satisfy constraint: 32-bit signless integer attribute whose value is non-negative
+6	verify	'llvm.mlir.global' op symbol's parent must have the SymbolTable trait
+7	verify	'llvm.mlir.global' op requires an i8 array type of the length equal to that of the string attribute
+8	parse	custom op 'llvm.mlir.global' type can only be omitted for string globals
+9	parse	custom op 'llvm.mlir.global' expected zero or one type
+10	parse	expected ':'
+11	parse	custom op 'llvm.mlir.addressof' invalid kind of attribute specified
+12	verify	'llvm.mlir.addressof' op must reference a global defined by 'llvm.mlir.global', 'llvm.mlir.alias' or 'llvm.func' or 'llvm.mlir.ifunc'
+13	verify	block with no terminator, has %0 = "llvm.mlir.constant"() <{value = 42 : i64}> : () -> i64
+14	verify	'llvm.mlir.global' op initializer region type 'i64' does not match global type 'i32'
+15	verify	'llvm.mlir.global' op cannot have both initializer value and region
+16	verify	'llvm.mlir.addressof' op pointer address space must match address space of the referenced global or alias
+17	verify	'llvm.mlir.addressof' op pointer address space must match address space of the referenced global or alias
+22	verify	'llvm.mlir.global' op global with target extension type can only be initialized with zero-initializer

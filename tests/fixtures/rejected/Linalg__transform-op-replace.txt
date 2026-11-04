@@ -1,0 +1,1 @@
+2	verify	'dummy_op' op expected replacement without operands

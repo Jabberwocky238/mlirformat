@@ -1,0 +1,4 @@
+1	verify	'test.two_region_op' op expected 2 regions
+2	verify	'test.two_region_op' op expected 2 regions
+3	verify	'test.sized_region_op' op region #1 failed to verify constraint: region with 1 blocks
+4	verify	'test.sized_region_op' op region #0 ('my_region') failed to verify constraint: region with 2 blocks

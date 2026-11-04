@@ -1,0 +1,3 @@
+1	verify	'nvvm.shfl.sync' op "return_value_and_is_valid" attribute must be specified when the return type is a struct type
+2	verify	'nvvm.shfl.sync' op expected return type to be of type 'f32' but got 'i32' instead
+3	verify	'nvvm.shfl.sync' op expected first element in the returned struct to be of type 'f32' but got 'i32' instead

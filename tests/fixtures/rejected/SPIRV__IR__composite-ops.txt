@@ -1,0 +1,25 @@
+1	verify	'spirv.CompositeConstruct' op has incorrect number of operands: expected 3, but provided 2
+2	verify	'spirv.CompositeConstruct' op operand type mismatch: expected operand type 'i32', but provided 'f32'
+3	verify	'spirv.CompositeConstruct' op has incorrect number of operands: expected 1, but provided 2
+4	verify	'spirv.CompositeConstruct' op operand type mismatch: expected operand type 'f32', but provided 'i32'
+5	verify	'spirv.CompositeConstruct' op expected to return a vector or cooperative matrix when the number of constituents is less than what the result needs
+6	verify	'spirv.CompositeConstruct' op operand element type mismatch: expected to be 'f32', but provided 'i32'
+7	verify	'spirv.CompositeConstruct' op has incorrect number of operands: expected 4, but provided 3
+11	parse	expected SSA operand
+12	parse	expected attribute value
+13	verify	'spirv.CompositeExtract' op attribute 'indices' failed to satisfy constraint: 32-bit integer array attribute
+14	parse	expected attribute value
+15	parse	custom op 'spirv.CompositeExtract' index 4 out of bounds for '!spirv.array<4 x !spirv.array<4 x f32>>'
+16	parse	custom op 'spirv.CompositeExtract' index 4 out of bounds for '!spirv.array<4 x f32>'
+17	parse	custom op 'spirv.CompositeExtract' index 2 out of bounds for '!spirv.struct<(f32, !spirv.array<4 x f32>)>'
+18	parse	custom op 'spirv.CompositeExtract' index 4 out of bounds for 'vector<4xf32>'
+19	parse	custom op 'spirv.CompositeExtract' cannot extract from non-composite type 'f32' with index 3
+20	parse	custom op 'spirv.CompositeExtract' cannot extract from non-composite type 'f32' with index 1
+21	parse	custom op 'spirv.CompositeExtract' expected at least one index for spirv.CompositeExtract
+22	verify	'spirv.CompositeExtract' op invalid result type: expected 'f32' but provided 'i32'
+25	verify	expected at least one index for spirv.CompositeExtract
+26	verify	index 4 out of bounds for '!spirv.array<4 x f32>'
+27	verify	'spirv.CompositeInsert' op object operand type should be 'f32', but found 'f64'
+28	verify	'spirv.CompositeInsert' op result type should be the same as the composite type, but found '!spirv.array<4 x f32>' vs '!spirv.array<4 x f64>'
+31	verify	'spirv.VectorShuffle' op result type element count (3) mismatch with the number of component selectors (4)
+32	verify	'spirv.VectorShuffle' op component selector 7 out of range: expected to be in [0, 6) or 0xffffffff

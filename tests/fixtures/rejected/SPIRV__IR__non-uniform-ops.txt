@@ -1,0 +1,40 @@
+1	verify	'spirv.GroupNonUniformBallot' op execution scope must be 'Workgroup' or 'Subgroup'
+2	verify	'spirv.GroupNonUniformBallot' op result #0 must be vector of 8/16/32/64-bit signless/unsigned integer values of length 4, but got 'vector<4xsi32>'
+4	verify	'spirv.GroupNonUniformBallotFindLSB' op execution scope must be 'Workgroup' or 'Subgroup'
+5	verify	'spirv.GroupNonUniformBallotFindLSB' op result #0 must be 8/16/32/64-bit signless/unsigned integer, but got 'si32'
+7	verify	'spirv.GroupNonUniformBallotFindMSB' op execution scope must be 'Workgroup' or 'Subgroup'
+8	verify	'spirv.GroupNonUniformBallotFindMSB' op result #0 must be 8/16/32/64-bit signless/unsigned integer, but got 'si32'
+11	verify	'spirv.GroupNonUniformBroadcast' op execution scope must be 'Workgroup' or 'Subgroup'
+12	verify	'spirv.GroupNonUniformBroadcast' op id must be the result of a constant op
+14	verify	'spirv.GroupNonUniformElect' op execution scope must be 'Workgroup' or 'Subgroup'
+16	verify	'spirv.GroupNonUniformFMul' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'bf16'
+18	verify	'spirv.GroupNonUniformFMax' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'bf16'
+21	verify	'spirv.GroupNonUniformIAdd' op execution scope must be 'Workgroup' or 'Subgroup'
+22	verify	'spirv.GroupNonUniformIAdd' op cluster size operand must be provided for 'ClusteredReduce' group operation
+23	verify	'spirv.GroupNonUniformIAdd' op cluster size operand must come from a constant op
+24	verify	'spirv.GroupNonUniformIAdd' op cluster size operand must be a power of two
+29	verify	'spirv.GroupNonUniformShuffle' op execution scope must be 'Workgroup' or 'Subgroup'
+30	verify	'spirv.GroupNonUniformShuffle' op second operand must be a singless/unsigned integer
+32	verify	'spirv.GroupNonUniformShuffleXor' op execution scope must be 'Workgroup' or 'Subgroup'
+33	verify	'spirv.GroupNonUniformShuffleXor' op second operand must be a singless/unsigned integer
+35	verify	'spirv.GroupNonUniformShuffleUp' op execution scope must be 'Workgroup' or 'Subgroup'
+36	verify	'spirv.GroupNonUniformShuffleUp' op second operand must be a singless/unsigned integer
+38	verify	'spirv.GroupNonUniformShuffleDown' op execution scope must be 'Workgroup' or 'Subgroup'
+39	verify	'spirv.GroupNonUniformShuffleDown' op second operand must be a singless/unsigned integer
+43	verify	'spirv.GroupNonUniformBitwiseAnd' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'i1'
+45	verify	'spirv.GroupNonUniformBitwiseOr' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'i1'
+47	verify	'spirv.GroupNonUniformBitwiseXor' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'i1'
+49	verify	'spirv.GroupNonUniformLogicalAnd' op operand #0 must be bool or fixed-length vector of bool values of length 2/3/4/8/16, but got 'i32'
+51	verify	'spirv.GroupNonUniformLogicalOr' op operand #0 must be bool or fixed-length vector of bool values of length 2/3/4/8/16, but got 'i32'
+53	verify	'spirv.GroupNonUniformLogicalXor' op operand #0 must be bool or fixed-length vector of bool values of length 2/3/4/8/16, but got 'i32'
+56	verify	'spirv.GroupNonUniformRotateKHR' op execution scope must be 'Workgroup' or 'Subgroup'
+57	verify	'spirv.GroupNonUniformRotateKHR' op operand #1 must be 8/16/32/64-bit signless/unsigned integer, but got 'si32'
+58	verify	'spirv.GroupNonUniformRotateKHR' op operand #2 must be 8/16/32/64-bit signless/unsigned integer, but got 'si32'
+59	verify	'spirv.GroupNonUniformRotateKHR' op cluster size operand must come from a constant op
+60	verify	'spirv.GroupNonUniformRotateKHR' op cluster size operand must be a power of two
+62	verify	'spirv.GroupNonUniformAll' op failed to verify that execution_scope must be Scope of value Subgroup
+64	verify	'spirv.GroupNonUniformAny' op failed to verify that execution_scope must be Scope of value Subgroup
+67	verify	'spirv.GroupNonUniformAllEqual' op failed to verify that execution_scope must be Scope of value Subgroup
+70	verify	'spirv.GroupNonUniformQuadSwap' op failed to verify that execution_scope must be Scope of value Subgroup
+71	verify	'spirv.GroupNonUniformQuadSwap' op operand #1 must be 8/16/32/64-bit signless/unsigned integer, but got 'f32'
+72	verify	'spirv.GroupNonUniformQuadSwap' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 or 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 or bool or fixed-length vector of bool values of length 2/3/4/8/16, but got '!spirv.array<3 x i32>'

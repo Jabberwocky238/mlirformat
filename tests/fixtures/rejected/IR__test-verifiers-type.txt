@@ -1,0 +1,2 @@
+1	parse	failed to verify 'param': 16-bit signless integer or 32-bit signless integer
+4	parse	failed to verify 'elementType': VectorElementTypeInterface instance

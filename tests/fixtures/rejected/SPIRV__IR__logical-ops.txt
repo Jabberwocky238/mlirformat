@@ -1,0 +1,12 @@
+6	parse	expected ':'
+7	parse	expected non-function type
+8	parse	expected ','
+10	parse	expected ':'
+11	parse	expected non-function type
+12	parse	expected SSA operand
+13	parse	custom op 'spirv.LogicalNot' 'operand' must be bool or fixed-length vector of bool values of length 2/3/4/8/16, but got 'i32'
+15	parse	expected ','
+16	verify	'spirv.Select' op result expected to be of vector type when condition is of vector type
+17	verify	'spirv.Select' op result should have the same number of elements as the condition when condition is of vector type
+18	verify	'spirv.Select' op failed to verify that all of {true_value, false_value, result} have same type
+19	verify	'spirv.Select' op failed to verify that all of {true_value, false_value, result} have same type

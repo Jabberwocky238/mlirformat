@@ -1,0 +1,1 @@
+1	verify	'arith.constant' op failed to verify that all of {value, result} have same type

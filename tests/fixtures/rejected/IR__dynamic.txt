@@ -1,0 +1,7 @@
+1	parse	expected 0 type arguments, but had 1
+2	parse	expected 2 type arguments, but had 1
+5	parse	expected 0 attribute arguments, but had 1
+6	parse	expected 2 attribute arguments, but had 1
+9	verify	'test.dynamic_one_operand_two_results' op expected 1 operand, but had 0
+10	verify	'test.dynamic_one_operand_two_results' op expected 2 results, but had 0
+12	verify	expected a single result, no operands and no regions

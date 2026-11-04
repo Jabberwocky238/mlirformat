@@ -1,0 +1,2 @@
+2	verify	'transform.affine.simplify_bounded_affine_ops' op incorrect number of lower bounds, expected 0 but found 1
+3	verify	'transform.affine.simplify_bounded_affine_ops' op incorrect number of upper bounds, expected 0 but found 1

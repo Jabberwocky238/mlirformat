@@ -1,0 +1,34 @@
+1	parse	no expression inside parentheses
+2	parse	expected affine expression
+3	parse	expected affine expression
+4	parse	expected affine expression
+5	parse	expected '=' in attribute alias definition
+6	parse	missing right operand of binary operator
+7	parse	missing right operand of binary operator
+8	parse	expected ')'
+9	parse	expected ')'
+10	parse	expected '(' in affine map range
+11	parse	use of undeclared identifier
+12	parse	redefinition of identifier 'i'
+13	parse	redefinition of identifier 's0'
+14	parse	redefinition of identifier 'i'
+15	parse	missing left operand of binary operator
+16	parse	missing left operand of binary operator
+17	parse	use of undeclared identifier
+18	parse	use of undeclared identifier
+19	parse	use of undeclared identifier
+20	parse	no expression inside parentheses
+21	parse	missing left operand of binary operator
+22	parse	use of undeclared identifier
+23	parse	use of undeclared identifier
+24	parse	use of undeclared identifier
+25	parse	non-affine expression: at least one of the multiply operands has to be either a constant or symbolic
+26	parse	non-affine expression: at least one of the multiply operands has to be either a constant or symbolic
+27	parse	non-affine expression: right operand of floordiv has to be either a constant or symbolic
+28	parse	non-affine expression: right operand of ceildiv has to be either a constant or symbolic
+29	parse	non-affine expression: right operand of mod has to be either a constant or symbolic
+30	parse	expected ')' in affine map range
+31	parse	use of undeclared identifier
+32	parse	redefinition of attribute alias id 'ABC'
+33	parse	invalid SSA name
+34	parse	expected '->' or ':'

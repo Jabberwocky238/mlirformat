@@ -1,0 +1,5 @@
+5	parse	invalid properties {dilations = dense<1> : vector<2xi64>, operandSegmentSizes = array<i32: 2, 1>, strides = dense<2.000000e+00> : vector<2xf32>} for op linalg.depthwise_conv_2d_nhwc_hwc: Invalid attribute `strides` in property conversion: dense<2.000000e+00> : vector<2xf32>
+6	parse	custom op 'linalg.depthwise_conv_2d_nhwc_hwc' 'linalg.depthwise_conv_2d_nhwc_hwc' op attribute 'strides' failed to satisfy constraint: 64-bit signless int elements attribute of shape [2]
+7	parse	custom op 'linalg.depthwise_conv_2d_nhwc_hwc' 'linalg.depthwise_conv_2d_nhwc_hwc' op attribute 'strides' failed to satisfy constraint: 64-bit signless int elements attribute of shape [2]
+70	verify	unexpected input index map for convolutions
+71	verify	expected output/filter indexing maps to be projected permutations

@@ -1,0 +1,65 @@
+2	verify	'spirv.mlir.addressof' op expected spirv.GlobalVariable symbol
+3	verify	'spirv.mlir.addressof' op result type mismatch with the referenced global variable's type
+5	verify	'spirv.Constant' op cannot have attribute: unit
+6	verify	'spirv.Constant' op result or element type ('vector<2xf32>') does not match value type ('vector<2xi32>'), must be the same or spirv.array
+7	verify	'spirv.Constant' op must have spirv.array result type for array value
+8	verify	'spirv.Constant' op only support nested array result type
+9	verify	'spirv.Constant' op result or element type ('vector<4xi32>') does not match value type ('tensor<4xi32>'), must be the same or spirv.array
+10	verify	'spirv.Constant' op result element type ('i32') does not match value element type ('f32')
+11	verify	'spirv.Constant' op result number of elements (6) does not match value number of elements (4)
+12	verify	'spirv.Constant' op expected a splat dense attribute for cooperative matrix constant, but found dense<[[1.000000e+00, 2.000000e+00], [3.000000e+00, 4.000000e+00]]> : !spirv.coopmatrix<2x2xf32, Subgroup, MatrixAcc>
+13	parse	floating point value not valid for specified type
+14	parse	unexpected decimal integer literal for a floating point value
+15	verify	'spirv.EXT.ConstantCompositeReplicate' op result #0 must be vector of bool or 8/16/32/64-bit integer or 16/32/64-bit float or BFloat16 values of length 2/3/4/8/16 or any SPIR-V array type or any SPIR-V runtime array type or any SPIR-V struct type or any SPIR-V cooperative matrix type or any SPIR-V matrix type or any SPIR-V tensorArm type, but got 'i32'
+16	verify	expected value attribute type 'f32', but got: 'i32'
+17	verify	expected value attribute type '!spirv.array<3 x i32>' or 'i32', but got: 'vector<2xi32>'
+18	verify	expected value attribute type 'f32', but got: 'i32'
+19	verify	expected value attribute type 'vector<3xi32>' or 'i32', but got: 'vector<2xi32>'
+21	parse	custom op 'spirv.EntryPoint' invalid kind of attribute specified
+22	verify	function 'do_something' not found in 'spirv.module'
+23	verify	'spirv.EntryPoint' op failed to verify that op must appear in a module-like op's block
+24	verify	duplicate of a previous EntryPointOp
+25	parse	custom op 'spirv.EntryPoint' invalid execution_model attribute specification: "ContractionOff"
+27	parse	custom op 'spirv.ExecutionMode' invalid execution_mode attribute specification: "GLCompute"
+30	verify	'spirv.module' cannot contain external functions without 'Import' linkage_attributes (LinkageAttributes)
+31	parse	custom op 'spirv.func' expected function_control attribute specified as string
+32	verify	'spirv.func' op cannot have more than one result
+33	parse	custom op 'spirv.func' expected SSA identifier
+34	verify	'spirv.func' op failed to verify that op must appear in a module-like op's block
+43	parse	custom op 'spirv.GlobalVariable' expected spirv.ptr type
+44	verify	'spirv.GlobalVariable' op result must be of a !spv.ptr type
+45	verify	'spirv.GlobalVariable' op initializer must be result of a spirv.SpecConstant or spirv.SpecConstantCompositeOp op
+46	verify	'spirv.GlobalVariable' op storage class cannot be 'Generic'
+47	verify	'spirv.GlobalVariable' op storage class cannot be 'Function'
+48	verify	'spirv.GlobalVariable' op failed to verify that op must appear in a module-like op's block
+50	parse	custom op 'spirv.module' expected valid keyword
+51	parse	custom op 'spirv.module' invalid addressing_model attribute specification: Physical
+52	parse	custom op 'spirv.module' expected valid keyword
+53	parse	custom op 'spirv.module' invalid memory_model attribute specification: Bla
+54	verify	'spirv.module' op expects region #0 to have 0 or 1 blocks
+55	verify	'spirv.module' can only contain spirv.* ops
+56	verify	functions in 'spirv.module' can only contain spirv.* ops
+57	verify	'spirv.module' cannot contain external functions without 'Import' linkage_attributes (LinkageAttributes)
+61	verify	'spirv.mlir.referenceof' op expected spirv.SpecConstant or spirv.SpecConstantComposite symbol
+62	verify	'spirv.mlir.referenceof' op result type mismatch with the referenced specialization constant's type
+63	verify	'spirv.mlir.referenceof' op result type mismatch with the referenced specialization constant's type
+65	verify	'spirv.SpecConstant' op SpecId cannot be negative
+66	verify	'spirv.SpecConstant' op default value bitwidth disallowed
+67	verify	'spirv.SpecConstant' op default value can only be a bool, integer, or float scalar
+68	verify	'spirv.SpecConstant' op failed to verify that op must appear in a module-like op's block
+69	verify	result type must be a composite type, but provided 'i32'
+71	verify	has incorrect number of operands: expected 4, but provided 3
+72	verify	has incorrect types of operands: expected 'f32', but provided 'i32'
+74	verify	has incorrect number of operands: expected 2, but provided 3
+75	verify	has incorrect types of operands: expected 'i32', but provided 'f32'
+77	verify	has incorrect number of operands: expected 4, but provided 3
+78	verify	has incorrect types of operands: expected 'f32', but provided 'i32'
+79	verify	unsupported composite type  '!spirv.coopmatrix<8x16xf32, Device, MatrixA>'
+80	verify	result type must be a composite type, but provided 'i32'
+81	verify	splat spec constant reference defining constituent not found
+82	verify	constituent has incorrect type: expected 'i32', but provided 'f32'
+83	verify	constituent has incorrect type: expected 'i32', but provided 'f32'
+84	verify	constituent has incorrect type: expected 'i32', but provided 'f32'
+87	verify	'spirv.mlir.yield' op expects parent op 'spirv.SpecConstantOperation'
+88	verify	'spirv.SpecConstantOperation' op invalid enclosed op
+89	verify	'spirv.SpecConstantOperation' op invalid operand, must be defined by a constant operation

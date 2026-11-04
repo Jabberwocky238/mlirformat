@@ -12,6 +12,11 @@ use mlirformat::*;
 
 /// Runs `check` on every `// -----` chunk of every file in `dir`, on all cores, collecting failures.
 fn each_chunk(dir: &str, check: impl Fn(&str) -> Result<(), String> + Sync) {
+    each_chunk_at(dir, |_, _, chunk| check(chunk));
+}
+
+/// [`each_chunk`], `check` also told the file and the chunk's index.
+fn each_chunk_at(dir: &str, check: impl Fn(&Path, usize, &str) -> Result<(), String> + Sync) {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures").join(dir);
     let files = Fixtures::sample(&dir);
     let next = AtomicUsize::new(0);
@@ -25,7 +30,7 @@ fn each_chunk(dir: &str, check: impl Fn(&str) -> Result<(), String> + Sync) {
                         let src = fs::read_to_string(path).unwrap();
                         for (i, chunk) in src.split("// -----").enumerate() {
                             total += 1;
-                            if let Err(e) = check(chunk.trim_start_matches('-')) {
+                            if let Err(e) = check(path, i, chunk.trim_start_matches('-')) {
                                 failures.push(format!("{}#{i}: {e}", path.file_name().unwrap().to_string_lossy()));
                             }
                         }
@@ -80,14 +85,66 @@ fn custom_form_roundtrips() {
     each_chunk("custom", |src| roundtrip(src, &MlirOpt::new()));
 }
 
-/// A chunk written for `-verify-diagnostics` to reject (`expected-error`) may not read: `mlir-opt`
-/// refuses it too. Every other chunk must round-trip.
+/// Why `mlir-opt` rejects chunk `i` of an `upstream/` file, if it does (`rejected/<name>.txt`,
+/// written by `scripts/fixtures.py`).
+fn rejected(path: &Path, i: usize) -> Option<Rejected> {
+    let list = fs::read_to_string(Fixtures::dir().join("rejected").join(path.with_extension("txt").file_name()?)).ok()?;
+    list.lines().find_map(|l| {
+        let mut f = l.splitn(3, '\t');
+        (f.next()?.parse::<usize>().ok()? == i).then(|| Rejected::try_from(f.next()?).ok()).flatten()
+    })
+}
+
+/// How `mlir-opt` 22.1.8 rejects a chunk when it only reads it (no pass).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Rejected {
+    /// The text does not read.
+    Parse,
+    /// It reads; the verifier rejects an op.
+    Verify,
+}
+
+impl TryFrom<&str> for Rejected {
+    type Error = ();
+    fn try_from(s: &str) -> Result<Self, ()> {
+        match s {
+            "parse" => Ok(Self::Parse),
+            "verify" => Ok(Self::Verify),
+            _ => Err(()),
+        }
+    }
+}
+
+/// Every chunk `mlir-opt` reads must round-trip, `expected-error` or not (most of those are the
+/// diagnostics of a pass). What it rejects is `upstream_rejections_match_mlir_opt`'s.
 #[test]
 fn upstream_sources_roundtrip() {
-    each_chunk("upstream", |src| match roundtrip(src, &MlirOpt::new()) {
-        Err(_) if src.contains("expected-error") => Ok(()),
-        r => r,
+    each_chunk_at("upstream", |path, i, src| match rejected(path, i) {
+        Some(_) => Ok(()),
+        None => roundtrip(src, &MlirOpt::new()),
     });
+}
+
+/// A chunk whose text `mlir-opt` cannot read, this crate rejects too. One only its verifier
+/// rejects is counted, not failed: verification is not this crate's yet.
+#[test]
+fn upstream_rejections_match_mlir_opt() {
+    let opt = MlirOpt::upstream();
+    let accepted_invalid = AtomicUsize::new(0);
+    each_chunk_at("upstream", |path, i, src| match rejected(path, i) {
+        Some(Rejected::Parse) => match opt.parse(src) {
+            Err(_) => Ok(()),
+            Ok(_) => Err("mlir-opt does not read it, this crate does".into()),
+        },
+        Some(Rejected::Verify) => {
+            if opt.parse(src).is_ok() {
+                accepted_invalid.fetch_add(1, Ordering::Relaxed);
+            }
+            Ok(())
+        }
+        None => Ok(()),
+    });
+    println!("read although mlir-opt's verifier rejects them (not verified here): {} chunks", accepted_invalid.into_inner());
 }
 
 #[test]

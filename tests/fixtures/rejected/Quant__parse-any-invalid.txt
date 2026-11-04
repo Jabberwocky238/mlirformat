@@ -1,0 +1,12 @@
+1	parse	expected ':'
+2	parse	unbalanced '<' character in pretty dialect name
+3	parse	expected '>'
+4	parse	illegal storage type prefix
+5	parse	illegal storage type prefix
+6	parse	illegal storage type size: 33
+7	parse	illegal storage type size: 1024
+8	parse	invalid integer width
+9	parse	illegal storage min and storage max: (2:1)
+10	parse	illegal storage min and storage max: (1:1)
+11	parse	illegal storage type maximum: 9
+12	parse	illegal storage type minimum: -9

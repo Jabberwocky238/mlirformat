@@ -1,0 +1,6 @@
+2	verify	'spirv.INTEL.ConvertFToBF16' op operand #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16, but got 'f64'
+3	verify	'spirv.INTEL.ConvertFToBF16' op requires the same shape for all operands and results
+6	verify	'spirv.INTEL.ConvertBF16ToF' op result #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16, but got 'f16'
+7	verify	'spirv.INTEL.ConvertBF16ToF' op requires the same shape for all operands and results
+10	verify	'spirv.INTEL.RoundFToTF32' op operand #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16, but got 'f64'
+11	verify	'spirv.INTEL.RoundFToTF32' op requires the same shape for all operands and results

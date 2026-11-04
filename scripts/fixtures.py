@@ -14,9 +14,19 @@ leading `Dialect/` dropped: `Dialect/Affine/ops.mlir` ⇒ `Affine__ops.mlir`):
 out of the output). A file is skipped when mlir-opt fails on it, or does not read back what it
 printed. Files already there are kept (some had a chunk mlir-opt cannot read back taken out by
 hand); `--force` rewrites them.
+
+Then, for every `upstream/` file, which of its `// -----` chunks mlir-opt rejects when it only
+reads it (no pass), written to `rejected/<name>.txt`, one line per rejected chunk:
+
+    <chunk index>\t<parse|verify>\t<mlir-opt's first error>
+
+`parse`: still rejected with `--mlir-very-unsafe-disable-verifier-on-parsing` (the text does not
+read); `verify`: it reads, and the verifier rejects the op. A chunk's `expected-error` alone says
+neither: many are diagnostics of the pass its RUN line runs.
 """
 
 import argparse
+import re
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -60,6 +70,26 @@ def main():
         (out / "generic" / f"{name}.mlir").write_text(generic.stdout)
         return "added"
 
+    def verdicts(path: Path) -> int:
+        """`rejected/<name>.txt` for one `upstream/` file; how many chunks it lists."""
+        lines = []
+        # Split as the tests split: on `// -----` anywhere.
+        for i, chunk in enumerate(path.read_text(errors="replace").split("// -----")):
+            chunk = chunk.lstrip("-")
+            plain = subprocess.run([opts.mlir_opt, "--allow-unregistered-dialect", "-o", "/dev/null", "-"], input=chunk, capture_output=True, text=True, timeout=120)
+            if plain.returncode == 0:
+                continue
+            raw = subprocess.run([opts.mlir_opt, "--allow-unregistered-dialect", "--mlir-very-unsafe-disable-verifier-on-parsing", "-o", "/dev/null", "-"], input=chunk, capture_output=True, text=True, timeout=120)
+            kind = "parse" if raw.returncode else "verify"
+            first = re.search(r"error: (.*)", plain.stderr)
+            lines.append(f"{i}\t{kind}\t{first.group(1) if first else plain.stderr.strip()[:200]}")
+        target = out / "rejected" / f"{path.stem}.txt"
+        if lines:
+            target.write_text("\n".join(lines) + "\n")
+        elif target.exists():
+            target.unlink()
+        return len(lines)
+
     paths = sorted(root.rglob("*.mlir"))
     with ThreadPoolExecutor() as pool:
         results = list(pool.map(one, paths))
@@ -68,6 +98,10 @@ def main():
         tally[r] = tally.get(r, 0) + 1
     for r, n in sorted(tally.items()):
         print(f"{n:5} {r}")
+    (out / "rejected").mkdir(exist_ok=True)
+    with ThreadPoolExecutor() as pool:
+        rejected = sum(pool.map(verdicts, sorted((out / "upstream").glob("*.mlir"))))
+    print(f"{rejected:5} upstream chunks mlir-opt rejects (rejected/)")
 
 
 if __name__ == "__main__":

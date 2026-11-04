@@ -1,0 +1,3 @@
+0	verify	'test.verifiers' op operand #0 must be 32-bit signless integer, but got 'index'
+1	verify	'test.verifiers' op requires one region
+2	verify	'test.verifiers' op operand #0 must be 32-bit signless integer, but got 'index'

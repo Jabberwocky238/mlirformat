@@ -1,0 +1,41 @@
+2	parse	expected block name
+3	verify	'spirv.Branch' op requires 1 successor but found 2
+7	parse	expected SSA operand
+8	parse	use of value '%zero' expects different type than prior uses: 'i1' vs 'i32'
+9	verify	'spirv.BranchConditional' op requires 2 successors but found 1
+10	verify	'spirv.BranchConditional' op must have exactly two branch weights
+11	verify	'spirv.BranchConditional' op branch weights cannot both be zero
+14	verify	'spirv.FunctionCall' op result group starting at #0 requires 0 or 1 element, but found 2
+15	verify	'spirv.FunctionCall' op has incorrect number of results has for callee: expected 0, but provided 1
+16	verify	'spirv.FunctionCall' op has incorrect number of operands for callee: expected 2, but provided 1
+17	verify	'spirv.FunctionCall' op operand type mismatch: expected operand type 'i32', but provided 'f32' for operand number 1
+18	verify	'spirv.FunctionCall' op result type mismatch: expected 'i32', but provided 'f32'
+19	verify	'spirv.FunctionCall' op callee function 'f_undefined' not found in nearest symbol table
+20	verify	'spirv.func' op requires attribute 'function_type'
+24	verify	'spirv.mlir.loop' op last block must be the merge block with only one 'spirv.mlir.merge' op
+25	verify	'spirv.mlir.loop' op must have an entry block branching to the loop header block
+26	verify	'spirv.mlir.loop' op must have a loop header block branched from the entry block
+27	verify	'spirv.mlir.loop' op entry block must only have one 'spirv.Branch' op to the second block
+28	verify	'spirv.mlir.loop' op requires a loop continue block branching to the loop header block
+29	verify	'spirv.mlir.loop' op second to last block must be the loop continue block that branches to the loop header block
+30	verify	'spirv.mlir.loop' op can only have the entry and loop continue block branching to the loop header block
+32	verify	'spirv.mlir.merge' op expects parent op to be one of 'spirv.mlir.selection, spirv.mlir.loop'
+33	verify	'spirv.mlir.selection' op should not have 'spirv.mlir.merge' op outside the merge block
+34	verify	empty block: expect at least a terminator
+35	verify	'spirv.mlir.loop' op should not have 'spirv.mlir.merge' op outside the merge block
+37	verify	'spirv.Return' op failed to verify that op must appear in a function-like op's block
+38	verify	'spirv.Return' op cannot be used in functions returning value
+39	verify	'spirv.Return' op cannot be used in functions returning value
+41	verify	'spirv.ReturnValue' op failed to verify that op must appear in a function-like op's block
+42	verify	'spirv.ReturnValue' op returns 1 value but enclosing function requires 0 results
+43	verify	'spirv.ReturnValue' op  return value's type ('i32') mismatch with function's result type ('f32')
+44	verify	'spirv.ReturnValue' op returns 1 value but enclosing function requires 0 results
+50	verify	'spirv.mlir.selection' op last block must be the merge block with only one 'spirv.mlir.merge' op
+51	verify	'spirv.mlir.selection' op must have a selection header block
+54	verify	'spirv.Unreachable' op cannot be used in reachable block
+57	parse	custom op 'spirv.Switch' invalid kind of type specified: expected builtin.integer, but found 'f32'
+58	parse	custom op 'spirv.Switch' expected integer value
+59	parse	custom op 'spirv.Switch' expected 'default'
+60	parse	expected block name
+61	parse	expected block name
+62	parse	expected ':'

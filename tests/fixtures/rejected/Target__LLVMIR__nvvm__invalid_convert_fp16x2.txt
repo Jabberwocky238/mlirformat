@@ -1,0 +1,5 @@
+1	verify	'nvvm.convert.f32x2.to.f16x2' op Only RN, RZ, and RS rounding modes are supported for conversions from f32x2 to f16x2.
+2	verify	'nvvm.convert.f32x2.to.f16x2' op random_bits is required for RS rounding mode.
+3	verify	'nvvm.convert.f32x2.to.f16x2' op random_bits not supported for RN and RZ rounding modes.
+4	verify	'nvvm.convert.f32x2.to.bf16x2' op Only RN, RZ, and RS rounding modes are supported for conversions from f32x2 to bf16x2.
+5	verify	'nvvm.convert.f32x2.to.bf16x2' op random_bits is required for RS rounding mode.

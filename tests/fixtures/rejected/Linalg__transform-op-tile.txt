@@ -1,0 +1,2 @@
+8	verify	'transform.structured.tile_using_for' op expected number of loops to tile (3) to match number of `loops` results (1)
+9	verify	'transform.structured.tile_using_for' op expected number of loops to tile (0) to match number of `loops` results (1)

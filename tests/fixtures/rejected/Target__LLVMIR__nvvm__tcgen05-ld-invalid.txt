@@ -1,0 +1,1 @@
+1	verify	offset argument is only supported for shape 16x32bx2

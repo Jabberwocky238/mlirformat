@@ -1,0 +1,15 @@
+1	parse	expected '(' in location
+2	parse	expected ')' in location
+3	parse	expected location instance
+4	parse	expected ')' after child location of NameLoc
+5	parse	expected '(' in callsite location
+6	parse	expected location instance
+7	parse	expected 'at' in callsite location
+8	parse	expected location instance
+9	parse	expected ')' in callsite location
+10	parse	expected '>' after fused location metadata
+11	parse	expected attribute value
+12	parse	expected '[' in fused location
+13	parse	expected ']' in fused location
+14	parse	operation location alias was never defined
+15	parse	expected location, but found 'true'

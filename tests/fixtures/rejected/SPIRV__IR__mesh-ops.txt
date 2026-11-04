@@ -1,0 +1,1 @@
+1	verify	'spirv.EXT.EmitMeshTasks' op payload must be a variable with a storage class of TaskPayloadWorkgroupEXT

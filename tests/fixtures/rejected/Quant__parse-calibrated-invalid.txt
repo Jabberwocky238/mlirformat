@@ -1,0 +1,5 @@
+1	parse	expected ':'
+2	parse	unbalanced '<' character in pretty dialect name
+3	parse	invalid kind of type specified
+4	parse	illegal min and max: (1.000000e+00:-1.000000e+00)
+5	parse	illegal min and max: (1.000000e+00:1.000000e+00)

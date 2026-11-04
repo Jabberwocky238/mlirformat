@@ -1,0 +1,4 @@
+1	verify	'test.destination_style_op' op expected the number of tensor results (0) to be equal to the number of output tensors (1)
+3	verify	'test.destination_style_op' op expected the number of tensor results (0) to be equal to the number of output tensors (1)
+4	verify	'test.destination_style_op' op expected the number of tensor results (1) to be equal to the number of output tensors (0)
+6	verify	'test.destination_style_op' op expected the number of tensor results (1) to be equal to the number of output tensors (0)

@@ -1,0 +1,12 @@
+1	verify	'spirv.CL.exp' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+2	verify	'spirv.CL.exp' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<5xf32>'
+3	parse	expected ':'
+4	parse	expected non-function type
+6	verify	'spirv.CL.fabs' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
+7	verify	'spirv.CL.fabs' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<5xf32>'
+8	parse	expected ':'
+9	parse	expected non-function type
+11	verify	'spirv.CL.s_abs' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'f32'
+12	verify	'spirv.CL.s_abs' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'vector<5xi32>'
+13	parse	expected ':'
+14	parse	expected non-function type
