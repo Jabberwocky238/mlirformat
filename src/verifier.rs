@@ -45,6 +45,10 @@ pub enum Invalid {
     /// `dense<"0x...">`: not `0x` and hex digits, or not one element / every element's bytes.
     #[error("invalid hex elements `{0}`")]
     DenseHex(String),
+    /// `dense<[1.5, 2]> : tensor<3xi32>`: a literal not of the type's shape, or a float literal
+    /// of an integer type.
+    #[error("invalid dense literal `{0}`")]
+    DenseLiteral(String),
     /// `vector<memref<2xf32>>`: a vector holds integers, floats, `index` or a dialect's
     /// `VectorElementTypeInterface` type.
     #[error("invalid vector element type `{0}`")]
@@ -67,6 +71,10 @@ pub enum Invalid {
     /// `%x` used as another type than it has, or than other uses gave it.
     #[error("use of value `%{0}` expects different type than prior uses: `{1}`")]
     ValueType(String, String),
+    /// An op's operand naming an entry argument of its own region, which nothing outside the
+    /// region sees (`affine.for %i = #map(%i)`).
+    #[error("region entry argument `%{0}` is already in use")]
+    RegionArgInUse(String),
     /// `%x` defined where a `%x` is already in scope.
     #[error("redefinition of SSA value `%{0}`")]
     RedefinedValue(String),
@@ -288,6 +296,9 @@ impl<'x> Verify<'x> for Operation<'x> {
             return Err(Invalid::CustomForm(self.name.to_string()));
         }
         v.loc(&self.loc)?;
+        if let Some(u) = self.operands.iter().find(|u| self.regions.iter().filter_map(|r| r.blocks.first()).any(|b| b.args.iter().any(|a| a.name == u.name))) {
+            return Err(Invalid::RegionArgInUse(u.name.to_string()));
+        }
         // An operand's type, when the op says one per operand.
         let typed = self.ty.inputs.len() == self.operands.len();
         for (i, u) in self.operands.iter().enumerate() {

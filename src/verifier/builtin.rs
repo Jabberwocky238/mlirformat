@@ -36,6 +36,62 @@ impl Keyword {
         }
     }
 
+    /// The shape of a `dense` literal (`[[1, 2], [3, 4]]` ⇒ `[2, 2]`, a scalar ⇒ `None`: a
+    /// splat), and whether a float literal is in it; `Err` for lists of uneven shapes.
+    fn literal(text: &str) -> Result<(Option<Vec<usize>>, bool), ()> {
+        let text = text.trim();
+        let Some(inner) = text.strip_prefix('[').and_then(|t| t.strip_suffix(']')) else {
+            // A scalar: a number, `true` / `false`, a `(re, im)` pair, a string.
+            let digits = text.strip_prefix('-').unwrap_or(text);
+            let float = digits.starts_with(|c: char| c.is_ascii_digit()) && !digits.starts_with("0x") && digits.contains(['.', 'e', 'E']);
+            return Ok((None, float));
+        };
+        let mut items = Vec::new();
+        let (mut depth, mut start, mut quoted) = (0i32, 0, false);
+        for (i, c) in inner.char_indices() {
+            match c {
+                '"' => quoted = !quoted,
+                _ if quoted => {}
+                '[' | '(' => depth += 1,
+                ']' | ')' => depth -= 1,
+                ',' if depth == 0 => {
+                    items.push(&inner[start..i]);
+                    start = i + 1;
+                }
+                _ => {}
+            }
+        }
+        if !inner.trim().is_empty() {
+            items.push(&inner[start..]);
+        }
+        let mut shape: Option<Option<Vec<usize>>> = None;
+        let mut float = false;
+        for item in &items {
+            let (s, f) = Self::literal(item)?;
+            float |= f;
+            match &shape {
+                Some(prev) if *prev != s => return Err(()),
+                Some(_) => {}
+                None => shape = Some(s),
+            }
+        }
+        let mut out = alloc::vec![items.len()];
+        out.extend(shape.flatten().unwrap_or_default());
+        Ok((Some(out), float))
+    }
+
+    /// `dense<literal> : T`: the literal's shape is `T`'s (or it is one splat value), and an
+    /// integer `T` has no float literal (`DenseElementsAttr` parsing in `AttributeParser.cpp`).
+    fn dense_literal(body: &str, ty: Option<&Type<'_>>) -> bool {
+        let Some(t @ Type::Shaped(s)) = ty else { return true };
+        let Some(dims) = s.shape.as_ref().and_then(|d| d.iter().map(|d| if let crate::Dim::Static(n) = d { usize::try_from(*n).ok() } else { None }).collect::<Option<Vec<usize>>>()) else { return true };
+        // A literal over several lines may carry `//` comments.
+        let body: String = body.lines().map(|l| l.split_once("//").map_or(l, |(code, _)| code)).collect::<Vec<_>>().join("\n");
+        let Ok((shape, float)) = Self::literal(&body) else { return false };
+        let shape_ok = shape.is_none_or(|sh| sh == dims || (dims.is_empty() && sh.is_empty()));
+        shape_ok && !(float && matches!(t.element_type(), Type::Integer { .. } | Type::Index))
+    }
+
     /// Its raw body (`<(d0) -> (d0)>`) as `mlir-opt` would read it.
     fn verify(self, body: &str, ty: Option<&Type<'_>>) -> Result<(), Invalid> {
         let inner = body.trim().strip_prefix('<').and_then(|b| b.strip_suffix('>')).unwrap_or(body);
@@ -46,7 +102,10 @@ impl Keyword {
             // type, it is strings).
             Keyword::Dense => match inner.trim().strip_prefix('"').and_then(|h| h.strip_suffix('"')) {
                 Some(hex) if ty.map(Type::element_type).is_some_and(|t| matches!(t, Type::Integer { .. } | Type::Float(_) | Type::Index | Type::Complex(_))) && !Self::dense_hex(hex, ty) => Err(Invalid::DenseHex(body.into())),
-                _ => Ok(()),
+                Some(_) => Ok(()),
+                // A literal of numbers.
+                None if !inner.trim().is_empty() && ty.map(Type::element_type).is_some_and(|t| matches!(t, Type::Integer { .. } | Type::Float(_) | Type::Index)) && !Self::dense_literal(inner, ty) => Err(Invalid::DenseLiteral(body.into())),
+                None => Ok(()),
             },
         }
     }
