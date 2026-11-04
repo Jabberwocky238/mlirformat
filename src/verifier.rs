@@ -8,17 +8,21 @@
 //!
 //! This file is the structure every dialect shares: the walk, aliases, locations, SSA scopes.
 //! What one dialect's types and attributes must be is its [`DialectRules`], one file each under
-//! `verifier/` (`builtin.rs`, `llvm.rs`, `quant.rs`, `spirv.rs`, `xegpu.rs`), listed in [`DIALECTS`].
+//! `verifier/` (`arm_sve.rs`, `builtin.rs`, `llvm.rs`, `ptr.rs`, `quant.rs`, `spirv.rs`, `xegpu.rs`), listed in [`DIALECTS`].
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
+/// `arm_sve` ops.
+mod arm_sve;
 /// The builtin types and attributes.
 mod builtin;
 /// LLVM dialect ops and attributes.
 mod llvm;
 /// ODS constraints of inherent attributes.
 mod ods;
+/// `ptr` attributes.
+mod ptr;
 /// `quant` types.
 mod quant;
 /// SPIR-V types.
@@ -402,8 +406,11 @@ impl<'x> Verify<'x> for Operation<'x> {
         }
         let isolated = v.opt.op_info(&self.name).is_some_and(|i| i.has(crate::Trait::IsIsolatedFromAbove));
         let raw = self.raw.iter().flatten().filter_map(|p| if let crate::Piece::Region(r) = p { Some(r) } else { None });
+        // A raw header that names values (`scf.for %i = ..`) may give its regions arguments
+        // unseen here; one that names none (`test.graph_region {`) gives none.
+        let names = self.raw.iter().flatten().any(|p| matches!(p, crate::Piece::Text(t) if t.contains('%')));
         v.regions(self.regions.iter(), isolated, false)?;
-        v.regions(raw, isolated, true)?;
+        v.regions(raw, isolated, names)?;
         // Results are defined once the whole op is read, `%0:2` two of them; typed when the op
         // gives every result one.
         let counts: usize = self.results.iter().map(|d| d.count.unwrap_or(1) as usize).sum();
@@ -495,6 +502,11 @@ impl<'x> Verify<'x> for Attribute<'x> {
             Attribute::Dict(xs) => xs.verify(v),
             Attribute::DenseArray { ty, .. } => ty.verify(v),
             Attribute::Extended { ext, ty } => {
+                // A dialect attribute's body kept as text may hold more dialect attributes and
+                // types (`#dlti.dl_entry<.., #ptr.spec<..>>`): each is checked too.
+                if let Some(b) = &ext.body {
+                    v.raw_text(b.get(1..).unwrap_or(""))?;
+                }
                 ext.verify(v)?;
                 ty.verify(v)
             }
@@ -530,7 +542,7 @@ trait DialectRules: Sync {
 }
 
 /// Every dialect with rules.
-const DIALECTS: &[&dyn DialectRules] = &[&builtin::Builtin, &llvm::Llvm, &quant::Quant, &spirv::Spirv, &xegpu::XeGpu];
+const DIALECTS: &[&dyn DialectRules] = &[&arm_sve::ArmSve, &builtin::Builtin, &llvm::Llvm, &ptr::Ptr, &quant::Quant, &spirv::Spirv, &xegpu::XeGpu];
 
 /// The rules of the dialect owning `!ns.mnemonic` / `#ns.mnemonic`; an alias (`!t`, `#map`)
 /// has none: its definition is checked.
