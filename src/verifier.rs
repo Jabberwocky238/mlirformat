@@ -8,7 +8,7 @@
 //!
 //! This file is the structure every dialect shares: the walk, aliases, locations, SSA scopes.
 //! What one dialect's types and attributes must be is its [`DialectRules`], one file each under
-//! `verifier/` (`builtin.rs`, `quant.rs`), listed in [`DIALECTS`].
+//! `verifier/` (`builtin.rs`, `quant.rs`, `spirv.rs`), listed in [`DIALECTS`].
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -17,6 +17,8 @@ use alloc::vec::Vec;
 mod builtin;
 /// `quant` types.
 mod quant;
+/// SPIR-V types.
+mod spirv;
 
 use crate::{Attribute, Block, BlockArg, Extended, FunctionType, Item, MlirOpt, Module, NamedAttr, Operation, Region, Shaped, Type};
 
@@ -374,7 +376,7 @@ trait DialectRules: Sync {
 }
 
 /// Every dialect with rules.
-const DIALECTS: &[&dyn DialectRules] = &[&builtin::Builtin, &quant::Quant];
+const DIALECTS: &[&dyn DialectRules] = &[&builtin::Builtin, &quant::Quant, &spirv::Spirv];
 
 /// The rules of the dialect owning `!ns.mnemonic` / `#ns.mnemonic`; an alias (`!t`, `#map`)
 /// has none: its definition is checked.
