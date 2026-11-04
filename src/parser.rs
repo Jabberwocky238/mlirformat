@@ -868,10 +868,15 @@ impl<'a, 'd> Parser<'a, 'd> {
     fn custom(&mut self) -> R<Operation<'a>> {
         let name = self.ident()?;
         let start = self.pos;
-        let full = |ns: &str| format!("{ns}.{name}");
-        let candidates = [name.contains('.').then(|| name.into()), self.default_ns.map(full), Some(full("builtin"))];
         let opt = self.opt;
-        for t in candidates.iter().flatten().filter_map(|n| opt.template(n)) {
+        // The name as written first; the prefixed ones are spelled only when it is not an op.
+        let qualified = || [self.default_ns, Some("builtin")].into_iter().flatten().filter_map(move |ns| opt.template(&format!("{ns}.{name}")));
+        let written = name.contains('.').then(|| opt.template(name)).flatten();
+        let templates: Vec<&Template> = match written {
+            Some(t) => alloc::vec![t],
+            None => qualified().collect(),
+        };
+        for t in templates {
             match (t.parse)(self) {
                 Ok(op) => return Ok(op),
                 Err(_) => self.pos = start,
@@ -1109,7 +1114,7 @@ impl Attribute<'_> {
             Attribute::Int { ty, .. } | Attribute::Float { ty, .. } | Attribute::Str { ty, .. } | Attribute::Builtin { ty, .. } | Attribute::Extended { ty, .. } => ty.as_ref()?,
             _ => return None,
         };
-        Content::convert(ty).ok()
+        Some(ty.clone().into_static())
     }
 }
 
@@ -1976,7 +1981,8 @@ impl Format<'_> {
         let field = |p: &Parser<'a, '_>, n: &str| self.field(n).copied().or_else(|e| p.err(e.0));
         let ty_var = |p: &Parser<'a, '_>, n: &str| self.type_var(n).copied().or_else(|e| p.err(e.0));
         let content = |p: &Parser<'a, '_>, c: Result<Content, Error>| c.or_else(|e| p.err(e.0));
-        let owned = |p: &Parser<'a, '_>, a: Option<&Attribute<'a>>| a.map_or(Ok(Attribute::Unit), Content::convert).map(Content::Attr).or_else(|e| p.err(e.0));
+        // An attribute owned for its `Content`: a clone made `'static`, no serde round trip.
+        let owned = |_: &Parser<'a, '_>, a: Option<&Attribute<'a>>| -> R<Content> { Ok(Content::Attr(a.map_or(Attribute::Unit, |a| a.clone().into_static()))) };
         for (i, e) in elems.iter().enumerate() {
             match e {
                 Elem::Lit(l) if l.trim().is_empty() => {}
