@@ -2,6 +2,7 @@
 
 use alloc::string::String;
 use alloc::vec;
+use alloc::format;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
@@ -144,7 +145,16 @@ impl Parse for FuncOp<'_> {
             vec![(p.ty()?, Vec::new())]
         };
         let mut attrs = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
+        // `function_interface_impl::parseFunctionOp`: what the syntax itself says is not also
+        // given as an attribute.
+        if let Some(a) = attrs.iter().find(|a| ["sym_name", "sym_visibility", "function_type"].contains(&&*a.name)) {
+            return p.err(format!("'{}' is an inferred attribute and should not be specified in the explicit attribute dictionary", a.name));
+        }
         let no_inline = attrs.iter().position(|a| a.name == "no_inline" && a.value.is_none()).map(|i| attrs.remove(i)).is_some();
+        // Arguments are all named or none is.
+        if entries.iter().any(|(a, ..)| a.is_some()) && entries.iter().any(|(a, ..)| a.is_none()) {
+            return p.err("func.func: arguments are either all named or all unnamed");
+        }
         let mut body = if p.at(b'{') { p.region_in(Some("func"))? } else { Region { blocks: Vec::new() } };
         let mut args = Vec::new();
         let (mut inputs, mut arg_dicts) = (Vec::new(), Vec::new());
@@ -153,7 +163,11 @@ impl Parse for FuncOp<'_> {
             inputs.push(ty);
             arg_dicts.push(d);
         }
-        if let Some(b) = body.blocks.first_mut() {
+        // Named arguments are the entry block's; unnamed ones leave it as the body wrote it
+        // (`func.func @f(f32) { ^bb0(%a: f32): .. }`).
+        if let Some(b) = body.blocks.first_mut()
+            && (!args.is_empty() || inputs.is_empty())
+        {
             b.label = (!args.is_empty()).then(|| "bb0".into());
             b.args = args;
         }

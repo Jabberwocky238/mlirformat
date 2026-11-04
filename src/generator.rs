@@ -1568,7 +1568,15 @@ impl Format<'_> {
                         // ODS prints a region variable with its entry block's arguments
                         // (`OpFormatGen.cpp`: `printEntryBlockArgs=true`); an op that binds
                         // those arguments in its header writes its own form by hand instead.
-                        Role::Region if f.variadic => return Err(format!("`{n}`: a region list in a format").into()),
+                        // A variadic region: `{..}, {..}`, as the generated printer interleaves them.
+                        Role::Region if f.variadic => {
+                            for (i, r) in v.regions(f)?.iter().enumerate() {
+                                if i > 0 {
+                                    p.write_str(", ").map_err(io)?;
+                                }
+                                p.region(r, true).map_err(io)?;
+                            }
+                        }
                         Role::Region => {
                             let r = v.regions(f)?.first().ok_or_else(|| Error(format!("no region `{}`", f.name)))?;
                             p.region(r, true).map_err(io)?

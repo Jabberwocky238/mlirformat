@@ -2008,6 +2008,17 @@ impl Format<'_> {
                             }
                         }
                         Role::Successor => Content::Str(p.sigil('^')?.into()),
+                        // `$regions` of a variadic region: `{..}, {..}`, maybe none (`scf.reduce`).
+                        Role::Region if f.variadic => {
+                            let mut rs = Vec::new();
+                            while { p.ws(); p.at(b'{') } {
+                                rs.push(p.region()?);
+                                if !p.eat(",") {
+                                    break;
+                                }
+                            }
+                            Content::regions(rs)
+                        }
                         Role::Region => {
                             Content::region(p.region()?)
                         }

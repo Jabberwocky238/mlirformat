@@ -225,16 +225,21 @@ impl<'a> Cur<'a> {
     /// A comma-separated name list inside `open` / `close`.
     fn names(&mut self, open: &str, close: &str) -> Result<Vec<&'a str>, Error> {
         self.expect(open)?;
-        let mut out = Vec::new();
-        while !self.eat(close) {
+        let mut out: Vec<&'a str> = Vec::new();
+        if self.eat(close) {
+            return Ok(out);
+        }
+        loop {
             let w = self.word();
             if w.is_empty() {
                 return Err(Error(alloc::format!("affine: expected a name at `{}`", self.rest())));
             }
             out.push(w);
-            self.eat(",");
+            if !self.eat(",") {
+                self.expect(close)?;
+                return Ok(out);
+            }
         }
-        Ok(out)
     }
 
     fn expr(&mut self) -> Result<Expr<'a>, Error> {
@@ -307,16 +312,79 @@ impl<'a> Cur<'a> {
     fn list<T>(&mut self, mut item: impl FnMut(&mut Self) -> Result<T, Error>) -> Result<Vec<T>, Error> {
         self.expect("(")?;
         let mut out = Vec::new();
-        while !self.eat(")") {
-            out.push(item(self)?);
-            self.eat(",");
+        if self.eat(")") {
+            return Ok(out);
         }
-        Ok(out)
+        // Items are separated by `,`: `(-1*i j, j)` is not two of them.
+        loop {
+            out.push(item(self)?);
+            if !self.eat(",") {
+                self.expect(")")?;
+                return Ok(out);
+            }
+        }
     }
 
     #[inline]
     fn done(&mut self) -> Result<(), Error> {
         if self.rest().is_empty() { Ok(()) } else { Err(Error(alloc::format!("affine: trailing `{}`", self.rest()))) }
+    }
+}
+
+impl Expr<'_> {
+    /// Does it hold no dimension (`syms` are the symbols)? What `isSymbolicOrConstant` asks.
+    fn symbolic(&self, syms: &[&str]) -> bool {
+        match self {
+            Self::Id(n) => syms.contains(n),
+            Self::Const(_) | Self::Symbol(_) => true,
+            Self::Neg(e) => e.symbolic(syms),
+            Self::Bin(_, a, b) => a.symbolic(syms) && b.symbolic(syms),
+        }
+    }
+
+    /// Is it affine, as `AffineParser` requires: a product with a symbolic or constant side, a
+    /// `floordiv` / `ceildiv` / `mod` by a symbolic or constant right side.
+    fn affine(&self, syms: &[&str]) -> Result<(), Error> {
+        match self {
+            Self::Id(_) | Self::Const(_) => Ok(()),
+            Self::Neg(e) | Self::Symbol(e) => e.affine(syms),
+            Self::Bin(op, a, b) => {
+                a.affine(syms)?;
+                b.affine(syms)?;
+                match op {
+                    Op::Mul if !a.symbolic(syms) && !b.symbolic(syms) => Err(Error("non-affine expression: at least one of the multiply operands has to be either a constant or symbolic".into())),
+                    Op::FloorDiv | Op::CeilDiv | Op::Mod if !b.symbolic(syms) => Err(Error(alloc::format!("non-affine expression: right operand of {} has to be either a constant or symbolic", op.word()))),
+                    _ => Ok(()),
+                }
+            }
+        }
+    }
+}
+
+/// The declared names: none twice (`redefinition of identifier`).
+fn distinct(dims: &[&str], syms: Option<&Vec<&str>>) -> Result<(), Error> {
+    let all: Vec<&str> = dims.iter().chain(syms.into_iter().flatten()).copied().collect();
+    match all.iter().enumerate().find(|(i, n)| all[..*i].contains(n)) {
+        Some((_, n)) => Err(Error(alloc::format!("redefinition of identifier '{n}'"))),
+        None => Ok(()),
+    }
+}
+
+impl Map<'_> {
+    /// What `mlir-opt` refuses of a map that reads: a name declared twice, a non-affine result.
+    pub fn check(&self) -> Result<(), Error> {
+        distinct(&self.dims, self.syms.as_ref())?;
+        let syms = self.syms.as_deref().unwrap_or(&[]);
+        self.results.iter().try_for_each(|e| e.affine(syms))
+    }
+}
+
+impl Set<'_> {
+    /// As [`Map::check`].
+    pub fn check(&self) -> Result<(), Error> {
+        distinct(&self.dims, self.syms.as_ref())?;
+        let syms = self.syms.as_deref().unwrap_or(&[]);
+        self.constraints.iter().try_for_each(|(e, _)| e.affine(syms))
     }
 }
 
