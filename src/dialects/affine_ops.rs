@@ -8,6 +8,7 @@
 //! Without it, or with a map we cannot read, the op prints generic, which is still valid MLIR.
 
 use crate::affine_expr::{Map, Set};
+use crate::values::AffineMap;
 use crate::mlir;
 use crate::common::{Attribute, Block, BlockArg, Content, Dim, Extended, Op, Parse, Print, Operation, Region, Shaped, ShapedKind, Signedness, Str, Type, Value};
 use crate::generator::{Printer, Sep};
@@ -438,7 +439,9 @@ impl Print for For<'_> {
             return self.print_generic(p);
         };
         p.op_name(Self::NAME)?;
-        write!(p, " %{} = ", entry.args[0].name)?;
+        write!(p, " %{}", entry.args[0].name)?;
+        p.loc(&entry.args[0].loc)?;
+        p.write_str(" = ")?;
         bound::put(p, &lo)?;
         p.write_str(" to ")?;
         bound::put(p, &hi)?;
@@ -463,14 +466,18 @@ impl Print for For<'_> {
 impl Parse for For<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let iv = String::from(p.sigil('%')?);
+        let iv_loc = p.opt_loc()?.map(|l| Str::Owned(String::from(&*l)));
         p.expect("=")?;
-        let (lower_bound_map, lower_bound_operands) = read_bound(p)?;
+        let (lower_bound_map, lower_bound_operands) = read_bound(p, "max")?;
         p.expect_lit("to")?;
-        let (upper_bound_map, upper_bound_operands) = read_bound(p)?;
+        let (upper_bound_map, upper_bound_operands) = read_bound(p, "min")?;
         // The step is written bare, but the op holds it as `N : index`.
         let step = match p.eat_kw("step") {
             true => {
                 let n = p.attr()?.int().or_else(|e| p.err(e.0))?;
+                if n <= 0 {
+                    return p.err("affine.for: expected step to be representable as a positive signed integer");
+                }
                 Attribute::Int { lit: Str::Owned(format!("{n}")), ty: Some(Type::Index) }
             }
             false => Attribute::Int { lit: Str::Borrowed("1"), ty: Some(Type::Index) },
@@ -500,7 +507,7 @@ impl Parse for For<'_> {
         }
         let Some(entry) = region.blocks.first_mut() else { return p.err("affine.for: a body") };
         entry.label.get_or_insert(Str::Borrowed("bb0"));
-        let mut args = alloc::vec![BlockArg { name: Str::Owned(iv), ty: Type::Index, loc: None }];
+        let mut args = alloc::vec![BlockArg { name: Str::Owned(iv), ty: Type::Index, loc: iv_loc }];
         for (name, ty) in names.iter().zip(&results) {
             args.push(BlockArg { name: Str::Owned(name.clone()), ty: ty.clone(), loc: None });
         }
@@ -527,8 +534,10 @@ impl Parse for For<'_> {
 }
 
 /// One loop bound: `0`, `%n`, `#map(%i)[%s]`, or either of the last two behind `max` / `min`.
-fn read_bound<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a>>)> {
-    let _ = p.eat_kw("max") || p.eat_kw("min");
+/// A map of several results needs its `max` (lower) / `min` (upper) prefix, as `AffineForOp::parse`
+/// requires.
+fn read_bound<'a>(p: &mut Parser<'a, '_>, prefix: &str) -> R<(Attribute<'static>, Vec<Value<'a>>)> {
+    let prefixed = p.eat_kw(prefix);
     if p.at(b'%') {
         let v = p.value()?;
         let named = |t: &str| p.alias_named(t).map(String::from);
@@ -536,6 +545,16 @@ fn read_bound<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a
     }
     if p.at(b'#') || p.rest().starts_with("affine_map") {
         let map = p.attr()?;
+        // The map's results: through its alias when it is one.
+        let text = match &map {
+            Attribute::Extended { ext, .. } if ext.body.is_none() => p.alias(&ext.name).map(String::from),
+            a => Some(format!("{a}")),
+        };
+        let results = text.and_then(|t| AffineMap::parse(t.strip_prefix("affine_map").unwrap_or(&t))).map_or(1, |m| m.results.len());
+        if results > 1 && !prefixed {
+            return p.err(format!("affine.for: a bound map with multiple results requires `{prefix}`"));
+        }
+        p.ws();
         let operands = if p.rest().starts_with('(') { read_call(p)? } else { Vec::new() };
         return Ok((Content::convert(&map).or_else(|e| p.err(e.0))?, operands));
     }
@@ -643,9 +662,8 @@ impl Parse for If<'_> {
 
 /// `affine.parallel (%i, %j) = (0, 0) to (10, 5) step (3, 2) { ... }`.
 ///
-/// Only the shape `mlir-opt` writes almost everywhere is taken: one map result per induction
-/// variable (`lowerBoundsGroups` a splat of 1, so no `max` / `min` to choose between) and no
-/// reductions. Anything else keeps the generic form.
+/// With reductions: `reduce ("minimumf", "maximumf") -> (f32, f32)`, each a case of `AtomicRMWKind`
+/// held by its value (`reductions = [8, 4]`).
 #[mlir::op("affine.parallel", custom, results(results))]
 pub struct Parallel<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
@@ -665,6 +683,11 @@ pub struct Parallel<'a> {
     pub map_operands_ty: Type<'a>,
     pub results: Vec<Type<'a>>,
 }
+
+/// `AtomicRMWKind`'s cases by value (`ArithBase.td`): how `affine.parallel` spells a reduction.
+const ATOMIC_RMW_KINDS: [&str; 16] = [
+    "addf", "addi", "andi", "assign", "maximumf", "maxnumf", "maxs", "maxu", "minimumf", "minnumf", "mins", "minu", "mulf", "muli", "ori", "xori",
+];
 
 /// `dense<1> : tensor<Nxi32>`: one map result per induction variable, which is the only grouping
 /// this op writes out.
@@ -731,9 +754,15 @@ impl Print for Parallel<'_> {
         let shaped = lm.results.len() == lg.iter().sum::<usize>()
             && hm.results.len() == ug.iter().sum::<usize>()
             && steps.len() == ivs
-            && self.reductions == Attribute::Array(Vec::new())
-            && self.results.is_empty()
             && split + inputs(&hm) == self.map_operands.len();
+        // The reductions by name, one per result.
+        let kinds: Option<Vec<&str>> = match &self.reductions {
+            Attribute::Array(xs) => xs.iter().map(|x| ATOMIC_RMW_KINDS.get(usize::try_from(x.int().ok()?).ok()?).copied()).collect(),
+            _ => None,
+        };
+        let Some(kinds) = kinds.filter(|k| k.len() == self.results.len()) else {
+            return self.print_generic(p);
+        };
         if !shaped {
             return self.print_generic(p);
         }
@@ -750,6 +779,9 @@ impl Print for Parallel<'_> {
         write!(p, " ({names}) = ({lows}) to ({highs})")?;
         if steps.iter().any(|s| *s != 1) {
             write!(p, " step ({})", steps.iter().map(|s| format!("{s}")).collect::<Vec<_>>().join(", "))?;
+        }
+        if !kinds.is_empty() {
+            write!(p, " reduce ({}) -> ({})", kinds.iter().map(|k| format!("\"{k}\"")).collect::<Vec<_>>().join(", "), Sep(&self.results, ", "))?;
         }
         p.write_char(' ')?;
         p.region_body(&self.region, "affine.yield")?;
@@ -768,6 +800,18 @@ impl Parse for Parallel<'_> {
             true => read_names(p)?.iter().map(|s| s.parse::<i64>().unwrap_or(1)).collect(),
             false => alloc::vec![1; ivs.len()],
         };
+        let (mut reductions, mut results) = (Vec::new(), Vec::new());
+        if p.eat_kw("reduce") {
+            p.expect("(")?;
+            while !p.eat(")") {
+                let Attribute::Str { lit, .. } = p.attr()? else { return p.err("affine.parallel: a reduction is a string") };
+                let Some(k) = ATOMIC_RMW_KINDS.iter().position(|k| *k == &*lit) else { return p.err(format!("invalid reduction value: \"{lit}\"")) };
+                reductions.push(Attribute::Int { lit: Str::Owned(format!("{k}")), ty: None });
+                p.eat(",");
+            }
+            p.expect("->")?;
+            results = p.results_ty()?;
+        }
         let mut region = p.region()?;
         close_region(&mut region);
         if let Some(b) = region.blocks.first_mut() {
@@ -779,7 +823,7 @@ impl Parse for Parallel<'_> {
         map_operands.extend(upper_ops);
         let op = Parallel {
             map_operands,
-            reductions: Attribute::Array(Vec::new()),
+            reductions: Attribute::Array(reductions),
             lower_bounds_map,
             lower_bounds_groups: groups_attr(&lower_groups),
             upper_bounds_map,
@@ -787,7 +831,7 @@ impl Parse for Parallel<'_> {
             steps: ints_attr(&steps),
             region,
             map_operands_ty: Type::Index,
-            results: Vec::new(),
+            results,
             attrs: p.opt_dict()?,
             loc: p.opt_loc()?,
         };

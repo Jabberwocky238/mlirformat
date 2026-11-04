@@ -31,6 +31,9 @@ pub struct Parser<'a, 'd> {
     bare: bool,
     /// Attribute aliases seen so far, so an op's custom form can look inside one.
     aliases: Vec<(String, String)>,
+    /// Type aliases seen so far (`!t = memref<?xf32>`): a use reads as the type it names, as
+    /// `mlir-opt` reads it, so a custom form can infer from it.
+    type_aliases: Vec<(&'a str, Type<'a>)>,
     /// How many values the op being read defines (`%0:2 = ` ⇒ 2): a variadic result whose
     /// types the custom form leaves out (`vector.to_elements`) has that many.
     results: usize,
@@ -96,7 +99,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     #[inline]
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
-        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 }
+        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0 }
     }
 
     /// Parses all of `src` with `f`, no dialects registered.
@@ -187,7 +190,8 @@ impl<'a, 'd> Parser<'a, 'd> {
     pub fn ws(&mut self) {
         loop {
             match self.peek() {
-                Some(c) if c.is_ascii_whitespace() => self.pos += 1,
+                // MLIR's lexer skips a NUL byte as whitespace (`IR/zero_whitespace.mlir`).
+                Some(c) if c.is_ascii_whitespace() || c == 0 => self.pos += 1,
                 Some(b'/') if self.peek_at(1) == Some(b'/') => self.skip_line(),
                 _ => break,
             }
@@ -462,7 +466,10 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.ws();
         match self.peek() {
             Some(b'(') => self.fn_ty().map(Type::Function),
-            Some(b'!') => self.extended(SymKind::Type).map(Type::Extended),
+            Some(b'!') => self.extended(SymKind::Type).map(|e| match &e {
+                Extended { name, body: None, params } if params.is_empty() && let Some((_, t)) = self.type_aliases.iter().find(|(n, _)| *n == &**name) => t.clone(),
+                _ => Type::Extended(e),
+            }),
             _ => self.keyword_ty(),
         }
     }
@@ -698,6 +705,21 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Optional attribute dictionary.
     #[inline]
+    /// `{...}`, or an attribute alias standing for one (`linalg.generic #trait ins(..)`).
+    pub fn dict_or_alias(&mut self) -> R<Vec<NamedAttr<'a>>> {
+        self.ws();
+        if !self.at(b'#') {
+            return self.dict();
+        }
+        let name = self.sigil('#')?;
+        let Some(text) = self.alias(name).map(String::from) else { return self.err(format!("undefined attribute alias `#{name}`")) };
+        let inner = Parser::new(&text, self.opt).with_aliases(&self.aliases);
+        match inner.all(Parser::dict) {
+            Ok(d) => Ok(d.into_static()),
+            Err(e) => self.err(format!("`#{name}` is not a dictionary: {e}")),
+        }
+    }
+
     pub fn opt_dict(&mut self) -> R<Vec<NamedAttr<'a>>> {
         if self.at(b'{') { self.dict() } else { Ok(Vec::new()) }
     }
@@ -718,9 +740,11 @@ impl<'a, 'd> Parser<'a, 'd> {
                     Item::AttrAlias { name, value }
                 }
                 Some(b'!') => {
-                    let name = self.sigil('!')?.into();
+                    let name = self.sigil('!')?;
                     self.expect("=")?;
-                    Item::TypeAlias { name, ty: self.ty()? }
+                    let ty = self.ty()?;
+                    self.type_aliases.push((name, ty.clone()));
+                    Item::TypeAlias { name: name.into(), ty }
                 }
                 Some(b'{') if self.rest().starts_with("{-#") => {
                     self.pos += 3;
@@ -906,7 +930,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
-        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 };
+        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0 };
         loop {
             if p.sigil('%').is_err() {
                 return false;
@@ -937,7 +961,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if !(tail.is_empty() || tail.starts_with("//")) || line_end == rest.len() {
             return false;
         }
-        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), results: 0 };
+        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0 };
         probe.ws();
         match probe.peek() {
             Some(b'%' | b'^' | b'}') => true,
@@ -1852,6 +1876,11 @@ impl<'a> Slots<'a> {
     fn get(&self, f: &Field) -> Option<&Content> {
         self.fields.iter().find(|(k, _)| *k == f.name).map(|(_, v)| v)
     }
+
+    #[inline]
+    fn get_mut(&mut self, f: &Field) -> Option<&mut Content> {
+        self.fields.iter_mut().find(|(k, _)| *k == f.name).map(|(_, v)| v)
+    }
 }
 
 /// `ShapedType::kDynamic`: the item is in the value list, not the integer list.
@@ -2210,6 +2239,13 @@ impl Format<'_> {
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],
                 (None, Role::Type { infer: Some(Infer::Same(var)), .. }) => Content::convert(r.bound(var).ok_or_else(undetermined)?)?,
                 (None, Role::Type { infer: Some(Infer::TypeOf(attr)), .. }) => {
+                    // A number written without its type is MLIR's default: `i64`, `f64`
+                    // (`arith.constant 10`); the attribute takes it too, as `mlir-opt` builds it.
+                    match self.schema.field(attr).and_then(|af| r.get_mut(af)) {
+                        Some(Content::Attr(Attribute::Int { ty: t @ None, .. })) => *t = Some(Type::Integer { signedness: Signedness::Signless, width: 64 }),
+                        Some(Content::Attr(Attribute::Float { ty: t @ None, .. })) => *t = Some(Type::Float(FloatKind::F64)),
+                        _ => {}
+                    }
                     let a = self.schema.field(attr).and_then(|f| r.get(f));
                     vec![if let Some(Content::Attr(a)) = a { a.type_of() } else { None }.ok_or_else(undetermined)?]
                 }

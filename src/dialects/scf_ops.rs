@@ -48,12 +48,15 @@ pub struct For<'a> {
 impl Print for For<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let entry = self.region.blocks.first();
-        // ⛔ unsignedCmp 的自定义写法没核过，有就走通用形式，不猜。
-        let shaped = entry.filter(|b| !self.unsigned_cmp && b.args.len() == 1 + self.init_args.len() && self.results.len() == self.init_args.len());
+        let shaped = entry.filter(|b| b.args.len() == 1 + self.init_args.len() && self.results.len() == self.init_args.len());
         let Some(entry) = shaped else {
             return self.print_generic(p);
         };
         p.op_name(Self::NAME)?;
+        // `ForOp::print`: `unsigned` first, and left out of the dictionary.
+        if self.unsigned_cmp {
+            p.write_str(" unsigned")?;
+        }
         write!(p, " %{} = {} to {} step {}", entry.args[0].name, self.lower_bound, self.upper_bound, self.step)?;
         if !self.init_args.is_empty() {
             p.write_str(" iter_args(")?;
@@ -76,6 +79,7 @@ impl Print for For<'_> {
 
 impl Parse for For<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let unsigned_cmp = p.eat_kw("unsigned");
         let iv = String::from(p.sigil('%')?);
         p.expect("=")?;
         let lower_bound = p.value()?;
@@ -113,7 +117,7 @@ impl Parse for For<'_> {
             }
             b.args = args;
         }
-        let op = For { lower_bound, upper_bound, step, init_args, unsigned_cmp: false, region, lower_bound_ty, results, attrs, loc: p.opt_loc()? };
+        let op = For { lower_bound, upper_bound, step, init_args, unsigned_cmp, region, lower_bound_ty, results, attrs, loc: p.opt_loc()? };
         Self::owned(op, p)
     }
 }

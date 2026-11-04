@@ -28,6 +28,10 @@ pub enum Invalid {
     /// `!t = ...` twice.
     #[error("redefinition of type alias id `{0}`")]
     TypeAliasRedefined(String),
+    /// A custom form its op's format does not read (`affine.for %i = 1 too 10`): the op is
+    /// registered with a custom format, yet the text stayed raw.
+    #[error("`{0}`: custom form does not match the op's syntax")]
+    CustomForm(String),
 }
 
 impl From<Invalid> for crate::Error {
@@ -109,9 +113,9 @@ impl<'x> Verify<'x> for Item<'x> {
 
 impl<'x> Verify<'x> for Operation<'x> {
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
-        // A registered op with a custom format left raw (`affine.for %i = 1 too 10`) is not
-        // refused yet: valid upstream text still stays raw where a template falls short
-        // (`linalg.generic #trait ins(..)`, 230 chunks), and refusing would refuse it too.
+        if self.raw.is_some() && v.opt.template(&self.name).is_some_and(|t| t.custom) {
+            return Err(Invalid::CustomForm(self.name.to_string()));
+        }
         self.properties.verify(v)?;
         self.attributes.verify(v)?;
         self.ty.verify(v)?;

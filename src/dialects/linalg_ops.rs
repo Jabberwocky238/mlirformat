@@ -115,7 +115,7 @@ impl Print for Generic<'_> {
 impl Parse for Generic<'_> {
     fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
         let (mut indexing_maps, mut iterator_types, mut doc, mut library_call, mut attrs) = (None, None, None, None, Vec::new());
-        for a in p.dict()? {
+        for a in p.dict_or_alias()? {
             match (&*a.name, a.value) {
                 ("indexing_maps", Some(v)) => indexing_maps = Some(v),
                 ("iterator_types", Some(v)) => iterator_types = Generic::iterator_types(&v),

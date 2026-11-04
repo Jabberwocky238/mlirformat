@@ -63,29 +63,35 @@ impl<'a> Func<'a> {
         ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
     }
 
-    /// `workgroup(%w : T, ...)`：一组归属（空的不印）。
-    fn attributions(p: &mut Printer<'_, '_>, keyword: &str, args: &[BlockArg<'_>]) -> fmt::Result {
+    /// `workgroup(%w : T {attrs}, ...)`：一组归属（空的不印），各自的字典来自 `dicts`
+    /// （`printAttributions`）。
+    fn attributions(p: &mut Printer<'_, '_>, keyword: &str, args: &[BlockArg<'_>], dicts: &Option<Attribute<'a>>) -> fmt::Result {
         if args.is_empty() {
             return Ok(());
         }
         write!(p, " {keyword}(")?;
         for (i, a) in args.iter().enumerate() {
             write!(p, "{}%{} : {}", if i > 0 { ", " } else { "" }, a.name, a.ty)?;
+            if let Some(d) = Self::nth(dicts, i) {
+                write!(p, " {d}")?;
+            }
         }
         p.write_char(')')
     }
 
-    /// 读一组归属：`(%w : T, ...)`。
-    fn parse_attributions(p: &mut Parser<'a, '_>, keyword: &str) -> R<Vec<BlockArg<'a>>> {
+    /// 读一组归属：`(%w : T {attrs}, ...)` ⇒ 块参数与各自的字典。
+    fn parse_attributions(p: &mut Parser<'a, '_>, keyword: &str) -> R<(Vec<BlockArg<'a>>, Vec<Vec<NamedAttr<'a>>>)> {
         if !p.eat_kw(keyword) {
-            return Ok(Vec::new());
+            return Ok((Vec::new(), Vec::new()));
         }
         p.expect("(")?;
-        p.list(")", |p| {
+        let entries = p.list(")", |p| {
             let name = p.sigil('%')?.into();
             p.expect(":")?;
-            Ok(BlockArg { name, ty: p.ty()?, loc: None })
-        })
+            let ty = p.ty()?;
+            Ok((BlockArg { name, ty, loc: None }, p.opt_dict()?))
+        })?;
+        Ok(entries.into_iter().unzip())
     }
 }
 
@@ -97,8 +103,8 @@ impl Print for Func<'_> {
         };
         let entry = self.body.blocks.first();
         let args = entry.map_or(&[][..], |b| b.args.as_slice());
-        // ⛔ 归属的字典、known_* 的写法没核过：有就走通用形式，不猜。
-        let odd = self.workgroup_attrib_attrs.is_some() || self.private_attrib_attrs.is_some() || self.known_block_size.is_some() || self.known_grid_size.is_some() || self.known_cluster_size.is_some();
+        // ⛔ known_* 的写法没核过：有就走通用形式，不猜。
+        let odd = self.known_block_size.is_some() || self.known_grid_size.is_some() || self.known_cluster_size.is_some();
         if odd || args.len() < ty.inputs.len() + workgroups {
             return self.print_generic(p);
         }
@@ -134,8 +140,8 @@ impl Print for Func<'_> {
         }
         let extra = &args[ty.inputs.len()..];
         let (workgroup, private) = extra.split_at(workgroups);
-        Self::attributions(p, "workgroup", workgroup)?;
-        Self::attributions(p, "private", private)?;
+        Self::attributions(p, "workgroup", workgroup, &self.workgroup_attrib_attrs)?;
+        Self::attributions(p, "private", private, &self.private_attrib_attrs)?;
         if self.attr("gpu.kernel").is_some() {
             p.write_str(" kernel")?;
         }
@@ -165,8 +171,8 @@ impl Parse for Func<'_> {
         } else {
             vec![(p.ty()?, Vec::new())]
         };
-        let workgroup = Func::parse_attributions(p, "workgroup")?;
-        let private = Func::parse_attributions(p, "private")?;
+        let (workgroup, workgroup_dicts) = Func::parse_attributions(p, "workgroup")?;
+        let (private, private_dicts) = Func::parse_attributions(p, "private")?;
         let kernel = p.eat_kw("kernel");
         let mut attrs = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
         let mut body = p.region()?;
@@ -193,8 +199,8 @@ impl Parse for Func<'_> {
             function_type: Type::Function(FunctionType { inputs, results }),
             arg_attrs: Func::dicts(arg_dicts),
             res_attrs: Func::dicts(res_dicts),
-            workgroup_attrib_attrs: None,
-            private_attrib_attrs: None,
+            workgroup_attrib_attrs: Func::dicts(workgroup_dicts),
+            private_attrib_attrs: Func::dicts(private_dicts),
             known_block_size: None,
             known_grid_size: None,
             known_cluster_size: None,
