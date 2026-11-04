@@ -353,9 +353,9 @@ pub struct ClusterLaunchControlTryCancelOp<'a> {
     #[slot(mbarrier_ty)]
     pub mbarrier: Value<'a>,
     pub multicast: bool,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub smem_address_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub mbarrier_ty: Type<'a>,
 }
 
@@ -826,9 +826,9 @@ pub struct CpAsyncBulkGlobalToSharedClusterOp<'a> {
     #[slot(l2_cache_hint_ty, name = "l2CacheHint")]
     pub l2_cache_hint: Vec<Value<'a>>,
     pub dst_mem_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub src_mem_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub mbar_ty: Type<'a>,
     #[dtype(is = i32)]
     pub size_ty: Type<'a>,
@@ -863,7 +863,7 @@ pub struct CpAsyncBulkPrefetchOp<'a> {
     pub size: Value<'a>,
     #[slot(l2_cache_hint_ty, name = "l2CacheHint")]
     pub l2_cache_hint: Vec<Value<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub src_mem_ty: Type<'a>,
     #[dtype(is = i32)]
     pub size_ty: Type<'a>,
@@ -914,9 +914,9 @@ pub struct CpAsyncBulkSharedCTAToGlobalOp<'a> {
     pub l2_cache_hint: Vec<Value<'a>>,
     #[slot(byte_mask_ty, name = "byteMask")]
     pub byte_mask: Vec<Value<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub dst_mem_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub src_mem_ty: Type<'a>,
     #[dtype(is = i32)]
     pub size_ty: Type<'a>,
@@ -942,11 +942,11 @@ pub struct CpAsyncBulkSharedCTAToSharedClusterOp<'a> {
     pub mbar: Value<'a>,
     #[slot(size_ty)]
     pub size: Value<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<7>", strip = "llvm.ptr")]
     pub dst_mem_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub src_mem_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub mbar_ty: Type<'a>,
     #[dtype(is = i32)]
     pub size_ty: Type<'a>,
@@ -1000,7 +1000,7 @@ pub struct CpAsyncBulkTensorGlobalToSharedClusterOp<'a> {
     pub tma_descriptor_ty: Type<'a>,
     #[dtype(is = i32)]
     pub coordinates_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub mbar_ty: Type<'a>,
     #[dtype(is = i16)]
     pub im2col_offsets_ty: Type<'a>,
@@ -1072,7 +1072,7 @@ pub struct CpAsyncBulkTensorReduceOp<'a> {
     pub mode: Option<Attribute<'a>>,
     #[dtype(strip = "llvm.ptr")]
     pub tma_descriptor_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub src_mem_ty: Type<'a>,
     #[dtype(is = i32)]
     pub coordinates_ty: Type<'a>,
@@ -1105,7 +1105,7 @@ pub struct CpAsyncBulkTensorSharedCTAToGlobalOp<'a> {
     pub mode: Option<Attribute<'a>>,
     #[dtype(is = "!llvm.ptr", strip = "llvm.ptr")]
     pub tma_descriptor_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub src_mem_ty: Type<'a>,
     #[dtype(is = i32)]
     pub coordinates_ty: Type<'a>,
@@ -1174,9 +1174,9 @@ pub struct CpAsyncOp<'a> {
     pub size: Attribute<'a>,
     #[attr(dialect = "nvvm<load_cache_modifier")]
     pub modifier: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub dst_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub src_ty: Type<'a>,
     #[dtype(is = i32)]
     pub cp_size_ty: Type<'a>,
@@ -1732,7 +1732,7 @@ pub struct LdMatrixOp<'a> {
     pub shape: Attribute<'a>,
     #[attr(name = "eltType", dialect = "nvvm.ld_st_matrix_elt_type")]
     pub elt_type: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -2951,7 +2951,7 @@ pub struct StMatrixOp<'a> {
     pub shape: Attribute<'a>,
     #[attr(name = "eltType", dialect = "nvvm.ld_st_matrix_elt_type")]
     pub elt_type: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub sources_ty: Type<'a>,
@@ -3070,7 +3070,7 @@ pub struct Tcgen05CpOp<'a> {
     pub multicast: Option<Attribute<'a>>,
     #[attr(name = "srcFormat", dialect = "nvvm.tcgen05_cp_src_fmt")]
     pub src_format: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub taddr_ty: Type<'a>,
     #[dtype(is = i64)]
     pub smem_desc_ty: Type<'a>,
@@ -3093,7 +3093,7 @@ pub struct Tcgen05DeallocOp<'a> {
     pub n_cols: Value<'a>,
     #[attr(dialect = "nvvm.cta_group", default = "<cta_1>")]
     pub group: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub taddr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub n_cols_ty: Type<'a>,
@@ -3168,7 +3168,7 @@ pub struct Tcgen05LdOp<'a> {
     pub pack: bool,
     #[attr(dialect = "nvvm.tcgen05_ldst_shape")]
     pub shape: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub tmem_addr_ty: Type<'a>,
     #[dtype(is = i64)]
     pub offset_ty: Type<'a>,
@@ -3234,7 +3234,7 @@ pub struct Tcgen05MMABlockScaleOp<'a> {
     pub block_scale: Option<Attribute<'a>>,
     #[attr(name = "collectorOp", dialect = "nvvm.tcgen05_mma_collectorop", default = "<discard>")]
     pub collector_op: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub matrix_d_ty: Type<'a>,
     pub matrix_a_ty: Type<'a>,
     #[dtype(is = i64)]
@@ -3243,9 +3243,9 @@ pub struct Tcgen05MMABlockScaleOp<'a> {
     pub idesc_ty: Type<'a>,
     #[dtype(is = i1)]
     pub enable_input_d_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub scale_a_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub scale_b_ty: Type<'a>,
 }
 
@@ -3318,7 +3318,7 @@ pub struct Tcgen05MMAOp<'a> {
     pub collector_op: Option<Attribute<'a>>,
     #[attr(name = "aShift")]
     pub a_shift: bool,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub matrix_d_ty: Type<'a>,
     pub matrix_a_ty: Type<'a>,
     #[dtype(is = i64)]
@@ -3382,7 +3382,7 @@ pub struct Tcgen05MMASparseBlockScaleOp<'a> {
     pub block_scale: Option<Attribute<'a>>,
     #[attr(name = "collectorOp", dialect = "nvvm.tcgen05_mma_collectorop", default = "<discard>")]
     pub collector_op: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub matrix_d_ty: Type<'a>,
     pub matrix_a_ty: Type<'a>,
     #[dtype(is = i64)]
@@ -3391,11 +3391,11 @@ pub struct Tcgen05MMASparseBlockScaleOp<'a> {
     pub idesc_ty: Type<'a>,
     #[dtype(is = i1)]
     pub enable_input_d_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub sparse_metadata_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub scale_a_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub scale_b_ty: Type<'a>,
 }
 
@@ -3450,7 +3450,7 @@ pub struct Tcgen05MMASparseOp<'a> {
     pub collector_op: Option<Attribute<'a>>,
     #[attr(name = "aShift")]
     pub a_shift: bool,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub matrix_d_ty: Type<'a>,
     pub matrix_a_ty: Type<'a>,
     #[dtype(is = i64)]
@@ -3459,7 +3459,7 @@ pub struct Tcgen05MMASparseOp<'a> {
     pub idesc_ty: Type<'a>,
     #[dtype(is = i1)]
     pub enable_input_d_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub sparse_metadata_ty: Type<'a>,
     #[dtype(is = i64)]
     pub scale_input_d_ty: Type<'a>,
@@ -3521,7 +3521,7 @@ pub struct Tcgen05MMAWsOp<'a> {
     pub collector_b_buffer: Option<Attribute<'a>>,
     #[attr(name = "collectorOp", dialect = "nvvm.tcgen05_mma_collectorop", default = "<discard>")]
     pub collector_op: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub matrix_d_ty: Type<'a>,
     pub matrix_a_ty: Type<'a>,
     #[dtype(is = i64)]
@@ -3581,7 +3581,7 @@ pub struct Tcgen05MMAWsSparseOp<'a> {
     pub collector_b_buffer: Option<Attribute<'a>>,
     #[attr(name = "collectorOp", dialect = "nvvm.tcgen05_mma_collectorop", default = "<discard>")]
     pub collector_op: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub matrix_d_ty: Type<'a>,
     pub matrix_a_ty: Type<'a>,
     #[dtype(is = i64)]
@@ -3590,7 +3590,7 @@ pub struct Tcgen05MMAWsSparseOp<'a> {
     pub idesc_ty: Type<'a>,
     #[dtype(is = i1)]
     pub enable_input_d_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub sparse_metadata_ty: Type<'a>,
     #[dtype(is = i64)]
     pub zero_col_mask_ty: Type<'a>,
@@ -3695,7 +3695,7 @@ pub struct Tcgen05ShiftOp<'a> {
     pub taddr: Value<'a>,
     #[attr(dialect = "nvvm.cta_group", default = "<cta_1>")]
     pub group: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub taddr_ty: Type<'a>,
 }
 
@@ -3755,7 +3755,7 @@ pub struct Tcgen05StOp<'a> {
     pub unpack: bool,
     #[attr(dialect = "nvvm.tcgen05_ldst_shape")]
     pub shape: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
     pub tmem_addr_ty: Type<'a>,
     pub val_ty: Type<'a>,
     #[dtype(is = i64)]

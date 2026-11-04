@@ -128,7 +128,7 @@ pub struct BarrierInitOp<'a> {
     pub ptr: Value<'a>,
     #[attr(name = "memberCnt", int = "i32")]
     pub member_cnt: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
 }
 
@@ -138,7 +138,7 @@ pub struct BarrierInitOp<'a> {
 pub struct BarrierJoinOp<'a> {
     #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
 }
 
@@ -183,7 +183,7 @@ pub struct BarrierSignalVarOp<'a> {
     pub ptr: Value<'a>,
     #[attr(name = "memberCnt", int = "i32")]
     pub member_cnt: Attribute<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
 }
 
@@ -275,9 +275,9 @@ pub struct ClusterLoadAsyncToLDSB128Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub mask_ty: Type<'a>,
@@ -302,9 +302,9 @@ pub struct ClusterLoadAsyncToLDSB32Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub mask_ty: Type<'a>,
@@ -329,9 +329,9 @@ pub struct ClusterLoadAsyncToLDSB64Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub mask_ty: Type<'a>,
@@ -356,9 +356,9 @@ pub struct ClusterLoadAsyncToLDSB8Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub mask_ty: Type<'a>,
@@ -2645,7 +2645,7 @@ pub struct DsAtomicAsyncBarrierArriveOp<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub barrier_ptr_ty: Type<'a>,
 }
 
@@ -2664,7 +2664,7 @@ pub struct DsAtomicBarrierArriveRtnOp<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub barrier_ptr_ty: Type<'a>,
     #[dtype(is = i64)]
     pub val_ty: Type<'a>,
@@ -2700,7 +2700,7 @@ pub struct DsLoadTr16_B128<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -2719,7 +2719,7 @@ pub struct DsLoadTr4_B64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -2738,7 +2738,7 @@ pub struct DsLoadTr6_B96<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -2757,7 +2757,7 @@ pub struct DsLoadTr8_B64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -2835,7 +2835,7 @@ pub struct GetBarrierStateOp<'a> {
 pub struct GetNamedBarrierStateOp<'a> {
     #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub res: Type<'a>,
@@ -2859,9 +2859,9 @@ pub struct GlobalLoadAsyncToLDSB128Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
 }
 
@@ -2883,9 +2883,9 @@ pub struct GlobalLoadAsyncToLDSB32Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
 }
 
@@ -2907,9 +2907,9 @@ pub struct GlobalLoadAsyncToLDSB64Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
 }
 
@@ -2931,9 +2931,9 @@ pub struct GlobalLoadAsyncToLDSB8Op<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
 }
 
@@ -2952,9 +2952,9 @@ pub struct GlobalLoadLDSOp<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
 }
 
@@ -2972,7 +2972,7 @@ pub struct GlobalLoadTr4_B64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -2991,7 +2991,7 @@ pub struct GlobalLoadTr6_B96<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -3010,7 +3010,7 @@ pub struct GlobalLoadTr8_B128<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -3029,7 +3029,7 @@ pub struct GlobalLoadTr8_B64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -3046,7 +3046,7 @@ pub struct GlobalPrefetchOp<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
 }
 
@@ -3094,7 +3094,7 @@ pub struct LoadToLDSOp<'a> {
     pub tbaa: Option<Attribute<'a>>,
     #[dtype(strip = "llvm.ptr")]
     pub global_ptr_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
 }
 
@@ -3386,7 +3386,7 @@ pub struct RawPtrBufferAtomicCmpSwap<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3415,7 +3415,7 @@ pub struct RawPtrBufferAtomicFaddOp<'a> {
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
     pub vdata_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3443,7 +3443,7 @@ pub struct RawPtrBufferAtomicFmaxOp<'a> {
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
     pub vdata_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3471,7 +3471,7 @@ pub struct RawPtrBufferAtomicSmaxOp<'a> {
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
     pub vdata_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3499,7 +3499,7 @@ pub struct RawPtrBufferAtomicUminOp<'a> {
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
     pub vdata_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3530,9 +3530,9 @@ pub struct RawPtrBufferLoadLdsOp<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub lds_ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub size_ty: Type<'a>,
@@ -3561,7 +3561,7 @@ pub struct RawPtrBufferLoadOp<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3590,7 +3590,7 @@ pub struct RawPtrBufferStoreOp<'a> {
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
     pub vdata_ty: Type<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
@@ -3894,7 +3894,7 @@ pub struct WaitTensorcntOp<'a> {
 pub struct WakeupBarrierOp<'a> {
     #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
 }
 
@@ -3912,7 +3912,7 @@ pub struct ds_read_tr16_b64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -3924,7 +3924,7 @@ pub struct ds_read_tr4_b64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -3936,7 +3936,7 @@ pub struct ds_read_tr6_b96<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -3948,7 +3948,7 @@ pub struct ds_read_tr8_b64<'a> {
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    #[dtype(strip = "llvm.ptr")]
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub res: Type<'a>,
 }

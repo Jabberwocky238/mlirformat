@@ -258,8 +258,10 @@ impl Records {
             _ if call.contains("getF16Type") || call.contains("Float16Type>") => "f16".into(),
             _ if call.contains("getF32Type") || call.contains("Float32Type>") => "f32".into(),
             _ if call.contains("getF64Type") || call.contains("Float64Type>") => "f64".into(),
-            // LLVM's opaque pointer in address space 0, and its token.
-            _ if call.contains("LLVMPointerType>(0)") => "!llvm.ptr".into(),
+            // LLVM's opaque pointer (`<3>`: in address space 3), and its token.
+            _ if let Some(space) = packed.split_once("LLVMPointerType>(").and_then(|(_, r)| r.strip_suffix(')')).filter(|n| n.parse::<u32>().is_ok()) => {
+                if space == "0" { "!llvm.ptr".into() } else { format!("!llvm.ptr<{space}>") }
+            }
             _ if call.contains("LLVMTokenType::get(") => "!llvm.token".into(),
             // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
             _ if call.trim_end().ends_with(">()") && let Some(c) = constraint && let Some(m) = self.text(c, "mnemonic").filter(|m| !m.is_empty()) => {

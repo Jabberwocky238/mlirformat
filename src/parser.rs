@@ -1857,7 +1857,7 @@ impl Format<'_> {
         let ty_var = |p: &Parser<'a, '_>, n: &str| self.type_var(n).copied().or_else(|e| p.err(e.0));
         let content = |p: &Parser<'a, '_>, c: Result<Content, Error>| c.or_else(|e| p.err(e.0));
         let owned = |p: &Parser<'a, '_>, a: Option<&Attribute<'a>>| a.map_or(Ok(Attribute::Unit), Content::convert).map(Content::Attr).or_else(|e| p.err(e.0));
-        for e in elems {
+        for (i, e) in elems.iter().enumerate() {
             match e {
                 Elem::Lit(l) if l.trim().is_empty() => {}
                 Elem::Lit(l) => p.expect_lit(l)?,
@@ -1872,9 +1872,16 @@ impl Format<'_> {
                     let f = field(p, n)?;
                     let c = match f.role {
                         Role::Operand { .. } if f.variadic => {
+                            // Followed by a `,` literal, the group is an ODS `Optional`: one operand
+                            // at most (`arm_sme.tile_load`'s `$padding `,` $mask`). A variadic list
+                            // there could not be read upstream either: its parser is greedy.
+                            let one = matches!(elems.get(i + 1), Some(Elem::Lit(",")));
                             let mut vs = Vec::new();
                             while p.at(b'%') {
                                 vs.push(p.value()?);
+                                if one {
+                                    break;
+                                }
                                 if !p.rest().trim_start().strip_prefix(',').is_some_and(|r| r.trim_start().starts_with('%')) {
                                     break;
                                 }
@@ -2060,24 +2067,30 @@ impl Format<'_> {
     /// once, since an operand and its type may sit in two groups
     /// (`(`,` $v^)? … (`,` type($v)^)?`), both absent; an anchored region is an empty region.
     fn absent<'a>(&self, anchor: &str, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
-        if let Ok(f) = self.field(anchor)
-            && let Role::Operand { ty } = f.role
-            && f.variadic
-        {
-            if r.get(f).is_none() {
-                r.set(f, Content::Seq(Vec::new()));
-            }
-            if let Ok(t) = self.field(ty)
-                && t.variadic
-                && r.bound(t.name).is_none()
+        // Every variadic operand the group spells is empty, not only its anchor
+        // (`arm_sme.tile_load`'s `(`,` $padding `,` $mask^)?`: `padding` too).
+        let vars = elems.iter().filter_map(|e| if let Elem::Var(n) = e { Some(*n) } else { None });
+        for name in core::iter::once(anchor).chain(vars) {
+            if let Ok(f) = self.field(name)
+                && let Role::Operand { ty } = f.role
+                && f.variadic
             {
-                r.bind(t.name, Vec::new());
+                if r.get(f).is_none() {
+                    r.set(f, Content::Seq(Vec::new()));
+                }
+                if let Ok(t) = self.field(ty)
+                    && t.variadic
+                    && r.bound(t.name).is_none()
+                {
+                    r.bind(t.name, Vec::new());
+                }
+            } else if name == anchor
+                && let Ok(f) = self.field(anchor)
+                && f.role == Role::Region
+                && r.get(f).is_none()
+            {
+                r.set(f, Content::region(Region { blocks: Vec::new() }));
             }
-        } else if let Ok(f) = self.field(anchor)
-            && f.role == Role::Region
-            && r.get(f).is_none()
-        {
-            r.set(f, Content::region(Region { blocks: Vec::new() }));
         }
         for e in elems {
             if let Elem::Group { anchor, elems } = e {
