@@ -179,7 +179,7 @@ impl Parse for FuncOp<'_> {
             arg_attrs: FuncOp::dicts(arg_dicts),
             res_attrs: FuncOp::dicts(res_dicts),
             no_inline,
-            body,
+            body: p.lend(body),
             attrs,
             loc: p.opt_loc()?,
         };

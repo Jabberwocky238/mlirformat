@@ -153,9 +153,7 @@ pub struct ExtractTileSliceOp<'a> {
 /// | [BFMOPA (widening, 2-way, BF16 to FP32)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/BFMOPA--widening---BFloat16-sum-of-outer-products-and-accumulate-) | +sme |
 ///
 /// [1] https://developer.arm.com/documentation/ddi0616
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.fmopa_2way", results(result))]
+#[mlir::op("arm_sme.fmopa_2way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct FMopa2WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -198,9 +196,7 @@ pub struct FMopa2WayOp<'a> {
 /// | ---- | -------- |
 /// | [FMOPS (widening, 2-way, FP16 to FP32)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/FMOPS--widening---Half-precision-floating-point-sum-of-outer-products-and-subtract-) | +sme |
 /// | [BFMOPS (widening, 2-way, BF16 to FP32)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/BMOPS--Bitwise-exclusive-NOR-population-count-outer-product-and-subtract-) | +sme |
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.fmops_2way", results(result))]
+#[mlir::op("arm_sme.fmops_2way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct FMops2WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -280,7 +276,6 @@ pub struct InsertTileSliceOp<'a> {
     pub tile_slice_index: Value<'a>,
     #[attr(dialect = "arm_sme.layout", default = "<horizontal>")]
     pub layout: Option<Attribute<'a>>,
-    #[dtype(el = result)]
     pub vector_ty: Type<'a>,
     #[dtype(is = index)]
     pub tile_slice_index_ty: Type<'a>,
@@ -1157,9 +1152,7 @@ pub struct LoadTileSliceOp<'a> {
 /// %result = arm_sme.outerproduct $lhs, $rhs acc($accumulator) masks($lhsMask, $rhsMask)
 ///             : vector<[4]xf32>, vector<[4]xf32>
 /// ```
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.outerproduct", results(result))]
+#[mlir::op("arm_sme.outerproduct", format = "$lhs `,` $rhs oilist( `kind` `` $kind | `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs)", results(result))]
 pub struct OuterProductOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1178,9 +1171,9 @@ pub struct OuterProductOp<'a> {
     pub lhs_mask_ty: Vec<Type<'a>>,
     #[dtype(i1 = lhs_ty)]
     pub rhs_mask_ty: Vec<Type<'a>>,
-    #[dtype(el = lhs_ty)]
+    #[dtype(outer = lhs_ty)]
     pub acc_ty: Vec<Type<'a>>,
-    #[dtype(el = lhs_ty)]
+    #[dtype(outer = lhs_ty)]
     pub result: Type<'a>,
 }
 
@@ -1198,9 +1191,7 @@ pub struct OuterProductOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [SMOPA (2-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SMOPA--2-way---Signed-integer-sum-of-outer-products-and-accumulate-) | +sme2 |
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.smopa_2way", results(result))]
+#[mlir::op("arm_sme.smopa_2way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct SMopa2WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1346,9 +1337,7 @@ pub struct SMopa2WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [SMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SMOPA--4-way---Signed-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.smopa_4way", results(result))]
+#[mlir::op("arm_sme.smopa_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct SMopa4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1382,9 +1371,7 @@ pub struct SMopa4WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [SMOPS (2-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SMOPS--2-way---Signed-integer-sum-of-outer-products-and-subtract-) | +sme2 |
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.smops_2way", results(result))]
+#[mlir::op("arm_sme.smops_2way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct SMops2WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1425,9 +1412,7 @@ pub struct SMops2WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [SMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SMOPS--4-way---Signed-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.smops_4way", results(result))]
+#[mlir::op("arm_sme.smops_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct SMops4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1545,9 +1530,7 @@ pub struct StreamingVLOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [SUMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SUMOPA--Signed-by-unsigned-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.sumopa_4way", results(result))]
+#[mlir::op("arm_sme.sumopa_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct SuMopa4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1585,9 +1568,7 @@ pub struct SuMopa4WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [SUMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/SUMOPS--Signed-by-unsigned-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.sumops_4way", results(result))]
+#[mlir::op("arm_sme.sumops_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct SuMops4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1734,9 +1715,7 @@ pub struct TileStoreOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [UMOPA (2-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/UMOPA--2-way---Unsigned-integer-sum-of-outer-products-and-accumulate-) | +sme2 |
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.umopa_2way", results(result))]
+#[mlir::op("arm_sme.umopa_2way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct UMopa2WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1774,9 +1753,7 @@ pub struct UMopa2WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [UMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/UMOPA--4-way---Unsigned-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.umopa_4way", results(result))]
+#[mlir::op("arm_sme.umopa_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct UMopa4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1810,9 +1787,7 @@ pub struct UMopa4WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [UMOPS (2-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/UMOPS--2-way---Unsigned-integer-sum-of-outer-products-and-subtract-) | +sme2 |
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.umops_2way", results(result))]
+#[mlir::op("arm_sme.umops_2way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct UMops2WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1850,9 +1825,7 @@ pub struct UMops2WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [UMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/UMOPS--4-way---Unsigned-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.umops_4way", results(result))]
+#[mlir::op("arm_sme.umops_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct UMops4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1890,9 +1863,7 @@ pub struct UMops4WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [USMOPA (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/USMOPA--Unsigned-by-signed-integer-sum-of-outer-products-and-accumulate-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.usmopa_4way", results(result))]
+#[mlir::op("arm_sme.usmopa_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct UsMopa4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1930,9 +1901,7 @@ pub struct UsMopa4WayOp<'a> {
 /// | Spec | Features |
 /// | ---- | -------- |
 /// | [USMOPS (4-way)](https://developer.arm.com/documentation/ddi0602/2023-09/SME-Instructions/USMOPS--Unsigned-by-signed-integer-sum-of-outer-products-and-subtract-) | +sme (32-bit), +sme-i16i64 (64-bit)|
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("arm_sme.usmops_4way", results(result))]
+#[mlir::op("arm_sme.usmops_4way", format = "$lhs `,` $rhs oilist( `acc` `` `(` $acc `)` | `masks` `` `(` $lhsMask `,` $rhsMask `)` ) attr-dict `:` type($lhs) `,` type($rhs) `into` type($result)", results(result))]
 pub struct UsMops4WayOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,

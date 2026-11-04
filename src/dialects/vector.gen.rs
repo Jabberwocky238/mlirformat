@@ -1185,9 +1185,7 @@ pub struct OuterProductOp<'a> {
 /// ```mlir
 /// vector.print str "Hello, World!"
 /// ```
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("vector.print")]
+#[mlir::op("vector.print", format = "($source^ `:` type($source))? oilist( `str` $stringLiteral | `punctuation` $punctuation) attr-dict")]
 pub struct PrintOp<'a> {
     #[slot(source_ty)]
     pub source: Vec<Value<'a>>,

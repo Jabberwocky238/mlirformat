@@ -541,6 +541,9 @@ pub enum Infer {
     /// Type variable `.0`'s vector with its trailing dim widened to 16 (`arm_sve.convert_from_svbool`'s
     /// source: `vector<2x[4]xi1>` ⇒ `vector<2x[16]xi1>`).
     Svbool(&'static str),
+    /// The scalable square tile of type variable `.0`'s leading dim (`arm_sme.outerproduct`'s
+    /// result: `vector<[4]xf32>` ⇒ `vector<[4]x[4]xf32>`).
+    OuterTile(&'static str),
 }
 
 /// A field's MLIR role, as `#[mlir::op]` writes it in [`Op::FIELDS`].
@@ -741,6 +744,8 @@ impl Module<'_> {
 /// attr-dict                 discardable attributes and the properties the format does not spell
 /// ( ... $x^ ... )?          optional group, present when anchor `x` is (non-empty / true / not default)
 /// custom<X>($a, $b)         a directive declared in [`crate::syntax`], expanded here and now
+/// oilist(`a` $x | `b` $y)   clauses in any order, each at most once, each present with its first
+///                           variable (ODS `OIListElement`)
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Elem<'f> {
@@ -759,6 +764,9 @@ pub enum Elem<'f> {
     /// What a `custom<X>(...)` call site stands for. It stays one element, because that is what
     /// ODS spaces it as: the parts inside are written tight, however they are declared.
     Custom { name: &'f str, parts: Vec<Elem<'f>> },
+    /// `oilist(..|..)`: its clauses, each a [`Elem::Group`] anchored at its first variable; read
+    /// in any order, printed in this one.
+    OiList(Vec<Elem<'f>>),
 }
 
 /// A tokenized assembly format with its op's schema.
@@ -859,8 +867,14 @@ impl<'f> Elem<'f> {
                 rest = tail;
                 continue;
             }
+            if let Some(after) = rest.strip_prefix("oilist(") {
+                let (elem, tail) = Self::oilist(after, op)?;
+                out.push(elem);
+                rest = tail;
+                continue;
+            }
             let (elem, tail) = match rest.chars().next() {
-                None | Some(')') => return Ok((out, rest)),
+                None | Some(')') | Some('|') => return Ok((out, rest)),
                 Some('`') => {
                     let end = rest[1..].find('`').ok_or_else(|| bad("unterminated literal".into()))?;
                     (Self::Lit(&rest[1..=end]), &rest[end + 2..])
@@ -901,6 +915,24 @@ impl<'f> Elem<'f> {
         }
     }
 
+    /// `oilist(..|..)` past its `(`: each clause a group anchored at its first variable.
+    fn oilist(mut rest: &'f str, op: &str) -> Result<(Self, &'f str), Error> {
+        let bad = |m: &str| Error(format!("{op}: format: oilist: {m}"));
+        let mut clauses = Vec::new();
+        loop {
+            let (elems, tail) = Self::list(rest, op)?;
+            let mut names = Vec::new();
+            Self::names(&elems, &mut names);
+            let anchor = names.first().copied().ok_or_else(|| bad("a clause without a variable"))?;
+            clauses.push(Self::Group { anchor, elems });
+            let tail = tail.trim_start();
+            match tail.strip_prefix('|') {
+                Some(next) => rest = next,
+                None => return Ok((Self::OiList(clauses), tail.strip_prefix(')').ok_or_else(|| bad("expected `)`"))?)),
+            }
+        }
+    }
+
     /// The `^` of a group's own elements (`group` past its `(`), not of a group nested in it.
     fn anchor(group: &'f str) -> Option<&'f str> {
         let (mut depth, mut quoted) = (0usize, false);
@@ -926,7 +958,7 @@ impl<'f> Elem<'f> {
     fn flatten<'x>(elems: &'x [Self], out: &mut Vec<&'x Self>) {
         for e in elems {
             match e {
-                Self::Group { elems, .. } | Self::Custom { parts: elems, .. } => Self::flatten(elems, out),
+                Self::Group { elems, .. } | Self::Custom { parts: elems, .. } | Self::OiList(elems) => Self::flatten(elems, out),
                 e => out.push(e),
             }
         }
@@ -938,7 +970,7 @@ impl<'f> Elem<'f> {
                 Self::Var(n) => out.push(n),
                 // Both halves are spelled by the list, so neither goes through `attr-dict`.
                 Self::Zip { integers, values } => out.extend([integers, values]),
-                Self::Group { elems, .. } | Self::Custom { parts: elems, .. } => Self::names(elems, out),
+                Self::Group { elems, .. } | Self::Custom { parts: elems, .. } | Self::OiList(elems) => Self::names(elems, out),
                 _ => {}
             }
         }

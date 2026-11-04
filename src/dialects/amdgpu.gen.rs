@@ -538,9 +538,7 @@ pub struct MakeGatherDmaDescriptorOp<'a> {
 /// Counters can lower to different instructions on different architectires,
 /// including clamping to the some HW supported max value or combining multiple
 /// counters into one.
-///
-/// Generic form only (directive `oilist`).
-#[mlir::op("amdgpu.memory_counter_wait")]
+#[mlir::op("amdgpu.memory_counter_wait", format = "oilist( `load` `(` $load `)` | `store` `(` $store `)` | `ds` `(` $ds `)` | `exp` `(` $exp `)` | `tensor` `(` $tensor `)` ) attr-dict")]
 pub struct MemoryCounterWaitOp<'a> {
     #[attr(int = "i32")]
     pub load: Option<Attribute<'a>>,

@@ -117,6 +117,7 @@ impl Parse for For<'_> {
             }
             b.args = args;
         }
+        let region = p.lend(region);
         let op = For { lower_bound, upper_bound, step, init_args, unsigned_cmp, region, lower_bound_ty, results, attrs, loc: p.opt_loc()? };
         Self::owned(op, p)
     }
@@ -178,6 +179,7 @@ impl Parse for If<'_> {
             }
             false => Region { blocks: Vec::new() },
         };
+        let (then_region, else_region) = (p.lend(then_region), p.lend(else_region));
         let op = If { condition, then_region, else_region, condition_ty: Type::I1, results, attrs: p.opt_dict()?, loc: p.opt_loc()? };
         Self::owned(op, p)
     }

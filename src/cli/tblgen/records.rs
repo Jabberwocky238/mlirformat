@@ -694,8 +694,14 @@ impl Records {
                             infer.insert(rhs, format!("width = {}", groups[lhs].name));
                             Vec::new()
                         }
+                        // `VectorType::get({ size, size }, elem, { true, true })` of `lhs`'s leading
+                        // dim: the outer product's scalable tile (`arm_sme.outerproduct`).
+                        _ if plain.split_whitespace().collect::<String>().contains("returnVectorType::get({size,size},vectorType.getElementType(),{true,true});") => {
+                            infer.insert(rhs, format!("outer = {}", groups[lhs].name));
+                            Vec::new()
+                        }
                         // `!async.value<T>` ⇒ `T`: its first parameter, as an element type.
-                        _ if (transformer.contains("getElementType()") || (plain.starts_with("::llvm::cast<") && plain.ends_with(">($_self).getValueType()"))) && !groups[lhs].variadic => {
+                        _ if !plain.contains("VectorType::get") && (transformer.contains("getElementType()") || (plain.starts_with("::llvm::cast<") && plain.ends_with(">($_self).getValueType()"))) && !groups[lhs].variadic => {
                             infer.insert(rhs, format!("el = {}", groups[lhs].name));
                             Vec::new()
                         }
@@ -803,7 +809,7 @@ impl Records {
                     }
                     &rest[end..]
                 }
-                ' ' | '(' | ')' | '?' | '^' | ',' => &rest[1..],
+                ' ' | '(' | ')' | '?' | '^' | ',' | '|' => &rest[1..],
                 // A directive we have a rule for: step over the name so its arguments are
                 // still checked as fields; `Elem::check` below settles the argument count.
                 _ if rest.starts_with("custom<") => {
@@ -814,7 +820,7 @@ impl Records {
                         None => return (None, Some("`custom<` without its `>`".into())),
                     }
                 }
-                _ => match ["type(", "functional-type(", "qualified(", "attr-dict-with-keyword", "attr-dict"].iter().find(|w| rest.starts_with(**w)) {
+                _ => match ["type(", "functional-type(", "qualified(", "attr-dict-with-keyword", "attr-dict", "oilist("].iter().find(|w| rest.starts_with(**w)) {
                     Some(w) => &rest[w.len()..],
                     None => return (None, Some(format!("directive `{}`", rest.split([' ', '(']).next().unwrap_or(rest)))),
                 },

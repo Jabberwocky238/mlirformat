@@ -1510,6 +1510,8 @@ impl Format<'_> {
                         self.write(elems, v, s, p)?;
                     }
                 }
+                // Its clauses in their declared order, each when present.
+                Elem::OiList(clauses) => self.write(clauses, v, s, p)?,
                 Elem::Var(n) => {
                     let f = self.field(n)?;
                     if !matches!(f.role, Role::Prop { unit: true, .. }) {

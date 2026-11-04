@@ -204,7 +204,7 @@ impl Parse for Func<'_> {
             known_block_size: None,
             known_grid_size: None,
             known_cluster_size: None,
-            body,
+            body: p.lend(body),
             attrs,
             loc: p.opt_loc()?,
         };

@@ -136,6 +136,7 @@ impl Parse for Generic<'_> {
         }
         let region = p.region()?;
         let result_tensors = if p.eat("->") { p.results_ty()? } else { Vec::new() };
+        let region = p.lend(region);
         let op = Generic { inputs, outputs, indexing_maps, iterator_types, doc, library_call, region, inputs_ty, outputs_ty, result_tensors, attrs, loc: p.opt_loc()? };
         Self::owned(op, p)
     }

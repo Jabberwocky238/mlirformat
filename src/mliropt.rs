@@ -255,8 +255,12 @@ impl Template {
 
     #[inline]
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
-        let op = O::parse(p)?;
-        Operation::of_owned_op(op).or_else(|e| p.err(e.0))
+        // An op of an ODS format is read straight into an `Operation`; a hand-written one through
+        // the typed op. Either way its regions are lent, not copied (`Parser::lend`).
+        if O::CUSTOM && !O::FORMAT.is_empty() {
+            return p.lending(|p| Format::of::<O>().or_else(|e| p.err(e.0))?.parse_op(p), Ok);
+        }
+        p.lending(O::parse, |op| Operation::of_owned_op(op).map(|o| -> Operation<'a> { o }))
     }
 
     /// The custom form, or `None` (the op then prints generic) when it does not fit `O` or `O`
