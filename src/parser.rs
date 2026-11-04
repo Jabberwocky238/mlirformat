@@ -1113,11 +1113,11 @@ impl Attribute<'_> {
     }
 }
 
-impl Type<'_> {
+impl<'a> Type<'a> {
     /// `i1`, or a shaped `i1` like `self` (`arith.cmpi`'s result).
-    pub fn i1_like(&self) -> Type<'static> {
+    pub fn i1_like(&self) -> Type<'a> {
         match self {
-            Type::Shaped(s) => Type::Shaped(Shaped { kind: s.kind, shape: s.shape.clone(), elem: Box::new(Type::I1), extras: Content::convert(&s.extras).unwrap_or_default() }),
+            Type::Shaped(s) => Type::Shaped(Shaped { kind: s.kind, shape: s.shape.clone(), elem: Box::new(Type::I1), extras: s.extras.clone() }),
             _ => Type::I1,
         }
     }
@@ -1899,6 +1899,8 @@ impl<'a> Operation<'a> {
 #[derive(Default)]
 struct Slots<'a> {
     fields: Vec<(&'static str, Content)>,
+    /// Operand groups read: (name, values), as written.
+    values: Vec<(&'static str, Vec<Value<'a>>)>,
     /// Type variables bound by the text: (name, types).
     types: Vec<(&'static str, Vec<Type<'a>>)>,
 }
@@ -1917,6 +1919,16 @@ impl<'a> Slots<'a> {
     #[inline]
     fn bound(&self, name: &str) -> Option<&[Type<'a>]> {
         self.types.iter().rev().find(|(n, _)| *n == name).map(|(_, t)| &**t)
+    }
+
+    #[inline]
+    fn set_values(&mut self, f: &Field, vs: Vec<Value<'a>>) {
+        self.values.push((f.name, vs));
+    }
+
+    #[inline]
+    fn values(&self, name: &str) -> Option<&[Value<'a>]> {
+        self.values.iter().find(|(k, _)| *k == name).map(|(_, v)| v.as_slice())
     }
 
     #[inline]
@@ -2019,11 +2031,13 @@ impl Format<'_> {
                                 }
                                 p.expect(",")?;
                             }
-                            content(p, Content::of(&vs))?
+                            r.set_values(&f, vs);
+                            continue;
                         }
                         Role::Operand { .. } => {
                             let v = p.value()?;
-                            content(p, Content::of(&v))?
+                            r.set_values(&f, alloc::vec![v]);
+                            continue;
                         }
                         Role::Type { .. } => {
                             let ts = self.types(&f, p)?;
@@ -2133,7 +2147,7 @@ impl Format<'_> {
                     }
                     let ty = Type::Integer { signedness: Signedness::Signless, width: 64 };
                     r.set(&ints, Content::Attr(Attribute::DenseArray { ty, values: statics }));
-                    r.set(&vals, content(p, Content::of(&ops))?);
+                    r.set_values(&vals, ops);
                     if let Role::Operand { ty } = vals.role
                         && let Ok(t) = self.field(ty)
                         && t.variadic
@@ -2150,10 +2164,7 @@ impl Format<'_> {
                     let ts = one(p)?;
                     // `type($indices)` of a variadic group sharing one type variable: a type per
                     // operand (`i32, i32`), all of them the one type.
-                    for _ in 1..self.shared_count(n, &var, |f| match r.get(f) {
-                        Some(Content::Seq(vs)) => vs.len(),
-                        _ => 0,
-                    }) {
+                    for _ in 1..self.shared_count(n, &var, |f| r.values(f.name).map_or(0, <[_]>::len)) {
                         p.expect(",")?;
                         if one(p)? != ts {
                             return p.err(format!("`type(${n})`: the types differ"));
@@ -2221,8 +2232,8 @@ impl Format<'_> {
                 && let Role::Operand { ty } = f.role
                 && f.variadic
             {
-                if r.get(f).is_none() {
-                    r.set(f, Content::Seq(Vec::new()));
+                if r.values(f.name).is_none() {
+                    r.set_values(f, Vec::new());
                 }
                 if let Ok(t) = self.field(ty)
                     && t.variadic
@@ -2285,10 +2296,7 @@ impl Format<'_> {
             return results.saturating_sub(fixed);
         }
         let group = self.schema.of_role(|x| matches!(x, Role::Operand { ty } if *ty == f.name)).next();
-        match group.and_then(|g| r.get(g)) {
-            Some(Content::Seq(xs)) => xs.len(),
-            _ => 1,
-        }
+        group.and_then(|g| r.values(g.name)).map_or(1, <[_]>::len)
     }
 
     /// Fills property defaults; every type variable's types, as the text bound them or as
@@ -2310,9 +2318,9 @@ impl Format<'_> {
                 // One per operand of a variadic group (none for an absent optional one: `arm_sme.tile_load`'s mask).
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like(); if f.variadic { self.arity(f, &r, results) } else { 1 }],
                 (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => {
-                    let elem: Type<'static> = match r.bound(var).and_then(|t| t.first()) {
-                        Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => Content::convert(&**elem)?,
-                        Some(Type::Extended(ext)) => Content::convert(&ext.shaped_elem().ok_or_else(undetermined)?)?,
+                    let elem: Type<'a> = match r.bound(var).and_then(|t| t.first()) {
+                        Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => (**elem).clone(),
+                        Some(Type::Extended(ext)) => ext.shaped_elem().ok_or_else(undetermined)?,
                         _ => return Err(undetermined()),
                     };
                     // A variadic variable has one type per value (`tensor.from_elements`'s
@@ -2333,18 +2341,18 @@ impl Format<'_> {
                             _ => Dim::Static(16),
                         };
                         let shape = outer.iter().cloned().chain([last]).collect();
-                        vec![Content::convert(&Type::Shaped(Shaped { shape: Some(shape), ..sh.clone() }))?]
+                        vec![Type::Shaped(Shaped { shape: Some(shape), ..sh.clone() })]
                     }
                     _ => return Err(undetermined()),
                 },
                 (None, Role::Type { infer: Some(Infer::OuterTile(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
                     Some(Type::Shaped(sh @ Shaped { shape: Some(shape), .. })) if let Some(Dim::Scalable(n) | Dim::Static(n)) = shape.first() => {
-                        vec![Content::convert(&Type::Shaped(Shaped { shape: Some(alloc::vec![Dim::Scalable(*n), Dim::Scalable(*n)]), ..sh.clone() }))?]
+                        vec![Type::Shaped(Shaped { shape: Some(alloc::vec![Dim::Scalable(*n), Dim::Scalable(*n)]), ..sh.clone() })]
                     }
                     _ => return Err(undetermined()),
                 },
-                (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Content::convert(&Type::try_from(ty).map_err(|e| Error(e.msg))?)?],
-                (None, Role::Type { infer: Some(Infer::Same(var)), .. }) => Content::convert(r.bound(var).ok_or_else(undetermined)?)?,
+                (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Type::try_from(ty).map_err(|e| Error(e.msg))?],
+                (None, Role::Type { infer: Some(Infer::Same(var)), .. }) => r.bound(var).ok_or_else(undetermined)?.to_vec(),
                 (None, Role::Type { infer: Some(Infer::TypeOf(attr)), .. }) => {
                     // A number written without its type is MLIR's default: `i64`, `f64`
                     // (`arith.constant 10`); the attribute takes it too, as `mlir-opt` builds it.
@@ -2369,6 +2377,11 @@ impl Format<'_> {
 
     /// Fills defaults and inferred types, then builds the struct's [`Content`].
     fn finish(&self, mut r: Slots<'_>, loc: Option<Str<'_>>, results: usize) -> Result<Content, Error> {
+        for (name, vs) in core::mem::take(&mut r.values) {
+            let Some(f) = self.schema.field(name) else { continue };
+            let c = if f.variadic { Content::of(&vs)? } else { Content::of(vs.first().ok_or_else(|| Error(format!("missing field `{name}`")))?)? };
+            r.set(f, c);
+        }
         for (name, ts) in self.complete(&mut r, results)? {
             let Some(f) = self.schema.field(name) else { continue };
             let c = if f.variadic { Content::of(&ts)? } else { Content::of(&ts[0])? };
@@ -2404,8 +2417,13 @@ impl Format<'_> {
         let (mut operands, mut inputs, mut sizes) = (Vec::new(), Vec::new(), Vec::new());
         for f in self.schema.of_role(|r| matches!(r, Role::Operand { .. })) {
             let Role::Operand { ty } = f.role else { continue };
-            let c = take(f.name).ok_or_else(|| missing(f.name))?;
-            let group: Vec<Value<'static>> = if f.variadic { c.to()? } else { vec![c.to()?] };
+            let group = match r.values.iter().position(|(k, _)| *k == f.name) {
+                Some(i) => r.values.swap_remove(i).1,
+                None => return Err(missing(f.name)),
+            };
+            if !f.variadic && group.len() != 1 {
+                return Err(missing(f.name));
+            }
             let var = self.schema.field(ty).ok_or_else(|| Error(format!("no type variable `{ty}`")))?;
             match ty_of(ty)? {
                 [t] if !var.variadic => inputs.extend(group.iter().map(|_| t.clone())),
