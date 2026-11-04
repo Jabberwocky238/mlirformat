@@ -5,12 +5,20 @@
 //! refuses it afterwards: every IR node says what makes it invalid, [`MlirOpt::verify`] walks a
 //! module. What only `mlir-opt`'s verifier (ODS constraints, an op's `verify()`) rejects is not
 //! checked here.
+//!
+//! This file is the structure every dialect shares: the walk, aliases, locations, SSA scopes.
+//! What one dialect's types and attributes must be is its [`DialectRules`], one file each under
+//! `verifier/` (`builtin.rs`, `quant.rs`), listed in [`DIALECTS`].
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
-use crate::affine_expr::{Map, Set};
-use crate::{AffineMap, Attribute, Block, BlockArg, Extended, FunctionType, IntegerSet, Item, MlirOpt, Module, NamedAttr, Operation, Region, Shaped, Type};
+/// The builtin types and attributes.
+mod builtin;
+/// `quant` types.
+mod quant;
+
+use crate::{Attribute, Block, BlockArg, Extended, FunctionType, Item, MlirOpt, Module, NamedAttr, Operation, Region, Shaped, Type};
 
 /// Why `mlir-opt` would not read it. The text is the offending one, copied only on failure.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -48,6 +56,9 @@ pub enum Invalid {
     /// `loc(#a)` where `#a` is no location (`#a = true`).
     #[error("`#{0}` is not a location")]
     NotLocation(String),
+    /// A dialect type's body its dialect would not read (`!quant.uniform<i33:f32, 1.0>`).
+    #[error("invalid type `{ty}`: {why}")]
+    DialectType { ty: String, why: String },
     /// `%x` used where no `%x` is in scope.
     #[error("use of undeclared SSA value name `%{0}`")]
     UndeclaredValue(String),
@@ -293,6 +304,10 @@ impl<'x> Verify<'x> for FunctionType<'x> {
 impl<'x> Verify<'x> for Type<'x> {
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
         match self {
+            Type::Extended(e) => rules(&e.name).map_or(Ok(()), |d| d.ty(v, self))?,
+            _ => builtin::Builtin.ty(v, self)?,
+        }
+        match self {
             Type::Complex(t) => t.verify(v),
             Type::Tuple(ts) => ts.verify(v),
             Type::Function(f) => f.verify(v),
@@ -305,10 +320,6 @@ impl<'x> Verify<'x> for Type<'x> {
 
 impl<'x> Verify<'x> for Shaped<'x> {
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
-        // A dialect type may be a `VectorElementTypeInterface` (`!llvm.ptr`); no other builtin is.
-        if self.kind == crate::ShapedKind::Vector && matches!(*self.elem, Type::Shaped(_) | Type::Function(_) | Type::Tuple(_) | Type::NoneType | Type::Complex(_)) {
-            return Err(Invalid::VectorElement(self.elem.to_string()));
-        }
         self.elem.verify(v)?;
         self.extras.verify(v)
     }
@@ -324,11 +335,11 @@ impl<'x> Verify<'x> for Extended<'x> {
 impl<'x> Verify<'x> for Attribute<'x> {
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
         match self {
-            Attribute::Builtin { name, body, ty } => {
-                Builtin::try_from(&**name).map_or(Ok(()), |b| b.verify(body, ty.as_ref()))?;
-                ty.verify(v)
-            }
-            Attribute::Int { ty, .. } | Attribute::Float { ty, .. } | Attribute::Str { ty, .. } => ty.verify(v),
+            Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(v, self))?,
+            _ => builtin::Builtin.attr(v, self)?,
+        }
+        match self {
+            Attribute::Builtin { ty, .. } | Attribute::Int { ty, .. } | Attribute::Float { ty, .. } | Attribute::Str { ty, .. } => ty.verify(v),
             Attribute::Type(t) => t.verify(v),
             Attribute::Array(xs) => xs.verify(v),
             Attribute::Dict(xs) => xs.verify(v),
@@ -342,46 +353,42 @@ impl<'x> Verify<'x> for Attribute<'x> {
     }
 }
 
-keywords! {
-    /// The builtin keyword attributes whose body is checked.
-    enum Builtin {
-        AffineMap = "affine_map",
-        AffineSet = "affine_set",
-        Dense = "dense",
+/// ⭐ One dialect's rules: what its types and attributes must be for `mlir-opt` to read them
+/// (the dialect's own `parseType` / `parseAttribute` and their `verifyInvariants`). One
+/// implementation per file under `verifier/`; the walk calls the one owning each node.
+trait DialectRules: Sync {
+    /// Its namespace (`quant`); `builtin` owns the types and attributes without one.
+    fn namespace(&self) -> &'static str;
+
+    /// One of its types, before the walk goes into it.
+    #[inline]
+    fn ty(&self, _v: &Verifier<'_>, _t: &Type<'_>) -> Result<(), Invalid> {
+        Ok(())
+    }
+
+    /// One of its attributes, before the walk goes into it.
+    #[inline]
+    fn attr(&self, _v: &Verifier<'_>, _a: &Attribute<'_>) -> Result<(), Invalid> {
+        Ok(())
     }
 }
 
-impl Builtin {
-    /// `dense<"0x..."> : T`: hex digits after `0x`, as many bytes as one element (a splat) or
-    /// all of them (`DenseElementsAttr::isValidRawBuffer`). An `i1` (bit-packed) is not checked.
-    fn dense_hex(hex: &str, ty: Option<&Type<'_>>) -> bool {
-        let Some(digits) = hex.strip_prefix("0x").filter(|d| !d.is_empty() && d.len() % 2 == 0 && d.bytes().all(|c| c.is_ascii_hexdigit())) else { return false };
-        let elem = ty.map(Type::element_type);
-        let bytes = match elem {
-            Some(Type::Complex(t)) => t.bit_width().map(|w| 2 * w.div_ceil(8)),
-            Some(t) => t.bit_width().filter(|w| *w > 1).map(|w| w.div_ceil(8)),
-            None => None,
-        };
-        match (bytes, ty.and_then(Type::element_count)) {
-            (Some(b), Some(n)) => [b as usize, b as usize * n].contains(&(digits.len() / 2)),
-            _ => true,
-        }
-    }
+/// Every dialect with rules.
+const DIALECTS: &[&dyn DialectRules] = &[&builtin::Builtin, &quant::Quant];
 
-    /// Its raw body (`<(d0) -> (d0)>`) as `mlir-opt` would read it.
-    fn verify(self, body: &str, ty: Option<&Type<'_>>) -> Result<(), Invalid> {
-        let inner = body.trim().strip_prefix('<').and_then(|b| b.strip_suffix('>')).unwrap_or(body);
-        match self {
-            Builtin::AffineMap => Map::try_from(inner).ok().filter(|m| m.check().is_ok() && AffineMap::try_from(m).is_ok()).map(drop).ok_or_else(|| Invalid::AffineMap(body.into())),
-            Builtin::AffineSet => Set::try_from(inner).ok().filter(|s| s.check().is_ok() && IntegerSet::try_from(s).is_ok()).map(drop).ok_or_else(|| Invalid::AffineSet(body.into())),
-            // Only the hex form: a quoted body.
-            Builtin::Dense => match inner.trim().strip_prefix('"').and_then(|h| h.strip_suffix('"')) {
-                // A quoted body of numbers is hex data; of anything else (a dialect string
-                // type), strings.
-                Some(hex) if ty.map(Type::element_type).is_some_and(|t| matches!(t, Type::Integer { .. } | Type::Float(_) | Type::Index | Type::Complex(_))) && !Self::dense_hex(hex, ty) => Err(Invalid::DenseHex(body.into())),
-                _ => Ok(()),
-            },
-        }
+/// The rules of the dialect owning `!ns.mnemonic` / `#ns.mnemonic`; an alias (`!t`, `#map`)
+/// has none: its definition is checked.
+#[inline]
+fn rules(name: &str) -> Option<&'static dyn DialectRules> {
+    let ns = name.split_once('.')?.0;
+    DIALECTS.iter().copied().find(|d| d.namespace() == ns)
+}
+
+impl Extended<'_> {
+    /// `mnemonic` of `ns.mnemonic`.
+    #[inline]
+    fn mnemonic(&self) -> &str {
+        self.name.split_once('.').map_or(&*self.name, |(_, m)| m)
     }
 }
 

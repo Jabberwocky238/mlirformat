@@ -203,6 +203,12 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.pos = self.rest().find('\n').map_or(self.src.len(), |i| self.pos + i);
     }
 
+    /// Moves `n` bytes on (a token the caller measured in [`Parser::rest`]).
+    #[inline]
+    pub(crate) fn skip(&mut self, n: usize) {
+        self.pos = (self.pos + n).min(self.src.len());
+    }
+
     /// Consumes punctuation `s` after whitespace.
     pub fn eat(&mut self, s: &str) -> bool {
         self.ws();
