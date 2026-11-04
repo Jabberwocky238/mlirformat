@@ -29,9 +29,9 @@ pub struct DPPOp<'a> {
     pub kind: Attribute<'a>,
     #[attr(name = "permArgument")]
     pub perm_argument: Option<Attribute<'a>>,
-    #[attr(int = "i32")]
+    #[attr(int = "i32", default = "15")]
     pub row_mask: Option<Attribute<'a>>,
-    #[attr(int = "i32")]
+    #[attr(int = "i32", default = "15")]
     pub bank_mask: Option<Attribute<'a>>,
     #[attr(default = "false")]
     pub bound_ctrl: Option<Attribute<'a>>,

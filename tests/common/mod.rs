@@ -226,6 +226,12 @@ impl Fixtures {
         if Self::bare(op) && parent.is_some_and(|par| !opt.show_in(aliases, par).to_string().contains(&*op.name)) {
             return Verdict::Reparsed;
         }
+        // A block's terminator with nothing but discardable attributes: `mlir-opt` elides it,
+        // attributes and all (`scf.if`'s `scf.yield {then}`), a loss this crate does not copy.
+        let last = |par: &Operation<'_>| par.regions.iter().flat_map(|r| &r.blocks).any(|b| b.ops.last().is_some_and(|l| core::ptr::eq(l, op)));
+        if !op.attributes.is_empty() && Self::bare(&Operation { attributes: Vec::new(), ..op.clone() }) && parent.is_some_and(last) {
+            return Verdict::Reparsed;
+        }
         // Nor can a block's terminator be judged under a parent only C++ prints in custom form
         // (`vector.mask`, `memref.alloca_scope`): there `mlir-opt` may leave it out.
         if parent.is_some_and(|par| Self::generic_only(opt, par) && par.regions.iter().flat_map(|r| &r.blocks).any(|b| b.ops.last().is_some_and(|l| core::ptr::eq(l, op)))) {

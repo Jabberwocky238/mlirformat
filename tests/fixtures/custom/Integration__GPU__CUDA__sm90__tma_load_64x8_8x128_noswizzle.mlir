@@ -1,0 +1,71 @@
+module @mymod {
+  memref.global "private" @bufferLhsGlobal : memref<64x8xf32, 3>
+  memref.global "private" @bufferRhsGlobal : memref<8x128xf32, 3>
+  func.func @main() {
+    %c10000000 = arith.constant 10000000 : index
+    %c6144 = arith.constant 6144 : index
+    %c45 = arith.constant 45 : index
+    %c7 = arith.constant 7 : index
+    %c64 = arith.constant 64 : index
+    %c1 = arith.constant 1 : index
+    %c0 = arith.constant 0 : index
+    %c8 = arith.constant 8 : index
+    %c128 = arith.constant 128 : index
+    %cst = arith.constant 3.000000e+00 : f32
+    %alloc = memref.alloc() : memref<64x8xf32>
+    %alloc_0 = memref.alloc() : memref<8x128xf32>
+    scf.for %arg0 = %c0 to %c8 step %c1 {
+      scf.for %arg1 = %c0 to %c128 step %c1 {
+        memref.store %cst, %alloc_0[%arg0, %arg1] : memref<8x128xf32>
+      }
+    }
+    scf.for %arg0 = %c0 to %c64 step %c1 {
+      scf.for %arg1 = %c0 to %c8 step %c1 {
+        %5 = arith.index_cast %arg1 : index to i64
+        %6 = arith.uitofp %5 : i64 to f32
+        memref.store %6, %alloc[%arg0, %arg1] : memref<64x8xf32>
+      }
+    }
+    %0 = gpu.wait async
+    %memref, %asyncToken = gpu.alloc async [%0] () : memref<64x8xf32>
+    %memref_1, %asyncToken_2 = gpu.alloc async [%0] () : memref<8x128xf32>
+    %1 = gpu.memcpy async [%0] %memref, %alloc : memref<64x8xf32>, memref<64x8xf32>
+    %2 = gpu.memcpy async [%0] %memref_1, %alloc_0 : memref<8x128xf32>, memref<8x128xf32>
+    %cast = memref.cast %memref : memref<64x8xf32> to memref<*xf32>
+    %cast_3 = memref.cast %memref_1 : memref<8x128xf32> to memref<*xf32>
+    %3 = nvgpu.tma.create.descriptor %cast box[%c64, %c8] : memref<*xf32> -> <tensor = memref<64x8xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>
+    %4 = nvgpu.tma.create.descriptor %cast_3 box[%c8, %c128] : memref<*xf32> -> <tensor = memref<8x128xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>
+    gpu.launch blocks(%arg0, %arg1, %arg2) in (%arg6 = %c1, %arg7 = %c1, %arg8 = %c1) threads(%arg3, %arg4, %arg5) in (%arg9 = %c128, %arg10 = %c1, %arg11 = %c1) {
+      %block_dim_x = gpu.block_dim  x
+      %thread_id_x = gpu.thread_id  x
+      %5 = memref.get_global @bufferLhsGlobal : memref<64x8xf32, 3>
+      %6 = memref.get_global @bufferRhsGlobal : memref<8x128xf32, 3>
+      %7 = nvgpu.mbarrier.create -> <memorySpace = #gpu.address_space<workgroup>>
+      nvgpu.mbarrier.init %7[%c0], %block_dim_x : <memorySpace = #gpu.address_space<workgroup>>
+      gpu.barrier
+      %8 = arith.cmpi eq, %thread_id_x, %c0 : index
+      scf.if %8 {
+        nvgpu.mbarrier.arrive.expect_tx %7[%c0], %c6144 : <memorySpace = #gpu.address_space<workgroup>>
+        %9 = memref.load %5[%c0, %c0] : memref<64x8xf32, 3>
+        %10 = memref.load %6[%c0, %c0] : memref<8x128xf32, 3>
+        gpu.printf "[GPU] TMA BEFORE lhs[45][7] %f\0A", %9 : f32
+        gpu.printf "[GPU] TMA BEFORE rhs[7][0] %f\0A", %10 : f32
+        nvgpu.tma.async.load %3[%c0, %c0], %7[%c0] to %5 : <tensor = memref<64x8xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>, <memorySpace = #gpu.address_space<workgroup>> -> memref<64x8xf32, 3>
+        nvgpu.tma.async.load %4[%c0, %c0], %7[%c0] to %6 : <tensor = memref<8x128xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>, <memorySpace = #gpu.address_space<workgroup>> -> memref<8x128xf32, 3>
+      } else {
+        nvgpu.mbarrier.arrive.expect_tx %7[%c0], %c0 : <memorySpace = #gpu.address_space<workgroup>>
+      }
+      %false = arith.constant false
+      nvgpu.mbarrier.try_wait.parity %7[%c0], %false, %c10000000 : <memorySpace = #gpu.address_space<workgroup>>
+      scf.if %8 {
+        %9 = memref.load %5[%c45, %c7] : memref<64x8xf32, 3>
+        %10 = memref.load %6[%c7, %c0] : memref<8x128xf32, 3>
+        gpu.printf "[GPU] TMA LOADED lhs[45][7] %f\0A", %9 : f32
+        gpu.printf "[GPU] TMA LOADED rhs[7][0] %f\0A", %10 : f32
+      }
+      gpu.terminator
+    }
+    return
+  }
+}
+

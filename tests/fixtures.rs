@@ -80,9 +80,14 @@ fn custom_form_roundtrips() {
     each_chunk("custom", |src| roundtrip(src, &MlirOpt::new()));
 }
 
+/// A chunk written for `-verify-diagnostics` to reject (`expected-error`) may not read: `mlir-opt`
+/// refuses it too. Every other chunk must round-trip.
 #[test]
 fn upstream_sources_roundtrip() {
-    each_chunk("upstream", |src| roundtrip(src, &MlirOpt::new()));
+    each_chunk("upstream", |src| match roundtrip(src, &MlirOpt::new()) {
+        Err(_) if src.contains("expected-error") => Ok(()),
+        r => r,
+    });
 }
 
 #[test]

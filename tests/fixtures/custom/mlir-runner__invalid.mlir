@@ -1,0 +1,4 @@
+module {
+  llvm.func @main()
+}
+

@@ -815,6 +815,14 @@ impl<'f> Format<'f> {
         after.find(|e| !matches!(e, Elem::AttrDict(_))) == Some(&Elem::Lit(":"))
     }
 
+    /// Does the format have `attr-dict-with-keyword`? Its `attributes` then starts the dictionary
+    /// (`gpu.module @m attributes {..}`), not a value.
+    pub fn keyword_dict(&self) -> bool {
+        let mut flat = Vec::new();
+        Elem::flatten(&self.elems, &mut flat);
+        flat.contains(&&Elem::AttrDict(true))
+    }
+
     /// Is `word` one of the format's literals?
     #[inline]
     pub fn literal(&self, word: &str) -> bool {

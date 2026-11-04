@@ -1304,6 +1304,9 @@ impl Field {
             (Some(Attribute::Int { lit, .. }), Role::Prop { int: Some(ty), .. }) => {
                 Some(Attribute::Int { lit, ty: Some(Type::try_from(ty).map_err(|e| Error(e.msg))?) })
             }
+            (Some(Attribute::Float { lit, .. }), Role::Prop { int: Some(ty), .. }) => {
+                Some(Attribute::Float { lit, ty: Some(Type::try_from(ty).map_err(|e| Error(e.msg))?) })
+            }
             (a, _) => a,
         })
     }
@@ -1531,8 +1534,10 @@ impl Format<'_> {
                             None => {}
                         },
                         Role::Prop { dialect, int, .. } => {
-                            let (_, shape) = v.shown(f)?;
-                            match (shape, v.prop(f)?.as_deref()) {
+                            // Spelled by the format, a default prints too (`nvgpu.rcp`'s
+                            // `{rounding = approx}`): an optional group decides on its own.
+                            let (shown, shape) = v.shown(f)?;
+                            match (shape, shown.as_deref()) {
                                 // A user enum prints its case name.
                                 (Shape::Case(case), _) => p.write_str(case).map_err(io)?,
                                 // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).

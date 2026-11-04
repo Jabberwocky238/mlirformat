@@ -1140,6 +1140,7 @@ pub struct ExpectWithProbabilityOp<'a> {
     pub val: Value<'a>,
     #[slot(res)]
     pub expected: Value<'a>,
+    #[attr(int = "f64")]
     pub prob: Attribute<'a>,
     pub res: Type<'a>,
 }

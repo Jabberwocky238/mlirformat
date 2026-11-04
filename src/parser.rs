@@ -835,6 +835,8 @@ impl<'a, 'd> Parser<'a, 'd> {
                 }
                 b'-' if self.peek_at(1) == Some(b'>') => self.pos += 2,
                 b'<' if self.peek_at(1) == Some(b'=') => self.pos += 2,
+                // A left arrow (`omp.tile (%a, %b) <- (%loop)`), not a bracket: `<-` and a space.
+                b'<' if self.peek_at(1) == Some(b'-') && self.peek_at(2).is_some_and(|c| c.is_ascii_whitespace()) => self.pos += 2,
                 b'<' | b'(' | b'[' | b'{' => {
                     stack.push(closer(c));
                     self.pos += 1;
@@ -882,7 +884,23 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
         match c {
             b'%' => !self.results_ahead(self.src.len() - next.len()),
-            _ => !matches!(c, b'^' | b'}' | b'"' | b'#' | b'!'),
+            // A string starts a generic op only as its name, `"ns.op"(`; else it is an operand of
+            // this one (`llvm.inline_asm asm_dialect = intel` and, on the next line, `"vaddps $0"`).
+            b'"' => {
+                let b = next.as_bytes();
+                let mut i = 1;
+                while i < b.len() && b[i] != b'"' {
+                    i += if b[i] == b'\\' { 2 } else { 1 };
+                }
+                !next.get(i + 1..).is_some_and(|r| r.starts_with('('))
+            }
+            // `#a = ...` / `!t = ...` define an alias; any other attribute or type continues the
+            // op (`spirv.module Logical Vulkan requires` and, next, `#spirv.vce<...>`).
+            b'#' | b'!' => {
+                let name = next[1..].bytes().position(|c| !is_id(c)).map_or(&next[1..], |n| &next[1..1 + n]);
+                !next[1 + name.len()..].trim_start().strip_prefix('=').is_some_and(|r| !r.starts_with('='))
+            }
+            _ => !matches!(c, b'^' | b'}'),
         }
     }
 
@@ -1604,6 +1622,7 @@ impl<'o, 'a> View<'o, 'a> {
         match g.ty {
             FieldType::Attr { .. } => Ok((Some(match (&**a, f.role) {
                 (Attribute::Int { lit, ty }, Role::Prop { int: Some(t), .. }) if let want = Type::try_from(t).ok() && *ty != want => Cow::Owned(Attribute::Int { lit: lit.clone(), ty: want }),
+                (Attribute::Float { lit, ty }, Role::Prop { int: Some(t), .. }) if let want = Type::try_from(t).ok() && *ty != want => Cow::Owned(Attribute::Float { lit: lit.clone(), ty: want }),
                 _ => Cow::Borrowed(&**a),
             }), Shape::Attr)),
             FieldType::Typed(through) => {
@@ -1952,6 +1971,7 @@ impl Format<'_> {
                                         (Some(ty), Attribute::Array(xs)) => Attribute::DenseArray { ty, values: xs.into_iter().map(|x| Str::Owned(format!("{}", x.untyped()))).collect() },
                                         // An integer of a declared width: so is its type.
                                         (_, Attribute::Int { lit, ty: None }) if let Role::Prop { int: Some(t), .. } = f.role => Attribute::Int { lit, ty: Type::try_from(t).ok() },
+                                        (_, Attribute::Float { lit, ty: None }) if let Role::Prop { int: Some(t), .. } = f.role => Attribute::Float { lit, ty: Type::try_from(t).ok() },
                                         (_, a) => a,
                                     };
                                     owned(p, Some(&a))?
@@ -2120,7 +2140,7 @@ impl Format<'_> {
                 // An enum keyword: any word the format does not spell as a literal; or an array
                 // attribute (`($targets^)?` ⇒ `[#nvvm.target]`).
                 Role::Prop { int: None, .. } if p.at(b'[') => true,
-                Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w)),
+                Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w) && !(w == "attributes" && self.keyword_dict())),
                 _ => false,
             },
             _ => false,

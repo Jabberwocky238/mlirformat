@@ -5,7 +5,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-use crate::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parse, Print, Parser, Printer, R, Region, Type, Value, mlir};
+use crate::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parse, Print, Parser, Printer, R, Reborrow, Region, Str, Type, Value, mlir};
 
 #[mlir::op("func.return", format = "attr-dict ($operands^ `:` type($operands))?")]
 pub struct Return<'a> {
@@ -19,6 +19,10 @@ pub struct Call<'a> {
     pub callee: Attribute<'a>,
     #[slot(arg_types)]
     pub operands: Vec<Value<'a>>,
+    pub arg_attrs: Option<Attribute<'a>>,
+    pub res_attrs: Option<Attribute<'a>>,
+    /// Shown in the attribute dictionary (`func.call @f() {no_inline}`).
+    pub no_inline: bool,
     pub arg_types: Vec<Type<'a>>,
     pub results: Vec<Type<'a>>,
 }
@@ -35,6 +39,10 @@ pub struct FuncOp<'a> {
     pub arg_attrs: Option<Attribute<'a>>,
     /// One dictionary per result.
     pub res_attrs: Option<Attribute<'a>>,
+    /// A property, though the custom form lists it among the discardable attributes
+    /// (`func.func @f() attributes {no_inline}`).
+    #[attr]
+    pub no_inline: bool,
     pub body: Region<'a>,
 }
 
@@ -93,7 +101,15 @@ impl Print for FuncOp<'_> {
                 p.write_char(')')?;
             }
         }
-        p.attr_dict("attributes ", &self.attrs, &[])?;
+        // `attributes {..}`: the discardable attributes and `no_inline`, sorted by name.
+        if self.no_inline {
+            let mut attrs = self.attrs.reborrow();
+            attrs.push(NamedAttr { name: Str::Borrowed("no_inline"), value: None });
+            attrs.sort_by(|a, b| a.name.cmp(&b.name));
+            p.attr_dict("attributes ", &attrs, &[])?;
+        } else {
+            p.attr_dict("attributes ", &self.attrs, &[])?;
+        }
         if !self.body.blocks.is_empty() {
             p.write_char(' ')?;
             p.region_in(Some("func"), &self.body, false)?;
@@ -127,7 +143,8 @@ impl Parse for FuncOp<'_> {
         } else {
             vec![(p.ty()?, Vec::new())]
         };
-        let attrs = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
+        let mut attrs = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
+        let no_inline = attrs.iter().position(|a| a.name == "no_inline" && a.value.is_none()).map(|i| attrs.remove(i)).is_some();
         let mut body = if p.at(b'{') { p.region_in(Some("func"))? } else { Region { blocks: Vec::new() } };
         let mut args = Vec::new();
         let (mut inputs, mut arg_dicts) = (Vec::new(), Vec::new());
@@ -147,6 +164,7 @@ impl Parse for FuncOp<'_> {
             sym_visibility,
             arg_attrs: FuncOp::dicts(arg_dicts),
             res_attrs: FuncOp::dicts(res_dicts),
+            no_inline,
             body,
             attrs,
             loc: p.opt_loc()?,

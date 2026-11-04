@@ -578,16 +578,14 @@ include!("linalg_named.gen.rs");
 // ---- 乘加类（ODS：matmul / batch_matmul / batch_reduce_matmul / contract）--------------------
 //
 // 体都是 `out + cast(a) * cast(b)`（`regionBuilder`）；`indexing_maps` 是固有属性，自定义形式里写在最前面：
-// matmul、batch_matmul 不是缺省的才写（`indexing_maps = [..]`），batch_reduce_matmul 不是缺省的才写、
-// ⚠ 且不带 `indexing_maps = [` 前后缀（`BatchReduceMatmulOp::print` 就是这么印的），contract 总写。
+// matmul、batch_matmul、batch_reduce_matmul 不是缺省的才写（`indexing_maps = [..]`，22.1.8 的
+// `BatchReduceMatmulOp::print` 也带前后缀），contract 总写。
 
 /// `indexing_maps` 在自定义形式里怎么写。
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Maps {
     /// 不是缺省的才写 `indexing_maps = [..]`。
     Keyword,
-    /// 不是缺省的才写，逗号隔开、没有前后缀。
-    Bare,
     /// 总写 `indexing_maps = [..]`。
     Always,
 }
@@ -652,10 +650,8 @@ macro_rules! contraction_ops {
                 let Some(maps) = &self.indexing_maps else { return self.print_generic(p) };
                 let shown = Maps::$style == Maps::Always || !Contraction::is_default(p, maps, &[$($map),*]);
                 p.op_name(Self::NAME)?;
-                match (shown, Maps::$style, maps) {
-                    (false, ..) => {}
-                    (true, Maps::Bare, Attribute::Array(xs)) => write!(p, "{}", Sep(xs, ", "))?,
-                    _ => write!(p, " indexing_maps = {maps}")?,
+                if shown {
+                    write!(p, " indexing_maps = {maps}")?;
                 }
                 Named::print(p, &[("cast", self.cast.as_ref())], &self.attrs, (&self.inputs, &self.inputs_ty), (&self.outputs, &self.outputs_ty), &self.result_tensors, &[$($elide),*])?;
                 p.loc(&self.loc)
@@ -689,7 +685,7 @@ macro_rules! contraction_ops {
 contraction_ops! {
     Matmul = "linalg.matmul", Keyword, ["(d0, d1, d2) -> (d0, d2)", "(d0, d1, d2) -> (d2, d1)", "(d0, d1, d2) -> (d0, d1)"], true, ["indexing_maps"];
     BatchMatmul = "linalg.batch_matmul", Keyword, ["(d0, d1, d2, d3) -> (d0, d1, d3)", "(d0, d1, d2, d3) -> (d0, d3, d2)", "(d0, d1, d2, d3) -> (d0, d1, d2)"], true, ["indexing_maps"];
-    BatchReduceMatmul = "linalg.batch_reduce_matmul", Bare, ["(d0, d1, d2, d3) -> (d0, d1, d3)", "(d0, d1, d2, d3) -> (d0, d3, d2)", "(d0, d1, d2, d3) -> (d1, d2)"], false, ["indexing_maps"];
+    BatchReduceMatmul = "linalg.batch_reduce_matmul", Keyword, ["(d0, d1, d2, d3) -> (d0, d1, d3)", "(d0, d1, d2, d3) -> (d0, d3, d2)", "(d0, d1, d2, d3) -> (d1, d2)"], false, ["indexing_maps"];
     Contract = "linalg.contract", Always, [], true, ["indexing_maps"];
 }
 

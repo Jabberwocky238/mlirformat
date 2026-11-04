@@ -543,7 +543,9 @@ impl Records {
         // `I64Attr`, `IndexAttr`: the custom form leaves the integer's type out (`linalg.index 0`,
         // `gpu.lane_id upper_bound 64`).
         if let Some(int) = chain.iter().find_map(|c| Self::int_attr(c)) {
-            return match default.filter(|v| v.parse::<i64>().is_ok()) {
+            // A C++ integer literal: `15`, or `0xf` (`amdgpu.dpp`'s masks).
+            let number = default.and_then(|v| v.parse::<i64>().ok().or_else(|| i64::from_str_radix(v.strip_prefix("0x")?, 16).ok()));
+            return match number {
                 Some(v) => (format!("#[attr({name}, int = \"{int}\", default = \"{v}\")]"), "Option<Attribute<'a>>".into()),
                 None => (format!("#[attr({name}, int = \"{int}\")]"), ty.into()),
             };
@@ -561,8 +563,11 @@ impl Records {
 
     /// `I64Attr` ⇒ `i64`, `IndexAttr` ⇒ `index`: an integer attribute of a fixed type.
     fn int_attr(def: &str) -> Option<String> {
-        if def == "IndexAttr" {
-            return Some("index".into());
+        match def {
+            "IndexAttr" => return Some("index".into()),
+            // `F64Attr`: a float the custom form also prints without its type (`5.000000e-01`).
+            "F16Attr" | "F32Attr" | "F64Attr" => return Some(def[..3].to_lowercase()),
+            _ => {}
         }
         def.strip_prefix('I')?.strip_suffix("Attr")?.parse::<u32>().ok().filter(|w| [1, 8, 16, 32, 64].contains(w)).map(|w| format!("i{w}"))
     }
