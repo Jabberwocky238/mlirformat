@@ -283,7 +283,11 @@ impl<'x> Verifier<'x> {
         } else {
             let a = p.attr().ok()?;
             match &a {
-                Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(&v, &a)),
+                // Its body may nest more (`#dlti.dl_entry<.., #ptr.spec<..>>`).
+                Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(&v, &a)).and_then(|()| match &ext.body {
+                    Some(b) => Verifier::new(opt).raw_text(b.get(1..).unwrap_or("")),
+                    None => Ok(()),
+                }),
                 a => builtin::Builtin.attr(&v, a),
             }
         };
