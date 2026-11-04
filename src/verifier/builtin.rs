@@ -1,7 +1,8 @@
 //! The builtin types and attributes as `mlir-opt` reads them (`AsmParser`): affine maps and
 //! sets, hex `dense` data, vector element types.
 
-use alloc::string::ToString;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 use super::{DialectRules, Invalid, Verifier};
 use crate::affine_expr::{Map, Set};
@@ -48,6 +49,38 @@ impl Keyword {
                 _ => Ok(()),
             },
         }
+    }
+}
+
+impl Builtin {
+    /// The same type, as MLIR compares the types it built: text kept in a body may be spaced
+    /// otherwise (`strided<[?,?]>`), and a memref's default spellings mean nothing
+    /// (`MemRefType::get` drops a `0` memory space, an identity map and an `offset: 0`; `1 : i64`
+    /// is `1`).
+    pub(super) fn same(a: &Type<'_>, b: &Type<'_>) -> bool {
+        a == b || Self::canonical(a) == Self::canonical(b)
+    }
+
+    /// The text two equal types share.
+    fn canonical(t: &Type<'_>) -> String {
+        let text = match t {
+            Type::Shaped(s) if s.kind == ShapedKind::MemRef => {
+                // An identity map layout is no layout either.
+                let identity = |a: &Attribute<'_>| AffineMap::try_from(a).is_ok_and(|m| m.syms == 0 && m.is_identity());
+                let mut extras: Vec<String> = s.extras.iter().filter(|a| !identity(a)).map(|a| match a {
+                    Attribute::Int { lit, ty: None | Some(Type::Integer { width: 64, .. }) } => lit.to_string(),
+                    a => a.to_string(),
+                }).collect();
+                if extras.last().is_some_and(|m| m == "0") {
+                    extras.pop();
+                }
+                let shaped = Type::Shaped(crate::Shaped { extras: Vec::new(), ..s.clone() }).to_string();
+                let head = shaped.strip_suffix('>').unwrap_or(&shaped);
+                alloc::format!("{head}{}>", extras.iter().map(|e| alloc::format!(",{e}")).collect::<String>())
+            }
+            t => t.to_string(),
+        };
+        text.chars().filter(|c| !c.is_whitespace()).collect::<String>().replace(",offset:0>", ">")
     }
 }
 

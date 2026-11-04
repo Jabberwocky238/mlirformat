@@ -64,6 +64,9 @@ pub enum Invalid {
     /// `%x` used where no `%x` is in scope.
     #[error("use of undeclared SSA value name `%{0}`")]
     UndeclaredValue(String),
+    /// `%x` used as another type than it has, or than other uses gave it.
+    #[error("use of value `%{0}` expects different type than prior uses: `{1}`")]
+    ValueType(String, String),
     /// `%x` defined where a `%x` is already in scope.
     #[error("redefinition of SSA value `%{0}`")]
     RedefinedValue(String),
@@ -84,14 +87,16 @@ pub struct Verifier<'x> {
     type_aliases: Vec<&'x str>,
     loc_aliases: Vec<&'x str>,
     /// The values each enclosing region has defined so far, innermost last (MLIR's
-    /// `definitionsPerScope`): a region's go out of scope at its end.
-    scopes: Vec<Vec<&'x str>>,
+    /// `definitionsPerScope`): a region's go out of scope at its end. Each name with the types
+    /// of its values (`%0:2` two), where known.
+    scopes: Vec<Vec<(&'x str, Vec<Option<&'x Type<'x>>>)>>,
     /// Where the innermost isolated-from-above op's regions start in `scopes`: nothing below is
     /// visible.
     floor: usize,
-    /// Names used before any definition, per isolated scope (`forwardRefPlaceholders`): a later
-    /// definition anywhere in that scope resolves one; one left at its end is undeclared.
-    forward: Vec<Vec<&'x str>>,
+    /// Names used before any definition, per isolated scope (`forwardRefPlaceholders`), with the
+    /// types their uses gave (by result number): a later definition anywhere in that scope
+    /// resolves one; one left at its end is undeclared.
+    forward: Vec<Vec<(&'x str, Vec<(u32, &'x Type<'x>)>)>>,
     /// Inside a raw op's regions: their entry arguments are in its unread header, so a use there
     /// is not judged.
     opaque: usize,
@@ -103,41 +108,73 @@ impl<'x> Verifier<'x> {
         Self { opt, attr_aliases: Vec::new(), type_aliases: Vec::new(), loc_aliases: Vec::new(), scopes: alloc::vec![Vec::new()], floor: 0, forward: alloc::vec![Vec::new()], opaque: 0 }
     }
 
-    /// Is `%name` defined and visible here?
+    /// The types of `%name` if it is defined and visible here.
     #[inline]
-    fn visible(&self, name: &str) -> bool {
-        self.scopes[self.floor..].iter().any(|s| s.contains(&name))
+    fn visible(&self, name: &str) -> Option<&[Option<&'x Type<'x>>]> {
+        self.scopes[self.floor..].iter().rev().find_map(|s| s.iter().find(|(n, _)| *n == name)).map(|(_, t)| t.as_slice())
     }
 
-    /// `%name` defined here (`defineSSAValue`): not over one in scope; it resolves a forward use.
-    fn define(&mut self, name: &'x str) -> Result<(), Invalid> {
-        if self.visible(name) {
+    /// The same type, as MLIR compares them ([`builtin::Builtin::same`]).
+    #[inline]
+    fn same(a: &Type<'_>, b: &Type<'_>) -> bool {
+        builtin::Builtin::same(a, b)
+    }
+
+    /// `%name` defined here with its values' types (`defineSSAValue`): not over one in scope;
+    /// it resolves a forward use, which must have used these types.
+    fn define(&mut self, name: &'x str, tys: Vec<Option<&'x Type<'x>>>) -> Result<(), Invalid> {
+        if self.visible(name).is_some() {
             return Err(Invalid::RedefinedValue(name.into()));
         }
-        if let Some(f) = self.forward.last_mut() {
-            f.retain(|n| *n != name);
+        if let Some(f) = self.forward.last_mut()
+            && let Some(i) = f.iter().position(|(n, _)| *n == name)
+        {
+            let (_, used) = f.remove(i);
+            if let Some((_, t)) = used.iter().find(|(k, t)| tys.get(*k as usize).copied().flatten().is_some_and(|d| !Self::same(d, t))) {
+                return Err(Invalid::ValueType(name.into(), t.to_string()));
+            }
         }
         if let Some(s) = self.scopes.last_mut() {
-            s.push(name);
+            s.push((name, tys));
         }
         Ok(())
     }
 
-    /// `%name` used here (`resolveSSAUse`): defined, or a forward use to be defined later.
-    fn use_value(&mut self, name: &'x str) {
-        if self.opaque == 0
-            && !self.visible(name)
-            && let Some(f) = self.forward.last_mut()
-            && !f.contains(&name)
-        {
-            f.push(name);
+    /// `%name#k` used here as `ty` (`resolveSSAUse`): defined with that type, or a forward use
+    /// to be defined later, every use of it with one type.
+    fn use_value(&mut self, value: &'x crate::Value<'x>, ty: Option<&'x Type<'x>>) -> Result<(), Invalid> {
+        if self.opaque > 0 {
+            return Ok(());
         }
+        let k = value.index.unwrap_or(0);
+        if let Some(tys) = self.visible(&value.name) {
+            return match (tys.get(k as usize).copied().flatten(), ty) {
+                (Some(d), Some(t)) if !Self::same(d, t) => Err(Invalid::ValueType(value.name.to_string(), t.to_string())),
+                _ => Ok(()),
+            };
+        }
+        let Some(f) = self.forward.last_mut() else { return Ok(()) };
+        let used = match f.iter_mut().find(|(n, _)| *n == &*value.name) {
+            Some((_, used)) => used,
+            None => {
+                f.push((&value.name, Vec::new()));
+                &mut f.last_mut().expect("just pushed").1
+            }
+        };
+        if let Some(t) = ty {
+            match used.iter().find(|(i, _)| *i == k) {
+                Some((_, u)) if !Self::same(u, t) => return Err(Invalid::ValueType(value.name.to_string(), t.to_string())),
+                Some(_) => {}
+                None => used.push((k, t)),
+            }
+        }
+        Ok(())
     }
 
     /// The end of an isolated scope (the module, an isolated op): no forward use left.
     fn close(&mut self) -> Result<(), Invalid> {
-        match self.forward.last_mut().and_then(|f| f.first().copied()) {
-            Some(name) => Err(Invalid::UndeclaredValue(name.into())),
+        match self.forward.last_mut().and_then(|f| f.first()) {
+            Some((name, _)) => Err(Invalid::UndeclaredValue((*name).into())),
             None => Ok(()),
         }
     }
@@ -251,7 +288,11 @@ impl<'x> Verify<'x> for Operation<'x> {
             return Err(Invalid::CustomForm(self.name.to_string()));
         }
         v.loc(&self.loc)?;
-        self.operands.iter().for_each(|u| v.use_value(&u.name));
+        // An operand's type, when the op says one per operand.
+        let typed = self.ty.inputs.len() == self.operands.len();
+        for (i, u) in self.operands.iter().enumerate() {
+            v.use_value(u, typed.then(|| &self.ty.inputs[i]))?;
+        }
         self.properties.verify(v)?;
         self.attributes.verify(v)?;
         self.ty.verify(v)?;
@@ -259,8 +300,11 @@ impl<'x> Verify<'x> for Operation<'x> {
         let raw = self.raw.iter().flatten().filter_map(|p| if let crate::Piece::Region(r) = p { Some(r) } else { None });
         v.regions(self.regions.iter(), isolated, false)?;
         v.regions(raw, isolated, true)?;
-        // Results are defined once the whole op is read.
-        self.results.iter().try_for_each(|d| v.define(&d.name))
+        // Results are defined once the whole op is read, `%0:2` two of them; typed when the op
+        // gives every result one.
+        let counts: usize = self.results.iter().map(|d| d.count.unwrap_or(1) as usize).sum();
+        let mut tys = self.ty.results.iter().map(Some).chain(core::iter::repeat(None)).map(|t| t.filter(|_| counts == self.ty.results.len()));
+        self.results.iter().try_for_each(|d| v.define(&d.name, tys.by_ref().take(d.count.unwrap_or(1) as usize).collect()))
     }
 }
 
@@ -275,7 +319,7 @@ impl<'x> Verify<'x> for Block<'x> {
     #[inline]
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
         self.args.verify(v)?;
-        self.args.iter().try_for_each(|a| v.define(&a.name))?;
+        self.args.iter().try_for_each(|a| v.define(&a.name, alloc::vec![Some(&a.ty)]))?;
         self.ops.verify(v)
     }
 }
