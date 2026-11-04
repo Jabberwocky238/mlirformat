@@ -342,15 +342,26 @@ impl<'a> TryFrom<&'a str> for Set<'a> {
         let mut c = Cur::new(body);
         let (dims, syms) = c.header()?;
         c.expect(":")?;
+        // `lhs >= rhs`, `lhs <= rhs`, `lhs == rhs`, kept as `e >= 0` / `e == 0` as MLIR keeps it:
+        // `lhs - rhs`, `rhs - lhs` for `<=`; a `0` right side leaves `lhs` as written.
         let constraints = c.list(|c| {
-            let e = c.expr()?;
-            let cmp = if c.eat(">=") {
-                Cmp::Ge
+            let lhs = c.expr()?;
+            let (cmp, flip) = if c.eat(">=") {
+                (Cmp::Ge, false)
+            } else if c.eat("<=") {
+                (Cmp::Ge, true)
+            } else if c.eat("==") {
+                (Cmp::Eq, false)
             } else {
-                c.expect("==")?;
-                Cmp::Eq
+                return Err(Error(alloc::format!("affine: expected `== affine-expr` or `>= affine-expr` at end of affine constraint, at `{}`", c.rest())));
             };
-            c.expect("0")?;
+            let rhs = c.expr()?;
+            let e = match (flip, rhs) {
+                (false, Expr::Const(0)) => lhs,
+                (true, Expr::Const(0)) => Expr::Neg(Box::new(lhs)),
+                (false, rhs) => Expr::Bin(Op::Sub, Box::new(lhs), Box::new(rhs)),
+                (true, rhs) => Expr::Bin(Op::Sub, Box::new(rhs), Box::new(lhs)),
+            };
             Ok((e, cmp))
         })?;
         c.done()?;

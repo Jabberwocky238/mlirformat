@@ -119,9 +119,15 @@ impl TryFrom<&str> for Rejected {
 /// diagnostics of a pass). What it rejects is `upstream_rejections_match_mlir_opt`'s.
 #[test]
 fn upstream_sources_roundtrip() {
+    let opt = MlirOpt::upstream();
     each_chunk_at("upstream", |path, i, src| match rejected(path, i) {
         Some(_) => Ok(()),
-        None => roundtrip(src, &MlirOpt::new()),
+        None => {
+            roundtrip(src, &MlirOpt::new())?;
+            // Nor does the verifier refuse what `mlir-opt` reads.
+            let m = opt.parse(src).map_err(|e| e.to_string())?;
+            opt.verify(&m).map_err(|e| format!("mlir-opt reads it, verify refuses: {e}"))
+        }
     });
 }
 
@@ -134,10 +140,11 @@ fn upstream_rejections_match_mlir_opt() {
     each_chunk_at("upstream", |path, i, src| match rejected(path, i) {
         Some(Rejected::Parse) => match opt.parse(src) {
             Err(_) => Ok(()),
+            Ok(m) if opt.verify(&m).is_err() => Ok(()),
             Ok(_) => Err("mlir-opt does not read it, this crate does".into()),
         },
         Some(Rejected::Verify) => {
-            if opt.parse(src).is_ok() {
+            if opt.parse(src).is_ok_and(|m| opt.verify(&m).is_ok()) {
                 accepted_invalid.fetch_add(1, Ordering::Relaxed);
             }
             Ok(())

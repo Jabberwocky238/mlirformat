@@ -6,8 +6,9 @@
 //! * A typed op is a struct with `#[mlir::op]`: serde turns it into / out of an [`Operation`],
 //!   its assembly format gives the custom form.
 //!
-//! Layout: `common` (what an IR is), `parser` (text → IR), `generator` (IR → text), `mliropt`
-//! (the converter, re-exporting everything public), `dialects` (upstream dialects).
+//! Layout: `common` (what an IR is), `parser` (text → IR), `generator` (IR → text), `verifier`
+//! (what `mlir-opt` would refuse to read), `mliropt` (the converter, re-exporting everything
+//! public), `dialects` (upstream dialects).
 //!
 //! `no_std` compatible (needs `alloc`).
 
@@ -65,12 +66,15 @@ pub mod syntax;
 mod traits;
 /// What attribute and type text means as values.
 mod values;
+/// What `mlir-opt` rejects while reading, checked on the IR read ([`Verify`]).
+mod verifier;
 
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
 pub use traits::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos, Trait};
 pub use values::*;
+pub use verifier::{Invalid, Verifier, Verify};
 
 #[doc(hidden)]
 pub use {alloc::vec as __vec, alloc::vec::Vec as __Vec, serde as __serde};
