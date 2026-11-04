@@ -1643,7 +1643,7 @@ pub(crate) enum Shape {
 /// typed op would check it — an op that does not fit has no view (and stays generic).
 pub(crate) struct View<'o, 'a> {
     /// `(field, its Rust type, what it holds)`; an absent property has no entry.
-    pub(crate) slots: Vec<(Field, Slot<'o, 'a>)>,
+    pub(crate) slots: Vec<(&'static Field, Slot<'o, 'a>)>,
 }
 
 impl<'o, 'a> View<'o, 'a> {
@@ -1773,7 +1773,7 @@ impl<'a> Operation<'a> {
             Some(Attribute::Dict(ps)) => ps.iter().collect(),
             Some(other) => return Err(format!("properties must be a dictionary, found `{other}`").into()),
         };
-        let groups: Vec<&Field> = schema.of_role(|r| matches!(r, Role::Operand { .. })).collect();
+        let groups: Vec<&'static Field> = schema.of_role(|r| matches!(r, Role::Operand { .. })).collect();
         let sizes: Vec<usize> = match props.iter().position(|p| p.name == SEGMENTS) {
             Some(i) => match &props.remove(i).value {
                 Some(Attribute::DenseArray { values, .. }) => values.iter().map(|v| v.parse().map_err(|_| Error("bad segment size".into()))).collect::<Result<_, _>>()?,
@@ -1792,7 +1792,7 @@ impl<'a> Operation<'a> {
         if sizes.len() != groups.len() || sizes.iter().sum::<usize>() != self.operands.len() || self.ty.inputs.len() != self.operands.len() {
             return Err("operands do not match the op's operand groups".into());
         }
-        let mut slots: Vec<(Field, Slot<'o, 'a>)> = Vec::with_capacity(schema.fields.len());
+        let mut slots: Vec<(&'static Field, Slot<'o, 'a>)> = Vec::with_capacity(schema.fields.len());
         // Each type variable's types, borrowed from the operands' and results' types.
         let mut bound: Vec<(&'static str, &'o [Type<'a>])> = Vec::new();
         let mut bind = |name: &'static str, ts: &'o [Type<'a>]| -> Result<(), Error> {
@@ -1810,7 +1810,7 @@ impl<'a> Operation<'a> {
             if !f.variadic && n != 1 {
                 return Err(format!("`{}` takes exactly one operand", f.name).into());
             }
-            slots.push((**f, Slot::Values(ops)));
+            slots.push((*f, Slot::Values(ops)));
             let var = schema.field(ty).ok_or_else(|| Error(format!("no type variable `{ty}`")))?;
             if var.variadic {
                 bind(var.name, tys)?;
@@ -1842,7 +1842,7 @@ impl<'a> Operation<'a> {
                 None if let Role::Type { infer: Some(Infer::Is(ty)), .. } = f.role => Cow::Owned(vec![Type::try_from(ty).map_err(|e| Error(e.msg))?.owned()]),
                 _ => return Err(format!("type variable `{}` is not determined", f.name).into()),
             };
-            slots.push((*f, Slot::Types(ts)));
+            slots.push((f, Slot::Types(ts)));
         }
         for f in schema.of_role(|r| matches!(r, Role::Prop { .. })) {
             let ty = f.ty;
@@ -1851,7 +1851,7 @@ impl<'a> Operation<'a> {
                 None => f.default_attr().map(Cow::Owned),
             };
             match (a, ty) {
-                (Some(a), _) => slots.push((*f, Slot::Prop(a))),
+                (Some(a), _) => slots.push((f, Slot::Prop(a))),
                 // Absent: fine for an `Option` (and a unit attribute's `bool`), not for a
                 // required field.
                 (None, FieldType::Attr { required: true }) => return Err(format!("`{}` needs `{}`", schema.name, f.name).into()),
@@ -1869,7 +1869,7 @@ impl<'a> Operation<'a> {
             let n = if f.variadic { self.regions.len().saturating_sub(at) } else { 1 };
             let rs = self.regions.get(at..at + n).ok_or_else(|| Error("too few regions".into()))?;
             at += n;
-            slots.push((*f, Slot::Regions(rs)));
+            slots.push((f, Slot::Regions(rs)));
         }
         if at < self.regions.len() {
             return Err("too many regions".into());
@@ -1884,15 +1884,15 @@ impl<'a> Operation<'a> {
             let n = if f.variadic { rest } else { 1 };
             let ss = self.successors.get(at..at + n).ok_or_else(|| Error("too few successors".into()))?;
             at += n;
-            slots.push((*f, Slot::Successors(ss)));
+            slots.push((f, Slot::Successors(ss)));
         }
         match schema.of_role(|r| *r == Role::Attrs).next() {
-            Some(f) => slots.push((*f, Slot::Attrs(&self.attributes))),
+            Some(f) => slots.push((f, Slot::Attrs(&self.attributes))),
             None if !self.attributes.is_empty() => return Err("discardable attributes on an op without an attribute dictionary".into()),
             None => {}
         }
         if let Some(f) = schema.of_role(|r| *r == Role::Loc).next() {
-            slots.push((*f, Slot::Loc(self.loc.as_ref())));
+            slots.push((f, Slot::Loc(self.loc.as_ref())));
         }
         Ok(View { slots })
     }

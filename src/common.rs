@@ -623,7 +623,7 @@ impl Schema {
     }
 
     #[inline]
-    pub fn of_role(&self, pick: impl Fn(&Role) -> bool) -> impl Iterator<Item = &Field> {
+    pub fn of_role<P: Fn(&Role) -> bool>(&self, pick: P) -> impl Iterator<Item = &'static Field> + use<P> {
         self.fields.iter().filter(move |f| pick(&f.role))
     }
 
