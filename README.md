@@ -138,6 +138,9 @@ from llvm-project's ODS by `scripts/traits.py`:
 python3 scripts/traits.py --llvm $LLVM --mlirformat target/release/mlirformat -I $LLVM_BUILD/tools/mlir/include
 ```
 
+The same run writes `src/verifier/ods.gen.rs`: each op's inherent attributes with their ODS
+constraints, which `MlirOpt::verify` checks as `verifyInherentAttrs` does.
+
 ## Value layer
 
 Attributes and types keep their text (`Attribute::Builtin { name, body }`, a dialect type's

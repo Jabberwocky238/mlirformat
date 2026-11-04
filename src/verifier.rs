@@ -15,6 +15,8 @@ use alloc::vec::Vec;
 
 /// The builtin types and attributes.
 mod builtin;
+/// ODS constraints of inherent attributes.
+mod ods;
 /// `quant` types.
 mod quant;
 /// SPIR-V types.
@@ -70,6 +72,9 @@ pub enum Invalid {
     /// A dialect attribute its dialect would not read or verify (`#xegpu.layout<sg_data = [8]>`).
     #[error("invalid attribute `{attr}`: {why}")]
     DialectAttr { attr: String, why: String },
+    /// An inherent attribute its ODS constraint refuses (`function_type = i64` on `llvm.func`).
+    #[error("`{op}`: attribute `{attr}` fails its ODS constraint")]
+    AttrConstraint { op: String, attr: String },
     /// `%x` used where no `%x` is in scope.
     #[error("use of undeclared SSA value name `%{0}`")]
     UndeclaredValue(String),
@@ -353,6 +358,18 @@ impl<'x> Verify<'x> for Operation<'x> {
         let typed = self.ty.inputs.len() == self.operands.len();
         for (i, u) in self.operands.iter().enumerate() {
             v.use_value(u, typed.then(|| &self.ty.inputs[i]))?;
+        }
+        // Each inherent attribute present, against its ODS constraint (`verifyInherentAttrs`).
+        let props = match &self.properties {
+            Some(Attribute::Dict(xs)) => xs.as_slice(),
+            _ => &[],
+        };
+        for (name, c) in ods::C::of_op(&self.name) {
+            if let Some(a) = props.iter().chain(&self.attributes).find(|a| a.name == *name)
+                && !c.admits(a.value.as_ref())
+            {
+                return Err(Invalid::AttrConstraint { op: self.name.to_string(), attr: (*name).into() });
+            }
         }
         self.properties.verify(v)?;
         self.attributes.verify(v)?;

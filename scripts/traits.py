@@ -137,6 +137,102 @@ class Records:
                 out.append(name)
         return out
 
+    # ---- ODS attribute constraints, for src/verifier/ods.gen.rs -------------------------
+    #
+    # A constraint's template arguments are resolved away in the records; its `summary`, which
+    # ODS writes from them in a fixed shape, says what they were. Read here into a Rust
+    # expression of `verifier::ods::C`; one it does not know is left out (not checked).
+
+    def attr_rec(self, arg):
+        rec = self.d.get(arg["def"]) if isinstance(arg, dict) else None
+        if rec and "Arg" in rec["!superclasses"] and isinstance(rec.get("constraint"), dict):
+            rec = self.d.get(rec["constraint"]["def"])
+        return rec
+
+    def constraint(self, rec):
+        """`C::...` for an attribute constraint record, or None."""
+        import re
+        sup = rec["!superclasses"]
+        # `AnyAttrOf<[A, B]>`: one of them.
+        if "AnyAttrOf" in sup:
+            parts = [self.constraint(self.d[a["def"]]) for a in rec.get("allowedAttributes") or []]
+            return None if not parts or None in parts else "C::AnyOf(&[" + ", ".join(parts) + "])"
+        # An `I32EnumAttr` / `I64EnumAttr`: an integer of one of its case values.
+        if "IntEnumAttr" in sup and "BitEnumAttr" not in sup:
+            width = rec.get("width") or (32 if "I32EnumAttr" in sup else 64 if "I64EnumAttr" in sup else None)
+            vals = [self.d[c["def"]].get("value") for c in rec.get("enumerants") or []]
+            if width and all(isinstance(v, int) for v in vals):
+                return f"C::Int {{ width: {width}, sign: Sign::Signless, min: None, cases: Some(&[{', '.join(str(v) for v in vals)}]) }}"
+            return None
+        summary = (rec.get("summary") or "").strip()
+        c = self.summary(summary)
+        if c is None and isinstance(rec.get("baseAttr"), dict) and not ("ConfinedAttr" in sup):
+            return self.constraint(self.d[rec["baseAttr"]["def"]])
+        return c
+
+    def summary(self, s):
+        import re
+        sign = {"signless ": "Signless", "signed ": "Signed", "unsigned ": "Unsigned", "": "Any"}
+        # `... whose value is non-negative` / `positive` (ConfinedAttr on an integer).
+        min_ = "None"
+        for tail, v in ((" whose value is non-negative", "Some(0)"), (" whose value is positive", "Some(1)")):
+            if s.endswith(tail):
+                s, min_ = s[: -len(tail)], v
+        m = re.fullmatch(r"(\d+)-bit (signless |signed |unsigned |)integer attribute", s)
+        if m:
+            return f"C::Int {{ width: {m[1]}, sign: Sign::{sign[m[2]]}, min: {min_}, cases: None }}"
+        if min_ != "None" and (m := re.fullmatch(r"i(\d+) dense array attribute", s)):
+            return f"C::DenseArray {{ elem: Elem::Int({m[1]}), order: None, min: {min_} }}"
+        if min_ != "None":
+            return None
+        m = re.fullmatch(r"i(\d+) dense array attribute should be in (increasing|non-decreasing) order", s)
+        if m:
+            order = "Order::Increasing" if m[2] == "increasing" else "Order::NonDecreasing"
+            return f"C::DenseArray {{ elem: Elem::Int({m[1]}), order: Some({order}), min: None }}"
+        m = re.fullmatch(r"(i|f)(\d+) dense array attribute", s)
+        if m:
+            return f"C::DenseArray {{ elem: Elem::{'Int' if m[1] == 'i' else 'Float'}({m[2]}), order: None, min: None }}"
+        if s == "index attribute":
+            return "C::Index"
+        m = re.fullmatch(r"(\d+)-bit float attribute", s)
+        if m:
+            return f"C::Float({m[1]})"
+        simple = {"bool attribute": "C::Bool", "string attribute": "C::Str", "unit attribute": "C::Unit",
+                  "any type attribute": "C::Type(None)", "type array attribute": "C::TypeArray",
+                  "flat symbol reference attribute": "C::FlatSymbolRef", "symbol reference attribute": "C::SymbolRef",
+                  "type attribute of LLVM function type": "C::Type(Some(TypeOf::LlvmFunction))",
+                  "type attribute of function type": "C::Type(Some(TypeOf::Function))"}
+        if s in simple:
+            return simple[s]
+        # Elements attributes, maybe of a shape.
+        shape = "None"
+        m = re.fullmatch(r"(.*) of shape \[([\d, ]*)\]", s)
+        if m:
+            s, shape = m[1], "Some(&[" + m[2] + "])"
+        m = re.fullmatch(r"(\d+)-bit (signless |)(?:integer|int) elements attribute", s)
+        if m:
+            return f"C::Elements {{ elem: Elem::{'Int' if m[2] else 'AnyInt'}({m[1]}), shape: {shape} }}"
+        m = re.fullmatch(r"(\d+)-bit integer elements attribute", s)
+        if m:
+            return f"C::Elements {{ elem: Elem::AnyInt({m[1]}), shape: {shape} }}"
+        m = re.fullmatch(r"(\d+)-bit float elements attribute", s)
+        if m:
+            return f"C::Elements {{ elem: Elem::Float({m[1]}), shape: {shape} }}"
+        if s == "index elements attribute":
+            return f"C::Elements {{ elem: Elem::Index, shape: {shape} }}"
+        return None
+
+    def constraints(self, dag):
+        """(name, constraint) of each inherent attribute whose constraint is known."""
+        out = []
+        for arg, name in (dag or {}).get("args", []):
+            rec = self.attr_rec(arg)
+            if rec and "TypeConstraint" not in rec["!superclasses"] and ("Attr" in rec["!superclasses"] or "AttrConstraint" in rec["!superclasses"]):
+                c = self.constraint(rec)
+                if c:
+                    out.append((name, c))
+        return out
+
     def ops(self):
         for name in self.d["!instanceof"].get("Op", []):
             rec = self.d[name]
@@ -153,7 +249,7 @@ class Records:
                 eff = "custom"
             else:
                 eff = None
-            yield f"{dialect}.{rec['opName']}", traits, eff, self.inherent(rec.get("arguments"))
+            yield f"{dialect}.{rec['opName']}", traits, eff, self.inherent(rec.get("arguments")), self.constraints(rec.get("arguments"))
 
 
 def main():
@@ -162,15 +258,18 @@ def main():
     ap.add_argument("--mlirformat", required=True)
     ap.add_argument("-I", dest="extra", action="append", default=[], help="more include dirs: a build's tools/mlir/include holds Linalg's yamlgen.td, tools/mlir/test/lib/Dialect/Test the test dialect's")
     ap.add_argument("-o", default=str(Path(__file__).resolve().parent.parent / "src" / "traits.gen.rs"))
+    ap.add_argument("--ods", default=str(Path(__file__).resolve().parent.parent / "src" / "verifier" / "ods.gen.rs"), help="where the inherent attributes' constraints go")
     opts = ap.parse_args()
     mlir = Path(opts.llvm) / "mlir"
 
     with ThreadPoolExecutor() as pool:
         dumps = list(pool.map(lambda td: dump(opts.mlirformat, mlir, opts.extra, td), TDS))
-    ops = {}
+    ops, constraints = {}, {}
     for d in dumps:
-        for name, traits, effects, inherent in Records(d).ops():
+        for name, traits, effects, inherent, cons in Records(d).ops():
             ops[name] = (traits, effects, inherent)
+            if cons:
+                constraints[name] = cons
 
     names = sorted({t for traits, _, _ in ops.values() for t in traits})
     lines = [
@@ -202,7 +301,20 @@ def main():
         lines.append(f"        self.insert(OpInfo {{ name: \"{name}\", traits: &[{ts}], effects: {eff}, inherent: &[{attrs}] }});")
     lines += ["    }", "}"]
     Path(opts.o).write_text("\n".join(lines) + "\n")
-    print(f"{len(ops)} ops, {len(names)} traits and interfaces")
+    ods = [
+        "//! Generated by `scripts/traits.py` from llvm-project `llvmorg-22.1.8` ODS; do not edit.",
+        "//! Each op's inherent attributes with their ODS constraints, sorted by op name.",
+        "",
+        "use super::{Elem, Order, Sign, TypeOf, C};",
+        "",
+        "pub(super) const OPS: &[(&str, &[(&str, C)])] = &[",
+    ]
+    for name in sorted(constraints):
+        items = ", ".join(f'("{a}", {c})' for a, c in constraints[name])
+        ods.append(f'    ("{name}", &[{items}]),')
+    ods.append("];")
+    Path(opts.ods).write_text("\n".join(ods) + "\n")
+    print(f"{len(ops)} ops, {len(names)} traits and interfaces, {len(constraints)} ops with checked attributes")
 
 
 if __name__ == "__main__":
