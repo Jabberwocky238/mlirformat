@@ -216,6 +216,51 @@ impl<'x> Verifier<'x> {
         r
     }
 
+    /// The dialect types (`!ns.x<..>`) and attributes (`#ns.x<..>`) written in a raw op's text,
+    /// each read and checked as if it stood in a structured op.
+    fn raw_text(&mut self, text: &str) -> Result<(), Invalid> {
+        let bytes = text.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            let sigil = bytes[i];
+            // A dialect name: `ns.mnemonic` right after the sigil.
+            let name = text[i + 1..].bytes().take_while(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'.')).count();
+            if matches!(sigil, b'!' | b'#') && text[i + 1..i + 1 + name].contains('.') {
+                let rest = &text[i..];
+                let opt = self.opt;
+                let read = crate::Parser::new(rest, opt);
+                let r = Self::check_raw(read, sigil == b'!', opt);
+                if let Some((len, r)) = r {
+                    r?;
+                    i += len.max(1);
+                    continue;
+                }
+            }
+            i += 1;
+        }
+        Ok(())
+    }
+
+    /// One type (`ty`) or attribute at the start of `p`'s text, checked by its dialect's rules:
+    /// how long it is, and the verdict; `None` when it does not read (left to the op's own reader).
+    fn check_raw(mut p: crate::Parser<'_, '_>, ty: bool, opt: &MlirOpt) -> Option<(usize, Result<(), Invalid>)> {
+        let v = Verifier::new(opt);
+        let r = if ty {
+            let t = p.ty().ok()?;
+            match &t {
+                Type::Extended(e) => rules(&e.name).map_or(Ok(()), |d| d.ty(&v, &t)),
+                _ => Ok(()),
+            }
+        } else {
+            let a = p.attr().ok()?;
+            match &a {
+                Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(&v, &a)),
+                _ => Ok(()),
+            }
+        };
+        Some((p.pos(), r))
+    }
+
     /// The text inside a `loc(..)`: not empty; an alias is resolved once the module is read.
     fn loc(&mut self, loc: &'x Option<crate::Str<'x>>) -> Result<(), Invalid> {
         match loc.as_deref().map(str::trim) {
@@ -312,6 +357,11 @@ impl<'x> Verify<'x> for Operation<'x> {
         self.properties.verify(v)?;
         self.attributes.verify(v)?;
         self.ty.verify(v)?;
+        // A raw custom form still spells types and attributes: each dialect one in its text is
+        // read and checked.
+        for t in self.raw.iter().flatten().filter_map(|p| if let crate::Piece::Text(t) = p { Some(t) } else { None }) {
+            v.raw_text(t)?;
+        }
         let isolated = v.opt.op_info(&self.name).is_some_and(|i| i.has(crate::Trait::IsIsolatedFromAbove));
         let raw = self.raw.iter().flatten().filter_map(|p| if let crate::Piece::Region(r) = p { Some(r) } else { None });
         v.regions(self.regions.iter(), isolated, false)?;
