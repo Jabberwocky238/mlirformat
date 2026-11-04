@@ -35,6 +35,8 @@ struct Loaded {
 pub struct MlirOpt {
     dialects: BTreeMap<&'static str, Loaded>,
     ops: BTreeMap<&'static str, Template>,
+    /// The ops' tokenized ODS formats ([`Template::format`]), by op name.
+    formats: BTreeMap<&'static str, Arc<Format<'static>>>,
     /// What ODS says about each op, for whoever works on the IR.
     infos: crate::OpInfos,
 }
@@ -81,7 +83,7 @@ impl MlirOpt {
     /// No dialects: every op stays generic or raw.
     #[inline]
     pub const fn new() -> Self {
-        Self { dialects: BTreeMap::new(), ops: BTreeMap::new(), infos: crate::OpInfos::new() }
+        Self { dialects: BTreeMap::new(), ops: BTreeMap::new(), formats: BTreeMap::new(), infos: crate::OpInfos::new() }
     }
 
     /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
@@ -154,7 +156,9 @@ impl MlirOpt {
         self.unregister(ns);
         let templates = dialect.ops();
         let ops = templates.iter().map(|t| t.name).collect();
-        self.ops.extend(templates.into_iter().map(|t| (t.name, t)));
+        for t in templates {
+            self.inject(t);
+        }
         for info in dialect.op_infos() {
             self.infos.insert(info);
         }
@@ -168,12 +172,17 @@ impl MlirOpt {
     pub fn unregister(&mut self, ns: &str) -> bool {
         let Some(loaded) = self.dialects.remove(ns) else { return false };
         self.ops.retain(|name, _| !loaded.ops.contains(name));
+        self.formats.retain(|name, _| !loaded.ops.contains(name));
         true
     }
 
     /// Injects one op's template into the op table.
     #[inline]
     pub fn inject(&mut self, t: Template) -> &mut Self {
+        match (t.format)() {
+            Some(f) => self.formats.insert(t.name, Arc::new(f)),
+            None => self.formats.remove(t.name),
+        };
         self.ops.insert(t.name, t);
         self
     }
@@ -181,7 +190,14 @@ impl MlirOpt {
     /// Removes an op from the op table.
     #[inline]
     pub fn eject(&mut self, name: &str) -> Option<Template> {
+        self.formats.remove(name);
         self.ops.remove(name)
+    }
+
+    /// Op `name`'s tokenized ODS format, if the table holds one.
+    #[inline]
+    pub fn format(&self, name: &str) -> Option<&Format<'static>> {
+        self.formats.get(name).map(|f| &**f)
     }
 
     #[inline]
@@ -245,7 +261,12 @@ impl Template {
     /// ⭐ The blueprint of typed op `O` (what `O::template()` returns).
     #[inline]
     pub fn of<O: Op + 'static>() -> Self {
-        Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O>, defaults: Self::defaults_of::<O> }
+        Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O>, defaults: Self::defaults_of::<O>, format: Self::format_of::<O> }
+    }
+
+    #[inline]
+    fn format_of<O: Op>() -> Option<Format<'static>> {
+        (O::CUSTOM && !O::FORMAT.is_empty()).then(|| Format::of::<O>().ok()).flatten()
     }
 
     #[inline]
@@ -258,7 +279,14 @@ impl Template {
         // An op of an ODS format is read straight into an `Operation`; a hand-written one through
         // the typed op. Either way its regions are lent, not copied (`Parser::lend`).
         if O::CUSTOM && !O::FORMAT.is_empty() {
-            return p.lending(|p| Format::of::<O>().or_else(|e| p.err(e.0))?.parse_op(p), Ok);
+            let opt = p.opt();
+            return p.lending(
+                |p| match opt.format(O::NAME) {
+                    Some(f) => f.parse_op(p),
+                    None => Format::of::<O>().or_else(|e| p.err(e.0))?.parse_op(p),
+                },
+                Ok,
+            );
         }
         p.lending(O::parse, |op| Operation::of_owned_op(op).map(|o| -> Operation<'a> { o }))
     }
@@ -278,7 +306,15 @@ impl Template {
                 p.attempt(&op.regions, |q| Some(typed.print(q)))
             }
             _ => {
-                let format = Format::of::<O>().ok()?;
+                let opt = p.opt();
+                let built;
+                let format = match opt.format(O::NAME) {
+                    Some(f) => f,
+                    None => {
+                        built = Format::of::<O>().ok()?;
+                        &built
+                    }
+                };
                 p.attempt(&[], |q| Some(format.print_op(op, q).map_err(|_| fmt::Error)))
             }
         }

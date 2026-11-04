@@ -422,6 +422,9 @@ pub struct Template {
     pub print: fn(&Operation<'_>, &mut Printer<'_, '_>) -> Option<fmt::Result>,
     /// The properties the op declares a default for, with it (what an ODS builder sets).
     pub defaults: fn() -> Vec<NamedAttr<'static>>,
+    /// Its ODS format tokenized, if it has one: built once when an [`MlirOpt`](crate::MlirOpt)
+    /// takes the op, not once per op read or printed.
+    pub format: fn() -> Option<Format<'static>>,
 }
 
 /// What ODS declares of a dialect as a whole (`Dialect` in `DialectBase.td`): the dialect-level

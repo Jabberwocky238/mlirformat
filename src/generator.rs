@@ -93,6 +93,12 @@ impl Write for Printer<'_, '_> {
 }
 
 impl<'p, 'd> Printer<'p, 'd> {
+    /// The converter it prints with.
+    #[inline]
+    pub(crate) fn opt(&self) -> &'d MlirOpt {
+        self.opt
+    }
+
     #[inline]
     pub fn new(out: &'p mut dyn Write, opt: &'d MlirOpt) -> Self {
         Self::into(Sink::Write(out), opt)
