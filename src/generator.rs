@@ -1240,6 +1240,10 @@ impl TryFrom<Content> for Option<Attribute<'static>> {
     /// attribute's presence, numbers / strings the attribute of that kind, a user enum its case
     /// value, `Attribute` / `Type` themselves.
     fn try_from(c: Content) -> Result<Self, Error> {
+        let float = |kind, bits| {
+            let lit = crate::ApFloat::from_bits(kind, bits).map_or_else(|| format!("0x{bits:X}"), crate::ApFloat::print);
+            Attribute::Float { lit: Cow::Owned(lit), ty: Some(Type::Float(kind)) }
+        };
         let int = Attribute::of_int;
         Ok(Some(match c {
             Content::None | Content::Bool(false) => return Ok(None),
@@ -1253,8 +1257,10 @@ impl TryFrom<Content> for Option<Attribute<'static>> {
             Content::U16(v) => int(v.into(), Type::int(16)),
             Content::U32(v) => int(v.into(), Type::int(32)),
             Content::U64(v) => int(v.into(), Type::int(64)),
-            Content::F32(v) => Attribute::Float { lit: Cow::Owned(format!("{v:e}")), ty: Some(Type::Float(FloatKind::F32)) },
-            Content::F64(v) => Attribute::Float { lit: Cow::Owned(format!("{v:e}")), ty: Some(Type::Float(FloatKind::F64)) },
+            // as MLIR prints a float (`3.000000e+00`, the bits in hex for an inf or a NaN): Rust's `{:e}` writes
+            // `3e0`, which is no float literal
+            Content::F32(v) => float(FloatKind::F32, v.to_bits().into()),
+            Content::F64(v) => float(FloatKind::F64, v.to_bits()),
             Content::Str(s) => Attribute::str(&s),
             Content::Attr(a) => a,
             // A sequence of one kind of number is a dense array (`Vec<i32>` ⇄ `array<i32: 1, 2>`).

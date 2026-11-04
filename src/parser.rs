@@ -1110,8 +1110,17 @@ impl<'de> de::Deserializer<'de> for Content {
             Self::Attr(a) => match a {
                 Attribute::Unit => v.visit_bool(true),
                 Attribute::Bool(b) => v.visit_bool(b),
+                // a float's bits (`0x7FF0000000000000 : f64`: an inf or a NaN, as MLIR prints one)
+                Attribute::Int { ref lit, ty: Some(Type::Float(kind)) } => v.visit_f64(crate::ApFloat::parse(kind, lit).ok_or_else(|| Error(format!("not a float: `{a}`")))?.to_f64()),
                 Attribute::Int { .. } => v.visit_i64(i64::try_from(a.int()?).map_err(|_| Error(format!("`{a}` is out of range")))?),
-                Attribute::Float { lit, .. } => v.visit_f64(lit.parse().map_err(|_| Error(format!("not a float: `{lit}`")))?),
+                // MLIR's spellings of a float (its type's: an f32 reads as one), not only Rust's
+                Attribute::Float { ref lit, ref ty } => {
+                    let kind = match ty {
+                        Some(Type::Float(k)) => *k,
+                        _ => FloatKind::F64,
+                    };
+                    v.visit_f64(crate::ApFloat::parse(kind, lit).ok_or_else(|| Error(format!("not a float: `{lit}`")))?.to_f64())
+                }
                 Attribute::Str { .. } => v.visit_string(a.text()?),
                 Attribute::Array(xs) => v.visit_seq(Items(xs.into_iter().map(Self::Attr).collect::<Vec<_>>().into_iter())),
                 Attribute::DenseArray { ty, values } => {

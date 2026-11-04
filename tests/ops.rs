@@ -109,3 +109,22 @@ fn ops_round_trip_through_serde() {
         ArithMax: "arith.maxsi %a, %b {tag, n = 3 : i64} : vector<4xi8>",
     }
 }
+
+/// A float property read back from the text its op prints.
+#[mlir::op("test.scale", format = "attr-dict")]
+pub struct Scale {
+    pub by: Option<f64>,
+    pub low: Option<f32>,
+}
+
+#[test]
+fn float_properties_print_as_float_literals() {
+    // Rust's `{:e}` writes 3.0 as `3e0`, which MLIR does not read as a float: printed as MLIR prints a float, every
+    // value reads back bit for bit (an inf / a NaN as its bits)
+    for (by, low) in [(3.0, 3.0), (0.1, 0.1), (1e-5, -2.5), (-0.0, 1e30), (f64::INFINITY, f32::NEG_INFINITY), (f64::NAN, f32::NAN)] {
+        let text = Scale::new(Some(by), Some(low)).to_string();
+        let back = Scale::try_from(text.as_str()).unwrap_or_else(|e| panic!("{text}: {e}"));
+        assert_eq!(back.by.map(f64::to_bits), Some(by.to_bits()), "{text}");
+        assert_eq!(back.low.map(f32::to_bits), Some(low.to_bits()), "{text}");
+    }
+}
