@@ -39,9 +39,25 @@ by `mlir-opt`, which then refuses it with `expects at most one data layout attri
 
 ### One big module
 
-`mlir-opt`'s split comes from `--mlir-timing`. Its parser time includes the verifier.
+Measured again after the custom-form fast path (`main` after 0.5.2: ODS-format ops read straight
+into an `Operation`, regions lent instead of copied, formats tokenized once per `MlirOpt`), best
+of 5, same machine and inputs; `mlir-opt` is its whole run (parse, verify, print).
 
-| | mlirformat | `mlir-opt` |
+| | mlirformat 0.5.2 | mlirformat now | `mlir-opt` whole run |
+| --- | ---: | ---: | ---: |
+| **parse, custom form** (31.9 MB) | 3,453 | **960** | |
+| **parse, generic form** (54.3 MB) | 434 | **427** | |
+| print custom form | 1,285 – 1,452 | 1,075 – 1,108 | |
+| print generic form | 216 – 314 | 227 – 256 | |
+| whole run, custom in ⇒ custom out | 4,905 | **2,035** | 2,225 |
+| whole run, generic in ⇒ custom out | 1,718 | **1,534** | 2,934 |
+
+In the print rows, the range covers the two inputs.
+
+The 0.4.8 numbers, with `mlir-opt`'s own split from `--mlir-timing` (its parser time includes the
+verifier):
+
+| | mlirformat 0.4.8 | `mlir-opt` |
 | --- | ---: | ---: |
 | **parse, custom form** (31.9 MB) | **3,830** | **1,172** |
 | **parse, generic form** (54.3 MB) | **411** | **1,675** |
@@ -50,9 +66,9 @@ by `mlir-opt`, which then refuses it with `expects at most one data layout attri
 | whole run, custom in ⇒ custom out | 6,060 | 2,153 |
 | whole run, generic in ⇒ custom out | 2,483 | 2,704 |
 
-In the print rows, the range covers the two inputs.
-
 ### Many small modules (the fixtures)
+
+From 0.4.8, on the fixtures of the time (657 files; there are 2,229 now):
 
 | | mlirformat parse | mlirformat parse + print custom | `mlir-opt` (whole run) |
 | --- | ---: | ---: | ---: |
