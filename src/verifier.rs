@@ -53,6 +53,12 @@ pub enum Invalid {
     /// of an integer type.
     #[error("invalid dense literal `{0}`")]
     DenseLiteral(String),
+    /// `-1 : i0`: an integer its type cannot hold.
+    #[error("integer constant out of range for attribute `{0}`")]
+    IntRange(String),
+    /// `array<tf32: ..>`: a dense array of elements that are not whole bytes.
+    #[error("element type bitwidth must be a multiple of 8: `{0}`")]
+    DenseArrayWidth(String),
     /// `vector<memref<2xf32>>`: a vector holds integers, floats, `index` or a dialect's
     /// `VectorElementTypeInterface` type.
     #[error("invalid vector element type `{0}`")]
@@ -230,6 +236,15 @@ impl<'x> Verifier<'x> {
             let sigil = bytes[i];
             // A dialect name: `ns.mnemonic` right after the sigil.
             let name = text[i + 1..].bytes().take_while(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'.')).count();
+            // A builtin keyword attribute (`dense<..>`, `affine_map<..>`, `array<..>`) at a word start.
+            let word_start = i == 0 || !(bytes[i - 1].is_ascii_alphanumeric() || matches!(bytes[i - 1], b'_' | b'.' | b'$' | b'%' | b'#' | b'!' | b'@'));
+            if word_start && ["dense<", "affine_map<", "affine_set<", "array<"].iter().any(|k| text[i..].starts_with(k)) {
+                if let Some((len, r)) = Self::check_raw(crate::Parser::new(&text[i..], self.opt), false, self.opt) {
+                    r?;
+                    i += len.max(1);
+                    continue;
+                }
+            }
             if matches!(sigil, b'!' | b'#') && text[i + 1..i + 1 + name].contains('.') {
                 let rest = &text[i..];
                 let opt = self.opt;
@@ -260,7 +275,7 @@ impl<'x> Verifier<'x> {
             let a = p.attr().ok()?;
             match &a {
                 Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(&v, &a)),
-                _ => Ok(()),
+                a => builtin::Builtin.attr(&v, a),
             }
         };
         Some((p.pos(), r))

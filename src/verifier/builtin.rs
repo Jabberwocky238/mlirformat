@@ -112,6 +112,31 @@ impl Keyword {
 }
 
 impl Builtin {
+    /// Does integer literal `lit` fit a `width`-bit integer (`IntegerAttr` parsing)? Signed:
+    /// `[-2^(w-1), 2^(w-1))`; unsigned: `[0, 2^w)`; signless: either.
+    fn fits(lit: &str, s: crate::Signedness, width: u32) -> bool {
+        let (neg, digits) = lit.strip_prefix('-').map_or((false, lit), |d| (true, d));
+        let Some(v) = (match digits.strip_prefix("0x") {
+            Some(h) => u128::from_str_radix(h, 16).ok(),
+            None => digits.parse::<u128>().ok(),
+        }) else {
+            return width >= 128;
+        };
+        if width >= 127 {
+            return true;
+        }
+        let (umax, smax) = ((1u128 << width) - 1, if width == 0 { 0 } else { (1u128 << (width - 1)) - 1 });
+        let smin = if width == 0 { 0 } else { 1u128 << (width - 1) };
+        match (s, neg) {
+            (crate::Signedness::Unsigned, true) => v == 0,
+            (crate::Signedness::Unsigned, false) => v <= umax,
+            (crate::Signedness::Signed, true) => v <= smin,
+            (crate::Signedness::Signed, false) => v <= smax,
+            (crate::Signedness::Signless, true) => v <= smin,
+            (crate::Signedness::Signless, false) => v <= umax,
+        }
+    }
+
     /// The same type, as MLIR compares the types it built: text kept in a body may be spaced
     /// otherwise (`strided<[?,?]>`), and a memref's default spellings mean nothing
     /// (`MemRefType::get` drops a `0` memory space, an identity map and an `offset: 0`; `1 : i64`
@@ -161,6 +186,10 @@ impl DialectRules for Builtin {
     fn attr(&self, _v: &Verifier<'_>, a: &Attribute<'_>) -> Result<(), Invalid> {
         match a {
             Attribute::Builtin { name, body, ty } => Keyword::try_from(&**name).map_or(Ok(()), |k| k.verify(body, ty.as_ref())),
+            // An integer fits its type (`-1 : i0` does not): signless takes either reading.
+            Attribute::Int { lit, ty: Some(Type::Integer { signedness, width }) } if !Self::fits(lit, *signedness, *width) => Err(Invalid::IntRange(a.to_string())),
+            // `DenseArrayAttr`: whole bytes per element (`array<tf32: ..>` is not), `i1` aside.
+            Attribute::DenseArray { ty, .. } if ty.bit_width().is_some_and(|w| w > 1 && w % 8 != 0) => Err(Invalid::DenseArrayWidth(ty.to_string())),
             _ => Ok(()),
         }
     }

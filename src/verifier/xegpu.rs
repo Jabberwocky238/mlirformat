@@ -215,7 +215,11 @@ impl XeGpu {
             let Attribute::Extended { ext, .. } = a else { return Err(alloc::format!("unexpected attribute `{a}`")) };
             let body = ext.body.as_deref().unwrap_or("");
             match ext.name.strip_prefix("xegpu.").and_then(|m| AttrKind::try_from(m).ok()) {
-                Some(AttrKind::Layout) => layout = Some(Layout::read(opt, body)?),
+                Some(AttrKind::Layout) => {
+                    let l = Layout::read(opt, body)?;
+                    l.verify()?;
+                    layout = Some(l);
+                }
                 Some(AttrKind::BlockTdesc) => {
                     if shape.len() > 1 && params(body).iter().any(|(k, v)| *k == "memory_space" && *v == "slm") {
                         return Err("SLM is only supported for 1D block tensor".into());
