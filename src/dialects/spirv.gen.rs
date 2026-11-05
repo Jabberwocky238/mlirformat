@@ -7479,7 +7479,7 @@ pub struct KHRCooperativeMatrixLoadOp<'a> {
 /// scope instance must be active or all must be inactive (where the scope is
 /// the scope of the operation).
 ///
-/// ``` {.ebnf}
+/// ```text
 /// cooperative-matrixmuladd-op ::= ssa-id `=` `spirv.KHR.CooperativeMatrixMulAdd`
 ///                           ssa-use `,` ssa-use `,` ssa-use
 ///                           (`<` matrix-operands `>`)? `:`

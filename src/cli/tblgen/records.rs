@@ -93,7 +93,8 @@ impl GenOp {
     }
 
     /// ⭐ The description as rustdoc lines (after a blank `///`): Markdown kept, but no code
-    /// block is ever a doctest — a fence without a language and an indented block become
+    /// block is ever a doctest — a fence without a language (or with only pandoc attributes,
+    /// ```` ``` {.ebnf} ````, which rustdoc reads as no language) and an indented block become
     /// ```` ```text ````; a fenced block keeps its language (`mlir` is not Rust to rustdoc).
     fn doc(&self) -> Vec<String> {
         if self.description.is_empty() {
@@ -110,7 +111,7 @@ impl GenOp {
             }
             if fence {
                 let lang = line.trim_start()[3..].trim();
-                out.push(if !fenced && lang.is_empty() { "```text".into() } else { line.trim_start().to_string() });
+                out.push(if !fenced && (lang.is_empty() || lang.starts_with('{')) { "```text".into() } else { line.trim_start().to_string() });
                 fenced = !fenced;
             } else if !fenced && !indented && blank && line.starts_with("    ") {
                 out.push("```text".into());
