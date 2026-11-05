@@ -40,6 +40,11 @@ impl<'a> Func<'a> {
         self.attrs.iter().find(|a| a.name == name).map(|a| &a.value)
     }
 
+    /// 三个 `known_*` 固有属性，带名字。
+    fn known(&self) -> [(&'static str, &Option<Attribute<'a>>); 3] {
+        [("known_block_size", &self.known_block_size), ("known_cluster_size", &self.known_cluster_size), ("known_grid_size", &self.known_grid_size)]
+    }
+
     /// `workgroup_attributions` 的个数（没有 ⇒ 0）。
     fn workgroups(&self) -> Option<usize> {
         match self.attr("workgroup_attributions") {
@@ -103,9 +108,7 @@ impl Print for Func<'_> {
         };
         let entry = self.body.blocks.first();
         let args = entry.map_or(&[][..], |b| b.args.as_slice());
-        // ⛔ known_* 的写法没核过：有就走通用形式，不猜。
-        let odd = self.known_block_size.is_some() || self.known_grid_size.is_some() || self.known_cluster_size.is_some();
-        if odd || args.len() < ty.inputs.len() + workgroups {
+        if args.len() < ty.inputs.len() + workgroups {
             return self.print_generic(p);
         }
         p.op_name(Self::NAME)?;
@@ -145,7 +148,15 @@ impl Print for Func<'_> {
         if self.attr("gpu.kernel").is_some() {
             p.write_str(" kernel")?;
         }
-        p.attr_dict("attributes ", &self.attrs, &HEAD)?;
+        // `printFunctionAttributes`：`getAttrs()` 是固有属性（known_*）和可丢弃属性合成的一个字典，按名字排序。
+        let mut attrs = self.attrs.clone();
+        for (name, a) in self.known() {
+            if let Some(a) = a {
+                attrs.push(NamedAttr { name: name.into(), value: Some(a.clone()) });
+            }
+        }
+        attrs.sort_by(|a, b| a.name.cmp(&b.name));
+        p.attr_dict("attributes ", &attrs, &HEAD)?;
         p.write_char(' ')?;
         p.region(&self.body, false)?;
         p.loc(&self.loc)
@@ -188,6 +199,9 @@ impl Parse for Func<'_> {
         }
         attrs.push(NamedAttr { name: "workgroup_attributions".into(), value: Some(Attribute::Int { lit: Str::Owned(alloc::format!("{}", workgroup.len())), ty: Some(Type::int(64)) }) });
         attrs.sort_by(|a, b| a.name.cmp(&b.name));
+        // 字典里的固有属性是属性（property）。
+        let mut known = |name: &str| attrs.iter().position(|a| a.name == name).and_then(|i| attrs.remove(i).value);
+        let (known_block_size, known_grid_size, known_cluster_size) = (known("known_block_size"), known("known_grid_size"), known("known_cluster_size"));
         args.extend(workgroup);
         args.extend(private);
         if let Some(b) = body.blocks.first_mut() {
@@ -201,9 +215,9 @@ impl Parse for Func<'_> {
             res_attrs: Func::dicts(res_dicts),
             workgroup_attrib_attrs: Func::dicts(workgroup_dicts),
             private_attrib_attrs: Func::dicts(private_dicts),
-            known_block_size: None,
-            known_grid_size: None,
-            known_cluster_size: None,
+            known_block_size,
+            known_grid_size,
+            known_cluster_size,
             body: p.lend(body),
             attrs,
             loc: p.opt_loc()?,
