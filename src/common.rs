@@ -219,6 +219,9 @@ impl Operation<'_> {
         self.successors.shrink_to_fit();
         self.regions.shrink_to_fit();
         self.attributes.shrink_to_fit();
+        if let Some(Attribute::Dict(d)) = &mut self.properties {
+            d.shrink_to_fit();
+        }
         self.ty.inputs.shrink_to_fit();
         self.ty.results.shrink_to_fit();
     }

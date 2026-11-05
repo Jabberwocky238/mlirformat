@@ -2523,7 +2523,9 @@ impl Format<'_> {
         for (_, name) in result_vars {
             result_tys.extend(ty_of(name)?.iter().cloned());
         }
-        let mut props: Vec<NamedAttr<'a>> = Vec::new();
+        // On the stack, then one allocation of its length: one property pushed into a `Vec`
+        // takes room for four (4 × 184 B), held for the life of the op.
+        let mut props = smallvec::SmallVec::<[NamedAttr<'a>; 4]>::new();
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
             // As `Fields::take` reads a field the text left out: an `Option`'s `None`, else none.
             // An attribute field keeps what was read, borrowing the text; only a typed one goes
@@ -2562,7 +2564,7 @@ impl Format<'_> {
             name: Cow::Borrowed(self.schema.name),
             operands,
             successors,
-            properties: (!props.is_empty()).then_some(Attribute::Dict(props)),
+            properties: (!props.is_empty()).then(|| Attribute::Dict(Parser::exact(props))),
             regions,
             attributes,
             ty: FunctionType { inputs, results: result_tys },
