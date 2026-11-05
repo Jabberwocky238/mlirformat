@@ -216,9 +216,10 @@ is the one file a 22.1.8 build generates (from the OpDSL YAML) rather than keeps
 
 ## Performance
 
-Against `mlir-opt` 22.1.8 (`BENCHMARK.md`), on one 32 MB module: reading the custom form and
-writing it back takes 2.0 s (`mlir-opt`'s whole run: 2.2 s), reading the generic form instead
-1.5 s (2.9 s). The generic form parses at about 130 MB/s (54 MB in 0.43 s).
+Against `mlir-opt` 22.1.8 (`BENCHMARK.md`), on one 32 MB module and one core: reading the custom
+form and writing it back takes 2.0 s (`mlir-opt`'s whole run: 2.4 s), reading the generic form
+instead 1.5 s (2.9 s). The generic form parses at 130 MB/s, the custom form at 34 MB/s. Peak memory
+is about 3× `mlir-opt`'s on that module (1.1–1.3 GB against 0.34–0.43 GB).
 
 ## License
 
