@@ -424,6 +424,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             out.push(f(self)?);
             if !self.eat(",") {
                 self.expect(close)?;
+                out.shrink_to_fit();
                 return Ok(out);
             }
         }
@@ -828,7 +829,9 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
         self.results = results.iter().map(|r| r.count.unwrap_or(1)).sum::<u32>().try_into().unwrap_or(0);
         let op = if self.at(b'"') { self.generic()? } else { self.custom()? };
-        Ok(Operation { results, ..op })
+        let mut op = Operation { results, ..op };
+        op.shrink_to_fit();
+        Ok(op)
     }
 
     /// `%name` or `%name#index`.
@@ -1037,6 +1040,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             }
             blocks.push(self.block()?);
         }
+        blocks.shrink_to_fit();
         Ok(Region { blocks })
     }
 
@@ -1059,6 +1063,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         loop {
             self.ws();
             if matches!(self.peek(), None | Some(b'}' | b'^')) {
+                ops.shrink_to_fit();
                 return Ok(Block { label, args, ops });
             }
             ops.push(self.op()?);

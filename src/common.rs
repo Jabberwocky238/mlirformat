@@ -210,6 +210,20 @@ impl Extended<'_> {
     }
 }
 
+impl Operation<'_> {
+    /// Gives back what its lists grew past their length: `Vec` starts at 4 and doubles, so a
+    /// one-attribute dict held 4 × 184 B. Called on every op the parser makes.
+    pub(crate) fn shrink_to_fit(&mut self) {
+        self.results.shrink_to_fit();
+        self.operands.shrink_to_fit();
+        self.successors.shrink_to_fit();
+        self.regions.shrink_to_fit();
+        self.attributes.shrink_to_fit();
+        self.ty.inputs.shrink_to_fit();
+        self.ty.results.shrink_to_fit();
+    }
+}
+
 impl Type<'_> {
     pub const I1: Type<'static> = Type::Integer { signedness: Signedness::Signless, width: 1 };
 

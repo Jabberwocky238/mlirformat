@@ -513,6 +513,7 @@ impl Parse for For<'_> {
         }
         entry.args = args;
         if !entry.ops.last().is_some_and(|op| op.name == "affine.yield") {
+            entry.ops.reserve_exact(1);
             entry.ops.push(Operation { name: Str::Borrowed("affine.yield"), ..Operation::default() });
         }
         let op = For {
@@ -592,6 +593,7 @@ fn close_region(r: &mut Region<'_>) {
     if let Some(b) = r.blocks.last_mut()
         && !b.ops.last().is_some_and(|op| op.name == "affine.yield")
     {
+        b.ops.reserve_exact(1);
         b.ops.push(Operation { name: Str::Borrowed("affine.yield"), ..Operation::default() });
     }
 }

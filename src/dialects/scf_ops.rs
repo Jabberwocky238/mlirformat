@@ -18,6 +18,8 @@ fn close_region(r: &mut Region<'_>, terminator: &str) {
     if let Some(b) = r.blocks.last_mut()
         && !b.ops.last().is_some_and(|op| op.name == terminator)
     {
+        // The parser left `ops` exactly full: a plain push would double it.
+        b.ops.reserve_exact(1);
         b.ops.push(Operation { name: Str::Owned(String::from(terminator)), ..Operation::default() });
     }
 }
