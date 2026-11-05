@@ -614,7 +614,9 @@ impl Display for Shaped<'_> {
             Some(dims) => dims.iter().try_for_each(|d| write!(f, "{d}x"))?,
         }
         self.elem.fmt(f)?;
-        self.extras.iter().try_for_each(|a| write!(f, ", {a}"))?;
+        // MLIR leaves an identity map layout out, as it does the default one.
+        let elided = |a: &Attribute<'_>| self.kind == ShapedKind::MemRef && a.is_identity_map();
+        self.extras.iter().filter(|a| !elided(a)).try_for_each(|a| write!(f, ", {a}"))?;
         f.write_char('>')
     }
 }

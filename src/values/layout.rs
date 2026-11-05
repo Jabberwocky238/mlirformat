@@ -59,6 +59,14 @@ impl Attribute<'_> {
     pub fn is_layout(&self) -> bool {
         matches!(self, Attribute::Builtin { name, .. } if name == "strided" || name == "affine_map")
     }
+
+    /// An identity `affine_map` layout, symbols or not: `AffineMap::isIdentity`, which is what
+    /// the printer asks before it leaves a memref's layout out (`memref<?xf32, affine_map<(d0)[s0]
+    /// -> (d0)>>` prints as `memref<?xf32>`, though it is not that type).
+    #[inline]
+    pub fn is_identity_map(&self) -> bool {
+        crate::AffineMap::try_from(self).is_ok_and(|m| m.is_identity())
+    }
 }
 
 impl<'a> Shaped<'a> {
