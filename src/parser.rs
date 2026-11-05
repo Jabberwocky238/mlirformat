@@ -414,18 +414,35 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok((self.pos > start).then(|| self.since(start)))
     }
 
-    /// `elem (, elem)* close`, assuming the opener was consumed.
+    /// `elem (, elem)* close`, assuming the opener was consumed. Read on the stack, up to four,
+    /// then allocated once at its length: a `Vec` grown by pushing starts at four and doubles,
+    /// and giving the rest back afterwards (`shrink_to_fit`) costs a reallocation per list.
     pub fn list<T>(&mut self, close: &str, mut f: impl FnMut(&mut Self) -> R<T>) -> R<Vec<T>> {
-        let mut out = Vec::new();
         if self.eat(close) {
-            return Ok(out);
+            return Ok(Vec::new());
         }
+        let mut out = smallvec::SmallVec::<[T; 4]>::new();
         loop {
             out.push(f(self)?);
             if !self.eat(",") {
                 self.expect(close)?;
-                out.shrink_to_fit();
-                return Ok(out);
+                return Ok(Self::exact(out));
+            }
+        }
+    }
+
+    /// `xs` in a `Vec` of exactly its length: one allocation when it is still inline.
+    fn exact<T, const N: usize>(xs: smallvec::SmallVec<[T; N]>) -> Vec<T> {
+        match xs.spilled() {
+            true => {
+                let mut v = xs.into_vec();
+                v.shrink_to_fit();
+                v
+            }
+            false => {
+                let mut v = Vec::with_capacity(xs.len());
+                v.extend(xs);
+                v
             }
         }
     }
@@ -810,7 +827,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     pub fn op(&mut self) -> R<Operation<'a>> {
-        let mut results = Vec::new();
+        let mut results = smallvec::SmallVec::<[ResultDef<'a>; 2]>::new();
         if self.at(b'%') {
             loop {
                 let name = self.sigil('%')?.into();
@@ -829,7 +846,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
         self.results = results.iter().map(|r| r.count.unwrap_or(1)).sum::<u32>().try_into().unwrap_or(0);
         let op = if self.at(b'"') { self.generic()? } else { self.custom()? };
-        let mut op = Operation { results, ..op };
+        let mut op = Operation { results: Self::exact(results), ..op };
         op.shrink_to_fit();
         Ok(op)
     }
