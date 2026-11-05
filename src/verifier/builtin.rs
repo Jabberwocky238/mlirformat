@@ -11,6 +11,25 @@ use crate::{AffineMap, Attribute, IntegerSet, ShapedKind, Type};
 /// The builtin dialect's rules.
 pub(super) struct Builtin;
 
+/// The kinds of literal in a `dense<..>` body.
+#[derive(Clone, Copy, Default)]
+struct Literals {
+    /// `1.5`, `2e3`.
+    float: bool,
+    /// `4`, `-4`: decimal, not `0x..` bits.
+    int: bool,
+    /// `true`, `false`.
+    bool: bool,
+}
+
+impl core::ops::BitOr for Literals {
+    type Output = Self;
+    #[inline]
+    fn bitor(self, o: Self) -> Self {
+        Self { float: self.float | o.float, int: self.int | o.int, bool: self.bool | o.bool }
+    }
+}
+
 keywords! {
     /// The builtin keyword attributes whose body is checked.
     enum Keyword {
@@ -37,14 +56,18 @@ impl Keyword {
     }
 
     /// The shape of a `dense` literal (`[[1, 2], [3, 4]]` ⇒ `[2, 2]`, a scalar ⇒ `None`: a
-    /// splat), and whether a float literal is in it; `Err` for lists of uneven shapes.
-    fn literal(text: &str) -> Result<(Option<Vec<usize>>, bool), ()> {
+    /// splat), and what kinds of literal are in it; `Err` for lists of uneven shapes.
+    fn literal(text: &str) -> Result<(Option<Vec<usize>>, Literals), ()> {
         let text = text.trim();
         let Some(inner) = text.strip_prefix('[').and_then(|t| t.strip_suffix(']')) else {
             // A scalar: a number, `true` / `false`, a `(re, im)` pair, a string.
+            if let Some(pair) = text.strip_prefix('(').and_then(|t| t.strip_suffix(')')) {
+                return Ok((None, pair.split(',').try_fold(Literals::default(), |acc, x| Self::literal(x).map(|(_, l)| acc | l))?));
+            }
             let digits = text.strip_prefix('-').unwrap_or(text);
-            let float = digits.starts_with(|c: char| c.is_ascii_digit()) && !digits.starts_with("0x") && digits.contains(['.', 'e', 'E']);
-            return Ok((None, float));
+            let number = digits.starts_with(|c: char| c.is_ascii_digit()) && !digits.starts_with("0x");
+            let float = number && digits.contains(['.', 'e', 'E']);
+            return Ok((None, Literals { float, int: number && !float, bool: matches!(text, "true" | "false") }));
         };
         let mut items = Vec::new();
         let (mut depth, mut start, mut quoted) = (0i32, 0, false);
@@ -65,10 +88,10 @@ impl Keyword {
             items.push(&inner[start..]);
         }
         let mut shape: Option<Option<Vec<usize>>> = None;
-        let mut float = false;
+        let mut kinds = Literals::default();
         for item in &items {
-            let (s, f) = Self::literal(item)?;
-            float |= f;
+            let (s, l) = Self::literal(item)?;
+            kinds = kinds | l;
             match &shape {
                 Some(prev) if *prev != s => return Err(()),
                 Some(_) => {}
@@ -77,19 +100,44 @@ impl Keyword {
         }
         let mut out = alloc::vec![items.len()];
         out.extend(shape.flatten().unwrap_or_default());
-        Ok((Some(out), float))
+        Ok((Some(out), kinds))
     }
 
-    /// `dense<literal> : T`: the literal's shape is `T`'s (or it is one splat value), and an
-    /// integer `T` has no float literal (`DenseElementsAttr` parsing in `AttributeParser.cpp`).
+    /// `dense<literal> : T`: the literal's shape is `T`'s (or it is one splat value), an integer
+    /// `T` has no float literal, a float `T` no decimal integer or `true` (`TensorLiteralParser`
+    /// in `AttributeParser.cpp`). A dialect shaped type (`!spirv.coopmatrix<16x16xf32, ..>`)
+    /// has its element type checked only.
     fn dense_literal(body: &str, ty: Option<&Type<'_>>) -> bool {
-        let Some(t @ Type::Shaped(s)) = ty else { return true };
-        let Some(dims) = s.shape.as_ref().and_then(|d| d.iter().map(|d| if let crate::Dim::Static(n) = d { usize::try_from(*n).ok() } else { None }).collect::<Option<Vec<usize>>>()) else { return true };
         // A literal over several lines may carry `//` comments.
         let body: String = body.lines().map(|l| l.split_once("//").map_or(l, |(code, _)| code)).collect::<Vec<_>>().join("\n");
-        let Ok((shape, float)) = Self::literal(&body) else { return false };
-        let shape_ok = shape.is_none_or(|sh| sh == dims || (dims.is_empty() && sh.is_empty()));
-        shape_ok && !(float && matches!(t.element_type(), Type::Integer { .. } | Type::Index))
+        let Ok((shape, kinds)) = Self::literal(&body) else { return false };
+        let elem = match ty {
+            Some(Type::Extended(e)) => e.shaped_elem(),
+            Some(t) => Some(t.element_type().owned()),
+            None => None,
+        };
+        let float_elem = match &elem {
+            Some(Type::Complex(t)) => matches!(**t, Type::Float(_)),
+            Some(t) => matches!(t, Type::Float(_)),
+            None => false,
+        };
+        if float_elem && (kinds.int || kinds.bool) || kinds.float && matches!(elem, Some(Type::Integer { .. } | Type::Index)) {
+            return false;
+        }
+        let Some(Type::Shaped(s)) = ty else { return true };
+        let Some(dims) = s.shape.as_ref().and_then(|d| d.iter().map(|d| if let crate::Dim::Static(n) = d { usize::try_from(*n).ok() } else { None }).collect::<Option<Vec<usize>>>()) else { return true };
+        shape.is_none_or(|sh| sh == dims || (dims.is_empty() && sh.is_empty()))
+    }
+
+    /// Does a `dense` of type `ty` hold numbers (integers, floats, `index`, complex numbers),
+    /// a dialect shaped type's too?
+    fn numeric(ty: Option<&Type<'_>>) -> bool {
+        let elem = match ty {
+            Some(Type::Extended(e)) if e.name.contains('.') => e.shaped_elem(),
+            Some(t) => Some(t.element_type().owned()),
+            None => None,
+        };
+        matches!(elem, Some(Type::Integer { .. } | Type::Float(_) | Type::Index | Type::Complex(_)))
     }
 
     /// Its raw body (`<(d0) -> (d0)>`) as `mlir-opt` would read it.
@@ -104,7 +152,7 @@ impl Keyword {
                 Some(hex) if ty.map(Type::element_type).is_some_and(|t| matches!(t, Type::Integer { .. } | Type::Float(_) | Type::Index | Type::Complex(_))) && !Self::dense_hex(hex, ty) => Err(Invalid::DenseHex(body.into())),
                 Some(_) => Ok(()),
                 // A literal of numbers.
-                None if !inner.trim().is_empty() && ty.map(Type::element_type).is_some_and(|t| matches!(t, Type::Integer { .. } | Type::Float(_) | Type::Index)) && !Self::dense_literal(inner, ty) => Err(Invalid::DenseLiteral(body.into())),
+                None if !inner.trim().is_empty() && Self::numeric(ty) && !Self::dense_literal(inner, ty) => Err(Invalid::DenseLiteral(body.into())),
                 None => Ok(()),
             },
         }
@@ -135,6 +183,15 @@ impl Builtin {
             (crate::Signedness::Signless, true) => v <= smin,
             (crate::Signedness::Signless, false) => v <= umax,
         }
+    }
+
+    /// Is integer literal `lit` the bits of a `width`-bit float: hex, not negative, no more
+    /// active bits than the float has?
+    fn float_bits(lit: &str, width: u32) -> bool {
+        let Some(hex) = lit.strip_prefix("0x") else { return false };
+        let digits = hex.trim_start_matches('0');
+        let top = digits.chars().next().and_then(|c| c.to_digit(16)).map_or(0, |d| 32 - d.leading_zeros());
+        (digits.len() as u32).saturating_sub(1) * 4 + top <= width
     }
 
     /// The same type, as MLIR compares the types it built: text kept in a body may be spaced
@@ -186,6 +243,10 @@ impl DialectRules for Builtin {
     fn attr(&self, _v: &Verifier<'_>, a: &Attribute<'_>) -> Result<(), Invalid> {
         match a {
             Attribute::Builtin { name, body, ty } => Keyword::try_from(&**name).map_or(Ok(()), |k| k.verify(body, ty.as_ref())),
+            // A float is spelled as one, or as hex bits that fit it, unsigned
+            // (`Parser::parseFloatFromIntegerLiteral`).
+            Attribute::Int { lit, ty: Some(t @ Type::Float(_)) } if !Self::float_bits(lit, t.bit_width().unwrap_or(128)) => Err(Invalid::FloatLiteral(a.to_string())),
+            Attribute::Float { ty: Some(t), .. } if !matches!(t, Type::Float(_)) && !matches!(t, Type::Extended(e) if !e.name.contains('.')) => Err(Invalid::FloatType(a.to_string())),
             // An integer fits its type (`-1 : i0` does not): signless takes either reading.
             Attribute::Int { lit, ty: Some(Type::Integer { signedness, width }) } if !Self::fits(lit, *signedness, *width) => Err(Invalid::IntRange(a.to_string())),
             // `DenseArrayAttr`: whole bytes per element (`array<tf32: ..>` is not), `i1` aside.

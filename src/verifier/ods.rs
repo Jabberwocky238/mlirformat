@@ -58,6 +58,50 @@ pub(super) enum C {
     DenseArray { elem: Elem, order: Option<Order>, min: Option<i64> },
     Elements { elem: Elem, shape: Option<&'static [i64]> },
     AnyOf(&'static [C]),
+    /// A dialect's `EnumAttr`: `#spirv.memory_access<..>` (its full name).
+    Dialect(&'static str),
+}
+
+/// ⭐ The kind of one operand or result type: the C++ class its ODS constraint is of
+/// (`::mlir::VectorType`), or a summary read (`bool`).
+#[derive(Clone, Copy)]
+pub(super) enum K {
+    /// Not checked.
+    Any,
+    Integer,
+    Index,
+    Float,
+    Vector,
+    Tensor,
+    MemRef,
+    /// `i1`.
+    Bool,
+    /// `i1` or a vector of 2, 3, 4, 8 or 16 of them (`SPIRV_ScalarOrVectorOf<SPIRV_Bool>`).
+    BoolLike,
+}
+
+impl K {
+    /// Does type `t` fit? An alias (`!t`) does: what it names is not known here.
+    pub(super) fn admits(self, t: &Type<'_>) -> bool {
+        let shaped = |k: crate::ShapedKind| matches!(t, Type::Shaped(s) if s.kind == k);
+        match (self, t) {
+            (K::Any, _) => true,
+            (_, Type::Extended(e)) if !e.name.contains('.') => true,
+            (K::Integer, Type::Integer { .. }) | (K::Index, Type::Index) | (K::Float, Type::Float(_)) => true,
+            (K::Vector, _) => shaped(crate::ShapedKind::Vector),
+            (K::Tensor, _) => shaped(crate::ShapedKind::Tensor),
+            (K::MemRef, _) => shaped(crate::ShapedKind::MemRef),
+            (K::Bool, _) => *t == Type::I1,
+            (K::BoolLike, Type::Shaped(s)) => s.kind == crate::ShapedKind::Vector && *s.elem == Type::I1 && s.shape.as_deref().is_some_and(|d| matches!(d, [crate::Dim::Static(2 | 3 | 4 | 8 | 16)])),
+            (K::BoolLike, _) => *t == Type::I1,
+            _ => false,
+        }
+    }
+
+    /// Op `name`'s operand and result kinds.
+    pub(super) fn of_op(name: &str) -> (Option<&'static [K]>, Option<&'static [K]>) {
+        table::KINDS.binary_search_by(|(n, _, _)| (*n).cmp(name)).map_or((None, None), |i| (table::KINDS[i].1, table::KINDS[i].2))
+    }
 }
 
 /// An integer literal's value (`5`, `-5`, `0x1F`).
@@ -135,6 +179,8 @@ impl C {
                 elem.admits(t.element_type()) && shape.is_none_or(|want| dims.as_deref() == Some(want))
             }
             (C::AnyOf(cs), a) => cs.iter().any(|c| c.admits(Some(a))),
+            // Itself, or an alias (`#mode`).
+            (C::Dialect(name), Attribute::Extended { ext, .. }) => ext.name == *name || !ext.name.contains('.'),
             // An alias (`#map`) or a dialect attribute: what it stands for is not known here.
             (_, Attribute::Extended { .. }) => true,
             _ => false,

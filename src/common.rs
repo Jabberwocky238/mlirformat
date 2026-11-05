@@ -198,6 +198,10 @@ impl Extended<'_> {
             }
             None
         })?;
+        // A type on its own (`!spirv.ptr<vector<4xf32>, Function>`), else a shape (`16x16xf32`).
+        if let Ok(t) = crate::Parser::read(body[..end].trim(), |p| p.ty()) {
+            return Some(t.owned());
+        }
         let shaped = format!("vector<{}>", body[..end].trim());
         match crate::Parser::read(&shaped, |p| p.ty()).ok()? {
             Type::Shaped(Shaped { elem, .. }) => Some(elem.owned()),

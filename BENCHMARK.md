@@ -79,13 +79,9 @@ From 0.4.8, on the fixtures of the time (657 files; there are 2,229 now):
 
 - **Generic form is mlirformat's fast path.** It parses 4.1× faster than `mlir-opt` (54 MB in 0.41 s,
   about 130 MB/s) and prints 1.7–2.4× faster.
-- **Custom form is slower.**
-  - Parsing takes 3.3× as long as `mlir-opt`, and 9× as long as mlirformat's own generic parse of
-    the same module.
-  - Printing takes 2.6–2.8× as long as `mlir-opt`.
-
-  The generic path being fast on the same IR shows that the cost is in the custom-form code
-  (declarative formats and hand-written parsers). It has not been profiled further yet.
+- **Custom form** now parses in 0.96 s (31.9 MB), 2.2× its generic parse of the same module.
+  Reading it and printing it back takes 2.0 s against `mlir-opt`'s 2.2 s for the same job (which
+  also verifies). Printing it is still slower than `mlir-opt`'s printer (1.1 s against 0.8 s).
 - **Many small modules**: `mlir-opt` builds a fresh `MLIRContext` for every `// -----` chunk
   (`processBuffer` in `MlirOptMain.cpp`). Counting everything, that comes to 2.2–2.9 ms per
   chunk. mlirformat keeps one `MlirOpt` for all chunks. This row mostly measures per-module

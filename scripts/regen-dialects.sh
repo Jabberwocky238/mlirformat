@@ -35,6 +35,7 @@ pdl $D/PDL/IR/PDLOps.td
 rocdl $D/LLVMIR/ROCDLOps.td $D/LLVMIR/LLVMTypes.td
 scf $D/SCF/IR/SCFOps.td
 shape $D/Shape/IR/ShapeOps.td
+spirv $D/SPIRV/IR/SPIRVOps.td
 tensor $D/Tensor/IR/TensorOps.td
 tosa $D/Tosa/IR/TosaOps.td
 vector $D/Vector/IR/VectorOps.td

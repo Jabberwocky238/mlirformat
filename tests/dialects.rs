@@ -58,6 +58,7 @@ dialects! {
     pdl: "pdl" => mlirformat::pdl::PdlDialect,
     scf: "scf" => mlirformat::scf::ScfDialect,
     shape: "shape" => mlirformat::shape::ShapeDialect,
+    spirv: "spirv" => mlirformat::spirv::SpirvDialect,
     tensor: "tensor" => mlirformat::tensor::TensorDialect,
     tosa: "tosa" => mlirformat::tosa::TosaDialect,
     vector: "vector" => mlirformat::vector::VectorDialect,

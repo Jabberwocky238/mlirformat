@@ -1860,7 +1860,7 @@ pub struct TransposeOp<'a> {
 /// Defines a new TOSA variable. This is a persistent mutable value across multiple
 /// TOSA graph invocations. Modifications are expressed using read/write semantics.
 ///
-/// Generic form only (custom C++ syntax).
+/// Generic form only (directive `custom<VariableOpTypeOrInitialValue>`).
 #[mlir::op("tosa.variable")]
 pub struct VariableOp<'a> {
     #[attr(symbol)]

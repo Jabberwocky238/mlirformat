@@ -677,6 +677,12 @@ impl Records {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
+                        // `getUnaryOpResultType`: `i1`, or a vector of as many `i1` (SPIR-V's
+                        // comparisons).
+                        _ if plain == "getUnaryOpResultType($_self)" => {
+                            infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
+                            Vec::new()
+                        }
                         // `cloneWith({}, i1)`: the same shape, scalable dims included, of `i1`
                         // (`arm_sme.tile_load`'s mask).
                         _ if plain.split_whitespace().collect::<String>().ends_with("($_self).cloneWith({},IntegerType::get($_ctxt,1))") => {
@@ -700,8 +706,9 @@ impl Records {
                             infer.insert(rhs, format!("outer = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `!async.value<T>` ⇒ `T`: its first parameter, as an element type.
-                        _ if !plain.contains("VectorType::get") && (transformer.contains("getElementType()") || (plain.starts_with("::llvm::cast<") && plain.ends_with(">($_self).getValueType()"))) && !groups[lhs].variadic => {
+                        // `!async.value<T>` ⇒ `T`: its first parameter, as an element type (a SPIR-V pointer's
+                        // pointee, a sampled image's image).
+                        _ if !plain.contains("VectorType::get") && (transformer.contains("getElementType()") || (plain.contains("cast<") && [">($_self).getValueType()", ">($_self).getPointeeType()", ">($_self).getImageType()"].iter().any(|g| plain.ends_with(g)))) && !groups[lhs].variadic => {
                             infer.insert(rhs, format!("el = {}", groups[lhs].name));
                             Vec::new()
                         }
@@ -751,7 +758,15 @@ impl Records {
         }
         fields.extend(props);
         for (key, marker) in [("regions", "region"), ("successors", "successor")] {
-            for (constraint, ods_name) in self.dag(op, key) {
+            let entries = self.dag(op, key);
+            let count = entries.len();
+            for (k, (constraint, ods_name)) in entries.into_iter().enumerate() {
+                // An unnamed one (`spirv.module`'s body) is called by its position.
+                let ods_name = &*match ods_name {
+                    "" if count == 1 => String::from(marker),
+                    "" => format!("{marker}{k}"),
+                    n => String::from(n),
+                };
                 let variadic = self.is_a(constraint, "VariadicRegion") || self.is_a(constraint, "VariadicSuccessor");
                 let ty = match (marker, variadic) {
                     ("region", false) => "Region<'a>",
@@ -786,13 +801,63 @@ impl Records {
         GenOp { rust, name, summary, description, format, generic_why, results: results.iter().map(|r| Self::ident(r)).collect(), fields }
     }
 
+    /// The `operands` / `results` directives spelled out as the op's own groups: `operands` ⇒
+    /// `$a `,` $b`, `type(results)` ⇒ `type($r)`. ODS prints them as one comma list, which is
+    /// what the spelled out form prints too while each group is one value (or there is one
+    /// group); otherwise, and inside `functional-type(..)`, the directive is left for the check
+    /// to refuse.
+    fn spell_groups(format: &str, fields: &[GenField], results: &[String]) -> String {
+        let name_of = |f: &GenField| f.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).map(String::from);
+        let operands: Vec<(String, bool)> = fields.iter().filter(|f| f.marker.starts_with("#[slot(")).filter_map(|f| Some((name_of(f)?, f.ty.starts_with("Vec<")))).collect();
+        let results: Vec<(String, bool)> = results
+            .iter()
+            .map(|r| (r.clone(), fields.iter().any(|f| f.marker.starts_with(&format!("#[dtype(name = {r:?}")) && f.ty.starts_with("Vec<"))))
+            .collect();
+        let spelled = |groups: &[(String, bool)], typed: bool| -> Option<String> {
+            if groups.len() > 1 && groups.iter().any(|(_, v)| *v) {
+                return None;
+            }
+            let one = |(n, _): &(String, bool)| if typed { format!("type(${n})") } else { format!("${n}") };
+            Some(groups.iter().map(one).collect::<Vec<_>>().join(" `,` "))
+        };
+        let (mut out, mut rest) = (String::new(), format);
+        while !rest.is_empty() {
+            // A literal is copied as it is.
+            if let Some(lit) = rest.strip_prefix('`') {
+                let end = lit.find('`').map_or(rest.len(), |e| e + 2);
+                out.push_str(&rest[..end]);
+                rest = &rest[end..];
+                continue;
+            }
+            let word_start = !out.ends_with(|c: char| c.is_ascii_alphanumeric() || matches!(c, '_' | '$' | '-'));
+            let directive = [("type(operands)", &operands, true), ("type(results)", &results, true), ("operands", &operands, false), ("results", &results, false)]
+                .into_iter()
+                .find(|(w, _, _)| word_start && rest.starts_with(w) && !rest[w.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_'));
+            match directive.and_then(|(w, g, typed)| Some((w, spelled(g, typed)?))) {
+                // Inside `functional-type(` the list is one argument: not spelled out.
+                Some((w, s)) if !out.trim_end().ends_with("functional-type(") && !out.trim_end().ends_with(',') || w.starts_with("type(") => {
+                    out.push_str(&s);
+                    rest = &rest[w.len()..];
+                }
+                _ => {
+                    let c = rest.chars().next().unwrap_or(' ');
+                    out.push(c);
+                    rest = &rest[c.len_utf8()..];
+                }
+            }
+        }
+        out
+    }
+
     /// The assembly format if the runtime format engine can read it, else why not.
     fn format(&self, op: &str, fields: &[GenField], results: &[String]) -> (Option<String>, Option<String>) {
-        if self.field(op, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) {
-            return (None, Some("custom C++ syntax".into()));
-        }
-        let Some(raw) = self.text(op, "assemblyFormat").filter(|f| !f.trim().is_empty()) else { return (None, Some("no assembly format".into())) };
-        let format = raw.split_whitespace().collect::<Vec<_>>().join(" ");
+        // An `assemblyFormat` wins over an inherited `hasCustomAssemblyFormat`
+        // (`OpEmitter::genParser`: SPIR-V's base op sets the bit, most of its ops a format).
+        let Some(raw) = self.text(op, "assemblyFormat").filter(|f| !f.trim().is_empty()) else {
+            let why = if self.field(op, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) { "custom C++ syntax" } else { "no assembly format" };
+            return (None, Some(why.into()));
+        };
+        let format = Self::spell_groups(&raw.split_whitespace().collect::<Vec<_>>().join(" "), fields, results);
         // Outside literals, only `$name`, type(), functional-type(), qualified(), attr-dict and groups.
         let mut rest = format.as_str();
         let known: BTreeSet<String> = fields.iter().filter_map(|f| f.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).map(String::from)).collect();

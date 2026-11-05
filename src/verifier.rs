@@ -27,8 +27,14 @@ mod ptr;
 mod quant;
 /// SPIR-V types.
 mod spirv;
+/// `test` dialect types and attributes.
+mod test;
+/// `tosa` ops with a C++ parser.
+mod tosa;
 /// XeGPU types and attributes.
 mod xegpu;
+
+use alloc::borrow::Cow;
 
 use crate::{Attribute, Block, BlockArg, Extended, FunctionType, Item, MlirOpt, Module, NamedAttr, Operation, Region, Shaped, Type};
 
@@ -59,6 +65,12 @@ pub enum Invalid {
     /// of an integer type.
     #[error("invalid dense literal `{0}`")]
     DenseLiteral(String),
+    /// `4 : f32`: a decimal integer literal of a float type (hex bits are one).
+    #[error("unexpected decimal integer literal for a floating point value `{0}`")]
+    FloatLiteral(String),
+    /// `1.0 : i32`: a float literal of a type that is no float.
+    #[error("floating point value not valid for specified type `{0}`")]
+    FloatType(String),
     /// `-1 : i0`: an integer its type cannot hold.
     #[error("integer constant out of range for attribute `{0}`")]
     IntRange(String),
@@ -90,6 +102,10 @@ pub enum Invalid {
     /// An inherent attribute its ODS constraint refuses (`function_type = i64` on `llvm.func`).
     #[error("`{op}`: attribute `{attr}` fails its ODS constraint")]
     AttrConstraint { op: String, attr: String },
+    /// An operand or result type not of the kind its ODS constraint is (`spirv.GL.PackHalf2x16`
+    /// of an `f32`: it takes a vector).
+    #[error("`{op}`: {what} #{index} has type `{ty}`, not one its ODS constraint admits")]
+    TypeKind { op: String, what: &'static str, index: usize, ty: String },
     /// `%x` used where no `%x` is in scope.
     #[error("use of undeclared SSA value name `%{0}`")]
     UndeclaredValue(String),
@@ -122,7 +138,7 @@ pub struct Verifier<'x> {
     /// The values each enclosing region has defined so far, innermost last (MLIR's
     /// `definitionsPerScope`): a region's go out of scope at its end. Each name with the types
     /// of its values (`%0:2` two), where known.
-    scopes: Vec<Vec<(&'x str, Vec<Option<&'x Type<'x>>>)>>,
+    scopes: Vec<Vec<(&'x str, Vec<Option<Cow<'x, Type<'x>>>>)>>,
     /// Where the innermost isolated-from-above op's regions start in `scopes`: nothing below is
     /// visible.
     floor: usize,
@@ -143,7 +159,7 @@ impl<'x> Verifier<'x> {
 
     /// The types of `%name` if it is defined and visible here.
     #[inline]
-    fn visible(&self, name: &str) -> Option<&[Option<&'x Type<'x>>]> {
+    fn visible(&self, name: &str) -> Option<&[Option<Cow<'x, Type<'x>>>]> {
         self.scopes[self.floor..].iter().rev().find_map(|s| s.iter().find(|(n, _)| *n == name)).map(|(_, t)| t.as_slice())
     }
 
@@ -155,7 +171,7 @@ impl<'x> Verifier<'x> {
 
     /// `%name` defined here with its values' types (`defineSSAValue`): not over one in scope;
     /// it resolves a forward use, which must have used these types.
-    fn define(&mut self, name: &'x str, tys: Vec<Option<&'x Type<'x>>>) -> Result<(), Invalid> {
+    fn define(&mut self, name: &'x str, tys: Vec<Option<Cow<'x, Type<'x>>>>) -> Result<(), Invalid> {
         if self.visible(name).is_some() {
             return Err(Invalid::RedefinedValue(name.into()));
         }
@@ -163,7 +179,7 @@ impl<'x> Verifier<'x> {
             && let Some(i) = f.iter().position(|(n, _)| *n == name)
         {
             let (_, used) = f.remove(i);
-            if let Some((_, t)) = used.iter().find(|(k, t)| tys.get(*k as usize).copied().flatten().is_some_and(|d| !Self::same(d, t))) {
+            if let Some((_, t)) = used.iter().find(|(k, t)| tys.get(*k as usize).and_then(Option::as_deref).is_some_and(|d| !Self::same(d, t))) {
                 return Err(Invalid::ValueType(name.into(), t.to_string()));
             }
         }
@@ -181,7 +197,7 @@ impl<'x> Verifier<'x> {
         }
         let k = value.index.unwrap_or(0);
         if let Some(tys) = self.visible(&value.name) {
-            return match (tys.get(k as usize).copied().flatten(), ty) {
+            return match (tys.get(k as usize).and_then(Option::as_deref), ty) {
                 (Some(d), Some(t)) if !Self::same(d, t) => Err(Invalid::ValueType(value.name.to_string(), t.to_string())),
                 _ => Ok(()),
             };
@@ -400,6 +416,15 @@ impl<'x> Verify<'x> for Operation<'x> {
                 return Err(Invalid::AttrConstraint { op: self.name.to_string(), attr: (*name).into() });
             }
         }
+        // Each operand and result type of the kind its ODS constraint is.
+        let (ins, outs) = ods::K::of_op(&self.name);
+        for (what, ks, tys) in [("operand", ins, &self.ty.inputs), ("result", outs, &self.ty.results)] {
+            if let Some(ks) = ks.filter(|ks| ks.len() == tys.len())
+                && let Some((index, t)) = tys.iter().enumerate().find(|(i, t)| !ks[*i].admits(t))
+            {
+                return Err(Invalid::TypeKind { op: self.name.to_string(), what, index, ty: t.to_string() });
+            }
+        }
         self.properties.verify(v)?;
         self.attributes.verify(v)?;
         self.ty.verify(v)?;
@@ -418,7 +443,14 @@ impl<'x> Verify<'x> for Operation<'x> {
         // Results are defined once the whole op is read, `%0:2` two of them; typed when the op
         // gives every result one.
         let counts: usize = self.results.iter().map(|d| d.count.unwrap_or(1) as usize).sum();
-        let mut tys = self.ty.results.iter().map(Some).chain(core::iter::repeat(None)).map(|t| t.filter(|_| counts == self.ty.results.len()));
+        // A raw op's: what its dialect reads them to be from its text (`spirv.Constant 0 : i32`).
+        let raw_tys = self.raw.as_ref().and_then(|_| rules(&self.name)?.raw_results(v, self)).filter(|ts| ts.len() == counts);
+        let given: Vec<Cow<'x, Type<'x>>> = match raw_tys {
+            Some(ts) => ts.into_iter().map(Cow::Owned).collect(),
+            None => self.ty.results.iter().map(Cow::Borrowed).collect(),
+        };
+        let typed = counts == given.len();
+        let mut tys = given.into_iter().map(Some).chain(core::iter::repeat(None)).map(|t| t.filter(|_| typed));
         self.results.iter().try_for_each(|d| v.define(&d.name, tys.by_ref().take(d.count.unwrap_or(1) as usize).collect()))
     }
 }
@@ -434,7 +466,7 @@ impl<'x> Verify<'x> for Block<'x> {
     #[inline]
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
         self.args.verify(v)?;
-        self.args.iter().try_for_each(|a| v.define(&a.name, alloc::vec![Some(&a.ty)]))?;
+        self.args.iter().try_for_each(|a| v.define(&a.name, alloc::vec![Some(Cow::Borrowed(&a.ty))]))?;
         self.ops.verify(v)
     }
 }
@@ -543,10 +575,16 @@ trait DialectRules: Sync {
     fn op(&self, _v: &Verifier<'_>, _op: &Operation<'_>) -> Result<(), Invalid> {
         Ok(())
     }
+
+    /// A raw op's result types, as its text says them (`spirv.Constant 0 : i32`).
+    #[inline]
+    fn raw_results<'x>(&self, _v: &Verifier<'x>, _op: &'x Operation<'x>) -> Option<Vec<Type<'x>>> {
+        None
+    }
 }
 
 /// Every dialect with rules.
-const DIALECTS: &[&dyn DialectRules] = &[&arm_sve::ArmSve, &builtin::Builtin, &llvm::Llvm, &ptr::Ptr, &quant::Quant, &spirv::Spirv, &xegpu::XeGpu];
+const DIALECTS: &[&dyn DialectRules] = &[&arm_sve::ArmSve, &builtin::Builtin, &llvm::Llvm, &ptr::Ptr, &quant::Quant, &spirv::Spirv, &test::Test, &tosa::Tosa, &xegpu::XeGpu];
 
 /// The rules of the dialect owning `!ns.mnemonic` / `#ns.mnemonic`; an alias (`!t`, `#map`)
 /// has none: its definition is checked.

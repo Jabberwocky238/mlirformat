@@ -4,7 +4,7 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use super::{DialectRules, Invalid, Verifier};
-use crate::{MlirOpt, Parser, R, ShapedKind, Type};
+use crate::{Attribute, MlirOpt, Parser, R, ShapedKind, Type};
 
 keywords! {
     /// The SPIR-V types.
@@ -21,75 +21,45 @@ keywords! {
     }
 }
 
-/// `StorageClass`'s cases (`SPIRVBase.td`).
-const STORAGE_CLASSES: &[&str] = &[
-    "UniformConstant", "Input", "Uniform", "Output", "Workgroup", "CrossWorkgroup", "Private", "Function",
-    "Generic", "PushConstant", "AtomicCounter", "Image", "StorageBuffer", "CallableDataKHR", "IncomingCallableDataKHR", "RayPayloadKHR",
-    "HitAttributeKHR", "IncomingRayPayloadKHR", "ShaderRecordBufferKHR", "PhysicalStorageBuffer", "TaskPayloadWorkgroupEXT", "CodeSectionINTEL", "DeviceOnlyINTEL", "HostOnlyINTEL",
-];
+#[path = "spirv.gen.rs"]
+mod enums;
 
-/// `Dim`'s cases (`SPIRVBase.td`).
-const DIMS: &[&str] = &[
-    "Dim1D", "Dim2D", "Dim3D", "Cube", "Rect", "Buffer", "SubpassData",
-];
+/// ⭐ A SPIR-V enum attribute (`SPIRV_I32EnumAttr` / `SPIRV_BitEnumAttr` in `SPIRVBase.td`).
+pub(super) struct SpirvEnum {
+    /// `#spirv.scope<..>`'s `scope`.
+    mnemonic: &'static str,
+    /// The C++ enum (`Scope`).
+    name: &'static str,
+    /// A bit enum: `A|B` (`symbolizeEnum` of a `|` list).
+    bits: bool,
+    cases: &'static [(&'static str, u32)],
+}
 
-/// `ImageDepthInfo`'s cases (`SPIRVBase.td`).
-const DEPTHS: &[&str] = &[
-    "NoDepth", "IsDepth", "DepthUnknown",
-];
+impl SpirvEnum {
+    /// The enum `mnemonic` names (`storage_class`).
+    fn named(mnemonic: &str) -> Option<&'static SpirvEnum> {
+        enums::ENUMS.binary_search_by(|e| e.mnemonic.cmp(mnemonic)).ok().map(|i| &enums::ENUMS[i])
+    }
 
-/// `ImageArrayedInfo`'s cases (`SPIRVBase.td`).
-const ARRAYED: &[&str] = &[
-    "NonArrayed", "Arrayed",
-];
+    /// The enum by its C++ name (`ExecutionModel`).
+    fn of(name: &str) -> Option<&'static SpirvEnum> {
+        enums::ENUMS.iter().find(|e| e.name == name)
+    }
 
-/// `ImageSamplingInfo`'s cases (`SPIRVBase.td`).
-const SAMPLING: &[&str] = &[
-    "SingleSampled", "MultiSampled",
-];
+    /// `symbolizeEnum`: the value `text` spells (`Volatile|Aligned` for a bit enum).
+    fn value(&self, text: &str) -> Option<u32> {
+        let one = |w: &str| self.cases.iter().find(|(c, _)| *c == w.trim()).map(|(_, v)| *v);
+        match self.bits {
+            true => text.split('|').try_fold(0, |acc, w| Some(acc | one(w)?)),
+            false => one(text),
+        }
+    }
 
-/// `ImageSamplerUseInfo`'s cases (`SPIRVBase.td`).
-const SAMPLER_USES: &[&str] = &[
-    "SamplerUnknown", "NeedSampler", "NoSampler",
-];
-
-/// `ImageFormat`'s cases (`SPIRVBase.td`).
-const FORMATS: &[&str] = &[
-    "Unknown", "Rgba32f", "Rgba16f", "R32f", "Rgba8", "Rgba8Snorm", "Rg32f", "Rg16f",
-    "R11fG11fB10f", "R16f", "Rgba16", "Rgb10A2", "Rg16", "Rg8", "R16", "R8",
-    "Rgba16Snorm", "Rg16Snorm", "Rg8Snorm", "R16Snorm", "R8Snorm", "Rgba32i", "Rgba16i", "Rgba8i",
-    "R32i", "Rg32i", "Rg16i", "Rg8i", "R16i", "R8i", "Rgba32ui", "Rgba16ui",
-    "Rgba8ui", "R32ui", "Rgb10a2ui", "Rg32ui", "Rg16ui", "Rg8ui", "R16ui", "R8ui",
-    "R64ui", "R64i",
-];
-
-/// `Scope`'s cases (`SPIRVBase.td`).
-const SCOPES: &[&str] = &[
-    "CrossDevice", "Device", "Workgroup", "Subgroup", "Invocation", "QueueFamily", "ShaderCallKHR",
-];
-
-/// `CooperativeMatrixUseKHR`'s cases (`SPIRVBase.td`).
-const MATRIX_USES: &[&str] = &[
-    "MatrixA", "MatrixB", "MatrixAcc",
-];
-
-/// `Decoration`'s cases (`SPIRVBase.td`).
-const DECORATIONS: &[&str] = &[
-    "RelaxedPrecision", "SpecId", "Block", "BufferBlock", "RowMajor", "ColMajor", "ArrayStride", "MatrixStride",
-    "GLSLShared", "GLSLPacked", "CPacked", "BuiltIn", "NoPerspective", "Flat", "Patch", "Centroid",
-    "Sample", "Invariant", "Restrict", "Aliased", "Volatile", "Constant", "Coherent", "NonWritable",
-    "NonReadable", "Uniform", "UniformId", "SaturatedConversion", "Stream", "Location", "Component", "Index",
-    "Binding", "DescriptorSet", "Offset", "XfbBuffer", "XfbStride", "FuncParamAttr", "FPRoundingMode", "FPFastMathMode",
-    "LinkageAttributes", "NoContraction", "InputAttachmentIndex", "Alignment", "MaxByteOffset", "AlignmentId", "MaxByteOffsetId", "NoSignedWrap",
-    "NoUnsignedWrap", "ExplicitInterpAMD", "OverrideCoverageNV", "PassthroughNV", "ViewportRelativeNV", "SecondaryViewportRelativeNV", "PerPrimitiveEXT", "PerVertexKHR",
-    "NonUniform", "RestrictPointer", "AliasedPointer", "BindlessSamplerNV", "BindlessImageNV", "BoundSamplerNV", "BoundImageNV", "SIMTCallINTEL",
-    "ReferencedIndirectlyINTEL", "ClobberINTEL", "SideEffectsINTEL", "VectorComputeVariableINTEL", "FuncParamIOKindINTEL", "VectorComputeFunctionINTEL", "StackCallINTEL", "GlobalVariableOffsetINTEL",
-    "CounterBuffer", "UserSemantic", "UserTypeGOOGLE", "FunctionRoundingModeINTEL", "FunctionDenormModeINTEL", "RegisterINTEL", "MemoryINTEL", "NumbanksINTEL",
-    "BankwidthINTEL", "MaxPrivateCopiesINTEL", "SinglepumpINTEL", "DoublepumpINTEL", "MaxReplicatesINTEL", "SimpleDualPortINTEL", "MergeINTEL", "BankBitsINTEL",
-    "ForcePow2DepthINTEL", "BurstCoalesceINTEL", "CacheSizeINTEL", "DontStaticallyCoalesceINTEL", "PrefetchINTEL", "StallEnableINTEL", "FuseLoopsInFunctionINTEL", "AliasScopeINTEL",
-    "NoAliasINTEL", "BufferLocationINTEL", "IOPipeStorageINTEL", "FunctionFloatingPointModeINTEL", "SingleElementVectorINTEL", "VectorComputeCallableFunctionINTEL", "MediaBlockIOINTEL", "CacheControlLoadINTEL",
-    "CacheControlStoreINTEL",
-];
+    /// `, `-joined case names, as an ODS enum parser lists them.
+    fn listed(&self) -> String {
+        self.cases.iter().map(|(c, _)| *c).collect::<Vec<_>>().join(", ")
+    }
+}
 
 /// A cursor over one SPIR-V type's body; `enclosing`: the identified structs being read
 /// (`tryStartCyclicParse`), shared with the types nested in it.
@@ -100,9 +70,12 @@ struct SpirvText<'a, 'd, 'e> {
 
 impl<'a, 'd> SpirvText<'a, 'd, '_> {
     /// A keyword that is one of `cases` (`symbolizeEnum`).
-    fn keyword(&mut self, cases: &[&str], what: &str) -> R<&'a str> {
+    fn keyword(&mut self, e: &str, what: &str) -> R<&'a str> {
         let w = self.p.ident().or_else(|_| self.p.err(alloc::format!("expected {what}")))?;
-        if cases.contains(&w) { Ok(w) } else { self.p.err(alloc::format!("unknown {what}: {w}")) }
+        match SpirvEnum::of(e).and_then(|e| e.value(w)) {
+            Some(_) if !w.contains('|') => Ok(w),
+            _ => self.p.err(alloc::format!("unknown {what}: {w}")),
+        }
     }
 
     /// `parseDimensionList`: `N x ...` before the element type; `?` too when `dynamic`.
@@ -176,7 +149,7 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
 
     /// `Decoration` or `Decoration = attr`.
     fn decoration(&mut self) -> R<()> {
-        self.keyword(DECORATIONS, "decoration")?;
+        self.keyword("Decoration", "decoration")?;
         if self.p.eat("=") {
             self.p.attr()?;
         }
@@ -187,7 +160,7 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
     fn image(&mut self) -> R<&'a str> {
         self.element()?;
         let mut dim = "";
-        for (i, (cases, what)) in [(DIMS, "Dim"), (DEPTHS, "ImageDepthInfo"), (ARRAYED, "ImageArrayedInfo"), (SAMPLING, "ImageSamplingInfo"), (SAMPLER_USES, "ImageSamplerUseInfo"), (FORMATS, "ImageFormat")].into_iter().enumerate() {
+        for (i, (cases, what)) in [("Dim", "Dim"), ("ImageDepthInfo", "ImageDepthInfo"), ("ImageArrayedInfo", "ImageArrayedInfo"), ("ImageSamplingInfo", "ImageSamplingInfo"), ("ImageSamplerUseInfo", "ImageSamplerUseInfo"), ("ImageFormat", "ImageFormat")].into_iter().enumerate() {
             self.p.expect(",")?;
             let w = self.keyword(cases, what)?;
             if i == 0 {
@@ -288,7 +261,7 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
             Kind::Ptr => {
                 self.element()?;
                 self.p.expect(",")?;
-                self.keyword(STORAGE_CLASSES, "storage class")?;
+                self.keyword("StorageClass", "storage class")?;
             }
             Kind::Image => {
                 self.image()?;
@@ -312,9 +285,9 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
                 }
                 self.element()?;
                 self.p.expect(",")?;
-                self.keyword(SCOPES, "scope <id>")?;
+                self.keyword("Scope", "scope <id>")?;
                 self.p.expect(",")?;
-                self.keyword(MATRIX_USES, "use <id>")?;
+                self.keyword("CooperativeMatrixUseKHR", "use <id>")?;
             }
             Kind::Matrix => {
                 match self.dims(false)?.as_slice() {
@@ -366,6 +339,361 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
     }
 }
 
+keywords! {
+    /// The SPIR-V ops with a C++ parser whose text is checked here.
+    enum CxxOp {
+        Load = "spirv.Load",
+        Store = "spirv.Store",
+        Variable = "spirv.Variable",
+        GlobalVariable = "spirv.GlobalVariable",
+        CompositeExtract = "spirv.CompositeExtract",
+        EntryPoint = "spirv.EntryPoint",
+        ExecutionMode = "spirv.ExecutionMode",
+        Func = "spirv.func",
+        Module = "spirv.module",
+        IAddCarry = "spirv.IAddCarry",
+        ISubBorrow = "spirv.ISubBorrow",
+        SMulExtended = "spirv.SMulExtended",
+        UMulExtended = "spirv.UMulExtended",
+        BranchConditional = "spirv.BranchConditional",
+        Constant = "spirv.Constant",
+        Switch = "spirv.Switch",
+    }
+}
+
+/// A cursor over a raw SPIR-V op's text after its name, up to its first region; the ops' C++
+/// `parse` functions (`SPIRVOps.cpp`, `MemoryOps.cpp`, `ControlFlowOps.cpp`) read over again.
+struct OpText<'a, 'd, 'v, 'x> {
+    p: Parser<'a, 'd>,
+    v: &'v Verifier<'x>,
+}
+
+impl<'a> OpText<'a, '_, '_, '_> {
+    /// `parseEnumStrAttr`: a string naming one of enum `e`'s cases (a bit enum: `A|B`).
+    fn enum_str(&mut self, e: &str) -> R<u32> {
+        let e = SpirvEnum::of(e).ok_or_else(|| crate::ParseError::unplaced(0, "unknown enum"))?;
+        match self.p.bare_attr()? {
+            Attribute::Str { lit, .. } => match e.value(&lit) {
+                Some(v) => Ok(v),
+                None => self.p.err(alloc::format!("invalid {} attribute specification: \"{lit}\"", e.mnemonic)),
+            },
+            _ => self.p.err(alloc::format!("expected {} attribute specified as string", e.mnemonic)),
+        }
+    }
+
+    /// `parseEnumKeywordAttr`: a bare keyword naming one of enum `e`'s cases.
+    fn enum_keyword(&mut self, e: &str) -> R<()> {
+        let e = SpirvEnum::of(e).ok_or_else(|| crate::ParseError::unplaced(0, "unknown enum"))?;
+        let w = self.p.ident().or_else(|_| self.p.err("expected valid keyword"))?;
+        match e.value(w) {
+            Some(_) => Ok(()),
+            None => self.p.err(alloc::format!("invalid {} attribute specification: {w}", e.mnemonic)),
+        }
+    }
+
+    /// `parseMemoryAccessAttributes`: `[ "Volatile" ]`, `[ "Aligned", 4 ]`.
+    fn memory_access(&mut self) -> R<()> {
+        if !self.p.eat("[") {
+            return Ok(());
+        }
+        let v = self.enum_str("MemoryAccess")?;
+        // `MemoryAccess::Aligned`.
+        if v & 0x2 != 0 {
+            self.p.expect(",")?;
+            self.p.bare_attr()?;
+        }
+        self.p.expect("]")
+    }
+
+    /// An operand: `%x` / `%x#1`.
+    fn operand(&mut self) -> R<String> {
+        self.p.ws();
+        if !self.p.rest().starts_with('%') {
+            return self.p.err("expected SSA operand");
+        }
+        self.p.value().map(|v| v.name.to_string())
+    }
+
+    /// `: type`.
+    fn colon_type(&mut self) -> R<Type<'a>> {
+        self.p.expect(":")?;
+        self.p.ty()
+    }
+
+    /// `%x` is of type `want`, when its definition says (`resolveOperand`).
+    fn resolve(&self, name: &str, want: &Type<'_>) -> R<()> {
+        match self.v.visible(name).and_then(|ts| ts.first()?.as_deref()) {
+            Some(t) if !super::Verifier::same(t, want) => self.p.err(alloc::format!("use of value '%{name}' expects different type than prior uses: '{want}' vs '{t}'")),
+            _ => Ok(()),
+        }
+    }
+
+    /// `parseVariableDecorations`: `bind(set, binding)` or `built_in("..")`, then an attribute dict.
+    fn decorations(&mut self) -> R<()> {
+        if self.p.eat_kw("bind") {
+            self.p.expect("(")?;
+            self.p.bare_attr()?;
+            self.p.expect(",")?;
+            self.p.bare_attr()?;
+            self.p.expect(")")?;
+        } else if self.p.eat_kw("built_in") {
+            self.p.expect("(")?;
+            self.p.attr()?;
+            self.p.expect(")")?;
+        }
+        self.p.opt_dict().map(drop)
+    }
+
+    /// A `!spirv.ptr<..>` type after `:`.
+    fn pointer(&mut self) -> R<()> {
+        let t = self.colon_type()?;
+        match &t {
+            Type::Extended(e) if e.name == "spirv.ptr" => Ok(()),
+            // An alias: what it names is checked where it is defined.
+            Type::Extended(e) if !e.name.contains('.') => Ok(()),
+            _ => self.p.err("expected spirv.ptr type"),
+        }
+    }
+
+    /// `parseFunctionSignatureWithArguments` with no variadic `...`: `(%a: T {..}, ..) -> R`, or
+    /// types alone (an external function); named once named.
+    fn signature(&mut self) -> R<()> {
+        self.p.expect("(")?;
+        if !self.p.eat(")") {
+            self.p.ws();
+            let named = self.p.rest().starts_with('%');
+            loop {
+                self.p.ws();
+                match self.p.rest().starts_with('%') {
+                    true if named => {
+                        self.p.sigil('%')?;
+                        self.colon_type()?;
+                    }
+                    false if !named => drop(self.p.ty()?),
+                    _ => return self.p.err("expected SSA identifier"),
+                }
+                self.p.opt_dict()?;
+                self.p.opt_loc()?;
+                if !self.p.eat(",") {
+                    break;
+                }
+            }
+            self.p.expect(")")?;
+        }
+        if self.p.eat("->") {
+            if self.p.at(b'(') {
+                self.p.group()?;
+            } else {
+                self.p.ty()?;
+            }
+        }
+        Ok(())
+    }
+
+    /// `^bb` or `^bb(%a, %b : T, T)`.
+    fn successor(&mut self) -> R<()> {
+        self.p.ws();
+        if !self.p.rest().starts_with('^') {
+            return self.p.err("expected block name");
+        }
+        self.p.sigil('^')?;
+        if self.p.at(b'(') {
+            self.p.group()?;
+        }
+        Ok(())
+    }
+
+    /// The walk down a composite type by `indices` (`getElementType`).
+    fn extract(&self, ty: &Type<'_>, indices: &[i64]) -> R<()> {
+        if indices.is_empty() {
+            return self.p.err("expected at least one index for spirv.CompositeExtract");
+        }
+        let mut t: Type<'static> = ty.owned();
+        for &i in indices {
+            // Element count (`None`: not known at compile time) and the element at `i`.
+            let (count, elem): (Option<i64>, Option<Type<'static>>) = match &t {
+                Type::Shaped(s) if s.kind == ShapedKind::Vector => (t.element_count().map(|n| n as i64), Some(s.elem.owned())),
+                Type::Extended(_) => match crate::dialects::spirv_types::SpirvType::try_from(&t) {
+                    Ok(crate::dialects::spirv_types::SpirvType::Array { len, elem, .. }) => (Some(i64::from(len)), Some(elem.owned())),
+                    Ok(crate::dialects::spirv_types::SpirvType::RuntimeArray { elem, .. }) => (None, Some(elem.owned())),
+                    Ok(crate::dialects::spirv_types::SpirvType::Matrix { cols, column }) => (Some(i64::from(cols)), Some(column.owned())),
+                    Ok(crate::dialects::spirv_types::SpirvType::CoopMatrix { elem, .. }) => (None, Some(elem.owned())),
+                    Ok(crate::dialects::spirv_types::SpirvType::Struct { members: Some(ms), .. }) => {
+                        (Some(ms.len() as i64), usize::try_from(i).ok().and_then(|i| ms.get(i)).map(|m| m.ty.owned()))
+                    }
+                    // Not a composite, or an alias: not walked further.
+                    Ok(_) => (Some(-1), None),
+                    Err(()) => return Ok(()),
+                },
+                _ => (Some(-1), None),
+            };
+            match (count, elem) {
+                (Some(-1), _) => return self.p.err(alloc::format!("cannot extract from non-composite type '{t}' with index {i}")),
+                (Some(n), _) if i < 0 || i >= n => return self.p.err(alloc::format!("index {i} out of bounds for '{t}'")),
+                (_, Some(e)) => t = e,
+                (_, None) => return Ok(()),
+            }
+        }
+        Ok(())
+    }
+
+    /// The op's text as its C++ `parse` reads it; `region`: a region follows the text.
+    fn read(&mut self, op: CxxOp, region: bool) -> R<()> {
+        match op {
+            CxxOp::Load => {
+                self.enum_str("StorageClass")?;
+                self.operand()?;
+                self.memory_access()?;
+                self.p.opt_dict()?;
+                self.colon_type()?;
+            }
+            CxxOp::Store => {
+                self.enum_str("StorageClass")?;
+                self.p.ws();
+                if !self.p.rest().starts_with('%') {
+                    return self.p.err("expected operand");
+                }
+                self.operand()?;
+                if !self.p.eat(",") {
+                    return self.p.err("expected 2 operands");
+                }
+                self.operand()?;
+                self.memory_access()?;
+                self.colon_type()?;
+                self.p.opt_dict()?;
+            }
+            CxxOp::Variable => {
+                if self.p.eat_kw("init") {
+                    self.p.expect("(")?;
+                    self.operand()?;
+                    self.p.expect(")")?;
+                }
+                self.decorations()?;
+                self.pointer()?;
+            }
+            CxxOp::GlobalVariable => {
+                self.p.symbol()?;
+                if self.p.eat_kw("initializer") {
+                    self.p.group()?;
+                }
+                self.decorations()?;
+                self.pointer()?;
+            }
+            CxxOp::CompositeExtract => {
+                self.operand()?;
+                let indices = match self.p.attr()? {
+                    Attribute::Array(xs) => xs,
+                    _ => return self.p.err("expected a 32-bit integer array attribute for 'indices'"),
+                };
+                let mut is = Vec::new();
+                for x in &indices {
+                    match x {
+                        Attribute::Int { lit, .. } => is.push(lit.parse::<i64>().or_else(|_| self.p.err("expected an 32-bit integer for index"))?),
+                        _ => return self.p.err(alloc::format!("expected an 32-bit integer for index, but found '{x}'")),
+                    }
+                }
+                let t = self.colon_type()?;
+                self.extract(&t, &is)?;
+            }
+            CxxOp::EntryPoint => {
+                self.enum_str("ExecutionModel")?;
+                if !matches!(self.p.bare_attr()?, Attribute::SymbolRef(s) if s.len() == 1) {
+                    return self.p.err("invalid kind of attribute specified");
+                }
+                while self.p.eat(",") {
+                    self.p.symbol()?;
+                }
+            }
+            CxxOp::ExecutionMode => {
+                self.p.attr()?;
+                self.enum_str("ExecutionMode")?;
+                while self.p.eat(",") {
+                    self.p.bare_attr()?;
+                }
+            }
+            CxxOp::Func => {
+                self.p.symbol()?;
+                self.signature()?;
+                self.p.ws();
+                if region && self.p.rest().is_empty() {
+                    return self.p.err("expected function_control attribute specified as string");
+                }
+                self.enum_str("FunctionControl")?;
+                if self.p.eat_kw("attributes") {
+                    self.p.dict()?;
+                }
+            }
+            CxxOp::Module => {
+                self.p.ws();
+                if self.p.rest().starts_with('@') {
+                    self.p.symbol()?;
+                }
+                self.enum_keyword("AddressingModel")?;
+                self.enum_keyword("MemoryModel")?;
+                if self.p.eat_kw("requires") {
+                    self.p.attr()?;
+                }
+                if self.p.eat_kw("attributes") {
+                    self.p.dict()?;
+                }
+            }
+            CxxOp::IAddCarry | CxxOp::ISubBorrow | CxxOp::SMulExtended | CxxOp::UMulExtended => {
+                self.p.opt_dict()?;
+                self.operand()?;
+                while self.p.eat(",") {
+                    self.operand()?;
+                }
+                let t = self.colon_type()?;
+                match crate::dialects::spirv_types::SpirvType::try_from(&t) {
+                    Ok(crate::dialects::spirv_types::SpirvType::Struct { members: Some(ms), .. }) if ms.len() == 2 => {}
+                    _ if matches!(&t, Type::Extended(e) if !e.name.contains('.')) => {}
+                    _ => return self.p.err("expected spirv.struct type with two members"),
+                }
+            }
+            CxxOp::BranchConditional => {
+                let cond = self.operand()?;
+                self.resolve(&cond, &Type::I1)?;
+                if self.p.eat("[") {
+                    self.p.bare_attr()?;
+                    self.p.expect(",")?;
+                    self.p.bare_attr()?;
+                    self.p.expect("]")?;
+                }
+                self.p.expect(",")?;
+                self.successor()?;
+                self.p.expect(",")?;
+                self.successor()?;
+            }
+            CxxOp::Constant => {
+                let a = self.p.attr()?;
+                super::builtin::Builtin.attr(self.v, &a).or_else(|e| self.p.err(e.to_string()))?;
+            }
+            CxxOp::Switch => {
+                self.operand()?;
+                let t = self.colon_type()?;
+                if !matches!(&t, Type::Integer { .. }) && !matches!(&t, Type::Extended(e) if !e.name.contains('.')) {
+                    return self.p.err(alloc::format!("invalid kind of type specified: expected builtin.integer, but found '{t}'"));
+                }
+                self.p.expect(",")?;
+                self.p.expect("[")?;
+                if !self.p.eat_kw("default") {
+                    return self.p.err("expected 'default'");
+                }
+                self.p.expect(":")?;
+                self.successor()?;
+                while self.p.eat(",") {
+                    self.p.eat("-");
+                    self.p.number::<u64>()?;
+                    self.p.expect(":")?;
+                    self.successor()?;
+                }
+                self.p.expect("]")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 /// The SPIR-V dialect's rules.
 pub(super) struct Spirv;
 
@@ -393,5 +721,52 @@ impl DialectRules for Spirv {
     fn ty(&self, v: &Verifier<'_>, t: &Type<'_>) -> Result<(), Invalid> {
         let Type::Extended(e) = t else { return Ok(()) };
         Self::why(v.opt, e.mnemonic(), e.body.as_deref(), &mut Vec::new()).map_err(|why| Invalid::DialectType { ty: t.to_string(), why })
+    }
+
+    /// A raw op with a C++ parser: its text as that parser reads it. Its trailing attribute
+    /// dict and location are the generic reader's.
+    fn op(&self, v: &Verifier<'_>, op: &crate::Operation<'_>) -> Result<(), Invalid> {
+        let (Some(raw), Ok(kind)) = (&op.raw, CxxOp::try_from(&*op.name)) else { return Ok(()) };
+        let mut text = String::new();
+        let mut region = false;
+        for piece in raw {
+            match piece {
+                crate::Piece::Text(t) => text.push_str(t),
+                _ => {
+                    region = true;
+                    break;
+                }
+            }
+        }
+        let mut o = OpText { p: Parser::new(&text, v.opt), v };
+        o.read(kind, region).map_err(|e| Invalid::DialectOp { op: op.name.to_string(), why: e.placed(&text).to_string() })
+    }
+
+    /// `spirv.Constant`'s: its value's type, or the type after `:` (`ConstantOp::parse`).
+    fn raw_results<'x>(&self, v: &Verifier<'x>, op: &'x crate::Operation<'x>) -> Option<Vec<Type<'x>>> {
+        if op.name != "spirv.Constant" {
+            return None;
+        }
+        let [crate::Piece::Text(text)] = op.raw.as_deref()? else { return None };
+        let mut p = Parser::new(text, v.opt);
+        let ty = match p.attr().ok()? {
+            Attribute::Int { ty: Some(t), .. } | Attribute::Float { ty: Some(t), .. } | Attribute::Builtin { ty: Some(t), .. } if !matches!(&t, Type::Shaped(s) if s.kind == ShapedKind::Tensor) => t,
+            Attribute::Bool(_) => Type::I1,
+            _ => p.opt_ty().ok().flatten()?,
+        };
+        Some(alloc::vec![ty])
+    }
+
+    /// An enum attribute (`#spirv.scope<Device>`, an op's `<Device>`) names one of its cases
+    /// (`FieldParser<Scope>`).
+    fn attr(&self, _v: &Verifier<'_>, a: &Attribute<'_>) -> Result<(), Invalid> {
+        let Attribute::Extended { ext, .. } = a else { return Ok(()) };
+        let Some(e) = SpirvEnum::named(ext.mnemonic()) else { return Ok(()) };
+        let body = ext.body.as_deref().unwrap_or("");
+        let word = body.trim().strip_prefix('<').and_then(|b| b.strip_suffix('>')).unwrap_or(body).trim();
+        match e.value(word) {
+            Some(_) => Ok(()),
+            None => Err(Invalid::DialectAttr { attr: a.to_string(), why: alloc::format!("expected ::mlir::spirv::{} to be one of: {}", e.name, e.listed()) }),
+        }
     }
 }

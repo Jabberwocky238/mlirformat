@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv_types, tensor, tosa, ub, vector, x86vector, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
+pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv, spirv_types, tensor, tosa, ub, vector, x86vector, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
 pub use crate::generator::{Emit, IntoStatic, Printer, Reborrow, Sep, Shown, ShownFrom, ShownIn, Source, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
@@ -113,6 +113,7 @@ impl MlirOpt {
             .load(scf::ScfDialect)
             .load(shape::ShapeDialect)
             .load(tensor::TensorDialect)
+            .load(spirv::SpirvDialect)
             .load(tosa::TosaDialect)
             .load(vector::VectorDialect)
             .load(amx::AmxDialect)

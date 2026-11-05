@@ -92,10 +92,11 @@ position; the hidden `__N` variants filling gaps take none) — `CmpIPredicate::
 Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
 `builtin`, `cf`, `complex`, `emitc`, `func`, `gpu`, `index`, `linalg`, `llvm`, `math`, `memref`,
 `pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`; the CPUs' `x86vector`, `amx`, `arm_neon`,
-`arm_sve` and `arm_sme`; the GPU vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`. `arith`, `builtin`, `cf`, `complex`,
+`arm_sve` and `arm_sme`; the GPU vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`;
+`spirv`. `arith`, `builtin`, `cf`, `complex`,
 `func`, `index`, `math` and `ub` are written by hand; the rest are generated from ODS by
-`mlirformat tblgen`; `llvm_types::LlvmType` and `emitc_types::EmitcType` read and build those
-dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name
+`mlirformat tblgen`; `llvm_types::LlvmType`, `emitc_types::EmitcType` and
+`spirv_types::SpirvType` read and build those dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name
 over the generated one so the generated files stay as `mlirformat tblgen` wrote them:
 `affine_ops` (`affine.for` / `if` / `parallel` / `apply` / `min` / `max` / `load` / `store`),
 `scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`), `linalg_hand`
@@ -139,7 +140,10 @@ python3 scripts/traits.py --llvm $LLVM --mlirformat target/release/mlirformat -I
 ```
 
 The same run writes `src/verifier/ods.gen.rs`: each op's inherent attributes with their ODS
-constraints, which `MlirOpt::verify` checks as `verifyInherentAttrs` does.
+constraints, which `MlirOpt::verify` checks as `verifyInherentAttrs` does, and the kind of each
+operand and result type (the C++ class its constraint is of: `IntegerType`, `VectorType`, …).
+`scripts/spirv_enums.py` writes `src/verifier/spirv.gen.rs`, the cases of every SPIR-V enum
+attribute (`SPIRVBase.td`).
 
 ## Value layer
 
@@ -192,26 +196,29 @@ mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
     -I $LLVM/mlir/include -o src/dialects
 ```
 
-Every built-in generated dialect has one entry file under `td/`, which mirrors `mlir/include`:
-`td/mlir/Dialect/<Dir>/<namespace>.td` sits where the upstream files it includes sit, and says
-which they are (`td/mlir/Dialect/ArmSME/IR/arm_sme.td`: the ops and the intrinsics, two upstream
-files). Each is generated with `--dialect <namespace>`. An `include` the upstream `.td` declares
-relative to itself (`ArmSMEOps.td`'s `include "ArmSME.td"`) is found beside its includer, as each
-upstream build passes its own directory as `-I`:
+`td/` is llvm-project 22.1.8's `mlir/include`, cut down to what the built-in dialects include:
+the upstream `.td` files, unchanged, at their own paths; `-I td` is the root their
+`include "mlir/..."` lines read from. A dialect whose ops upstream splits over several files is one
+`--dialect <namespace>` run over those files (`linalg`: `LinalgOps.td`, `LinalgStructuredOps.td`,
+`LinalgRelayoutOps.td`). An `include` the upstream `.td` declares relative to itself
+(`ArmSMEOps.td`'s `include "ArmSME.td"`) is found beside its includer, as each upstream build passes
+its own directory as `-I`:
 
 ```sh
-mlirformat tblgen --dialect linalg td/mlir/Dialect/Linalg/IR/linalg.td \
-    -I $LLVM/mlir/include -I $MLIR_GEN -o src/dialects
+D=td/mlir/Dialect/Linalg/IR
+mlirformat tblgen --dialect linalg $D/LinalgOps.td $D/LinalgStructuredOps.td $D/LinalgRelayoutOps.td \
+    -I td -o src/dialects
 ```
 
-`scripts/regen-dialects.sh` regenerates every one of them (`LLVM=… MLIR_GEN=…`; `MLIR_GEN` holds
-the generated `LinalgNamedStructuredOps.yamlgen.td`: a build's `tools/mlir/include`, or an
-installed LLVM's `include`).
+`scripts/regen-dialects.sh` regenerates every one of them. `LinalgNamedStructuredOps.yamlgen.td`
+is the one file a 22.1.8 build generates (from the OpDSL YAML) rather than keeps in the source tree;
+`td/` holds it too.
 
 ## Performance
 
-Against `mlir-opt` 22.1.8 (`BENCHMARK.md`): the generic form parses 4.1× faster (54 MB in 0.41 s)
-and prints 1.7–2.4× faster. The custom form is slower, 3.3× to parse and 2.6–2.8× to print.
+Against `mlir-opt` 22.1.8 (`BENCHMARK.md`), on one 32 MB module: reading the custom form and
+writing it back takes 2.0 s (`mlir-opt`'s whole run: 2.2 s), reading the generic form instead
+1.5 s (2.9 s). The generic form parses at about 130 MB/s (54 MB in 0.43 s).
 
 ## License
 

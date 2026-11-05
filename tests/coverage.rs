@@ -56,7 +56,7 @@ enum Seen {
 const NOT_IN_ODS: &[&str] = &["affine.dma_start", "affine.dma_wait", "shape.print", "shape.unknown_shape"];
 
 /// The built-in dialects that come from `mlirformat tblgen` (`src/dialects/*.gen.rs`).
-const GENERATED: &[&str] = &["affine", "async", "bufferization", "emitc", "gpu", "linalg", "llvm", "memref", "pdl", "scf", "shape", "tensor", "tosa", "vector", "amdgpu", "arm_neon", "arm_sme", "arm_sve", "nvgpu", "nvvm", "rocdl", "xegpu", "xevm"];
+const GENERATED: &[&str] = &["affine", "async", "bufferization", "emitc", "gpu", "linalg", "llvm", "memref", "pdl", "scf", "shape", "tensor", "tosa", "vector", "amdgpu", "arm_neon", "arm_sme", "arm_sve", "nvgpu", "nvvm", "rocdl", "spirv", "xegpu", "xevm"];
 
 fn percent(part: usize, whole: usize) -> f64 {
     if whole == 0 { 100.0 } else { part as f64 * 100.0 / whole as f64 }
