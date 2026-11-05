@@ -1306,8 +1306,13 @@ impl Content {
 
 impl Field {
     /// A property field's value as an attribute (`None`: absent), enum case values typed `:iN`.
+    #[inline]
     pub fn attr(&self, c: Content) -> Result<Option<Attribute<'static>>, Error> {
-        let a = Option::<Attribute>::try_from(c)?;
+        self.retype(Option::<Attribute>::try_from(c)?)
+    }
+
+    /// [`Field::attr`] of an attribute already read: borrowing what it borrowed.
+    pub fn retype<'a>(&self, a: Option<Attribute<'a>>) -> Result<Option<Attribute<'a>>, Error> {
         Ok(match (a, self.role) {
             (Some(Attribute::Int { lit, .. }), Role::Prop { int: Some(ty), .. }) => {
                 Some(Attribute::Int { lit, ty: Some(Type::try_from(ty).map_err(|e| Error(e.msg))?) })
@@ -1320,10 +1325,12 @@ impl Field {
     }
 }
 
-impl NamedAttr<'_> {
+impl<'a> NamedAttr<'a> {
+    /// `name = value`; a unit attribute is the bare `name`. The name is borrowed (a field name,
+    /// a literal), not copied.
     #[inline]
-    pub fn of(name: &str, value: Attribute<'static>) -> NamedAttr<'static> {
-        NamedAttr { name: Cow::Owned(name.into()), value: (value != Attribute::Unit).then_some(value) }
+    pub fn of(name: &'a str, value: Attribute<'a>) -> NamedAttr<'a> {
+        NamedAttr { name: Cow::Borrowed(name), value: (value != Attribute::Unit).then_some(value) }
     }
 }
 

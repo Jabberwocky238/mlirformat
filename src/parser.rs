@@ -1905,10 +1905,52 @@ impl<'a> Operation<'a> {
 
 // ---- reading the custom form ---------------------------------------------------------------
 
+/// A field read off the text. What [`Format::to_operation`] puts straight into the op stays as
+/// read, borrowing the text; only a typed op ([`Format::finish`]) or a typed property makes it
+/// a [`Content`], and only then is it copied.
+enum Got<'a> {
+    Attr(Attribute<'a>),
+    /// A successor label without its `^`.
+    Str(Str<'a>),
+    /// The discardable attributes.
+    Attrs(Vec<NamedAttr<'a>>),
+    Other(Content),
+}
+
+impl From<Content> for Got<'_> {
+    #[inline]
+    fn from(c: Content) -> Self {
+        match c {
+            Content::Attr(a) => Got::Attr(a),
+            c => Got::Other(c),
+        }
+    }
+}
+
+impl<'a> From<Attribute<'a>> for Got<'a> {
+    #[inline]
+    fn from(a: Attribute<'a>) -> Self {
+        Got::Attr(a)
+    }
+}
+
+impl TryFrom<Got<'_>> for Content {
+    type Error = Error;
+
+    fn try_from(g: Got<'_>) -> Result<Content, Error> {
+        Ok(match g {
+            Got::Attr(a) => Content::Attr(a.into_static()),
+            Got::Str(s) => Content::Str(s.into_owned()),
+            Got::Attrs(v) => Content::of(&v)?,
+            Got::Other(c) => c,
+        })
+    }
+}
+
 /// Fields read so far.
 #[derive(Default)]
 struct Slots<'a> {
-    fields: Vec<(&'static str, Content)>,
+    fields: Vec<(&'static str, Got<'a>)>,
     /// Operand groups read: (name, values), as written.
     values: Vec<(&'static str, Vec<Value<'a>>)>,
     /// Type variables bound by the text: (name, types).
@@ -1917,8 +1959,8 @@ struct Slots<'a> {
 
 impl<'a> Slots<'a> {
     #[inline]
-    fn set(&mut self, f: &Field, v: Content) {
-        self.fields.push((f.name, v));
+    fn set(&mut self, f: &Field, v: impl Into<Got<'a>>) {
+        self.fields.push((f.name, v.into()));
     }
 
     #[inline]
@@ -1942,12 +1984,12 @@ impl<'a> Slots<'a> {
     }
 
     #[inline]
-    fn get(&self, f: &Field) -> Option<&Content> {
+    fn get(&self, f: &Field) -> Option<&Got<'a>> {
         self.fields.iter().find(|(k, _)| *k == f.name).map(|(_, v)| v)
     }
 
     #[inline]
-    fn get_mut(&mut self, f: &Field) -> Option<&mut Content> {
+    fn get_mut(&mut self, f: &Field) -> Option<&mut Got<'a>> {
         self.fields.iter_mut().find(|(k, _)| *k == f.name).map(|(_, v)| v)
     }
 }
@@ -1985,9 +2027,6 @@ impl Format<'_> {
     fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
         let field = |p: &Parser<'a, '_>, n: &str| self.field(n).copied().or_else(|e| p.err(e.0));
         let ty_var = |p: &Parser<'a, '_>, n: &str| self.type_var(n).copied().or_else(|e| p.err(e.0));
-        let content = |p: &Parser<'a, '_>, c: Result<Content, Error>| c.or_else(|e| p.err(e.0));
-        // An attribute owned for its `Content`: a clone made `'static`, no serde round trip.
-        let owned = |_: &Parser<'a, '_>, a: Option<&Attribute<'a>>| -> R<Content> { Ok(Content::Attr(a.map_or(Attribute::Unit, |a| a.clone().into_static()))) };
         for (i, e) in elems.iter().enumerate() {
             match e {
                 Elem::Lit(l) if l.trim().is_empty() => {}
@@ -2055,7 +2094,7 @@ impl Format<'_> {
                             r.bind(f.name, ts);
                             continue;
                         }
-                        Role::Prop { unit: true, .. } => Content::Attr(Attribute::Unit),
+                        Role::Prop { unit: true, .. } => Got::Attr(Attribute::Unit),
                         Role::Prop { bits: Some(_), int, .. } => {
                             let Some(e) = f.bit_enum() else { return p.err("a bad bit enum") };
                             p.ws();
@@ -2075,32 +2114,31 @@ impl Format<'_> {
                             if !e.mnemonic.is_empty() {
                                 p.expect(">")?;
                             }
-                            Content::Attr(Attribute::Int { lit: Str::Owned(format!("{value}")), ty: int.and_then(|t| Type::try_from(t).ok()) })
+                            Got::Attr(Attribute::Int { lit: Str::Owned(format!("{value}")), ty: int.and_then(|t| Type::try_from(t).ok()) })
                         }
                         Role::Prop { symbol: true, .. } => {
                             p.ws();
-                            Content::Attr(Attribute::str(&p.sym_name()?))
+                            Got::Attr(Attribute::str(&p.sym_name()?))
                         }
                         // An alias (`#di_label`) stands for the whole attribute.
                         Role::Prop { dialect: Some(_), .. } if { p.ws(); p.at(b'#') } => {
-                            let a = p.attr()?;
-                            owned(p, Some(&a))?
+                            Got::Attr(p.attr()?)
                         }
                         Role::Prop { dialect: Some(_), .. } if let Some((ns, m)) = f.keyword_dialect() => {
                             p.ws();
                             let body = Some(Cow::Owned(format!("<{m} {}>", p.ident()?)));
-                            Content::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body, params: Vec::new() }, ty: None })
+                            Got::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body, params: Vec::new() }, ty: None })
                         }
                         Role::Prop { dialect: Some(d), .. } => {
                             p.ws();
                             let body = Some(Cow::Owned(p.group()?.into()));
-                            Content::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
+                            Got::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
                         }
                         Role::Prop { .. } => {
                             // A bare keyword is a user enum case; anything else is an attribute.
                             let save = p.pos();
                             match p.ident() {
-                                Ok(word) if !ATTR_WORDS.contains(&word) && !p.rest().starts_with(['<', '(', '[']) && !Parser::scalar_type_word(word) => Content::Str(word.into()),
+                                Ok(word) if !ATTR_WORDS.contains(&word) && !p.rest().starts_with(['<', '(', '[']) && !Parser::scalar_type_word(word) => Got::Other(Content::Str(word.into())),
                                 _ => {
                                     p.seek(save);
                                     let a = if self.before_colon(n) || matches!(f.role, Role::Prop { int: Some(_), .. }) { p.bare_attr()? } else { p.attr()? };
@@ -2112,11 +2150,11 @@ impl Format<'_> {
                                         (_, Attribute::Float { lit, ty: None }) if let Role::Prop { int: Some(t), .. } = f.role => Attribute::Float { lit, ty: Type::try_from(t).ok() },
                                         (_, a) => a,
                                     };
-                                    owned(p, Some(&a))?
+                                    Got::Attr(a)
                                 }
                             }
                         }
-                        Role::Successor => Content::Str(p.sigil('^')?.into()),
+                        Role::Successor => Got::Str(Cow::Borrowed(p.sigil('^')?)),
                         // `$regions` of a variadic region: `{..}, {..}`, maybe none (`scf.reduce`).
                         Role::Region if f.variadic => {
                             let mut rs = Vec::new();
@@ -2127,11 +2165,11 @@ impl Format<'_> {
                                     break;
                                 }
                             }
-                            Content::regions(rs)
+                            Content::regions(rs).into()
                         }
                         Role::Region => {
                             let region = p.region()?;
-                            Content::region(p.lend(region))
+                            Content::region(p.lend(region)).into()
                         }
                         Role::Attrs | Role::Loc => continue,
                     };
@@ -2157,7 +2195,7 @@ impl Format<'_> {
                         }
                     }
                     let ty = Type::Integer { signedness: Signedness::Signless, width: 64 };
-                    r.set(&ints, Content::Attr(Attribute::DenseArray { ty, values: statics }));
+                    r.set(&ints, Attribute::DenseArray { ty, values: statics });
                     r.set_values(&vals, ops);
                     if let Role::Operand { ty } = vals.role
                         && let Ok(t) = self.field(ty)
@@ -2199,12 +2237,12 @@ impl Format<'_> {
                     };
                     for a in dict {
                         match self.schema.field(&a.name).filter(|f| matches!(f.role, Role::Prop { .. }) && !spelled.contains(&f.name)) {
-                            Some(&f) => r.set(&f, owned(p, a.value.as_ref())?),
+                            Some(&f) => r.set(&f, a.value.unwrap_or(Attribute::Unit)),
                             None => rest.push(a),
                         }
                     }
                     match self.schema.of_role(|r| *r == Role::Attrs).next() {
-                        Some(&f) => r.set(&f, content(p, Content::of(&rest))?),
+                        Some(&f) => r.set(&f, Got::Attrs(rest)),
                         None if !rest.is_empty() => return p.err("this op takes no discardable attributes"),
                         None => {}
                     }
@@ -2318,13 +2356,17 @@ impl Format<'_> {
             if r.get(f).is_none()
                 && let Some(d) = f.default_attr()
             {
-                r.set(f, Content::Attr(d));
+                r.set(f, d);
             }
         }
         for f in self.schema.of_role(|r| matches!(r, Role::Type { .. })) {
             let undetermined = || Error(format!("type variable `{}` is not determined", f.name));
             let ts: Vec<Type<'a>> = match (r.bound(f.name), f.role) {
-                (Some(ts), _) => ts.to_vec(),
+                // Moved out below, once no other variable can still read it.
+                (Some(_), _) => {
+                    types.push((f, None));
+                    continue;
+                }
                 (None, Role::Type { infer: Some(Infer::I1), .. }) => vec![Type::I1],
                 // One per operand of a variadic group (none for an absent optional one: `arm_sme.tile_load`'s mask).
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like(); if f.variadic { self.arity(f, &r, results) } else { 1 }],
@@ -2368,12 +2410,12 @@ impl Format<'_> {
                     // A number written without its type is MLIR's default: `i64`, `f64`
                     // (`arith.constant 10`); the attribute takes it too, as `mlir-opt` builds it.
                     match self.schema.field(attr).and_then(|af| r.get_mut(af)) {
-                        Some(Content::Attr(Attribute::Int { ty: t @ None, .. })) => *t = Some(Type::Integer { signedness: Signedness::Signless, width: 64 }),
-                        Some(Content::Attr(Attribute::Float { ty: t @ None, .. })) => *t = Some(Type::Float(FloatKind::F64)),
+                        Some(Got::Attr(Attribute::Int { ty: t @ None, .. })) => *t = Some(Type::Integer { signedness: Signedness::Signless, width: 64 }),
+                        Some(Got::Attr(Attribute::Float { ty: t @ None, .. })) => *t = Some(Type::Float(FloatKind::F64)),
                         _ => {}
                     }
                     let a = self.schema.field(attr).and_then(|f| r.get(f));
-                    vec![if let Some(Content::Attr(a)) = a { a.type_of() } else { None }.ok_or_else(undetermined)?]
+                    vec![if let Some(Got::Attr(a)) = a { a.type_of() } else { None }.ok_or_else(undetermined)?]
                 }
                 (None, _) if f.variadic => Vec::new(),
                 (None, _) => return Err(undetermined()),
@@ -2381,9 +2423,22 @@ impl Format<'_> {
             if !f.variadic && ts.is_empty() {
                 return Err(undetermined());
             }
-            types.push((f.name, ts));
+            types.push((f, Some(ts)));
         }
-        Ok(types)
+        // What the text bound, taken over: the last binding of each name, as `Slots::bound` reads.
+        types
+            .into_iter()
+            .map(|(f, ts)| {
+                let ts = match ts {
+                    Some(ts) => ts,
+                    None => r.types.iter_mut().rev().find(|(n, _)| *n == f.name).map(|(_, ts)| core::mem::take(ts)).unwrap_or_default(),
+                };
+                if !f.variadic && ts.is_empty() {
+                    return Err(Error(format!("type variable `{}` is not determined", f.name)));
+                }
+                Ok((f.name, ts))
+            })
+            .collect()
     }
 
     /// Fills defaults and inferred types, then builds the struct's [`Content`].
@@ -2406,7 +2461,8 @@ impl Format<'_> {
         {
             r.set(f, Content::Seq(Vec::new()));
         }
-        Ok(Content::Struct(self.schema.name, r.fields))
+        let fields = r.fields.into_iter().map(|(k, g)| Content::try_from(g).map(|c| (k, c))).collect::<Result<_, _>>()?;
+        Ok(Content::Struct(self.schema.name, fields))
     }
 
     /// ⭐ The op read straight into an [`Operation`], no typed op in between: what
@@ -2419,7 +2475,7 @@ impl Format<'_> {
         let ty_of = |name: &str| types.iter().find(|(n, _)| *n == name).map(|(_, ts)| ts.as_slice()).ok_or_else(|| Error(format!("no type variable `{name}`")));
         let mut regions = Vec::new();
         for f in self.schema.of_role(|r| *r == Role::Region) {
-            match take(f.name).ok_or_else(|| missing(f.name))? {
+            match Content::try_from(take(f.name).ok_or_else(|| missing(f.name))?)? {
                 Content::Seq(xs) if f.variadic => regions.extend(xs.into_iter().map(Content::into_region).collect::<Result<Vec<_>, _>>()?),
                 c if f.variadic => regions.extend(c.to::<Vec<Region<'static>>>()?),
                 c => regions.push(c.into_region()?),
@@ -2453,16 +2509,19 @@ impl Format<'_> {
         let mut props: Vec<NamedAttr<'a>> = Vec::new();
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
             // As `Fields::take` reads a field the text left out: an `Option`'s `None`, else none.
-            let c = match (take(f.name), f.ty) {
+            // An attribute field keeps what was read, borrowing the text; only a typed one goes
+            // through its Rust type (and so through a `Content`).
+            let a: Option<Attribute<'a>> = match (take(f.name), f.ty) {
                 // A unit attribute left out is `false` (`Fields::or_default`): not there.
                 (None, _) if matches!(f.role, Role::Prop { unit: true, .. }) => continue,
-                (Some(c), FieldType::Typed(through)) => through(c)?,
-                (Some(c), FieldType::Attr { .. }) => c,
-                (None, FieldType::Typed(through)) => through(Content::None).map_err(|_| missing(f.name))?,
+                (Some(g), FieldType::Typed(through)) => through(Content::try_from(g)?)?.try_into()?,
+                (Some(Got::Attr(a)), FieldType::Attr { .. }) => Some(a),
+                (Some(g), FieldType::Attr { .. }) => Content::try_from(g)?.try_into()?,
+                (None, FieldType::Typed(through)) => through(Content::None).map_err(|_| missing(f.name))?.try_into()?,
                 (None, FieldType::Attr { required: true }) => return Err(missing(f.name)),
                 (None, FieldType::Attr { required: false }) => continue,
             };
-            props.extend(f.attr(c)?.map(|a| NamedAttr::of(f.name, a)));
+            props.extend(f.retype(a)?.map(|a| NamedAttr::of(f.name, a)));
         }
         if self.schema.of_role(|r| matches!(r, Role::Operand { .. })).filter(|f| f.variadic).count() > 1 {
             let values = sizes.iter().map(|n| Cow::Owned(format!("{n}"))).collect();
@@ -2471,11 +2530,15 @@ impl Format<'_> {
         props.sort_by(|a, b| a.name.cmp(&b.name));
         let mut successors = Vec::new();
         for f in self.schema.of_role(|r| *r == Role::Successor) {
-            let c = take(f.name).ok_or_else(|| missing(f.name))?;
-            if f.variadic { successors.extend(c.to::<Vec<Str<'static>>>()?) } else { successors.push(c.to::<Str<'static>>()?) }
+            match take(f.name).ok_or_else(|| missing(f.name))? {
+                Got::Str(s) if !f.variadic => successors.push(s),
+                g if f.variadic => successors.extend(Content::try_from(g)?.to::<Vec<Str<'static>>>()?),
+                g => successors.push(Content::try_from(g)?.to::<Str<'static>>()?),
+            }
         }
         let attributes = match self.schema.of_role(|r| *r == Role::Attrs).next().and_then(|f| take(f.name)) {
-            Some(c) => c.to::<Vec<NamedAttr<'static>>>()?,
+            Some(Got::Attrs(v)) => v,
+            Some(g) => Content::try_from(g)?.to::<Vec<NamedAttr<'static>>>()?,
             None => Vec::new(),
         };
         Ok(Operation {
