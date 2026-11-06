@@ -3,7 +3,8 @@
 //! `cargo run --release --example bench -- [--reps N] FILE...`; `$MLIR_OPT` is the `mlir-opt` to
 //! compare with (22.1.8). A file is cut at `// -----` as `--split-input-file` does. mlirformat
 //! runs in process on one thread: parse with [`MlirOpt::upstream`], print custom (upstream) and
-//! generic ([`MlirOpt::new`]). `mlir-opt` runs as a process (startup included, measured on an
+//! generic ([`MlirOpt::new`]); and parses again on all CPUs ([`MlirOpt::parse_in`] on a
+//! `ThreadMulti`). `mlir-opt` runs as a process (startup included, measured on an
 //! empty input), threading off, unregistered ops allowed, printing to /dev/null: as is, and with the parse-time verifier off.
 
 use std::process::{Command, Stdio};
@@ -47,6 +48,14 @@ impl Bench {
             }
             t.elapsed()
         });
+        let pool = mlirformat::ThreadMulti::default();
+        let parse_in = self.best(|| {
+            let t = Instant::now();
+            for c in &chunks {
+                self.upstream.parse_in(c, &pool).unwrap_or_else(|e| panic!("{file}: {e}"));
+            }
+            t.elapsed()
+        });
         let modules: Vec<_> = chunks.iter().map(|c| self.upstream.parse(c).unwrap()).collect();
         let print = |opt: &MlirOpt| {
             self.best(|| {
@@ -72,11 +81,13 @@ impl Bench {
             src.len() as f64 / 1e6
         );
         println!(
-            "  mlirformat  parse {:8.1}  print custom {:8.1}  print generic {:8.1}  parse+custom {:8.1}",
+            "  mlirformat  parse {:8.1}  print custom {:8.1}  print generic {:8.1}  parse+custom {:8.1}  parse on {} threads {:8.1}",
             ms(parse),
             ms(custom),
             ms(generic),
-            ms(parse + custom)
+            ms(parse + custom),
+            mlirformat::Executor::threads(&pool),
+            ms(parse_in)
         );
         println!(
             "  mlir-opt    custom {:8.1}  generic {:8.1}  custom, no parse verifier {:8.1}  (startup {:.1})",
