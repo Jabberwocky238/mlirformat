@@ -45,6 +45,33 @@ pub struct Printer<'p, 'd> {
     lent: &'p [Region<'p>],
     /// Where the regions handed over by reference ([`Region::sourced`]) are read.
     source: Option<&'d dyn Source>,
+    /// Prints the ops of the next block read from a source in parallel, once
+    /// ([`MlirOpt::print_in`](crate::MlirOpt::print_in)): the executor, and the source as threads
+    /// share it.
+    par: Option<(&'d dyn Fork, &'d (dyn Source + Sync))>,
+}
+
+/// One run of a block's ops, printed apart ([`Printer::blocks_from`]).
+type Run<'t> = Box<dyn FnOnce() -> Result<String, fmt::Error> + Send + 't>;
+
+/// An [`Executor`](moremath::Executor) as a printer holds it: without its generic method, so
+/// it fits behind a reference.
+trait Fork: Sync {
+    fn threads(&self) -> usize;
+
+    fn fork<'t>(&self, runs: Vec<Run<'t>>) -> Vec<Result<String, fmt::Error>>;
+}
+
+impl<X: moremath::Executor + Sync> Fork for X {
+    #[inline]
+    fn threads(&self) -> usize {
+        moremath::Executor::threads(self)
+    }
+
+    #[inline]
+    fn fork<'t>(&self, runs: Vec<Run<'t>>) -> Vec<Result<String, fmt::Error>> {
+        self.execute(runs)
+    }
 }
 
 /// Where a printer's text goes: any writer, or a string it can take text back out of (a custom
@@ -60,21 +87,21 @@ enum Sink<'p> {
 pub trait Source {
     /// Region `id`, one level deep: its blocks and their ops, whose own regions are references
     /// again.
-    fn region(&self, id: u32) -> Region<'_>;
+    fn region(&self, id: u64) -> Region<'_>;
 
     /// Region `id`'s blocks, labels and arguments only (their ops are left out).
-    fn blocks(&self, id: u32) -> Vec<Block<'_>> {
+    fn blocks(&self, id: u64) -> Vec<Block<'_>> {
         self.region(id).blocks.into_iter().map(|b| Block { ops: Vec::new(), ..b }).collect()
     }
 
     /// How many ops block `b` of region `id` holds.
-    fn len(&self, id: u32, b: usize) -> usize {
+    fn len(&self, id: u64, b: usize) -> usize {
         self.region(id).blocks[b].ops.len()
     }
 
     /// Op `k` of block `b` of region `id`, its regions by reference: the printer reads a region
     /// it only prints one op at a time.
-    fn op(&self, id: u32, b: usize, k: usize) -> Operation<'_> {
+    fn op(&self, id: u64, b: usize, k: usize) -> Operation<'_> {
         self.region(id).blocks.swap_remove(b).ops.swap_remove(k)
     }
 }
@@ -112,7 +139,7 @@ impl<'p, 'd> Printer<'p, 'd> {
 
     #[inline]
     fn into(out: Sink<'p>, opt: &'d MlirOpt) -> Self {
-        Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new(), lent: &[], source: None }
+        Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new(), lent: &[], source: None, par: None }
     }
 
     /// A printer into `out` in the same state (indentation, default dialect, dialects).
@@ -128,7 +155,7 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 
     fn with<'q>(&self, out: Sink<'q>, lent: &'q [Region<'q>]) -> Printer<'q, 'd> {
-        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source }
+        Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source, par: self.par }
     }
 
     /// ⭐ Prints with `f` on a printer in the same state, lent `lent`, writing in place; when
@@ -143,7 +170,7 @@ impl<'p, 'd> Printer<'p, 'd> {
             }
             Sink::Write(_) => (&mut aside, None),
         };
-        let mut q = Printer { out: Sink::Text(text), indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source };
+        let mut q = Printer { out: Sink::Text(text), indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source, par: self.par };
         let done = f(&mut q).and_then(Result::ok);
         match (done, at) {
             (Some(()), Some(_)) => Some(Ok(())),
@@ -333,24 +360,63 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 
     /// [`blocks_eliding`](Self::blocks_eliding) of region `id` of `src`, read one op at a time.
-    fn blocks_from(&mut self, src: &dyn Source, id: u32, entry_label: bool, elide: Option<&str>) -> fmt::Result {
+    /// The first block that has an executor to print on ([`MlirOpt::print_in`](crate::MlirOpt::print_in))
+    /// prints in parallel ([`Printer::ops_apart`]).
+    fn blocks_from(&mut self, src: &dyn Source, id: u64, entry_label: bool, elide: Option<&str>) -> fmt::Result {
         self.write_char('{')?;
         for (i, b) in src.blocks(id).iter().enumerate() {
             self.block_head(b, i, entry_label)?;
             self.indent += 2;
             let n = src.len(id, i);
-            for k in 0..n {
-                let op = src.op(id, i, k);
-                if k + 1 == n && elide.is_some_and(|t| Self::bare_terminator(&op, t)) {
-                    break;
+            match self.par.take() {
+                Some(par) if n > 1 => self.ops_apart(par, id, i, n, elide)?,
+                par => {
+                    self.par = par;
+                    self.ops_from(src, id, i, 0..n, n, elide)?;
                 }
-                self.nl()?;
-                self.op(&op)?;
             }
             self.indent -= 2;
         }
         self.nl()?;
         self.write_char('}')
+    }
+
+    /// Ops `range` of block `b` of region `id` of `src`, each on a line of its own (the last
+    /// one of the `n` elided when it is the bare terminator `elide`).
+    fn ops_from(&mut self, src: &dyn Source, id: u64, b: usize, range: core::ops::Range<usize>, n: usize, elide: Option<&str>) -> fmt::Result {
+        for k in range {
+            let op = src.op(id, b, k);
+            if k + 1 == n && elide.is_some_and(|t| Self::bare_terminator(&op, t)) {
+                break;
+            }
+            self.nl()?;
+            self.op(&op)?;
+        }
+        Ok(())
+    }
+
+    /// ⭐ The `n` ops of block `b` of region `id` printed in parallel: cut into runs (about four
+    /// per thread), each printed into a string of its own — its slot — by a printer in this
+    /// one's state; the slots then written out in order: the text a serial print gives. The
+    /// runs print serially inside (no executor); the executor is spent once.
+    fn ops_apart(&mut self, (x, src): (&'d dyn Fork, &'d (dyn Source + Sync)), id: u64, b: usize, n: usize, elide: Option<&str>) -> fmt::Result {
+        let step = n.div_ceil(x.threads() * 4).max(1);
+        let (indent, opt, default_ns, aliases) = (self.indent, self.opt, self.default_ns, &self.aliases);
+        let runs: Vec<Run<'_>> = (0..n)
+            .step_by(step)
+            .map(|from| {
+                Box::new(move || {
+                    let mut out = String::new();
+                    let mut p = Printer { out: Sink::Text(&mut out), indent, opt, default_ns, aliases: aliases.clone(), lent: &[], source: Some(src), par: None };
+                    p.ops_from(src, id, b, from..(from + step).min(n), n, elide)?;
+                    Ok(out)
+                }) as Run<'_>
+            })
+            .collect();
+        for slot in x.fork(runs) {
+            self.write_str(&slot?)?;
+        }
+        Ok(())
     }
 
     /// `op` with its regions by reference read one level deep, for whatever looks into them.
@@ -420,12 +486,12 @@ impl<'a> Region<'a> {
 
     /// Region `id` of a [`Source`], by reference: what an op handed to the printer holds instead
     /// of its region (a region with no blocks is just empty, not a reference).
-    pub fn sourced(id: u32) -> Self {
+    pub fn sourced(id: u64) -> Self {
         Region { blocks: alloc::vec![Block { label: Some(Cow::Owned(format!("{SOURCED}{id}"))), args: Vec::new(), ops: Vec::new() }] }
     }
 
     /// The id of a region by reference.
-    fn source_id(&self) -> Option<u32> {
+    fn source_id(&self) -> Option<u64> {
         match &self.blocks[..] {
             [b] => b.label.as_deref()?.strip_prefix(SOURCED)?.parse().ok(),
             _ => None,
@@ -501,6 +567,19 @@ impl<T: Emit + ?Sized> ShownFrom<'_, T> {
         let mut out = String::new();
         let mut p = Printer::text(&mut out, self.0);
         p.source = Some(self.2);
+        self.1.emit(&mut p)?;
+        Ok(out)
+    }
+}
+
+impl<T: Emit + ?Sized> ShownFrom<'_, T> {
+    /// [`text`](Self::text), the ops of the first block read from the source printed in
+    /// parallel on `x` ([`MlirOpt::print_in`](crate::MlirOpt::print_in)).
+    pub(crate) fn text_in<X: moremath::Executor + Sync>(&self, source: &(dyn Source + Sync), x: &X) -> Result<String, fmt::Error> {
+        let mut out = String::new();
+        let mut p = Printer::text(&mut out, self.0);
+        p.source = Some(self.2);
+        p.par = (moremath::Executor::threads(x) > 1).then_some((x as &dyn Fork, source));
         self.1.emit(&mut p)?;
         Ok(out)
     }

@@ -261,6 +261,14 @@ impl MlirOpt {
         ShownFrom(self, x, source)
     }
 
+    /// ⭐ [`show_from`](Self::show_from) as text, the ops of the first block read from `source`
+    /// (a module's body) printed in parallel on `x` (`ThreadMulti`), each run into a string of
+    /// its own, the strings joined in order: the same text.
+    #[inline]
+    pub fn print_in<T: Emit + ?Sized, X: moremath::Executor + Sync>(&self, x: &T, source: &(dyn Source + Sync), exec: &X) -> Result<String, fmt::Error> {
+        ShownFrom(self, x, source).text_in(source, exec)
+    }
+
     /// Module / op → text, ops in the table in custom form: `opt.show(&m).to_string()`.
     #[inline]
     pub fn show<'x, T: Emit + ?Sized>(&'x self, x: &'x T) -> Shown<'x, T> {
