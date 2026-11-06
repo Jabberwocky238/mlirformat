@@ -1,4 +1,35 @@
-# Benchmark: mlirformat 0.6.0 vs `mlir-opt` 22.1.8
+# Benchmark: mlirformat 0.6.2 vs `mlir-opt` 22.1.8
+
+## 0.6.2: jemalloc, every CPU
+
+Since 0.6.2 the `std` feature makes jemalloc the global allocator, so a program linking
+mlirformat no longer runs on glibc malloc. Measured 2026-11-06 on the machine below, again **not
+idle** (load average 16–19 throughout): mlirformat 0.6.2 (`1bfd34d`), both tools with threads on,
+all 16 CPUs, no pinning. Inputs: seed 1's module, as in the tables further down.
+
+Parsing in process (`examples/bench.rs`, best of 5; `parse_in` on a `ThreadMulti` of 16
+threads), against the whole threaded `mlir-opt` run (parse, verify, print; best of 3):
+
+| file | `parse_in`, 16 threads | `mlir-opt` whole run, threads on |
+| --- | ---: | ---: |
+| big, custom (31.9 MB) | **214** | 2,100 (custom out) |
+| big, generic (54.3 MB) | **182** | 3,000 (generic out) |
+
+Text in ⇒ text out as processes (`mlirpass` with no pipeline: mlirformat's `parse_in` and
+`print_in` on 16 threads; `mlir-opt --allow-unregistered-dialect -o /dev/null`, best of 3, peak
+RSS from `/usr/bin/time -f %M`):
+
+| job | mlirpass 0.8.1 | `mlir-opt` | speed-up | RSS mlirpass / `mlir-opt` |
+| --- | ---: | ---: | ---: | ---: |
+| custom in ⇒ custom out | 1,300 | 2,100 | **1.62×** | 907 / 332 MB |
+| custom in ⇒ generic out | 980 | 2,440 | **2.49×** | 1,010 / 319 MB |
+| generic in ⇒ custom out | 1,490 | 2,840 | **1.91×** | 920 / 395 MB |
+| generic in ⇒ generic out | 520 | 3,000 | **5.77×** | 1,027 / 381 MB |
+
+Against 0.6.0 under glibc (same jobs, mlirpass's `BENCHMARK.md`): custom ⇒ custom 2,210 ⇒ 1,300 ms,
+generic ⇒ generic 770 ⇒ 520 ms; `parse_in` 542 ⇒ 214 ms (custom) and 349 ⇒ 182 ms (generic). The
+custom form is no longer slower than `mlir-opt` on any job. The tables below are 0.6.0's.
+
 
 Text → IR (parse) and IR → text (print), in mlirformat and in `mlir-opt` 22.1.8, on the same files:
 each phase timed on its own, on one thread and, for parsing, on all of them (`parse_in` on a
@@ -90,7 +121,7 @@ mlirformat keeps one `MlirOpt` for all of them (0.04–0.06 ms per chunk).
   machine this busy. It reads the same module.
 - **glibc malloc still costs up to 2.4× on the custom form** (print custom 2,372 vs 1,007 ms
   under jemalloc). Lists are allocated at their exact length since 0.5.5, which fragments glibc's
-  heap; a program that links mlirformat chooses its global allocator.
+  heap. Since 0.6.2 `std` makes jemalloc the global allocator (first section).
 - **The breaking change of 0.6.0** (`Source` region ids are `u64`) costs nothing measurable.
 
 ## History (one big module)

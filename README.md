@@ -225,12 +225,10 @@ is the one file a 22.1.8 build generates (from the OpDSL YAML) rather than keeps
 
 ## Performance
 
-Against `mlir-opt` 22.1.8 (`BENCHMARK.md`), one core, whole process: on a 54 MB module in generic
-form, reading it and writing it back is 2.7× faster (0.91 s against 2.46 s), and reading it and
-writing the custom form is 1.7× faster. Reading the 32 MB custom form and writing it back is 0.74×
-with glibc malloc and 1.28× with jemalloc; the `std` feature makes jemalloc the global allocator
-(not on MSVC), so a program linking mlirformat with `std` runs on jemalloc. Peak memory on that module is 1.5–2.3× `mlir-opt`'s
-(665–778 MB against 341–433 MB).
+Against `mlir-opt` 22.1.8 (`BENCHMARK.md`), 16 CPUs, both threaded, jemalloc (the global
+allocator with `std` since 0.6.2): `parse_in` reads a 54 MB generic module in 182 ms and a 32 MB
+custom one in 214 ms; as whole processes, generic in ⇒ generic out is 5.8× faster than `mlir-opt`,
+custom in ⇒ custom out 1.6×. Peak memory is 2.6–3.2× `mlir-opt`'s.
 
 ## License
 
