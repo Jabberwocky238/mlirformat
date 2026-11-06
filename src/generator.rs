@@ -104,6 +104,12 @@ pub trait Source {
     fn op(&self, id: u64, b: usize, k: usize) -> Operation<'_> {
         self.region(id).blocks.swap_remove(b).ops.swap_remove(k)
     }
+
+    /// Ops `range` of block `b` of region `id`, in order, as [`op`](Self::op) gives each: what
+    /// the printer reads a block by. A source whose blocks are lists walks them once here.
+    fn ops_iter<'s>(&'s self, id: u64, b: usize, range: core::ops::Range<usize>) -> Box<dyn Iterator<Item = Operation<'s>> + 's> {
+        Box::new(range.map(move |k| self.op(id, b, k)))
+    }
 }
 
 impl Write for Printer<'_, '_> {
@@ -384,8 +390,8 @@ impl<'p, 'd> Printer<'p, 'd> {
     /// Ops `range` of block `b` of region `id` of `src`, each on a line of its own (the last
     /// one of the `n` elided when it is the bare terminator `elide`).
     fn ops_from(&mut self, src: &dyn Source, id: u64, b: usize, range: core::ops::Range<usize>, n: usize, elide: Option<&str>) -> fmt::Result {
-        for k in range {
-            let op = src.op(id, b, k);
+        let start = range.start;
+        for (k, op) in (start..).zip(src.ops_iter(id, b, range)) {
             if k + 1 == n && elide.is_some_and(|t| Self::bare_terminator(&op, t)) {
                 break;
             }
