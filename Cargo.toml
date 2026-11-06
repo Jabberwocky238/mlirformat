@@ -27,9 +27,14 @@ moremath = { version = "0.2.1", default-features = false, features = ["alloc"] }
 clap = { version = "4", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
+# `std` makes jemalloc the global allocator: glibc malloc fragments on the exact-length lists the
+# parser allocates (BENCHMARK.md: printing the custom form 2.4× slower). Not on MSVC (no jemalloc).
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = { version = "0.7", optional = true }
+
 [features]
 default = ["std", "tblgen"]
-std = ["serde/std", "thiserror/std", "moremath/std"]
+std = ["serde/std", "thiserror/std", "moremath/std", "dep:tikv-jemallocator"]
 # The `mlirformat` command line (`cargo install mlirformat`); `mlirformat tblgen` turns an ODS `.td`
 # file into `<dialect>.gen.rs` (TableGen built in, no LLVM needed). Off ⇒ the library alone, `no_std` capable.
 tblgen = ["std", "dep:clap", "dep:serde_json"]

@@ -15,6 +15,11 @@
 #![no_std]
 
 extern crate alloc;
+
+/// With `std`, every program linking mlirformat allocates through jemalloc (`Cargo.toml`).
+#[cfg(all(feature = "std", not(target_env = "msvc")))]
+#[global_allocator]
+static JEMALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 /// Lets `#[mlir::op]` output use `::mlirformat::` paths inside this crate too.
 extern crate self as mlirformat;
 
