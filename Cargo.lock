@@ -128,6 +128,7 @@ version = "0.5.5"
 dependencies = [
  "clap",
  "mlirformat-macros",
+ "moremath",
  "serde",
  "serde_json",
  "smallvec",
@@ -137,6 +138,26 @@ dependencies = [
 [[package]]
 name = "mlirformat-macros"
 version = "0.5.5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "moremath"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25b7753ad0c9b23fdd8dbee55dab3c35295d0bfa47c920f30daf9a8e171894b0"
+dependencies = [
+ "moremath-macros",
+]
+
+[[package]]
+name = "moremath-macros"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23ceaf1b674279d5a0270be68af5eb54d9ccfe28a3121d93aab7e8661ad793bf"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -226,6 +226,16 @@ impl MlirOpt {
         Parser::new(src, self).all(Parser::module)
     }
 
+    /// A block smaller than this is read on one thread, even by [`parse_in`](Self::parse_in).
+    pub const PARALLEL_BYTES: usize = 1 << 16;
+
+    /// ⭐ Like [`parse`](Self::parse), the ops of the module's body read in parallel on `x`
+    /// (`ThreadMulti`): the same module, the same errors.
+    #[inline]
+    pub fn parse_in<'a, X: moremath::Executor + Sync>(&self, src: &'a str, x: &X) -> R<Module<'a>> {
+        Parser::new(src, self).with_fork(x).all(Parser::module)
+    }
+
     /// Text → one op.
     #[inline]
     pub fn parse_op<'a>(&self, src: &'a str) -> R<Operation<'a>> {

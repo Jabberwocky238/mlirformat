@@ -40,6 +40,38 @@ pub struct Parser<'a, 'd> {
     /// Regions a typed op read is lent (see [`Parser::lend`]), and whether lending is on.
     lent: Vec<Region<'a>>,
     lending: bool,
+    /// Reads the ops of the first block in parallel, once ([`MlirOpt::parse_in`]).
+    fork: Option<&'d dyn for<'x> Fork<'x>>,
+}
+
+/// Reads one run of a block's ops ([`Parser::forked`]).
+pub(crate) type Chunk<'a, 't> = Box<dyn FnOnce() -> R<Vec<Operation<'a>>> + Send + 't>;
+
+/// An [`Executor`](moremath::Executor) as the parser holds it: without its generic method, so
+/// it fits behind a reference.
+pub(crate) trait Fork<'a>: Sync {
+    fn threads(&self) -> usize;
+
+    /// The runs live for `'t` (they borrow the parser), the ops they read for `'a` (the source),
+    /// which outlives them.
+    fn fork<'t>(&self, chunks: Vec<Chunk<'a, 't>>) -> Vec<R<Vec<Operation<'a>>>>
+    where
+        'a: 't;
+}
+
+impl<'a, X: moremath::Executor + Sync> Fork<'a> for X {
+    #[inline]
+    fn threads(&self) -> usize {
+        moremath::Executor::threads(self)
+    }
+
+    #[inline]
+    fn fork<'t>(&self, chunks: Vec<Chunk<'a, 't>>) -> Vec<R<Vec<Operation<'a>>>>
+    where
+        'a: 't,
+    {
+        self.execute(chunks)
+    }
 }
 
 /// IR nodes a [`Parser`] reads whole — the dual of [`Emit`](crate::Emit), which writes them.
@@ -102,7 +134,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     #[inline]
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
-        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false }
+        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None }
     }
 
     /// ⭐ A region handed to a typed op without copying it. The op holds `Region<'static>`, so
@@ -147,6 +179,13 @@ impl<'a, 'd> Parser<'a, 'd> {
     #[inline]
     pub fn read<T>(src: &'a str, f: impl FnOnce(&mut Parser<'a, '_>) -> R<T>) -> R<T> {
         Parser::new(src, &MlirOpt::new()).all(f)
+    }
+
+    /// Reads the ops of the first block on `fork`'s threads (see [`Parser::forked`]).
+    #[inline]
+    pub(crate) fn with_fork(mut self, fork: &'d dyn for<'x> Fork<'x>) -> Self {
+        self.fork = (fork.threads() > 1).then_some(fork);
+        self
     }
 
     /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
@@ -1002,7 +1041,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
-        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false };
+        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None };
         loop {
             if p.sigil('%').is_err() {
                 return false;
@@ -1033,7 +1072,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if !(tail.is_empty() || tail.starts_with("//")) || line_end == rest.len() {
             return false;
         }
-        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false };
+        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None };
         probe.ws();
         match probe.peek() {
             Some(b'%' | b'^' | b'}') => true,
@@ -1076,15 +1115,135 @@ impl<'a, 'd> Parser<'a, 'd> {
             args = self.opt_list("(", ")", Self::block_arg)?;
             self.expect(":")?;
         }
-        let mut ops = Vec::new();
-        loop {
+        // The block's ops are read with `fork` off: only `forked`'s runs split further, so a
+        // nested block is never scanned twice.
+        let fork = self.fork.take();
+        let mut ops = fork.and_then(|f| self.forked(f)).unwrap_or_default();
+        let read = loop {
             self.ws();
             if matches!(self.peek(), None | Some(b'}' | b'^')) {
                 ops.shrink_to_fit();
-                return Ok(Block { label, args, ops });
+                break Ok(Block { label, args, ops });
             }
-            ops.push(self.op()?);
+            match self.op() {
+                Ok(op) => ops.push(op),
+                Err(e) => break Err(e),
+            }
+        };
+        self.fork = fork;
+        read
+    }
+
+    /// ⭐ The ops of the block starting here, read in runs on `fork`'s threads: the runs are cut
+    /// where [`Parser::op_starts`] finds an op, each read by a parser of its own with this one's
+    /// aliases. An op as big as a run is a run alone, and its parser keeps `fork`: its own
+    /// blocks split again, as tasks of their own, down to blocks too small to be worth it.
+    /// `None` (nothing consumed) when the block is small or a run does not read as exactly its
+    /// ops; the block is then read serially, with the serial reading's errors.
+    fn forked(&mut self, fork: &'d dyn for<'x> Fork<'x>) -> Option<Vec<Operation<'a>>> {
+        self.ws();
+        let starts = self.op_starts()?;
+        let (&first, &end) = (starts.first()?, starts.last()?);
+        if end - first < MlirOpt::PARALLEL_BYTES {
+            return None;
         }
+        // About four runs per thread, cut at op starts; an op of a run's size or more alone.
+        let step = (end - first) / (fork.threads() * 4) + 1;
+        let mut runs: Vec<(usize, usize, bool)> = Vec::new();
+        let mut from = first;
+        for w in starts.windows(2) {
+            let (s, e) = (w[0], w[1]);
+            if e - s >= step {
+                if s > from {
+                    runs.push((from, s, false));
+                }
+                runs.push((s, e, e - s >= MlirOpt::PARALLEL_BYTES));
+                from = e;
+            } else if e - from >= step || e == end {
+                runs.push((from, e, false));
+                from = e;
+            }
+        }
+        let (src, opt, ns, aliases, types) = (self.src, self.opt, self.default_ns, &self.aliases, &self.type_aliases);
+        let chunks: Vec<Chunk<'a, '_>> = runs
+            .into_iter()
+            .map(|(from, to, alone)| {
+                Box::new(move || {
+                    let mut p = Parser { pos: from, default_ns: ns, aliases: aliases.clone(), type_aliases: types.clone(), fork: alone.then_some(fork), ..Parser::new(src, opt) };
+                    let mut ops = Vec::new();
+                    loop {
+                        p.ws();
+                        if p.pos >= to {
+                            return if p.pos == to { Ok(ops) } else { p.err("an op runs past its run") };
+                        }
+                        ops.push(p.op()?);
+                    }
+                }) as Chunk<'a, '_>
+            })
+            .collect();
+        let runs: Vec<Vec<Operation<'a>>> = fork.fork(chunks).into_iter().collect::<R<_>>().ok()?;
+        let mut ops = Vec::with_capacity(runs.iter().map(Vec::len).sum());
+        runs.into_iter().for_each(|r| ops.extend(r));
+        self.pos = end;
+        Some(ops)
+    }
+
+    /// Where each op of the block starting here begins, then where the block ends (its `}` or
+    /// the next block's `^`): a scan that follows only `()[]{}`, strings and `//` comments. An
+    /// op starts a line of the block's own depth with `%`, `"` or a dotted name (`func.func`);
+    /// a guess the runs check ([`Parser::forked`]). `None` if the brackets do not close.
+    fn op_starts(&self) -> Option<Vec<usize>> {
+        let b = self.src.as_bytes();
+        let starts_op = |j: usize| match b.get(j) {
+            Some(b'%' | b'"') => true,
+            Some(c) if c.is_ascii_alphabetic() => {
+                let word = b[j..].iter().take_while(|c| is_id(**c)).count();
+                b[j..j + word].contains(&b'.')
+            }
+            _ => false,
+        };
+        let mut starts = Vec::new();
+        if !starts_op(self.pos) {
+            return None;
+        }
+        starts.push(self.pos);
+        let (mut i, mut depth) = (self.pos, 0usize);
+        while let Some(&c) = b.get(i) {
+            match c {
+                b'"' => {
+                    i += 1;
+                    while *b.get(i)? != b'"' {
+                        i += if b[i] == b'\\' { 2 } else { 1 };
+                    }
+                }
+                b'/' if b.get(i + 1) == Some(&b'/') => {
+                    while b.get(i + 1).is_some_and(|c| *c != b'\n') {
+                        i += 1;
+                    }
+                }
+                b'(' | b'[' | b'{' => depth += 1,
+                b'}' if depth == 0 => {
+                    starts.push(i);
+                    return Some(starts);
+                }
+                b')' | b']' | b'}' => depth = depth.checked_sub(1)?,
+                b'\n' if depth == 0 => {
+                    let j = i + 1 + b[i + 1..].iter().take_while(|c| matches!(c, b' ' | b'\t' | b'\r')).count();
+                    if b.get(j) == Some(&b'^') {
+                        starts.push(j);
+                        return Some(starts);
+                    }
+                    if starts_op(j) {
+                        starts.push(j);
+                    }
+                    i = j;
+                    continue;
+                }
+                _ => {}
+            }
+            i += 1;
+        }
+        None
     }
 }
 

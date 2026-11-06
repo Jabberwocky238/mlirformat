@@ -72,6 +72,10 @@ mod verifier;
 /// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
+/// What [`MlirOpt::parse_in`] runs on: `moremath`'s executors.
+pub use moremath::{Execute, Executor, ThreadSingle};
+#[cfg(feature = "std")]
+pub use moremath::ThreadMulti;
 pub use traits::{Effect, EffectKind, EffectOn, Effects, OpInfo, OpInfos, Trait};
 pub use values::*;
 pub use verifier::{Invalid, Verifier, Verify};

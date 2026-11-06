@@ -22,12 +22,14 @@ serde = { version = "1", default-features = false, features = ["derive", "alloc"
 thiserror = { version = "2", default-features = false }
 # A list being read: a few inline, then one allocation of the exact length (`Parser::list`).
 smallvec = { version = "1.15", default-features = false, features = ["union", "const_generics"] }
+# `Executor`: `MlirOpt::parse_in` reads a big module's ops on it (`ThreadMulti` with `std`).
+moremath = { version = "0.2.1", default-features = false, features = ["alloc"] }
 clap = { version = "4", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
 [features]
 default = ["std", "tblgen"]
-std = ["serde/std", "thiserror/std"]
+std = ["serde/std", "thiserror/std", "moremath/std"]
 # The `mlirformat` command line (`cargo install mlirformat`); `mlirformat tblgen` turns an ODS `.td`
 # file into `<dialect>.gen.rs` (TableGen built in, no LLVM needed). Off ⇒ the library alone, `no_std` capable.
 tblgen = ["std", "dep:clap", "dep:serde_json"]
