@@ -179,6 +179,15 @@ borrowed text is copied). `Reborrow::reborrow` goes the other way: a view of a v
 all its text from it, copying only the lists that hold it, so that an IR keeping its own text can
 hand it to the printer without a deep copy.
 
+## Threads
+
+`MlirOpt::parse_in(src, &exec)` and `MlirOpt::print_in(&module, &source, &exec)` take an
+executor (`ThreadMulti`, re-exported from [moremath](https://crates.io/crates/moremath); feature
+`std`). Reading, a block of at least `MlirOpt::PARALLEL_BYTES` is cut at its ops into runs read
+in parallel, an op as big as a run splitting again; printing, the ops of a module's body are
+printed in runs into strings of their own, joined in order. Either gives exactly what `parse` /
+`show_from` give. A [`Source`] names its regions by `u64` ids.
+
 ## Command line
 
 `mlirformat tblgen` turns an ODS `.td` file into `<dialect>.gen.rs`: one `#[mlir::op]` struct per
