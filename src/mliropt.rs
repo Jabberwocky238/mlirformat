@@ -226,6 +226,19 @@ impl MlirOpt {
         Parser::new(src, self).all(Parser::module)
     }
 
+    /// Like [`parse`](Self::parse), the text read from file `name`: an op or block argument written
+    /// without `loc(...)` is at `loc("name":line:col)` of where it starts, as `mlir-opt` reads a file.
+    #[inline]
+    pub fn parse_file<'a>(&self, src: &'a str, name: &str) -> R<Module<'a>> {
+        Parser::new(src, self).with_file(name).all(Parser::module)
+    }
+
+    /// [`parse_file`](Self::parse_file) on `x`'s threads, as [`parse_in`](Self::parse_in).
+    #[inline]
+    pub fn parse_file_in<'a, X: moremath::Executor + Sync>(&self, src: &'a str, name: &str, x: &X) -> R<Module<'a>> {
+        Parser::new(src, self).with_file(name).with_fork(x).all(Parser::module)
+    }
+
     /// A block smaller than this is read on one thread, even by [`parse_in`](Self::parse_in).
     pub const PARALLEL_BYTES: usize = 1 << 16;
 

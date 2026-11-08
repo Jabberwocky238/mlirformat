@@ -168,11 +168,13 @@ impl Parse for Func<'_> {
         let sym_name = p.sym_name()?;
         p.expect("(")?;
         let entries = p.list(")", |p| {
+            let start = p.here();
             let name = p.sigil('%')?.into();
             p.expect(":")?;
             let ty = p.ty()?;
             let attrs = p.opt_dict()?;
             let loc = p.opt_loc()?;
+            let loc = p.loc_or_file(loc, start);
             Ok((BlockArg { name, ty: ty.clone(), loc }, ty, attrs))
         })?;
         let results = if !p.eat("->") {

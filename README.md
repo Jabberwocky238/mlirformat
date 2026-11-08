@@ -158,6 +158,7 @@ as values, in both directions, for whoever computes with the IR (folds, rewrites
 | memref layouts | `StridedLayout` ⇄ `Attribute`; `Shaped::layout` / `strided` / `memory_space` | `StridedLayoutAttr` |
 | affine maps and sets | `AffineMap`, `IntegerSet`, `AffineExpr` ⇄ `Attribute` | `AffineMap`, `IntegerSet`, `AffineExpr` |
 | quantized types | `UniformQuantized` ⇄ `Type`, `storage_type` | `quant::UniformQuantizedType` |
+| locations | `Loc` (a `loc(...)`'s text), `Loc::fuse` | `FusedLoc::get`, `Builder::getFusedLoc` |
 
 Builtin types and attributes are read and built through methods named as MLIR names them:
 `Type::element_type`, `element_count`, `shape`, `dims`, `with_element`, `bit_width`,
@@ -178,6 +179,12 @@ read from. `IntoStatic::into_static` makes a value own all of it (by move: owned
 borrowed text is copied). `Reborrow::reborrow` goes the other way: a view of a value that borrows
 all its text from it, copying only the lists that hold it, so that an IR keeping its own text can
 hand it to the printer without a deep copy.
+
+## Source locations
+
+`MlirOpt::parse_file(src, name)` (and `parse_file_in`) reads text as the file `name`: an op or block
+argument written without `loc(...)` is at `loc("name":line:col)` of where it starts, as `mlir-opt`
+locates it; `parse` leaves it without one.
 
 ## Threads
 

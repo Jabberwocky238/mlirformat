@@ -42,6 +42,9 @@ pub struct Parser<'a, 'd> {
     lending: bool,
     /// Reads the ops of the first block in parallel, once ([`MlirOpt::parse_in`]).
     fork: Option<&'d dyn for<'x> Fork<'x>>,
+    /// The source's file name ([`MlirOpt::parse_file`]): an op or block argument written without
+    /// `loc(...)` is at `"file":line:col` of where it starts, as `mlir-opt` locates it.
+    file: Option<&'d str>,
 }
 
 /// Reads one run of a block's ops ([`Parser::forked`]).
@@ -134,7 +137,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     #[inline]
     pub fn new(src: &'a str, opt: &'d MlirOpt) -> Self {
-        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None }
+        Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None, file: None }
     }
 
     /// ⭐ A region handed to a typed op without copying it. The op holds `Region<'static>`, so
@@ -179,6 +182,46 @@ impl<'a, 'd> Parser<'a, 'd> {
     #[inline]
     pub fn read<T>(src: &'a str, f: impl FnOnce(&mut Parser<'a, '_>) -> R<T>) -> R<T> {
         Parser::new(src, &MlirOpt::new()).all(f)
+    }
+
+    /// Ops and block arguments written without `loc(...)` are located in `file` (see [`MlirOpt::parse_file`]).
+    #[must_use]
+    #[inline]
+    pub fn with_file(mut self, file: &'d str) -> Self {
+        self.file = Some(file);
+        self
+    }
+
+    /// Where the next token starts (whitespace skipped): an entity's position for [`Self::loc_or_file`].
+    #[inline]
+    pub fn here(&mut self) -> usize {
+        self.ws();
+        self.pos
+    }
+
+    /// `loc` as read, or else (with a file name) `"file":line:col` of byte `at` ([`Self::here`]).
+    #[inline]
+    pub fn loc_or_file(&self, loc: Option<Str<'a>>, at: usize) -> Option<Str<'a>> {
+        loc.or_else(|| self.file_loc(at))
+    }
+
+    /// `"file":line:col` of byte `at` (1-based, columns in bytes), if the source has a file name.
+    fn file_loc(&self, at: usize) -> Option<Str<'a>> {
+        let file = self.file?;
+        let before = &self.src.as_bytes()[..at];
+        let line = before.iter().filter(|c| **c == b'\n').count() + 1;
+        let col = at - before.iter().rposition(|c| *c == b'\n').map_or(0, |i| i + 1) + 1;
+        let mut out = String::from("\"");
+        for c in file.bytes() {
+            match c {
+                b'\\' => out.push_str("\\\\"),
+                b'"' => out.push_str("\\22"),
+                b' '..=b'~' => out.push(char::from(c)),
+                _ => out.push_str(&format!("\\{c:02X}")),
+            }
+        }
+        out.push_str(&format!("\":{line}:{col}"));
+        Some(Cow::Owned(out))
     }
 
     /// Reads the ops of the first block on `fork`'s threads (see [`Parser::forked`]).
@@ -866,6 +909,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 
     pub fn op(&mut self) -> R<Operation<'a>> {
+        let start = self.pos;
         let mut results = smallvec::SmallVec::<[ResultDef<'a>; 2]>::new();
         if self.at(b'%') {
             loop {
@@ -886,6 +930,9 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.results = results.iter().map(|r| r.count.unwrap_or(1)).sum::<u32>().try_into().unwrap_or(0);
         let op = if self.at(b'"') { self.generic()? } else { self.custom()? };
         let mut op = Operation { results: Self::exact(results), ..op };
+        if op.loc.is_none() {
+            op.loc = self.file_loc(start);
+        }
         op.shrink_to_fit();
         Ok(op)
     }
@@ -1041,7 +1088,7 @@ impl<'a, 'd> Parser<'a, 'd> {
 
     /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
-        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None };
+        let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None, file: None };
         loop {
             if p.sigil('%').is_err() {
                 return false;
@@ -1072,7 +1119,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if !(tail.is_empty() || tail.starts_with("//")) || line_end == rest.len() {
             return false;
         }
-        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None };
+        let mut probe = Parser { src: self.src, pos: self.pos + 1 + line_end, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None, file: None };
         probe.ws();
         match probe.peek() {
             Some(b'%' | b'^' | b'}') => true,
@@ -1103,9 +1150,13 @@ impl<'a, 'd> Parser<'a, 'd> {
     /// `%name : type loc(...)?` — a block argument or function-signature entry.
     #[inline]
     pub fn block_arg(&mut self) -> R<BlockArg<'a>> {
+        let start = self.here();
         let name = self.sigil('%')?.into();
         self.expect(":")?;
-        Ok(BlockArg { name, ty: self.ty()?, loc: self.opt_loc()? })
+        let ty = self.ty()?;
+        let loc = self.opt_loc()?;
+        let loc = self.loc_or_file(loc, start);
+        Ok(BlockArg { name, ty, loc })
     }
 
     fn block(&mut self) -> R<Block<'a>> {
@@ -1164,12 +1215,12 @@ impl<'a, 'd> Parser<'a, 'd> {
                 from = e;
             }
         }
-        let (src, opt, ns, aliases, types) = (self.src, self.opt, self.default_ns, &self.aliases, &self.type_aliases);
+        let (src, opt, ns, aliases, types, file) = (self.src, self.opt, self.default_ns, &self.aliases, &self.type_aliases, self.file);
         let chunks: Vec<Chunk<'a, '_>> = runs
             .into_iter()
             .map(|(from, to, alone)| {
                 Box::new(move || {
-                    let mut p = Parser { pos: from, default_ns: ns, aliases: aliases.clone(), type_aliases: types.clone(), fork: alone.then_some(fork), ..Parser::new(src, opt) };
+                    let mut p = Parser { pos: from, default_ns: ns, aliases: aliases.clone(), type_aliases: types.clone(), fork: alone.then_some(fork), file, ..Parser::new(src, opt) };
                     let mut ops = Vec::new();
                     loop {
                         p.ws();
