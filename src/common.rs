@@ -568,6 +568,12 @@ pub enum Infer {
     /// The scalable square tile of type variable `.0`'s leading dim (`arm_sme.outerproduct`'s
     /// result: `vector<[4]xf32>` ⇒ `vector<[4]x[4]xf32>`).
     OuterTile(&'static str),
+    /// `!llvm.struct<(T, i1)>` of type variable `.0` (`llvm.cmpxchg`'s result: the old value, whether it was
+    /// exchanged; upstream's `getValAndBoolStructType`).
+    Pair(&'static str),
+    /// The field of type variable `.0` (an `!llvm.struct` / `!llvm.array`) at the `position` property
+    /// (`llvm.extractvalue`'s result; upstream's `custom<InsertExtractValueElementType>`).
+    Field(&'static str),
 }
 
 /// A field's MLIR role, as `#[mlir::op]` writes it in [`Op::FIELDS`].

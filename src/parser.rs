@@ -2631,6 +2631,26 @@ impl Format<'_> {
                     }
                     _ => return Err(undetermined()),
                 },
+                (None, Role::Type { infer: Some(Infer::Pair(var)), .. }) => {
+                    let t = r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.clone();
+                    let pair = crate::llvm_types::LlvmType::Struct { name: None, packed: false, body: Some(vec![t, Type::I1]), opaque: false };
+                    vec![pair.into()]
+                }
+                (None, Role::Type { infer: Some(Infer::Field(var)), .. }) => {
+                    let position = match self.schema.field("position").and_then(|f| r.get(f)) {
+                        Some(Got::Attr(a)) => a.dense_values().ok_or_else(undetermined)?,
+                        _ => return Err(undetermined()),
+                    };
+                    let mut t: Type<'a> = r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.clone();
+                    for k in position {
+                        t = match crate::llvm_types::LlvmType::try_from(&t).map_err(|()| undetermined())? {
+                            crate::llvm_types::LlvmType::Struct { body: Some(fields), .. } => usize::try_from(k).ok().and_then(|k| fields.into_iter().nth(k)).ok_or_else(undetermined)?,
+                            crate::llvm_types::LlvmType::Array(_, elem) => *elem,
+                            _ => return Err(undetermined()),
+                        };
+                    }
+                    vec![t]
+                }
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Type::try_from(ty).map_err(|e| Error(e.msg))?],
                 (None, Role::Type { infer: Some(Infer::Same(var)), .. }) => r.bound(var).ok_or_else(undetermined)?.to_vec(),
                 (None, Role::Type { infer: Some(Infer::TypeOf(attr)), .. }) => {

@@ -722,6 +722,23 @@ impl Records {
                 unite(&mut parent, w[0], w[1]);
             }
         }
+        // Types upstream builds in C++ that a rule here covers: `llvm.cmpxchg`'s result
+        // (`getValAndBoolStructType`: `!llvm.struct<(T, i1)>` of the value's type), and the type that
+        // `custom<InsertExtractValueElementType>(type($x), ref(type($container)), ref($position))` reads
+        // (the container's field at the position: `llvm.extractvalue`'s result, `llvm.insertvalue`'s value).
+        if op == "LLVM_AtomicCmpXchgOp"
+            && let (Some(res), Some(_)) = (index("res"), index("val"))
+        {
+            infer.insert(res, String::from("pair = val"));
+        }
+        if let Some(args) = self.text(op, "assemblyFormat").and_then(|f| f.split("custom<InsertExtractValueElementType>(").nth(1)) {
+            let names: Vec<&str> = args.split('$').skip(1).filter_map(|a| a.split(|c: char| !(c.is_ascii_alphanumeric() || c == '_')).next()).collect();
+            if let [x, container, ..] = names[..]
+                && let (Some(x), Some(_)) = (index(x), index(container))
+            {
+                infer.insert(x, format!("field = {container}"));
+            }
+        }
         let classes: Vec<usize> = (0..groups.len()).map(|i| find(&mut parent, i)).collect();
         // Each class's variable: its first result, else `<first operand>_ty`.
         let mut var_of: BTreeMap<usize, (String, String)> = BTreeMap::new(); // class ⇒ (rust ident, MLIR name)
@@ -857,6 +874,23 @@ impl Records {
         let Some(raw) = self.text(op, "assemblyFormat").filter(|f| !f.trim().is_empty()) else {
             let why = if self.field(op, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) { "custom C++ syntax" } else { "no assembly format" };
             return (None, Some(why.into()));
+        };
+        // `custom<InsertExtractValueElementType>(...)` prints nothing: the type it names is inferred (a
+        // `#[dtype(field = ..)]` rule, above).
+        let raw = match raw.split_once("custom<InsertExtractValueElementType>(") {
+            Some((head, tail)) => {
+                let mut depth = 1;
+                let end = tail.char_indices().find(|(_, c)| {
+                    depth += match c {
+                        '(' => 1,
+                        ')' => -1,
+                        _ => 0,
+                    };
+                    depth == 0
+                });
+                format!("{head}{}", end.map_or("", |(i, _)| &tail[i + 1..]))
+            }
+            None => String::from(raw),
         };
         let format = Self::spell_groups(&raw.split_whitespace().collect::<Vec<_>>().join(" "), fields, results);
         // Outside literals, only `$name`, type(), functional-type(), qualified(), attr-dict and groups.

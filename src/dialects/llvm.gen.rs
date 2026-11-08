@@ -420,9 +420,7 @@ pub struct AssumeOp<'a> {
     pub op_bundle_operands_ty: Vec<Type<'a>>,
 }
 
-///
-/// Generic form only (result type `res` inferred in C++).
-#[mlir::op("llvm.cmpxchg", results(res))]
+#[mlir::op("llvm.cmpxchg", format = "(`weak` $weak^)? (`volatile` $volatile_^)? $ptr `,` $cmp `,` $val (`syncscope` `(` $syncscope^ `)`)? $success_ordering $failure_ordering attr-dict `:` qualified(type($ptr)) `,` type($val)", results(res))]
 pub struct AtomicCmpXchgOp<'a> {
     #[slot(ptr_ty)]
     pub ptr: Value<'a>,
@@ -445,6 +443,7 @@ pub struct AtomicCmpXchgOp<'a> {
     pub tbaa: Option<Attribute<'a>>,
     pub ptr_ty: Type<'a>,
     pub cmp_ty: Type<'a>,
+    #[dtype(pair = cmp_ty)]
     pub res: Type<'a>,
 }
 
@@ -1159,15 +1158,14 @@ pub struct ExtractElementOp<'a> {
 }
 
 /// `llvm.extractvalue`: Extract a value from an LLVM struct.
-///
-/// Generic form only (directive `custom<InsertExtractValueElementType>`).
-#[mlir::op("llvm.extractvalue", results(res))]
+#[mlir::op("llvm.extractvalue", format = "$container `` $position attr-dict `:` type($container)", results(res))]
 pub struct ExtractValueOp<'a> {
     #[slot(container_ty)]
     pub container: Value<'a>,
     #[attr(dense = "i64")]
     pub position: Attribute<'a>,
     pub container_ty: Type<'a>,
+    #[dtype(field = container_ty)]
     pub res: Type<'a>,
 }
 
@@ -1815,9 +1813,7 @@ pub struct InsertElementOp<'a> {
 }
 
 /// `llvm.insertvalue`: Insert a value into an LLVM struct.
-///
-/// Generic form only (directive `custom<InsertExtractValueElementType>`).
-#[mlir::op("llvm.insertvalue", results(res))]
+#[mlir::op("llvm.insertvalue", format = "$value `,` $container `` $position attr-dict `:` type($container)", results(res))]
 pub struct InsertValueOp<'a> {
     #[slot(res)]
     pub container: Value<'a>,
@@ -1825,6 +1821,7 @@ pub struct InsertValueOp<'a> {
     pub value: Value<'a>,
     #[attr(dense = "i64")]
     pub position: Attribute<'a>,
+    #[dtype(field = res)]
     pub value_ty: Type<'a>,
     pub res: Type<'a>,
 }
