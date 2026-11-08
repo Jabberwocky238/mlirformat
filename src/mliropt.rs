@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv, spirv_types, tensor, tosa, ub, vector, x86vector, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
+pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, bufferization_ops as bufferization_hand, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv, spirv_types, tensor, tosa, ub, vector, x86vector, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
 pub use crate::generator::{Emit, IntoStatic, Printer, Reborrow, Sep, Shown, ShownFrom, ShownIn, Source, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
@@ -139,6 +139,9 @@ impl MlirOpt {
             .inject(affine_ops::Parallel::template())
             .inject(scf_hand::For::template())
             .inject(scf_hand::If::template())
+            .inject(scf_hand::IndexSwitch::template())
+            .inject(scf_hand::ExecuteRegion::template())
+            .inject(bufferization_hand::MaterializeInDestination::template())
             .inject(gpu_hand::Func::template())
             .inject(gpu_hand::LaunchFunc::template())
             .inject(linalg_hand::Generic::template())

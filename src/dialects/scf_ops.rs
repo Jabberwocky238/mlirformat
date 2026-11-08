@@ -186,3 +186,119 @@ impl Parse for If<'_> {
         Self::owned(op, p)
     }
 }
+
+/// `scf.index_switch %arg {attrs} -> T, U` 换行 `case N { ... }`（每个 case 一行起头）换行 `default { ... }`。
+///
+/// ODS 把 case 交给 C++ 的 `custom<SwitchCases>`：每个 case 前换行、`case 值 ` 再接区域，区域里的 `scf.yield` 总是印出来；
+/// `default` 区域是 ODS 的普通区域，不带东西的 `scf.yield` 省掉（隐式终结符）。`%arg` 与类型之间那个空格之后紧跟换行，
+/// `mlir-opt` 就是这么印的。
+#[mlir::op("scf.index_switch", custom, results(results))]
+pub struct IndexSwitch<'a> {
+    #[slot(arg_ty)]
+    pub arg: Value<'a>,
+    #[attr(dense = "i64")]
+    pub cases: crate::common::Attribute<'a>,
+    #[region(name = "defaultRegion")]
+    pub default_region: Region<'a>,
+    #[region(name = "caseRegions")]
+    pub case_regions: Vec<Region<'a>>,
+    #[dtype(is = index)]
+    pub arg_ty: Type<'a>,
+    pub results: Vec<Type<'a>>,
+}
+
+impl Print for IndexSwitch<'_> {
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        let values = self.cases.dense_values().unwrap_or_default();
+        let plain = |r: &Region<'_>| r.blocks.len() == 1 && r.blocks[0].args.is_empty();
+        if values.len() != self.case_regions.len() || !self.case_regions.iter().all(plain) || !plain(&self.default_region) {
+            return self.print_generic(p);
+        }
+        p.op_name(Self::NAME)?;
+        write!(p, " {}", self.arg)?;
+        p.attr_dict("", &self.attrs, &[])?;
+        if !self.results.is_empty() {
+            write!(p, " -> {}", Sep(&self.results, ", "))?;
+        }
+        p.write_char(' ')?;
+        for (v, r) in values.iter().zip(&self.case_regions) {
+            p.nl()?;
+            write!(p, "case {v} ")?;
+            p.region(r, false)?;
+        }
+        p.nl()?;
+        p.write_str("default ")?;
+        p.region_body(&self.default_region, "scf.yield")
+    }
+}
+
+impl Parse for IndexSwitch<'_> {
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let arg = p.value()?;
+        let attrs = p.opt_dict()?;
+        let results = match p.eat("->") {
+            true => {
+                let mut tys = alloc::vec![p.ty()?];
+                while p.eat(",") {
+                    tys.push(p.ty()?);
+                }
+                tys
+            }
+            false => Vec::new(),
+        };
+        let (mut values, mut case_regions) = (Vec::new(), Vec::new());
+        while p.eat_kw("case") {
+            let negative = p.eat("-");
+            let v: i64 = p.number()?;
+            values.push(if negative { -v } else { v });
+            let mut r = p.region()?;
+            close_region(&mut r, "scf.yield");
+            case_regions.push(p.lend(r));
+        }
+        p.expect_lit("default")?;
+        let mut default_region = p.region()?;
+        close_region(&mut default_region, "scf.yield");
+        let default_region = p.lend(default_region);
+        let op = IndexSwitch { arg, cases: crate::common::Attribute::dense_i64(&values), default_region, case_regions, arg_ty: Type::Index, results, attrs, loc: p.opt_loc()? };
+        Self::owned(op, p)
+    }
+}
+
+/// `scf.execute_region -> T no_inline { ... } {attrs}`（`ExecuteRegionOp::print`：可选的 `-> 类型`，`no_inline`，区域里的终结符总是印）。
+#[mlir::op("scf.execute_region", custom, results(result))]
+pub struct ExecuteRegion<'a> {
+    pub no_inline: bool,
+    pub region: Region<'a>,
+    pub result: Vec<Type<'a>>,
+}
+
+impl Print for ExecuteRegion<'_> {
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        p.op_name(Self::NAME)?;
+        match self.result.as_slice() {
+            [] => {}
+            [one] if !matches!(one, Type::Function(_)) => write!(p, " -> {one}")?,
+            many => write!(p, " -> ({})", Sep(many, ", "))?,
+        }
+        p.write_char(' ')?;
+        if self.no_inline {
+            p.write_str("no_inline ")?;
+        }
+        p.region(&self.region, false)?;
+        p.attr_dict("", &self.attrs, &[])
+    }
+}
+
+impl Parse for ExecuteRegion<'_> {
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let result = match p.eat("->") {
+            true => p.results_ty()?,
+            false => Vec::new(),
+        };
+        let no_inline = p.eat_kw("no_inline");
+        let region = p.region()?;
+        let region = p.lend(region);
+        let op = ExecuteRegion { no_inline, region, result, attrs: p.opt_dict()?, loc: p.opt_loc()? };
+        Self::owned(op, p)
+    }
+}

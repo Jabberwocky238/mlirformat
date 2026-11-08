@@ -579,6 +579,10 @@ impl<'a, 'd> Parser<'a, 'd> {
     #[inline]
     pub fn stripped_ty(&mut self, name: &'a str) -> R<Type<'a>> {
         self.ws();
+        // `parseCustomTypeWithFallback`: the full `!ns.name<...>` is read as any type too
+        if self.peek() == Some(b'!') {
+            return self.ty();
+        }
         self.extended_body(SymKind::Type, name).map(Type::Extended)
     }
 
@@ -2236,7 +2240,7 @@ impl Format<'_> {
         // Taken before the body: an op inside a region resets it.
         let results = p.results;
         let mut r = Slots::default();
-        self.read(&self.elems, &mut r, p)?;
+        self.read(&self.elems, None, &mut r, p)?;
         let loc = p.opt_loc()?;
         self.finish(r, loc, results).and_then(O::from_content).or_else(|e| p.err(e.0))
     }
@@ -2246,12 +2250,14 @@ impl Format<'_> {
     pub fn parse_op<'a>(&self, p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
         let results = p.results;
         let mut r = Slots::default();
-        self.read(&self.elems, &mut r, p)?;
+        self.read(&self.elems, None, &mut r, p)?;
         let loc = p.opt_loc()?;
         self.to_operation(r, loc, results).or_else(|e| p.err(e.0))
     }
 
-    fn read<'a>(&self, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
+    /// `after`: what follows `elems` where they are spelled (the element after a group, in the group's parent).
+    fn read<'a>(&self, elems: &[Elem<'_>], after: Option<&Elem<'_>>, r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
+        let outer = elems;
         let field = |p: &Parser<'a, '_>, n: &str| self.field(n).copied().or_else(|e| p.err(e.0));
         let ty_var = |p: &Parser<'a, '_>, n: &str| self.type_var(n).copied().or_else(|e| p.err(e.0));
         for (i, e) in elems.iter().enumerate() {
@@ -2260,7 +2266,7 @@ impl Format<'_> {
                 Elem::Lit(l) => p.expect_lit(l)?,
                 Elem::Group { anchor, elems } => {
                     if self.group_ahead(elems, p).or_else(|e| p.err(e.0))? {
-                        self.read(elems, r, p)?;
+                        self.read(elems, outer.get(i + 1).or(after), r, p)?;
                     } else {
                         self.absent(anchor, elems, r, p)?;
                     }
@@ -2281,7 +2287,7 @@ impl Format<'_> {
                         }
                         let Some((k, elems)) = next else { break };
                         read[k] = true;
-                        self.read(elems, r, p)?;
+                        self.read(elems, None, r, p)?;
                     }
                     for (c, _) in clauses.iter().zip(&read).filter(|(_, done)| !**done) {
                         if let Elem::Group { anchor, elems } = c {
@@ -2296,7 +2302,9 @@ impl Format<'_> {
                             // Followed by a `,` literal, the group is an ODS `Optional`: one operand
                             // at most (`arm_sme.tile_load`'s `$padding `,` $mask`). A variadic list
                             // there could not be read upstream either: its parser is greedy.
-                            let one = matches!(elems.get(i + 1), Some(Elem::Lit(",")));
+                            // The group's last element looks past the group: `(`scale` $a_scale^)? `,``.
+                            let next = if i + 1 < outer.len() { outer.get(i + 1) } else { after };
+                            let one = matches!(next, Some(Elem::Lit(",")));
                             let mut vs = Vec::new();
                             while p.at(b'%') {
                                 vs.push(p.value()?);
@@ -2402,7 +2410,7 @@ impl Format<'_> {
                     };
                     r.set(&f, c);
                 }
-                Elem::Custom { parts, .. } => self.read(parts, r, p)?,
+                Elem::Custom { parts, .. } => self.read(parts, outer.get(i + 1).or(after), r, p)?,
                 // One list, two fields: a static item goes to `integers`, a `%value` goes to
                 // `values` and leaves the sentinel behind in its place.
                 Elem::Zip { integers, values } => {
