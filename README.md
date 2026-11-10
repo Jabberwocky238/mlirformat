@@ -226,9 +226,11 @@ mlirformat tblgen --dialect linalg $D/LinalgOps.td $D/LinalgStructuredOps.td $D/
     -I td -o src/dialects
 ```
 
-`scripts/regen-dialects.sh` regenerates every one of them. `LinalgNamedStructuredOps.yamlgen.td`
-is the one file a 23.1.5 build generates (from the OpDSL YAML) rather than keeps in the source tree;
-`td/` holds it too.
+`scripts/regen-dialects.sh` regenerates every one of them. Three files are what a 23.1.5 build
+generates rather than keeps in the source tree, and `td/` holds them too, at the same paths:
+`LinalgNamedStructuredOps.yamlgen.td` (from the OpDSL YAML), and `OpenMP/OmpCommon.td` /
+`OpenACC/AccCommon.td` (`--gen-directive-decl` of llvm's `OMP.td` / `ACC.td`, which
+`scripts/directive_common.py` reproduces).
 
 ## Performance
 

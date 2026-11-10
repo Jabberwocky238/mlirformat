@@ -1,6 +1,7 @@
 //! `APInt` and `APFloat`, as far as folding needs them, and MLIR's way of printing a float.
 //!
-//! Integers are up to 128 bits wide. Floats are the IEEE-like formats (`f16`, `bf16`, `tf32`,
+//! Integers are up to 256 bits wide. `f80` / `f128` values are held only when exactly an `f64`
+//! ([`WideFloat`]). Floats are the IEEE-like formats (`f16`, `bf16`, `tf32`,
 //! `f32`, `f64`); arithmetic on the narrow ones goes through `f32`, which is exact enough that
 //! the one final rounding is the correct one.
 
@@ -11,33 +12,196 @@ use core::cmp::Ordering;
 
 use crate::FloatKind;
 
-/// A fixed-width two's-complement integer.
+/// The bits of an [`ApInt`]: up to [`ApInt::MAX_WIDTH`], as a low and a high half.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+struct Wide {
+    lo: u128,
+    hi: u128,
+}
+
+impl Wide {
+    const ZERO: Wide = Wide { lo: 0, hi: 0 };
+    const ONE: Wide = Wide { lo: 1, hi: 0 };
+    /// The bits of one half.
+    const HALF: u32 = 128;
+
+    #[inline]
+    fn of(lo: u128) -> Self {
+        Wide { lo, hi: 0 }
+    }
+
+    /// `lo` sign-extended to the full width.
+    #[inline]
+    fn of_signed(v: i128) -> Self {
+        Wide { lo: v as u128, hi: if v < 0 { u128::MAX } else { 0 } }
+    }
+
+    /// The low `width` bits set.
+    #[inline]
+    fn mask(width: u32) -> Self {
+        match width {
+            0 => Wide::ZERO,
+            w if w < Self::HALF => Wide::of((1u128 << w) - 1),
+            w if w < 2 * Self::HALF => Wide { lo: u128::MAX, hi: (1u128 << (w - Self::HALF)) - 1 },
+            _ => Wide { lo: u128::MAX, hi: u128::MAX },
+        }
+    }
+
+    #[inline]
+    fn is_zero(self) -> bool {
+        self.lo == 0 && self.hi == 0
+    }
+
+    #[inline]
+    fn and(self, o: Self) -> Self {
+        Wide { lo: self.lo & o.lo, hi: self.hi & o.hi }
+    }
+
+    #[inline]
+    fn or(self, o: Self) -> Self {
+        Wide { lo: self.lo | o.lo, hi: self.hi | o.hi }
+    }
+
+    #[inline]
+    fn xor(self, o: Self) -> Self {
+        Wide { lo: self.lo ^ o.lo, hi: self.hi ^ o.hi }
+    }
+
+    #[inline]
+    fn not(self) -> Self {
+        Wide { lo: !self.lo, hi: !self.hi }
+    }
+
+    #[inline]
+    fn add(self, o: Self) -> Self {
+        let (lo, carry) = self.lo.overflowing_add(o.lo);
+        Wide { lo, hi: self.hi.wrapping_add(o.hi).wrapping_add(u128::from(carry)) }
+    }
+
+    #[inline]
+    fn sub(self, o: Self) -> Self {
+        self.add(o.not().add(Wide::ONE))
+    }
+
+    /// The full product of two halves.
+    fn mul_halves(a: u128, b: u128) -> Wide {
+        const LIMB: u32 = 64;
+        let (a0, a1) = (a as u64 as u128, a >> LIMB);
+        let (b0, b1) = (b as u64 as u128, b >> LIMB);
+        let (p00, p01, p10, p11) = (a0 * b0, a0 * b1, a1 * b0, a1 * b1);
+        let mid = (p00 >> LIMB) + (p01 as u64 as u128) + (p10 as u64 as u128);
+        let lo = (p00 as u64 as u128) | (mid << LIMB);
+        let hi = p11 + (p01 >> LIMB) + (p10 >> LIMB) + (mid >> LIMB);
+        Wide { lo, hi }
+    }
+
+    /// The product, wrapping at the full width.
+    fn mul(self, o: Self) -> Self {
+        let low = Self::mul_halves(self.lo, o.lo);
+        Wide { lo: low.lo, hi: low.hi.wrapping_add(self.lo.wrapping_mul(o.hi)).wrapping_add(self.hi.wrapping_mul(o.lo)) }
+    }
+
+    fn shl(self, by: u32) -> Self {
+        match by {
+            0 => self,
+            b if b < Self::HALF => Wide { lo: self.lo << b, hi: (self.hi << b) | (self.lo >> (Self::HALF - b)) },
+            b if b < 2 * Self::HALF => Wide { lo: 0, hi: self.lo << (b - Self::HALF) },
+            _ => Wide::ZERO,
+        }
+    }
+
+    fn shr(self, by: u32) -> Self {
+        match by {
+            0 => self,
+            b if b < Self::HALF => Wide { lo: (self.lo >> b) | (self.hi << (Self::HALF - b)), hi: self.hi >> b },
+            b if b < 2 * Self::HALF => Wide { lo: self.hi >> (b - Self::HALF), hi: 0 },
+            _ => Wide::ZERO,
+        }
+    }
+
+    #[inline]
+    fn bit(self, i: u32) -> bool {
+        !self.shr(i).and(Wide::ONE).is_zero()
+    }
+
+    fn leading_zeros(self) -> u32 {
+        if self.hi != 0 { self.hi.leading_zeros() } else { Self::HALF + self.lo.leading_zeros() }
+    }
+
+    fn trailing_zeros(self) -> u32 {
+        if self.lo != 0 { self.lo.trailing_zeros() } else { Self::HALF + self.hi.trailing_zeros() }
+    }
+
+    fn count_ones(self) -> u32 {
+        self.lo.count_ones() + self.hi.count_ones()
+    }
+
+    /// Quotient and remainder, `o` nonzero.
+    fn divrem(self, o: Self) -> (Self, Self) {
+        if self.hi == 0 && o.hi == 0 {
+            return (Wide::of(self.lo / o.lo), Wide::of(self.lo % o.lo));
+        }
+        let (mut q, mut r) = (Wide::ZERO, Wide::ZERO);
+        for i in (0..2 * Self::HALF).rev() {
+            r = r.shl(1).or(Wide::of(u128::from(self.bit(i))));
+            if r.cmp(&o) != Ordering::Less {
+                r = r.sub(o);
+                q = q.or(Wide::ONE.shl(i));
+            }
+        }
+        (q, r)
+    }
+}
+
+impl PartialOrd for Wide {
+    fn partial_cmp(&self, o: &Self) -> Option<Ordering> {
+        Some(self.cmp(o))
+    }
+}
+
+impl Ord for Wide {
+    fn cmp(&self, o: &Self) -> Ordering {
+        (self.hi, self.lo).cmp(&(o.hi, o.lo))
+    }
+}
+
+/// A fixed-width two's-complement integer, up to [`ApInt::MAX_WIDTH`] bits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApInt {
     pub width: u32,
-    bits: u128,
+    bits: Wide,
 }
 
 impl ApInt {
+    /// The widest integer held; a wider one keeps its low bits.
+    pub const MAX_WIDTH: u32 = 256;
+    /// The widest integer the `i128` / `u128` accessors return whole.
+    const NARROW: u32 = 128;
+
     #[inline]
-    fn mask(width: u32) -> u128 {
-        if width >= 128 { u128::MAX } else { (1u128 << width) - 1 }
+    fn mask(width: u32) -> Wide {
+        Wide::mask(width)
+    }
+
+    #[inline]
+    fn of(width: u32, bits: Wide) -> Self {
+        Self { width, bits: bits.and(Self::mask(width)) }
     }
 
     /// `value` truncated to `width` bits.
     #[inline]
     pub fn new(width: u32, value: i128) -> Self {
-        Self { width, bits: value as u128 & Self::mask(width) }
+        Self::of(width, Wide::of_signed(value))
     }
 
     #[inline]
     pub fn from_bits(width: u32, bits: u128) -> Self {
-        Self { width, bits: bits & Self::mask(width) }
+        Self::of(width, Wide::of(bits))
     }
 
     #[inline]
     pub fn zero(width: u32) -> Self {
-        Self { width, bits: 0 }
+        Self { width, bits: Wide::ZERO }
     }
 
     #[inline]
@@ -45,32 +209,40 @@ impl ApInt {
         Self { width, bits: Self::mask(width) }
     }
 
+    /// The low 128 bits.
     #[inline]
     pub fn bits(self) -> u128 {
-        self.bits
+        self.bits.lo
     }
 
+    /// The value, unsigned (its low 128 bits when wider).
     #[inline]
     pub fn unsigned(self) -> u128 {
-        self.bits
+        self.bits.lo
     }
 
+    /// The value, signed (its low 128 bits when wider).
     pub fn signed(self) -> i128 {
-        if self.width == 0 || self.width >= 128 {
-            return self.bits as i128;
+        if self.width == 0 || self.width >= Self::NARROW {
+            return self.bits.lo as i128;
         }
-        let shift = 128 - self.width;
-        ((self.bits << shift) as i128) >> shift
+        let shift = Self::NARROW - self.width;
+        ((self.bits.lo << shift) as i128) >> shift
+    }
+
+    /// The bits sign-extended to the full width.
+    fn sext_wide(self) -> Wide {
+        if self.is_negative() { self.bits.or(Self::mask(self.width).not()) } else { self.bits }
     }
 
     #[inline]
     pub fn is_zero(self) -> bool {
-        self.bits == 0
+        self.bits.is_zero()
     }
 
     #[inline]
     pub fn is_one(self) -> bool {
-        self.bits == 1
+        self.bits == Wide::ONE
     }
 
     #[inline]
@@ -80,17 +252,17 @@ impl ApInt {
 
     #[inline]
     pub fn is_negative(self) -> bool {
-        self.width > 0 && (self.bits >> (self.width - 1)) & 1 == 1
+        self.width > 0 && self.bits.bit(self.width - 1)
     }
 
     #[inline]
     pub fn signed_min(width: u32) -> Self {
-        Self::from_bits(width, 1u128 << (width - 1))
+        Self::of(width, Wide::ONE.shl(width - 1))
     }
 
     #[inline]
     pub fn signed_max(width: u32) -> Self {
-        Self::from_bits(width, (1u128 << (width - 1)) - 1)
+        Self::of(width, Wide::ONE.shl(width - 1).sub(Wide::ONE))
     }
 
     #[inline]
@@ -100,32 +272,32 @@ impl ApInt {
 
     #[inline]
     pub fn sext(self, width: u32) -> Self {
-        Self::new(width, self.signed())
+        Self::of(width, self.sext_wide())
     }
 
     #[inline]
     pub fn zext(self, width: u32) -> Self {
-        Self::from_bits(width, self.bits)
+        Self::of(width, self.bits)
     }
 
     #[inline]
     pub fn trunc(self, width: u32) -> Self {
-        Self::from_bits(width, self.bits)
+        Self::of(width, self.bits)
     }
 
     #[inline]
     pub fn add(self, o: Self) -> Self {
-        Self::from_bits(self.width, self.bits.wrapping_add(o.bits))
+        Self::of(self.width, self.bits.add(o.bits))
     }
 
     #[inline]
     pub fn sub(self, o: Self) -> Self {
-        Self::from_bits(self.width, self.bits.wrapping_sub(o.bits))
+        Self::of(self.width, self.bits.sub(o.bits))
     }
 
     #[inline]
     pub fn mul(self, o: Self) -> Self {
-        Self::from_bits(self.width, self.bits.wrapping_mul(o.bits))
+        Self::of(self.width, self.bits.mul(o.bits))
     }
 
     #[inline]
@@ -135,43 +307,60 @@ impl ApInt {
 
     #[inline]
     pub fn not(self) -> Self {
-        Self::from_bits(self.width, !self.bits)
+        Self::of(self.width, self.bits.not())
     }
 
     #[inline]
     pub fn and(self, o: Self) -> Self {
-        Self::from_bits(self.width, self.bits & o.bits)
+        Self::of(self.width, self.bits.and(o.bits))
     }
 
     #[inline]
     pub fn or(self, o: Self) -> Self {
-        Self::from_bits(self.width, self.bits | o.bits)
+        Self::of(self.width, self.bits.or(o.bits))
     }
 
     #[inline]
     pub fn xor(self, o: Self) -> Self {
-        Self::from_bits(self.width, self.bits ^ o.bits)
+        Self::of(self.width, self.bits.xor(o.bits))
     }
 
     #[inline]
     pub fn udiv(self, o: Self) -> Option<Self> {
-        (!o.is_zero()).then(|| Self::from_bits(self.width, self.bits / o.bits))
+        (!o.is_zero()).then(|| Self::of(self.width, self.bits.divrem(o.bits).0))
     }
 
     #[inline]
     pub fn urem(self, o: Self) -> Option<Self> {
-        (!o.is_zero()).then(|| Self::from_bits(self.width, self.bits % o.bits))
+        (!o.is_zero()).then(|| Self::of(self.width, self.bits.divrem(o.bits).1))
+    }
+
+    /// The magnitude of the signed value (`MIN`'s wraps to itself).
+    fn magnitude(self) -> Self {
+        if self.is_negative() { self.neg() } else { self }
     }
 
     /// Signed division, wrapping `MIN / -1`.
-    #[inline]
     pub fn sdiv(self, o: Self) -> Option<Self> {
-        (!o.is_zero()).then(|| Self::new(self.width, self.signed().wrapping_div(o.signed())))
+        if o.is_zero() {
+            return None;
+        }
+        if self.width <= Self::NARROW {
+            return Some(Self::new(self.width, self.signed().wrapping_div(o.signed())));
+        }
+        let q = self.magnitude().udiv(o.magnitude())?;
+        Some(if self.is_negative() != o.is_negative() { q.neg() } else { q })
     }
 
-    #[inline]
     pub fn srem(self, o: Self) -> Option<Self> {
-        (!o.is_zero()).then(|| Self::new(self.width, self.signed().wrapping_rem(o.signed())))
+        if o.is_zero() {
+            return None;
+        }
+        if self.width <= Self::NARROW {
+            return Some(Self::new(self.width, self.signed().wrapping_rem(o.signed())));
+        }
+        let r = self.magnitude().urem(o.magnitude())?;
+        Some(if self.is_negative() { r.neg() } else { r })
     }
 
     /// `sdiv_ov`: also whether it overflowed (`MIN / -1`).
@@ -183,23 +372,28 @@ impl ApInt {
 
     #[inline]
     pub fn shl(self, by: u32) -> Self {
-        if by >= self.width { Self::zero(self.width) } else { Self::from_bits(self.width, self.bits << by) }
+        if by >= self.width { Self::zero(self.width) } else { Self::of(self.width, self.bits.shl(by)) }
     }
 
     #[inline]
     pub fn lshr(self, by: u32) -> Self {
-        if by >= self.width { Self::zero(self.width) } else { Self::from_bits(self.width, self.bits >> by) }
+        if by >= self.width { Self::zero(self.width) } else { Self::of(self.width, self.bits.shr(by)) }
     }
 
     #[inline]
     pub fn ashr(self, by: u32) -> Self {
         let by = by.min(self.width.saturating_sub(1));
-        Self::new(self.width, self.signed() >> by)
+        let shifted = self.sext_wide().shr(by);
+        // Shifted in from the top: copies of the sign.
+        let fill = if self.is_negative() { Wide::mask(2 * Wide::HALF).shl(2 * Wide::HALF - by) } else { Wide::ZERO };
+        Self::of(self.width, shifted.or(fill))
     }
 
+    /// Signed order: the sign bit flipped, then unsigned.
     #[inline]
     pub fn scmp(self, o: Self) -> Ordering {
-        self.signed().cmp(&o.signed())
+        let flip = |x: Self| x.sext_wide().xor(Wide::ONE.shl(2 * Wide::HALF - 1));
+        flip(self).cmp(&flip(o))
     }
 
     #[inline]
@@ -231,32 +425,44 @@ impl ApInt {
         (self.sub(o), o.bits > self.bits)
     }
 
+    /// The product of the magnitudes did not fit `bits` bits (`a * b`, checked by dividing back).
+    fn product_exceeds(a: Wide, b: Wide, bits: u32) -> bool {
+        if a.is_zero() || b.is_zero() {
+            return false;
+        }
+        let p = a.mul(b);
+        p.divrem(a).0 != b || p > Wide::mask(bits)
+    }
+
     pub fn smul_ov(self, o: Self) -> (Self, bool) {
         let r = self.mul(o);
-        let ov = match self.signed().checked_mul(o.signed()) {
-            Some(full) => Self::new(self.width, full).signed() != full,
-            None => true,
-        };
+        if self.width <= Self::NARROW {
+            let ov = match self.signed().checked_mul(o.signed()) {
+                Some(full) => Self::new(self.width, full).signed() != full,
+                None => true,
+            };
+            return (r, ov);
+        }
+        let (a, b) = (self.magnitude().bits, o.magnitude().bits);
+        // A negative product may reach `-2^(w-1)`, a positive one only `2^(w-1) - 1`.
+        let negative = self.is_negative() != o.is_negative();
+        let limit = if negative { self.width } else { self.width - 1 };
+        let ov = Self::product_exceeds(a, b, limit) && !(negative && a.mul(b) == Wide::ONE.shl(self.width - 1));
         (r, ov)
     }
 
     pub fn umul_ov(self, o: Self) -> (Self, bool) {
-        let r = self.mul(o);
-        let ov = match self.bits.checked_mul(o.bits) {
-            Some(full) => full > Self::mask(self.width),
-            None => true,
-        };
-        (r, ov)
+        (self.mul(o), Self::product_exceeds(self.bits, o.bits, self.width))
     }
 
     #[inline]
     pub fn count_leading_zeros(self) -> u32 {
-        if self.bits == 0 { self.width } else { self.width - (128 - self.bits.leading_zeros()) }
+        if self.bits.is_zero() { self.width } else { self.width - (2 * Wide::HALF - self.bits.leading_zeros()) }
     }
 
     #[inline]
     pub fn count_trailing_zeros(self) -> u32 {
-        if self.bits == 0 { self.width } else { self.bits.trailing_zeros() }
+        if self.bits.is_zero() { self.width } else { self.bits.trailing_zeros() }
     }
 
     #[inline]
@@ -266,12 +472,60 @@ impl ApInt {
 
     #[inline]
     pub fn is_power_of_two(self) -> bool {
-        self.bits != 0 && self.bits & (self.bits - 1) == 0
+        self.popcount() == 1
     }
 
     #[inline]
     pub fn log2(self) -> u32 {
-        127 - self.bits.leading_zeros()
+        2 * Wide::HALF - 1 - self.bits.leading_zeros()
+    }
+
+    /// The value in decimal, signed or not.
+    pub fn to_decimal(self, signed: bool) -> String {
+        const TEN: Wide = Wide { lo: 10, hi: 0 };
+        let negative = signed && self.is_negative();
+        let mut v = if negative { self.neg().bits } else { self.bits };
+        if negative && v == Wide::ONE.shl(self.width - 1) && self.width == 2 * Wide::HALF {
+            // `MIN` of the full width: its magnitude is itself.
+            v = self.bits;
+        }
+        let mut digits = Vec::new();
+        loop {
+            let (q, r) = v.divrem(TEN);
+            digits.push(b'0' + r.lo as u8);
+            v = q;
+            if v.is_zero() {
+                break;
+            }
+        }
+        if negative {
+            digits.push(b'-');
+        }
+        digits.reverse();
+        String::from_utf8(digits).expect("ascii digits")
+    }
+
+    /// A decimal literal (optionally negative) truncated to `width` bits.
+    pub fn parse_decimal(width: u32, lit: &str) -> Option<Self> {
+        const TEN: Wide = Wide { lo: 10, hi: 0 };
+        let (negative, digits) = match lit.strip_prefix('-') {
+            Some(d) => (true, d),
+            None => (false, lit.strip_prefix('+').unwrap_or(lit)),
+        };
+        if digits.is_empty() || !digits.bytes().all(|c| c.is_ascii_digit()) {
+            return None;
+        }
+        let v = digits.bytes().fold(Wide::ZERO, |acc, c| acc.mul(TEN).add(Wide::of(u128::from(c - b'0'))));
+        let x = Self::of(width, v);
+        Some(if negative { x.neg() } else { x })
+    }
+
+    /// A hexadecimal literal (no `0x`) truncated to `width` bits.
+    pub fn parse_hex(width: u32, digits: &str) -> Option<Self> {
+        /// The bits of one hex digit.
+        const NIBBLE: u32 = 4;
+        let v = digits.chars().try_fold(Wide::ZERO, |acc, c| Some(acc.shl(NIBBLE).or(Wide::of(u128::from(c.to_digit(16)?)))))?;
+        Some(Self::of(width, v))
     }
 }
 
@@ -927,5 +1181,228 @@ impl ApFloat {
             }
         }
         alloc::format!("0x{:X}", self.bits)
+    }
+}
+
+/// An `f80` (x87 extended) or `f128` (IEEE quad) value that is exactly an `f64`: what folding
+/// holds of these formats. Only what stays exact is done with them (conversions, comparison,
+/// printing); there is no arithmetic.
+#[derive(Debug, Clone, Copy)]
+pub struct WideFloat {
+    pub kind: FloatKind,
+    pub value: f64,
+}
+
+impl PartialEq for WideFloat {
+    fn eq(&self, o: &Self) -> bool {
+        self.kind == o.kind && self.value.to_bits() == o.value.to_bits()
+    }
+}
+
+impl Eq for WideFloat {}
+
+impl WideFloat {
+    /// The exponent bits of both formats and their bias.
+    const EXP: u32 = 15;
+    const BIAS: i32 = (1 << (Self::EXP - 1)) - 1;
+    /// The stored fraction bits (`f80` stores its integer bit too).
+    const F80_FRACTION: u32 = 63;
+    const F128_FRACTION: u32 = 112;
+    /// `f64`'s.
+    const F64_FRACTION: u32 = 52;
+    const F64_BIAS: i32 = 1023;
+    /// The significand precision, `printFloatValue`'s full precision.
+    const F80_PRECISION: u32 = 64;
+    const F128_PRECISION: u32 = 113;
+
+    /// Whether `kind` is one of these formats.
+    #[inline]
+    pub fn wide(kind: FloatKind) -> bool {
+        matches!(kind, FloatKind::F80 | FloatKind::F128)
+    }
+
+    /// `x` in `kind` (`None` for NaN, which is not held).
+    pub fn of(kind: FloatKind, x: f64) -> Option<Self> {
+        (Self::wide(kind) && !x.is_nan()).then_some(Self { kind, value: x })
+    }
+
+    /// The format's bits: sign, 15 exponent bits, then the fraction (`f80` with its explicit
+    /// integer bit).
+    pub fn bits(self) -> u128 {
+        let b = self.value.to_bits();
+        let sign = u128::from(b >> 63);
+        let raw_e = ((b >> Self::F64_FRACTION) & 0x7ff) as i32;
+        let frac = u128::from(b & ((1u64 << Self::F64_FRACTION) - 1));
+        let (fraction, f80) = match self.kind {
+            FloatKind::F80 => (Self::F80_FRACTION, true),
+            _ => (Self::F128_FRACTION, false),
+        };
+        let top = sign << (Self::EXP + fraction + u32::from(f80));
+        let emax = (1u128 << Self::EXP) - 1;
+        let (e, m) = if raw_e == 0x7ff {
+            // Infinity (NaN is not held).
+            (emax, if f80 { 1u128 << Self::F80_FRACTION } else { 0 })
+        } else if raw_e == 0 && frac == 0 {
+            (0, 0)
+        } else {
+            // Normalize (an f64 subnormal is a normal here).
+            let (mut m, mut e) = if raw_e == 0 { (frac, 1 - Self::F64_BIAS) } else { (frac | (1 << Self::F64_FRACTION), raw_e - Self::F64_BIAS) };
+            while m >> Self::F64_FRACTION == 0 {
+                m <<= 1;
+                e -= 1;
+            }
+            let m = m << (fraction - Self::F64_FRACTION);
+            let m = if f80 { m } else { m & ((1u128 << fraction) - 1) };
+            ((e + Self::BIAS) as u128, m)
+        };
+        // The exponent sits above the stored fraction (with `f80`'s integer bit).
+        top | (e << (fraction + u32::from(f80))) | m
+    }
+
+    /// The value of the format's bits, when it is exactly an `f64`.
+    fn from_bits(kind: FloatKind, bits: u128) -> Option<Self> {
+        let f80 = kind == FloatKind::F80;
+        let fraction = if f80 { Self::F80_FRACTION } else { Self::F128_FRACTION };
+        let stored = fraction + u32::from(f80);
+        let sign = (bits >> (Self::EXP + stored)) & 1;
+        let e = ((bits >> stored) & ((1 << Self::EXP) - 1)) as i32;
+        let m = bits & ((1u128 << stored) - 1);
+        let emax = (1i32 << Self::EXP) - 1;
+        let mag = if e == emax {
+            let payload = if f80 { m & ((1u128 << Self::F80_FRACTION) - 1) } else { m };
+            if payload != 0 {
+                return None;
+            }
+            f64::INFINITY
+        } else if e == 0 && m == 0 {
+            0.0
+        } else {
+            // significand · 2^(e - bias - fraction), the significand with its integer bit.
+            let (sig, e) = if f80 { (m, if e == 0 { 1 } else { e }) } else if e == 0 { (m, 1) } else { (m | (1u128 << fraction), e) };
+            let exp = e - Self::BIAS - fraction as i32;
+            let tz = sig.trailing_zeros();
+            let (sig, exp) = (sig >> tz, exp + tz as i32);
+            if sig >> (Self::F64_FRACTION + 1) != 0 {
+                return None;
+            }
+            let x = sig as f64 * libm_exp2_wide(exp)?;
+            // Exact only when the scaling did not round (subnormals past f64).
+            if (x / libm_exp2_wide(exp)?) as u128 != sig {
+                return None;
+            }
+            x
+        };
+        Self::of(kind, if sign == 1 { -mag } else { mag })
+    }
+
+    /// The exact decimal digits of `x` (no leading or trailing zeros) and the power of ten of
+    /// the last one.
+    fn exact_decimal(x: f64) -> (String, i32) {
+        let b = x.abs().to_bits();
+        let raw_e = ((b >> Self::F64_FRACTION) & 0x7ff) as i32;
+        let frac = u128::from(b & ((1u64 << Self::F64_FRACTION) - 1));
+        let (sig, e) = if raw_e == 0 { (frac, 1 - Self::F64_BIAS - Self::F64_FRACTION as i32) } else { (frac | (1 << Self::F64_FRACTION), raw_e - Self::F64_BIAS - Self::F64_FRACTION as i32) };
+        if sig == 0 {
+            return (String::from("0"), 0);
+        }
+        let mut n = BigUint::from_u128(sig);
+        let mut exp10 = 0;
+        if e >= 0 {
+            n.shl(e as u32);
+        } else {
+            n = n.mul(&BigUint::pow(5, (-e) as u32));
+            exp10 = e;
+        }
+        let mut digits = Vec::new();
+        while !n.is_zero() {
+            digits.push(b'0' + n.divrem_small(10) as u8);
+        }
+        let tz = digits.iter().take_while(|d| **d == b'0').count();
+        digits.drain(..tz);
+        digits.reverse();
+        (String::from_utf8(digits).expect("ascii digits"), exp10 + tz as i32)
+    }
+
+    /// A decimal literal's digits and power of ten, as [`Self::exact_decimal`] normalizes them.
+    fn literal_decimal(lit: &str) -> Option<(bool, String, i32)> {
+        let (neg, lit) = match lit.strip_prefix('-') {
+            Some(r) => (true, r),
+            None => (false, lit.strip_prefix('+').unwrap_or(lit)),
+        };
+        let (mant, exp) = lit.split_once(['e', 'E']).unwrap_or((lit, "0"));
+        let exp: i32 = exp.parse().ok()?;
+        let (int, frac) = mant.split_once('.').unwrap_or((mant, ""));
+        let all: String = int.chars().chain(frac.chars()).collect();
+        if all.is_empty() || !all.bytes().all(|c| c.is_ascii_digit()) {
+            return None;
+        }
+        let digits = all.trim_start_matches('0');
+        if digits.is_empty() {
+            return Some((neg, String::from("0"), 0));
+        }
+        let trimmed = digits.trim_end_matches('0');
+        let exp10 = exp - frac.len() as i32 + (digits.len() - trimmed.len()) as i32;
+        Some((neg, String::from(trimmed), exp10))
+    }
+
+    /// A literal as MLIR spells it: decimal (exactly an `f64`), or `0x...` bits.
+    pub fn parse(kind: FloatKind, lit: &str) -> Option<Self> {
+        if !Self::wide(kind) {
+            return None;
+        }
+        if let Some(hex) = lit.strip_prefix("0x").or_else(|| lit.strip_prefix("0X")) {
+            return Self::from_bits(kind, u128::from_str_radix(hex, 16).ok()?);
+        }
+        let x: f64 = lit.parse().ok()?;
+        let (neg, digits, exp10) = Self::literal_decimal(lit)?;
+        if x.is_infinite() || (x.is_sign_negative() != neg && x != 0.0) || Self::exact_decimal(x) != (digits, exp10) {
+            return None;
+        }
+        Self::of(kind, x)
+    }
+
+    /// As `printFloatValue` prints it: six digits when they are exact, else every digit the
+    /// format has, else its bits.
+    pub fn print(self) -> String {
+        let f = ApFloat { kind: FloatKind::F64, bits: self.value.to_bits() };
+        if self.value.is_finite() {
+            let s = f.to_string_with(6, 0, false);
+            if Self::parse(self.kind, &s).is_some_and(|w| w == self) {
+                return s;
+            }
+            let precision = if self.kind == FloatKind::F80 { Self::F80_PRECISION } else { Self::F128_PRECISION };
+            let s = f.to_string_full(precision);
+            if s.contains('.') {
+                return s;
+            }
+        }
+        alloc::format!("0x{:X}", self.bits())
+    }
+
+    /// In another format, when nothing is lost.
+    pub fn to_float(self, kind: FloatKind) -> Option<ApFloat> {
+        let f = ApFloat::from_f64(kind, self.value)?;
+        (f.to_f64().to_bits() == self.value.to_bits()).then_some(f)
+    }
+}
+
+/// `2^e` as an `f64`, when it is one.
+fn libm_exp2_wide(e: i32) -> Option<f64> {
+    /// `f64`'s smallest subnormal exponent and largest exponent.
+    const MIN: i32 = -1074;
+    const MAX: i32 = 1023;
+    (MIN..=MAX).contains(&e).then(|| libm_exp2(e))
+}
+
+impl ApFloat {
+    /// `toString(0, 3, true)` with the significand precision of another format.
+    fn to_string_full(self, sem_precision: u32) -> String {
+        let mut out = String::new();
+        if self.is_zero() {
+            return self.to_string_with(0, 3, true);
+        }
+        let (sig, exp) = self.decompose();
+        Self::to_string_impl(&mut out, self.is_negative(), exp, sig, sem_precision, 0, 3, true);
+        out
     }
 }

@@ -7,7 +7,10 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::{ApFloat, ApInt, Attribute, Dim, Shaped, Signedness, Type};
+use crate::{ApFloat, ApInt, Attribute, Dim, FloatKind, Shaped, Signedness, Type, WideFloat};
+
+/// The widest integer parsed and printed through `i128` / `u128`.
+const NARROW_INT: u32 = 128;
 
 /// One element.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -18,6 +21,8 @@ pub enum Scalar {
     Complex(ApInt, ApInt),
     /// A `complex<fN>` element.
     ComplexFloat(ApFloat, ApFloat),
+    /// An `f80` / `f128` element that is exactly an `f64` (no arithmetic on it).
+    Wide(WideFloat),
 }
 
 impl Scalar {
@@ -53,10 +58,25 @@ impl Scalar {
         }
     }
 
+    /// `self` as a float of `kind`, when nothing is lost (`f80` / `f128` included).
+    pub fn convert_float(self, kind: FloatKind) -> Option<Self> {
+        let value = match self {
+            Scalar::Float(f) => f.to_f64(),
+            Scalar::Wide(w) => w.value,
+            _ => return None,
+        };
+        if WideFloat::wide(kind) {
+            return WideFloat::of(kind, value).map(Scalar::Wide);
+        }
+        let f = ApFloat::from_f64(kind, value)?;
+        (f.to_f64().to_bits() == value.to_bits()).then_some(Scalar::Float(f))
+    }
+
     /// The zero of element type `ty` (`(0, 0)` for a complex one).
     pub fn zero(ty: &Type<'_>) -> Option<Self> {
         match ty {
             Type::Complex(part) => Self::complex(Self::zero(part)?, Self::zero(part)?),
+            Type::Float(k) if WideFloat::wide(*k) => WideFloat::of(*k, 0.0).map(Scalar::Wide),
             Type::Float(k) => ApFloat::from_f64(*k, 0.0).map(Scalar::Float),
             t => t.int_width().map(|(w, _)| Scalar::Int(ApInt::zero(w))),
         }
@@ -81,6 +101,7 @@ impl Scalar {
             return Self::complex(Self::parse(re, part)?, Self::parse(im, part)?);
         }
         match ty {
+            Type::Float(k) if WideFloat::wide(*k) => WideFloat::parse(*k, lit).map(Scalar::Wide),
             Type::Float(k) => {
                 // Integer-looking hex is the bits; a decimal integer is the value.
                 let f = if lit.starts_with("0x") || lit.contains(['.', 'e', 'E']) || lit.contains("inf") || lit.contains("nan") {
@@ -92,6 +113,16 @@ impl Scalar {
             }
             t => {
                 let (w, sign) = t.int_width()?;
+                if w > NARROW_INT {
+                    return Some(Scalar::Int(match lit {
+                        "true" => ApInt::from_bits(w, 1),
+                        "false" => ApInt::zero(w),
+                        _ => match lit.strip_prefix("0x") {
+                            Some(h) => ApInt::parse_hex(w, h)?,
+                            None => ApInt::parse_decimal(w, lit)?,
+                        },
+                    }));
+                }
                 let v = match lit {
                     "true" => 1,
                     "false" => 0,
@@ -114,8 +145,10 @@ impl Scalar {
         }
         match self {
             Scalar::Float(f) => f.print(),
+            Scalar::Wide(w) => w.print(),
             Scalar::Int(i) => match ty.int_width() {
                 Some((1, _)) => String::from(if i.is_zero() { "false" } else { "true" }),
+                Some((w, sign)) if w > NARROW_INT => i.to_decimal(sign != Signedness::Unsigned),
                 Some((_, Signedness::Unsigned)) => format!("{}", i.unsigned()),
                 _ => format!("{}", i.signed()),
             },
@@ -250,11 +283,10 @@ impl<'a> From<Const<'a>> for Attribute<'a> {
         match c.values[0] {
             Scalar::Int(i) if matches!(c.ty, Type::Integer { width: 1, .. }) => Attribute::Bool(!i.is_zero()),
             v @ Scalar::Int(_) => Attribute::Int { lit: Cow::Owned(v.print(&c.ty)), ty: Some(c.ty) },
-            v @ Scalar::Float(f) => {
+            v @ (Scalar::Float(_) | Scalar::Wide(_)) => {
                 let lit = v.print(&c.ty);
                 // A float printed as its bits reads back as an integer literal.
                 if lit.starts_with("0x") {
-                    let _ = f;
                     Attribute::Int { lit: Cow::Owned(lit), ty: Some(c.ty) }
                 } else {
                     Attribute::Float { lit: Cow::Owned(lit), ty: Some(c.ty) }

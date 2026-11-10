@@ -22,16 +22,24 @@ traits! {
     ArmSMETileOpInterface,
     AsyncOpInterface,
     AtMostOneChildOf,
+    AtomicCaptureOpInterface,
+    AtomicCompareOpInterface,
+    AtomicReadOpInterface,
+    AtomicUpdateOpInterface,
+    AtomicWriteOpInterface,
     AttrSizedOperandSegments,
     AttrSizedResultSegments,
     AutomaticAllocationScope,
     BasicPtxBuilderInterface,
+    BlockArgOpenMPOpInterface,
     BranchOpInterface,
     BufferizableOpInterface,
     CExpressionInterface,
     CallOpInterface,
     CallableOpInterface,
     CastOpInterface,
+    ComposableOpInterface,
+    ComputeRegionOpInterface,
     ConditionallySpeculatable,
     ConstantExprOpTrait,
     ConstantExpressionInitializerOpTrait,
@@ -83,6 +91,9 @@ traits! {
     LabelLevelOpInterface,
     LinalgOp,
     LoopLikeOpInterface,
+    LoopTransformationInterface,
+    LoopWrapperInterface,
+    MapClauseOwningOpInterface,
     MaskableOpInterface,
     MaskingOpInterface,
     MemRefsNormalizable,
@@ -93,9 +104,12 @@ traits! {
     NoRegionArguments,
     NoTerminator,
     NonNegFlagInterface,
+    OffloadRegionOpInterface,
     OffsetSizeAndStrideOpInterface,
     OneToOneIntrinsicOpInterface,
     OpAsmOpInterface,
+    OutlineRematerializationOpInterface,
+    OutlineableOpenMPOpInterface,
     ParallelCombiningOpInterface,
     PromotableAliaserInterface,
     PromotableAllocationOpInterface,
@@ -107,6 +121,7 @@ traits! {
     QueryMaxVersionInterface,
     QueryMinVersionInterface,
     QueryProfileInterface,
+    RecipeInterface,
     RecursivelySpeculatableImplTrait,
     RegionBranchOpInterface,
     RegionBranchTerminatorOpInterface,
@@ -165,6 +180,73 @@ traits! {
 impl OpInfos {
     /// Registers every upstream op.
     pub fn register_upstream_ops(&mut self) {
+        self.insert(OpInfo { name: "acc.atomic.capture", traits: &[Trait::AtomicCaptureOpInterface, Trait::HasRecursiveMemoryEffects, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "acc.atomic.read", traits: &[Trait::AtomicReadOpInterface], effects: Effects::Unknown, inherent: &["element_type"] });
+        self.insert(OpInfo { name: "acc.atomic.update", traits: &[Trait::AtomicUpdateOpInterface, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.atomic.write", traits: &[Trait::AtomicWriteOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "acc.attach", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.bounds", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface, Trait::OutlineRematerializationOpInterface], effects: Effects::Known(&[]), inherent: &["strideInBytes"] });
+        self.insert(OpInfo { name: "acc.cache", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.compute_region", traits: &[Trait::AffineScope, Trait::AttrSizedOperandSegments, Trait::HasRecursiveMemoryEffects, Trait::IsIsolatedFromAbove, Trait::OffloadRegionOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["origin", "kernel_func_name", "kernel_module_name"] });
+        self.insert(OpInfo { name: "acc.copyin", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.copyout", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name"] });
+        self.insert(OpInfo { name: "acc.create", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.data", traits: &[Trait::AttrSizedOperandSegments, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::RegionBranchOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["asyncOperandsDeviceType", "asyncOnly", "waitOperandsSegments", "waitOperandsDeviceType", "hasWaitDevnum", "waitOnly", "defaultAttr"] });
+        self.insert(OpInfo { name: "acc.declare", traits: &[Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.declare_device_resident", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.declare_enter", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.declare_exit", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.declare_link", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.delete", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name"] });
+        self.insert(OpInfo { name: "acc.detach", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name"] });
+        self.insert(OpInfo { name: "acc.deviceptr", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.enter_data", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["async", "wait"] });
+        self.insert(OpInfo { name: "acc.exit_data", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["async", "wait", "finalize"] });
+        self.insert(OpInfo { name: "acc.firstprivate", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.firstprivate.recipe", traits: &[Trait::AutomaticAllocationScope, Trait::IsIsolatedFromAbove, Trait::RecipeInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type"] });
+        self.insert(OpInfo { name: "acc.firstprivate_map", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.get_extent", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.get_lowerbound", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.get_stride", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.get_upperbound", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.getdeviceptr", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.global_ctor", traits: &[Trait::IsIsolatedFromAbove, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name"] });
+        self.insert(OpInfo { name: "acc.global_dtor", traits: &[Trait::IsIsolatedFromAbove, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name"] });
+        self.insert(OpInfo { name: "acc.gpu_shared_memory", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Allocate, on: EffectOn::Result(0), resource: "DefaultResource" }]), inherent: &["num_copies", "static_upper_bound_bytes", "dynamic_shared_memory_scaling_bytes", "dynamic_shared_memory_fixed_bytes"] });
+        self.insert(OpInfo { name: "acc.host_data", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface, Trait::RegionBranchOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["ifPresent"] });
+        self.insert(OpInfo { name: "acc.init", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["device_types"] });
+        self.insert(OpInfo { name: "acc.kernel_environment", traits: &[Trait::AttrSizedOperandSegments, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::NoTerminator, Trait::RegionBranchOpInterface, Trait::SingleBlock], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["asyncOnly", "waitOnly"] });
+        self.insert(OpInfo { name: "acc.kernels", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::ComputeRegionOpInterface, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::OffloadRegionOpInterface, Trait::RegionBranchOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["asyncOperandsDeviceType", "asyncOnly", "waitOperandsSegments", "waitOperandsDeviceType", "hasWaitDevnum", "waitOnly", "numGangsSegments", "numGangsDeviceType", "numWorkersDeviceType", "vectorLengthDeviceType", "selfAttr", "defaultAttr", "combined"] });
+        self.insert(OpInfo { name: "acc.loop", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::ComputeRegionOpInterface, Trait::HasRecursiveMemoryEffects, Trait::LoopLikeOpInterface, Trait::MemoryEffectOpInterface, Trait::RegionBranchOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }]), inherent: &["inclusiveUpperbound", "collapse", "collapseDeviceType", "gangOperandsArgType", "gangOperandsSegments", "gangOperandsDeviceType", "workerNumOperandsDeviceType", "vectorOperandsDeviceType", "seq", "independent", "auto_", "gang", "worker", "vector", "tileOperandsSegments", "tileOperandsDeviceType", "combined", "unstructured"] });
+        self.insert(OpInfo { name: "acc.nocreate", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.on_device", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "acc.par_width", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["par_dim"] });
+        self.insert(OpInfo { name: "acc.parallel", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::ComputeRegionOpInterface, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::OffloadRegionOpInterface, Trait::RegionBranchOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["asyncOperandsDeviceType", "asyncOnly", "waitOperandsSegments", "waitOperandsDeviceType", "hasWaitDevnum", "waitOnly", "numGangsSegments", "numGangsDeviceType", "numWorkersDeviceType", "vectorLengthDeviceType", "selfAttr", "defaultAttr", "combined"] });
+        self.insert(OpInfo { name: "acc.predicate_region", traits: &[Trait::HasRecursiveMemoryEffects, Trait::NoTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "acc.present", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.private", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.private.recipe", traits: &[Trait::AutomaticAllocationScope, Trait::IsIsolatedFromAbove, Trait::RecipeInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type"] });
+        self.insert(OpInfo { name: "acc.private_local", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.privatize", traits: &[], effects: Effects::Unknown, inherent: &["par_dims"] });
+        self.insert(OpInfo { name: "acc.reduction", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.reduction.recipe", traits: &[Trait::AutomaticAllocationScope, Trait::IsIsolatedFromAbove, Trait::RecipeInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type", "reductionOperator"] });
+        self.insert(OpInfo { name: "acc.reduction_accumulate", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(1), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(1), resource: "DefaultResource" }]), inherent: &["reductionOperator", "par_dims"] });
+        self.insert(OpInfo { name: "acc.reduction_accumulate_array", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &["reductionOperator", "par_dims"] });
+        self.insert(OpInfo { name: "acc.reduction_combine", traits: &[Trait::MemoryEffectOpInterface, Trait::SameTypeOperands], effects: Effects::Custom, inherent: &["reductionOperator"] });
+        self.insert(OpInfo { name: "acc.reduction_combine_region", traits: &[Trait::HasRecursiveMemoryEffects, Trait::RegionBranchOpInterface, Trait::SameTypeOperands, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "acc.reduction_init", traits: &[Trait::HasRecursiveMemoryEffects, Trait::RegionBranchOpInterface, Trait::SameOperandsAndResultType, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["reductionOperator"] });
+        self.insert(OpInfo { name: "acc.routine", traits: &[Trait::IsIsolatedFromAbove], effects: Effects::Unknown, inherent: &["sym_name", "func_name", "bindIdName", "bindStrName", "bindIdNameDeviceType", "bindStrNameDeviceType", "worker", "vector", "seq", "nohost", "implicit", "gang", "gangDim", "gangDimDeviceType"] });
+        self.insert(OpInfo { name: "acc.serial", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::ComputeRegionOpInterface, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::OffloadRegionOpInterface, Trait::RegionBranchOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["asyncOperandsDeviceType", "asyncOnly", "waitOperandsSegments", "waitOperandsDeviceType", "hasWaitDevnum", "waitOnly", "selfAttr", "defaultAttr", "combined"] });
+        self.insert(OpInfo { name: "acc.set", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["device_type"] });
+        self.insert(OpInfo { name: "acc.shutdown", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["device_types"] });
+        self.insert(OpInfo { name: "acc.terminator", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.unwrap_private", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::ViewLikeOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "acc.update", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "ConstructResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "CurrentDeviceIdResource" }]), inherent: &["asyncOperandsDeviceType", "asyncOnly", "waitOperandsSegments", "waitOperandsDeviceType", "hasWaitDevnum", "waitOnly", "ifPresent"] });
+        self.insert(OpInfo { name: "acc.update_device", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.update_host", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name"] });
+        self.insert(OpInfo { name: "acc.use_device", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["varType", "asyncOperandsDeviceType", "asyncOnly", "dataClause", "structured", "implicit", "modifiers", "name", "recipe"] });
+        self.insert(OpInfo { name: "acc.wait", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["async"] });
+        self.insert(OpInfo { name: "acc.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "affine.apply", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferIntDivisibilityOpInterface, Trait::InferIntRangeInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["map"] });
         self.insert(OpInfo { name: "affine.delinearize_index", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::Elementwise, Trait::InferIntDivisibilityOpInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["static_basis"] });
         self.insert(OpInfo { name: "affine.dma_start", traits: &[Trait::AffineMapAccessInterface, Trait::MemRefsNormalizable, Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["src_map", "dst_map", "tag_map"] });
@@ -1370,6 +1452,72 @@ impl OpInfos {
         self.insert(OpInfo { name: "nvvm.wmma.load", traits: &[], effects: Effects::Unknown, inherent: &["m", "n", "k", "layout", "eltype", "frag"] });
         self.insert(OpInfo { name: "nvvm.wmma.mma", traits: &[], effects: Effects::Unknown, inherent: &["m", "n", "k", "layoutA", "layoutB", "eltypeA", "eltypeB"] });
         self.insert(OpInfo { name: "nvvm.wmma.store", traits: &[], effects: Effects::Unknown, inherent: &["m", "n", "k", "layout", "eltype"] });
+        self.insert(OpInfo { name: "omp.affinity_entry", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "omp.alloc_shared_mem", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Allocate, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &["mem_elem_type", "mem_alignment"] });
+        self.insert(OpInfo { name: "omp.allocate_dir", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["align"] });
+        self.insert(OpInfo { name: "omp.allocate_free", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.atomic.capture", traits: &[Trait::AtomicCaptureOpInterface, Trait::HasRecursiveMemoryEffects, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["hint", "memory_order"] });
+        self.insert(OpInfo { name: "omp.atomic.compare", traits: &[Trait::AtomicCompareOpInterface, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &["weak", "hint", "memory_order"] });
+        self.insert(OpInfo { name: "omp.atomic.read", traits: &[Trait::AtomicReadOpInterface], effects: Effects::Unknown, inherent: &["element_type", "hint", "memory_order"] });
+        self.insert(OpInfo { name: "omp.atomic.update", traits: &[Trait::AtomicUpdateOpInterface, Trait::HasRecursiveMemoryEffects, Trait::MemoryEffectOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &["atomic_control", "hint", "memory_order"] });
+        self.insert(OpInfo { name: "omp.atomic.write", traits: &[Trait::AtomicWriteOpInterface], effects: Effects::Unknown, inherent: &["hint", "memory_order"] });
+        self.insert(OpInfo { name: "omp.barrier", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.cancel", traits: &[], effects: Effects::Unknown, inherent: &["cancel_directive"] });
+        self.insert(OpInfo { name: "omp.cancellation_point", traits: &[], effects: Effects::Unknown, inherent: &["cancel_directive"] });
+        self.insert(OpInfo { name: "omp.canonical_loop", traits: &[Trait::LoopTransformationInterface, Trait::OpAsmOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.critical", traits: &[Trait::SymbolUserOpInterface], effects: Effects::Unknown, inherent: &["name"] });
+        self.insert(OpInfo { name: "omp.critical.declare", traits: &[Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "hint"] });
+        self.insert(OpInfo { name: "omp.declare_mapper", traits: &[Trait::IsIsolatedFromAbove, Trait::RecipeInterface, Trait::SingleBlock, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type"] });
+        self.insert(OpInfo { name: "omp.declare_mapper.info", traits: &[Trait::AttrSizedOperandSegments, Trait::HasParent, Trait::IsTerminator, Trait::MapClauseOwningOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.declare_reduction", traits: &[Trait::IsIsolatedFromAbove, Trait::RecipeInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type", "byref_element_type"] });
+        self.insert(OpInfo { name: "omp.declare_simd", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["alignments", "inbranch", "linear_var_types", "linear_modifiers", "notinbranch", "simdlen"] });
+        self.insert(OpInfo { name: "omp.distribute", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::LoopWrapperInterface, Trait::NoTerminator, Trait::SingleBlock], effects: Effects::Unknown, inherent: &["dist_schedule_static", "order", "order_mod", "private_syms", "private_needs_barrier"] });
+        self.insert(OpInfo { name: "omp.flush", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.free_shared_mem", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Free, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Free, on: EffectOn::Operand(3), resource: "DefaultResource" }]), inherent: &["mem_elem_type", "mem_alignment"] });
+        self.insert(OpInfo { name: "omp.fuse", traits: &[Trait::AttrSizedOperandSegments, Trait::LoopTransformationInterface], effects: Effects::Unknown, inherent: &["first", "count"] });
+        self.insert(OpInfo { name: "omp.groupprivate", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["sym_name", "device_type"] });
+        self.insert(OpInfo { name: "omp.iterator", traits: &[Trait::AttrSizedOperandSegments, Trait::SingleBlock], effects: Effects::Unknown, inherent: &["loop_inclusive"] });
+        self.insert(OpInfo { name: "omp.loop", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::LoopWrapperInterface, Trait::NoTerminator, Trait::SingleBlock], effects: Effects::Unknown, inherent: &["bind_kind", "private_syms", "private_needs_barrier", "order", "order_mod", "reduction_mod", "reduction_byref", "reduction_syms"] });
+        self.insert(OpInfo { name: "omp.loop_nest", traits: &[Trait::HasRecursiveMemoryEffects], effects: Effects::Unknown, inherent: &["collapse_num_loops", "loop_inclusive", "tile_sizes"] });
+        self.insert(OpInfo { name: "omp.map.bounds", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["stride_in_bytes"] });
+        self.insert(OpInfo { name: "omp.map.info", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["var_ptr_type", "map_type", "map_capture_type", "var_ptr_ptr_type", "members_index", "mapper_id", "name", "partial_map"] });
+        self.insert(OpInfo { name: "omp.masked", traits: &[Trait::ComposableOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.master", traits: &[Trait::ComposableOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.new_cli", traits: &[Trait::OpAsmOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.ordered", traits: &[], effects: Effects::Unknown, inherent: &["doacross_depend_type", "doacross_num_loops"] });
+        self.insert(OpInfo { name: "omp.ordered.region", traits: &[], effects: Effects::Unknown, inherent: &["par_level_simd"] });
+        self.insert(OpInfo { name: "omp.parallel", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::OutlineableOpenMPOpInterface], effects: Effects::Unknown, inherent: &["private_syms", "private_needs_barrier", "proc_bind_kind", "reduction_mod", "reduction_byref", "reduction_syms"] });
+        self.insert(OpInfo { name: "omp.private", traits: &[Trait::IsIsolatedFromAbove, Trait::RecipeInterface], effects: Effects::Unknown, inherent: &["sym_name", "type", "data_sharing_type"] });
+        self.insert(OpInfo { name: "omp.scan", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "omp.scope", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface], effects: Effects::Unknown, inherent: &["nowait", "private_syms", "private_needs_barrier", "reduction_mod", "reduction_byref", "reduction_syms"] });
+        self.insert(OpInfo { name: "omp.section", traits: &[Trait::BlockArgOpenMPOpInterface, Trait::HasParent], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.sections", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface], effects: Effects::Unknown, inherent: &["nowait", "private_syms", "private_needs_barrier", "reduction_mod", "reduction_byref", "reduction_syms"] });
+        self.insert(OpInfo { name: "omp.simd", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::LoopWrapperInterface, Trait::NoTerminator, Trait::SingleBlock], effects: Effects::Unknown, inherent: &["alignments", "linear_var_types", "linear_modifiers", "order", "order_mod", "private_syms", "private_needs_barrier", "reduction_mod", "reduction_byref", "reduction_syms", "safelen", "simdlen"] });
+        self.insert(OpInfo { name: "omp.single", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface], effects: Effects::Unknown, inherent: &["copyprivate_syms", "nowait", "private_syms", "private_needs_barrier"] });
+        self.insert(OpInfo { name: "omp.target", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::IsIsolatedFromAbove, Trait::MapClauseOwningOpInterface, Trait::OutlineableOpenMPOpInterface], effects: Effects::Unknown, inherent: &["depend_kinds", "depend_iterated_kinds", "dyn_groupprivate_access_group", "dyn_groupprivate_fallback", "in_reduction_byref", "in_reduction_syms", "nowait", "private_syms", "private_needs_barrier", "private_maps", "kernel_type"] });
+        self.insert(OpInfo { name: "omp.target_allocmem", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Allocate, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &["in_type", "uniq_name", "bindc_name"] });
+        self.insert(OpInfo { name: "omp.target_data", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::MapClauseOwningOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.target_enter_data", traits: &[Trait::AttrSizedOperandSegments, Trait::MapClauseOwningOpInterface], effects: Effects::Unknown, inherent: &["depend_kinds", "depend_iterated_kinds", "nowait"] });
+        self.insert(OpInfo { name: "omp.target_exit_data", traits: &[Trait::AttrSizedOperandSegments, Trait::MapClauseOwningOpInterface], effects: Effects::Unknown, inherent: &["depend_kinds", "depend_iterated_kinds", "nowait"] });
+        self.insert(OpInfo { name: "omp.target_freemem", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Free, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Free, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Free, on: EffectOn::Operand(1), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "omp.target_update", traits: &[Trait::AttrSizedOperandSegments, Trait::MapClauseOwningOpInterface], effects: Effects::Unknown, inherent: &["depend_kinds", "depend_iterated_kinds", "nowait"] });
+        self.insert(OpInfo { name: "omp.task", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::OutlineableOpenMPOpInterface], effects: Effects::Unknown, inherent: &["depend_kinds", "depend_iterated_kinds", "in_reduction_byref", "in_reduction_syms", "mergeable", "private_syms", "private_needs_barrier", "untied"] });
+        self.insert(OpInfo { name: "omp.taskgroup", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::BlockArgOpenMPOpInterface], effects: Effects::Unknown, inherent: &["task_reduction_byref", "task_reduction_syms"] });
+        self.insert(OpInfo { name: "omp.taskloop.context", traits: &[Trait::AttrSizedOperandSegments, Trait::AutomaticAllocationScope, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::OutlineableOpenMPOpInterface, Trait::SingleBlock], effects: Effects::Unknown, inherent: &["grainsize_mod", "in_reduction_byref", "in_reduction_syms", "mergeable", "nogroup", "num_tasks_mod", "private_syms", "private_needs_barrier", "reduction_mod", "reduction_byref", "reduction_syms", "untied"] });
+        self.insert(OpInfo { name: "omp.taskloop.wrapper", traits: &[Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::LoopWrapperInterface, Trait::NoTerminator, Trait::SingleBlock], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.taskwait", traits: &[Trait::AttrSizedOperandSegments], effects: Effects::Unknown, inherent: &["depend_kinds", "depend_iterated_kinds", "nowait"] });
+        self.insert(OpInfo { name: "omp.taskyield", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.teams", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::OutlineableOpenMPOpInterface], effects: Effects::Unknown, inherent: &["dyn_groupprivate_access_group", "dyn_groupprivate_fallback", "private_syms", "private_needs_barrier", "reduction_mod", "reduction_byref", "reduction_syms"] });
+        self.insert(OpInfo { name: "omp.terminator", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "omp.threadprivate", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.tile", traits: &[Trait::AttrSizedOperandSegments, Trait::LoopTransformationInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.unroll_heuristic", traits: &[Trait::LoopTransformationInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.unroll_partial", traits: &[Trait::LoopTransformationInterface], effects: Effects::Unknown, inherent: &["unroll_factor"] });
+        self.insert(OpInfo { name: "omp.workdistribute", traits: &[Trait::ComposableOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.workshare", traits: &[Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects], effects: Effects::Unknown, inherent: &["nowait"] });
+        self.insert(OpInfo { name: "omp.workshare.loop_wrapper", traits: &[Trait::HasAncestor, Trait::HasRecursiveMemoryEffects, Trait::LoopWrapperInterface, Trait::NoTerminator, Trait::SingleBlock], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "omp.wsloop", traits: &[Trait::AttrSizedOperandSegments, Trait::BlockArgOpenMPOpInterface, Trait::ComposableOpInterface, Trait::HasRecursiveMemoryEffects, Trait::LoopWrapperInterface, Trait::NoTerminator, Trait::SingleBlock], effects: Effects::Unknown, inherent: &["linear_var_types", "linear_modifiers", "nowait", "order", "order_mod", "ordered", "private_syms", "private_needs_barrier", "reduction_mod", "reduction_byref", "reduction_syms", "schedule_kind", "schedule_mod", "schedule_simd"] });
+        self.insert(OpInfo { name: "omp.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "pdl.apply_native_constraint", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["name", "isNegated"] });
         self.insert(OpInfo { name: "pdl.apply_native_rewrite", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["name"] });
         self.insert(OpInfo { name: "pdl.attribute", traits: &[], effects: Effects::Unknown, inherent: &["value"] });

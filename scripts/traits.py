@@ -47,6 +47,8 @@ TDS = [
     "include/mlir/Dialect/Math/IR/MathOps.td",
     "include/mlir/Dialect/MemRef/IR/MemRefOps.td",
     "include/mlir/Dialect/NVGPU/IR/NVGPUOps.td",
+    "include/mlir/Dialect/OpenACC/OpenACCOps.td",
+    "include/mlir/Dialect/OpenMP/OpenMPOps.td",
     "include/mlir/Dialect/PDL/IR/PDLOps.td",
     "include/mlir/Dialect/PDLInterp/IR/PDLInterpOps.td",
     "include/mlir/Dialect/Ptr/IR/PtrOps.td",
