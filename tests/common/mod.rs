@@ -266,6 +266,17 @@ impl Elided {
         if let Some(Attribute::Dict(props)) = &mut op.properties {
             props.retain(|a| !(matches!(&*a.name, "arg_attrs" | "res_attrs") && matches!(&a.value, Some(Attribute::Array(xs)) if xs.is_empty())));
         }
+        // `gpu.func` 旧的可丢弃 `gpu.kernel`：印成 `kernel`，读回来是固有的 `kernel`（`mlir-opt` 一样）。
+        if op.name == "gpu.func" && let Some(i) = op.attributes.iter().position(|a| a.name == "gpu.kernel") {
+            op.attributes.remove(i);
+            let props = op.properties.get_or_insert_with(|| Attribute::Dict(Vec::new()));
+            if let Attribute::Dict(props) = props
+                && !props.iter().any(|a| a.name == "kernel")
+            {
+                props.push(mlirformat::NamedAttr { name: "kernel".into(), value: None });
+                props.sort_by(|a, b| a.name.cmp(&b.name));
+            }
+        }
         if op.name.starts_with("linalg.") {
             Self::rename(op);
             Self::expand(op, aliases);

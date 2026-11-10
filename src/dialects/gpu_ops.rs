@@ -14,8 +14,9 @@ use core::fmt::{self, Write};
 
 /// `gpu.func @name(%a: T, ...) [-> R] [workgroup(%w : T, ...)] [private(%p : T, ...)] [kernel] [attributes {...}] { body }`。
 ///
-/// `sym_name`、`gpu.kernel`、`workgroup_attributions` 是可丢弃属性（`mlir-opt` 的通用形式把它们写在 `{...}` 里），
-/// 自定义形式把它们拆进头部；形参的 `{attrs}` 走 `arg_attrs` / `res_attrs`。
+/// `sym_name` 是可丢弃属性，`kernel`（MLIR 23 起是固有的 unit 属性；旧的可丢弃 `gpu.kernel` 照样认）、
+/// `workgroup_attributions`（不为 0 才有）是固有属性，自定义形式把它们拆进头部；形参的 `{attrs}` 走
+/// `arg_attrs` / `res_attrs`。
 #[mlir::op("gpu.func", custom)]
 pub struct Func<'a> {
     #[attr]
@@ -27,11 +28,13 @@ pub struct Func<'a> {
     pub known_block_size: Option<Attribute<'a>>,
     pub known_grid_size: Option<Attribute<'a>>,
     pub known_cluster_size: Option<Attribute<'a>>,
+    pub workgroup_attributions: Option<Attribute<'a>>,
+    pub kernel: bool,
     pub body: Region<'a>,
 }
 
-/// 头部拆出去的三个可丢弃属性。
-const HEAD: [&str; 3] = ["sym_name", "gpu.kernel", "workgroup_attributions"];
+/// 头部拆出去的可丢弃属性（`gpu.kernel`：旧写法，印成 `kernel`）。
+const HEAD: [&str; 2] = ["sym_name", "gpu.kernel"];
 
 impl<'a> Func<'a> {
     /// 可丢弃属性 `name`。
@@ -47,9 +50,9 @@ impl<'a> Func<'a> {
 
     /// `workgroup_attributions` 的个数（没有 ⇒ 0）。
     fn workgroups(&self) -> Option<usize> {
-        match self.attr("workgroup_attributions") {
+        match &self.workgroup_attributions {
             None => Some(0),
-            Some(Some(Attribute::Int { lit, .. })) => lit.parse().ok(),
+            Some(Attribute::Int { lit, .. }) => lit.parse().ok(),
             Some(_) => None,
         }
     }
@@ -102,8 +105,11 @@ impl<'a> Func<'a> {
 
 impl Print for Func<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
-        // ⛔ 没有 workgroup_attributions 的（通用形式写进来的）：自定义形式读回去总会补上它，往返不一致 ⇒ 走通用形式。
-        let (Type::Function(ty), Some(Some(Attribute::Str { lit: name, .. })), Some(_), Some(workgroups)) = (&self.function_type, self.attr("sym_name"), self.attr("workgroup_attributions"), self.workgroups()) else {
+        // ⛔ `workgroup_attributions = 0`：自定义形式读回去不会有它，往返不一致 ⇒ 走通用形式。
+        let (Type::Function(ty), Some(Some(Attribute::Str { lit: name, .. })), Some(workgroups)) = (&self.function_type, self.attr("sym_name"), self.workgroups()) else {
+            return self.print_generic(p);
+        };
+        if workgroups == 0 && self.workgroup_attributions.is_some() {
             return self.print_generic(p);
         };
         let entry = self.body.blocks.first();
@@ -145,7 +151,7 @@ impl Print for Func<'_> {
         let (workgroup, private) = extra.split_at(workgroups);
         Self::attributions(p, "workgroup", workgroup, &self.workgroup_attrib_attrs)?;
         Self::attributions(p, "private", private, &self.private_attrib_attrs)?;
-        if self.attr("gpu.kernel").is_some() {
+        if self.kernel || self.attr("gpu.kernel").is_some() {
             p.write_str(" kernel")?;
         }
         // `printFunctionAttributes`：`getAttrs()` 是固有属性（known_*）和可丢弃属性合成的一个字典，按名字排序。
@@ -196,10 +202,7 @@ impl Parse for Func<'_> {
             arg_dicts.push(d);
         }
         attrs.push(NamedAttr { name: "sym_name".into(), value: Some(Attribute::Str { lit: Str::Owned(sym_name), ty: None }) });
-        if kernel {
-            attrs.push(NamedAttr { name: "gpu.kernel".into(), value: None });
-        }
-        attrs.push(NamedAttr { name: "workgroup_attributions".into(), value: Some(Attribute::Int { lit: Str::Owned(alloc::format!("{}", workgroup.len())), ty: Some(Type::int(64)) }) });
+        let workgroup_attributions = (!workgroup.is_empty()).then(|| Attribute::Int { lit: Str::Owned(alloc::format!("{}", workgroup.len())), ty: Some(Type::int(64)) });
         attrs.sort_by(|a, b| a.name.cmp(&b.name));
         // 字典里的固有属性是属性（property）。
         let mut known = |name: &str| attrs.iter().position(|a| a.name == name).and_then(|i| attrs.remove(i).value);
@@ -220,6 +223,8 @@ impl Parse for Func<'_> {
             known_block_size,
             known_grid_size,
             known_cluster_size,
+            workgroup_attributions,
+            kernel,
             body: p.lend(body),
             attrs,
             loc: p.opt_loc()?,
@@ -229,7 +234,7 @@ impl Parse for Func<'_> {
 }
 
 /// `gpu.launch_func [async] [[%deps]] [<%obj : T>] @m::@k [clusters in (x, y, z)] blocks in (x, y, z)
-/// threads in (x, y, z) [: T] [dynamic_shared_memory_size %s] [args(%a : T, ...)] {attrs}`。
+/// threads in (x, y, z) [: T] [dynamic_shared_memory_size %s] [cooperative] [args(%a : T, ...)] {attrs}`。
 #[mlir::op("gpu.launch_func", custom, results(async_token))]
 pub struct LaunchFunc<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
@@ -259,6 +264,7 @@ pub struct LaunchFunc<'a> {
     #[slot(async_object_ty, name = "asyncObject")]
     pub async_object: Vec<Value<'a>>,
     pub kernel: Attribute<'a>,
+    pub cooperative: bool,
     #[dtype(name = "asyncDependencies_ty")]
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(name = "gridSizeX_ty")]
@@ -335,6 +341,9 @@ impl Print for LaunchFunc<'_> {
         if let [s] = self.dynamic_shared_memory_size.as_slice() {
             write!(p, " dynamic_shared_memory_size {s}")?;
         }
+        if self.cooperative {
+            p.write_str(" cooperative")?;
+        }
         // custom<LaunchFuncOperands>
         p.write_char(' ')?;
         if !self.kernel_operands.is_empty() {
@@ -375,6 +384,7 @@ impl Parse for LaunchFunc<'_> {
         let [block_size_x, block_size_y, block_size_z] = LaunchFunc::triple(p)?;
         let grid_size_x_ty = if p.eat(":") { p.ty()? } else { Type::Index };
         let dynamic_shared_memory_size = if p.eat_kw("dynamic_shared_memory_size") { vec![p.value()?] } else { Vec::new() };
+        let cooperative = p.eat_kw("cooperative");
         let (mut kernel_operands, mut kernel_operands_ty) = (Vec::new(), Vec::new());
         if p.eat_kw("args") {
             p.expect("(")?;
@@ -406,6 +416,7 @@ impl Parse for LaunchFunc<'_> {
             kernel_operands,
             async_object,
             kernel,
+            cooperative,
             grid_size_x_ty,
             cluster_size_x_ty: cluster_ty.clone(),
             cluster_size_y_ty: cluster_ty.clone(),
