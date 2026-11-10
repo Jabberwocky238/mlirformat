@@ -21,6 +21,7 @@ traits! {
     ArithRoundingModeInterface,
     ArmSMETileOpInterface,
     AsyncOpInterface,
+    AtMostOneChildOf,
     AttrSizedOperandSegments,
     AttrSizedResultSegments,
     AutomaticAllocationScope,
@@ -32,6 +33,8 @@ traits! {
     CallableOpInterface,
     CastOpInterface,
     ConditionallySpeculatable,
+    ConstantExprOpTrait,
+    ConstantExpressionInitializerOpTrait,
     ConstantLike,
     ContractionOpInterface,
     ConvolutionOpInterface,
@@ -57,6 +60,7 @@ traits! {
     HasParent,
     HasRecursiveMemoryEffects,
     ImplicitLodOpInterface,
+    ImportOpInterface,
     InParallelOpInterface,
     IndexedAccessOpInterface,
     IndexedMemCopyOpInterface,
@@ -75,6 +79,8 @@ traits! {
     IsInvolution,
     IsIsolatedFromAbove,
     IsTerminator,
+    LabelBranchingOpInterface,
+    LabelLevelOpInterface,
     LinalgOp,
     LoopLikeOpInterface,
     MaskableOpInterface,
@@ -126,6 +132,7 @@ traits! {
     SignedOp,
     SingleBlock,
     SingleBlockImplicitTerminator,
+    StageWithSortSparseOp,
     SubsetInsertionOpInterface,
     SubsetOpInterface,
     SymbolOpInterface,
@@ -148,6 +155,8 @@ traits! {
     VectorTransferOpInterface,
     VectorUnrollOpInterface,
     Vectorizable,
+    VerifyConstraintInterface,
+    VerifyRegionInterface,
     ViewLikeOpInterface,
     WeightedBranchOpInterface,
     X86IntrinsicOp,
@@ -609,6 +618,23 @@ impl OpInfos {
         self.insert(OpInfo { name: "index.sizeof", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferIntRangeInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "index.sub", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferIntRangeInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "index.xor", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferIntRangeInterface, Trait::IsCommutative, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "irdl.all_of", traits: &[Trait::HasParent, Trait::SameOperandsAndResultType, Trait::VerifyConstraintInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "irdl.any", traits: &[Trait::HasParent, Trait::VerifyConstraintInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "irdl.any_of", traits: &[Trait::HasParent, Trait::SameOperandsAndResultType, Trait::VerifyConstraintInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "irdl.attribute", traits: &[Trait::AtMostOneChildOf, Trait::HasParent, Trait::IsIsolatedFromAbove, Trait::NoRegionArguments, Trait::NoTerminator, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name"] });
+        self.insert(OpInfo { name: "irdl.attributes", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["attributeValueNames"] });
+        self.insert(OpInfo { name: "irdl.base", traits: &[Trait::HasParent, Trait::SymbolUserOpInterface, Trait::VerifyConstraintInterface], effects: Effects::Unknown, inherent: &["base_ref", "base_name"] });
+        self.insert(OpInfo { name: "irdl.c_pred", traits: &[], effects: Effects::Unknown, inherent: &["pred"] });
+        self.insert(OpInfo { name: "irdl.dialect", traits: &[Trait::IsIsolatedFromAbove, Trait::NoTerminator, Trait::SymbolOpInterface, Trait::SymbolTable], effects: Effects::Unknown, inherent: &["sym_name"] });
+        self.insert(OpInfo { name: "irdl.is", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::MemoryEffectOpInterface, Trait::VerifyConstraintInterface], effects: Effects::Known(&[]), inherent: &["expected"] });
+        self.insert(OpInfo { name: "irdl.operands", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["names", "variadicity"] });
+        self.insert(OpInfo { name: "irdl.operation", traits: &[Trait::AtMostOneChildOf, Trait::HasParent, Trait::IsIsolatedFromAbove, Trait::NoRegionArguments, Trait::NoTerminator, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name"] });
+        self.insert(OpInfo { name: "irdl.parameters", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["names"] });
+        self.insert(OpInfo { name: "irdl.parametric", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::MemoryEffectOpInterface, Trait::SymbolUserOpInterface, Trait::VerifyConstraintInterface], effects: Effects::Known(&[]), inherent: &["base_type"] });
+        self.insert(OpInfo { name: "irdl.region", traits: &[Trait::HasParent, Trait::VerifyRegionInterface], effects: Effects::Unknown, inherent: &["numberOfBlocks", "constrainedArguments"] });
+        self.insert(OpInfo { name: "irdl.regions", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["names"] });
+        self.insert(OpInfo { name: "irdl.results", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["names", "variadicity"] });
+        self.insert(OpInfo { name: "irdl.type", traits: &[Trait::AtMostOneChildOf, Trait::HasParent, Trait::IsIsolatedFromAbove, Trait::NoRegionArguments, Trait::NoTerminator, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name"] });
         self.insert(OpInfo { name: "linalg.abs", traits: &[Trait::AttrSizedOperandSegments, Trait::ConditionallySpeculatable, Trait::DestinationStyleOpInterface, Trait::HasRecursiveMemoryEffects, Trait::IndexingMapOpInterface, Trait::LinalgOp, Trait::MemoryEffectOpInterface, Trait::ReifyRankedShapedTypeOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Custom, inherent: &[] });
         self.insert(OpInfo { name: "linalg.add", traits: &[Trait::AttrSizedOperandSegments, Trait::ConditionallySpeculatable, Trait::DestinationStyleOpInterface, Trait::HasRecursiveMemoryEffects, Trait::IndexingMapOpInterface, Trait::LinalgOp, Trait::MemoryEffectOpInterface, Trait::ReifyRankedShapedTypeOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Custom, inherent: &[] });
         self.insert(OpInfo { name: "linalg.batch_matmul", traits: &[Trait::AttrSizedOperandSegments, Trait::ConditionallySpeculatable, Trait::ContractionOpInterface, Trait::DestinationStyleOpInterface, Trait::HasRecursiveMemoryEffects, Trait::IndexingMapOpInterface, Trait::LinalgOp, Trait::MemoryEffectOpInterface, Trait::ReifyRankedShapedTypeOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Custom, inherent: &["indexing_maps", "cast"] });
@@ -1093,6 +1119,23 @@ impl OpInfos {
         self.insert(OpInfo { name: "ml_program.return", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "ml_program.subgraph", traits: &[Trait::ArgAndResultAttrsOpInterface, Trait::CallableOpInterface, Trait::FunctionOpInterface, Trait::HasOnlyGraphRegion, Trait::IsIsolatedFromAbove, Trait::RegionKindInterface, Trait::SingleBlock, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "function_type", "arg_attrs", "res_attrs", "sym_visibility"] });
         self.insert(OpInfo { name: "ml_program.token", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.allgather", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(1), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.allreduce", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(1), resource: "DefaultResource" }]), inherent: &["op"] });
+        self.insert(OpInfo { name: "mpi.barrier", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.comm_rank", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.comm_size", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.comm_split", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.comm_world", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.error_class", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.finalize", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.init", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.irecv", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.isend", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.recv", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.reduce_scatter_block", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Operand(1), resource: "DefaultResource" }]), inherent: &["op"] });
+        self.insert(OpInfo { name: "mpi.retval_check", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["errclass"] });
+        self.insert(OpInfo { name: "mpi.send", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Read, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
+        self.insert(OpInfo { name: "mpi.wait", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "nvgpu.device_async_copy", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Operand(2), resource: "DefaultResource" }]), inherent: &["dstElements", "bypassL1"] });
         self.insert(OpInfo { name: "nvgpu.device_async_create_group", traits: &[], effects: Effects::Unknown, inherent: &[] });
         self.insert(OpInfo { name: "nvgpu.device_async_wait", traits: &[], effects: Effects::Unknown, inherent: &["numGroups"] });
@@ -1822,6 +1865,86 @@ impl OpInfos {
         self.insert(OpInfo { name: "shape.value_of", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "shape.with_shape", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "shape.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "shard.all_gather", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SameOperandsAndResultElementType, Trait::SameOperandsAndResultRank, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "gather_axis"] });
+        self.insert(OpInfo { name: "shard.all_reduce", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SameOperandsAndResultShape, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "reduction"] });
+        self.insert(OpInfo { name: "shard.all_slice", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SameOperandsAndResultElementType, Trait::SameOperandsAndResultRank, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "slice_axis"] });
+        self.insert(OpInfo { name: "shard.all_to_all", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SameOperandsAndResultElementType, Trait::SameOperandsAndResultRank, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "split_axis", "concat_axis"] });
+        self.insert(OpInfo { name: "shard.broadcast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "root"] });
+        self.insert(OpInfo { name: "shard.gather", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "gather_axis", "root"] });
+        self.insert(OpInfo { name: "shard.get_sharding", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "shard.grid", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::SymbolOpInterface], effects: Effects::Known(&[]), inherent: &["sym_name", "shape"] });
+        self.insert(OpInfo { name: "shard.grid_shape", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "axes"] });
+        self.insert(OpInfo { name: "shard.neighbors_linear_indices", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "split_axes"] });
+        self.insert(OpInfo { name: "shard.process_linear_index", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid"] });
+        self.insert(OpInfo { name: "shard.process_multi_index", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "axes"] });
+        self.insert(OpInfo { name: "shard.recv", traits: &[Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Unknown, inherent: &["grid", "grid_axes", "source"] });
+        self.insert(OpInfo { name: "shard.reduce", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "reduction", "root"] });
+        self.insert(OpInfo { name: "shard.reduce_scatter", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SameOperandsAndResultRank, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "reduction", "scatter_dim"] });
+        self.insert(OpInfo { name: "shard.scatter", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "scatter_dim", "root"] });
+        self.insert(OpInfo { name: "shard.send", traits: &[Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Unknown, inherent: &["grid", "grid_axes", "destination"] });
+        self.insert(OpInfo { name: "shard.shard", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface], effects: Effects::Known(&[]), inherent: &["annotate_for_users"] });
+        self.insert(OpInfo { name: "shard.shard_shape", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::AttrSizedOperandSegments, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface], effects: Effects::Known(&[]), inherent: &["dims", "device"] });
+        self.insert(OpInfo { name: "shard.sharding", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::AttrSizedOperandSegments, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "split_axes", "static_sharded_dims_offsets", "static_halo_sizes"] });
+        self.insert(OpInfo { name: "shard.shift", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface, Trait::SameOperandsAndResultElementType, Trait::SameOperandsAndResultShape, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "grid_axes", "shift_axis", "offset", "rotate"] });
+        self.insert(OpInfo { name: "shard.update_halo", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::DestinationStyleOpInterface, Trait::MemoryEffectOpInterface, Trait::SymbolUserOpInterface], effects: Effects::Known(&[]), inherent: &["grid", "split_axes", "static_halo_sizes"] });
+        self.insert(OpInfo { name: "smt.and", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.apply_func", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.assert", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "smt.check", traits: &[Trait::NoRegionArguments, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "smt.constant", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::ConstantLike, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface], effects: Effects::Known(&[]), inherent: &["value"] });
+        self.insert(OpInfo { name: "smt.declare_fun", traits: &[Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Allocate, on: EffectOn::Result(0), resource: "DefaultResource" }]), inherent: &["namePrefix"] });
+        self.insert(OpInfo { name: "smt.distinct", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::SameTypeOperands], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.eq", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::SameTypeOperands], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.exists", traits: &[Trait::ConditionallySpeculatable, Trait::HasRecursiveMemoryEffects, Trait::RecursivelySpeculatableImplTrait, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["weight", "noPattern", "boundVarNames"] });
+        self.insert(OpInfo { name: "smt.forall", traits: &[Trait::ConditionallySpeculatable, Trait::HasRecursiveMemoryEffects, Trait::RecursivelySpeculatableImplTrait, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["weight", "noPattern", "boundVarNames"] });
+        self.insert(OpInfo { name: "smt.implies", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.ite", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.not", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.or", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.pop", traits: &[], effects: Effects::Unknown, inherent: &["count"] });
+        self.insert(OpInfo { name: "smt.push", traits: &[], effects: Effects::Unknown, inherent: &["count"] });
+        self.insert(OpInfo { name: "smt.reset", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "smt.set_logic", traits: &[Trait::HasParent], effects: Effects::Unknown, inherent: &["logic"] });
+        self.insert(OpInfo { name: "smt.solver", traits: &[Trait::IsIsolatedFromAbove, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "smt.xor", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "smt.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.assemble", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.binary", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["left_identity", "right_identity"] });
+        self.insert(OpInfo { name: "sparse_tensor.coiterate", traits: &[Trait::AttrSizedOperandSegments, Trait::HasRecursiveMemoryEffects, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["crdUsedLvls", "cases"] });
+        self.insert(OpInfo { name: "sparse_tensor.compress", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.concatenate", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::StageWithSortSparseOp], effects: Effects::Known(&[]), inherent: &["dimension"] });
+        self.insert(OpInfo { name: "sparse_tensor.convert", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::StageWithSortSparseOp], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.coordinates", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferTypeOpInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["level"] });
+        self.insert(OpInfo { name: "sparse_tensor.coordinates_buffer", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferTypeOpInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.crd_translate", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["direction", "encoder"] });
+        self.insert(OpInfo { name: "sparse_tensor.disassemble", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.expand", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.extract_iteration_space", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferTypeOpInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["loLvl", "hiLvl"] });
+        self.insert(OpInfo { name: "sparse_tensor.extract_value", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.foreach", traits: &[Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["order"] });
+        self.insert(OpInfo { name: "sparse_tensor.has_runtime_library", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.iterate", traits: &[Trait::ConditionallySpeculatable, Trait::HasRecursiveMemoryEffects, Trait::LoopLikeOpInterface, Trait::RecursivelySpeculatableImplTrait, Trait::RegionBranchOpInterface, Trait::SingleBlock, Trait::SingleBlockImplicitTerminator], effects: Effects::Unknown, inherent: &["crdUsedLvls"] });
+        self.insert(OpInfo { name: "sparse_tensor.load", traits: &[Trait::SameOperandsAndResultType], effects: Effects::Unknown, inherent: &["hasInserts"] });
+        self.insert(OpInfo { name: "sparse_tensor.lvl", traits: &[Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.new", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.number_of_entries", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.out", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.positions", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferTypeOpInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["level"] });
+        self.insert(OpInfo { name: "sparse_tensor.print", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.push_back", traits: &[], effects: Effects::Unknown, inherent: &["inbounds"] });
+        self.insert(OpInfo { name: "sparse_tensor.reduce", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::SameOperandsAndResultType], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.reinterpret_map", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.reorder_coo", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["algorithm"] });
+        self.insert(OpInfo { name: "sparse_tensor.select", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::SameOperandsAndResultType], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.slice.offset", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["dim"] });
+        self.insert(OpInfo { name: "sparse_tensor.slice.stride", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["dim"] });
+        self.insert(OpInfo { name: "sparse_tensor.sort", traits: &[], effects: Effects::Unknown, inherent: &["perm_map", "ny", "algorithm"] });
+        self.insert(OpInfo { name: "sparse_tensor.storage_specifier.get", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["specifierKind", "level"] });
+        self.insert(OpInfo { name: "sparse_tensor.storage_specifier.init", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.storage_specifier.set", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["specifierKind", "level"] });
+        self.insert(OpInfo { name: "sparse_tensor.unary", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.values", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferTypeOpInterface, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "sparse_tensor.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::HasParent, Trait::IsTerminator, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "spirv.ARM.Graph", traits: &[Trait::ArgAndResultAttrsOpInterface, Trait::AutomaticAllocationScope, Trait::CallableOpInterface, Trait::FunctionOpInterface, Trait::IsIsolatedFromAbove, Trait::QueryCapabilityInterface, Trait::QueryExtensionInterface, Trait::QueryMaxVersionInterface, Trait::QueryMinVersionInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["function_type", "arg_attrs", "res_attrs", "entry_point", "sym_name"] });
         self.insert(OpInfo { name: "spirv.ARM.GraphConstant", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::QueryCapabilityInterface, Trait::QueryExtensionInterface, Trait::QueryMaxVersionInterface, Trait::QueryMinVersionInterface], effects: Effects::Known(&[]), inherent: &["graph_constant_id"] });
         self.insert(OpInfo { name: "spirv.ARM.GraphEntryPoint", traits: &[Trait::QueryCapabilityInterface, Trait::QueryExtensionInterface, Trait::QueryMaxVersionInterface, Trait::QueryMinVersionInterface], effects: Effects::Unknown, inherent: &["fn", "interface"] });
@@ -2868,6 +2991,8 @@ impl OpInfos {
         self.insert(OpInfo { name: "tosa.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::QueryExtensionInterface, Trait::QueryProfileInterface, Trait::TosaOp, Trait::TosaResolvableShapeOperands], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "ub.poison", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::ConstantLike, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["value"] });
         self.insert(OpInfo { name: "ub.unreachable", traits: &[Trait::IsTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "vcix.v.iv", traits: &[], effects: Effects::Unknown, inherent: &["opcode", "imm"] });
+        self.insert(OpInfo { name: "vcix.v.sv", traits: &[], effects: Effects::Unknown, inherent: &["opcode"] });
         self.insert(OpInfo { name: "vector.bitcast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::VectorUnrollOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "vector.broadcast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::InferIntRangeInterface, Trait::MemoryEffectOpInterface, Trait::VectorUnrollOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "vector.compressstore", traits: &[Trait::AlignmentAttrOpInterface, Trait::MemoryEffectOpInterface, Trait::MemorySpaceCastConsumerOpInterface], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &["alignment"] });
@@ -2907,6 +3032,82 @@ impl OpInfos {
         self.insert(OpInfo { name: "vector.type_cast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::ViewLikeOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "vector.vscale", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OpAsmOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "vector.yield", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::IsTerminator, Trait::MemoryEffectOpInterface, Trait::RegionBranchTerminatorOpInterface, Trait::ReturnLike], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.abs", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.add", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.and", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.block", traits: &[Trait::IsTerminator, Trait::LabelLevelOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.block_return", traits: &[Trait::IsTerminator, Trait::LabelBranchingOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.branch_if", traits: &[Trait::IsTerminator, Trait::LabelBranchingOpInterface], effects: Effects::Unknown, inherent: &["exitLevel"] });
+        self.insert(OpInfo { name: "wasmssa.call", traits: &[], effects: Effects::Unknown, inherent: &["callee"] });
+        self.insert(OpInfo { name: "wasmssa.ceil", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.clz", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.const", traits: &[Trait::ConstantExprOpTrait], effects: Effects::Unknown, inherent: &["value"] });
+        self.insert(OpInfo { name: "wasmssa.convert_s", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.convert_u", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.copysign", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.ctz", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.demote", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.div", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.div_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.div_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.eq", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.eqz", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.extend", traits: &[], effects: Effects::Unknown, inherent: &["bitsToTake"] });
+        self.insert(OpInfo { name: "wasmssa.extend_i32_s", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.extend_i32_u", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.floor", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.func", traits: &[Trait::AffineScope, Trait::ArgAndResultAttrsOpInterface, Trait::AutomaticAllocationScope, Trait::CallableOpInterface, Trait::FunctionOpInterface, Trait::IsIsolatedFromAbove, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "functionType", "arg_attrs", "res_attrs", "exported"] });
+        self.insert(OpInfo { name: "wasmssa.ge", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.ge_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.ge_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.global", traits: &[Trait::AffineScope, Trait::AutomaticAllocationScope, Trait::ConstantExpressionInitializerOpTrait, Trait::IsIsolatedFromAbove, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type", "isMutable", "exported"] });
+        self.insert(OpInfo { name: "wasmssa.global_get", traits: &[Trait::ConstantExprOpTrait, Trait::SymbolUserOpInterface], effects: Effects::Unknown, inherent: &["global"] });
+        self.insert(OpInfo { name: "wasmssa.gt", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.gt_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.gt_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.if", traits: &[Trait::IsTerminator, Trait::LabelLevelOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.import_func", traits: &[Trait::ArgAndResultAttrsOpInterface, Trait::CallableOpInterface, Trait::ImportOpInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "moduleName", "importName", "type", "arg_attrs", "res_attrs"] });
+        self.insert(OpInfo { name: "wasmssa.import_global", traits: &[Trait::ImportOpInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "moduleName", "importName", "type", "isMutable"] });
+        self.insert(OpInfo { name: "wasmssa.import_mem", traits: &[Trait::ImportOpInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "moduleName", "importName", "limits"] });
+        self.insert(OpInfo { name: "wasmssa.import_table", traits: &[Trait::ImportOpInterface, Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "moduleName", "importName", "type"] });
+        self.insert(OpInfo { name: "wasmssa.le", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.le_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.le_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.local", traits: &[Trait::InferTypeOpInterface], effects: Effects::Unknown, inherent: &["type"] });
+        self.insert(OpInfo { name: "wasmssa.local_get", traits: &[Trait::InferTypeOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.local_set", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.local_tee", traits: &[Trait::InferTypeOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.loop", traits: &[Trait::IsTerminator, Trait::LabelLevelOpInterface], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.lt", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.lt_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.lt_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.max", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.memory", traits: &[Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "limits", "exported"] });
+        self.insert(OpInfo { name: "wasmssa.min", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.mul", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.ne", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.nearest", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.neg", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.or", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.popcnt", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.promote", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.reinterpret", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.rem_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.rem_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.return", traits: &[Trait::IsTerminator], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.rotl", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.rotr", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.shl", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.shr_s", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.shr_u", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.sqrt", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.sub", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.table", traits: &[Trait::SymbolOpInterface], effects: Effects::Unknown, inherent: &["sym_name", "type", "exported"] });
+        self.insert(OpInfo { name: "wasmssa.trunc", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.trunc_si", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.trunc_ui", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.wrap", traits: &[], effects: Effects::Unknown, inherent: &[] });
+        self.insert(OpInfo { name: "wasmssa.xor", traits: &[], effects: Effects::Unknown, inherent: &[] });
         self.insert(OpInfo { name: "x86.amx.tile_load", traits: &[Trait::AttrSizedOperandSegments, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[Effect { kind: EffectKind::Write, on: EffectOn::Op, resource: "DefaultResource" }, Effect { kind: EffectKind::Read, on: EffectOn::Operand(0), resource: "DefaultResource" }]), inherent: &[] });
         self.insert(OpInfo { name: "x86.amx.tile_mulf", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "x86.amx.tile_muli", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface, Trait::OneToOneIntrinsicOpInterface, Trait::X86IntrinsicOp], effects: Effects::Known(&[]), inherent: &["isZextLhs", "isZextRhs"] });
