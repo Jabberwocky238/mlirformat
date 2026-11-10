@@ -234,7 +234,7 @@ generates rather than keeps in the source tree, and `td/` holds them too, at the
 
 ## Performance
 
-Against `mlir-opt` 22.1.8 (`BENCHMARK.md`), 16 CPUs, both threaded, jemalloc (the global
+Measured with 0.6.2 against `mlir-opt` 22.1.8 (`BENCHMARK.md`), 16 CPUs, both threaded, jemalloc (the global
 allocator with `std` since 0.6.2): `parse_in` reads a 54 MB generic module in 182 ms and a 32 MB
 custom one in 214 ms; as whole processes, generic in ⇒ generic out is 5.8× faster than `mlir-opt`,
 custom in ⇒ custom out 1.6×. Peak memory is 2.6–3.2× `mlir-opt`'s.
