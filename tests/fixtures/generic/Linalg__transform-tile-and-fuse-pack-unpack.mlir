@@ -68,14 +68,14 @@
       "linalg.yield"(%10) : (f32) -> ()
     }) : (tensor<4x4x128x256xf32>, tensor<4x4x128x256xf32>, tensor<1x1x128x256xf32>) -> tensor<1x1x128x256xf32>
     %8 = "tensor.empty"() : () -> tensor<128x256xf32>
-    %9 = "linalg.unpack"(%7, %8) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 128, 256>}> : (tensor<1x1x128x256xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
+    %9 = "linalg.unpack"(%7, %8) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 128, 256>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x128x256xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
     "func.return"(%9) : (tensor<128x256xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = false}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = false}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       %2 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %3:2 = "transform.structured.tile_using_forall"(%2) <{operandSegmentSizes = array<i32: 1, 0, 0, 0, 0>, static_num_threads = array<i64: 4, 4>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       %4 = "transform.structured.match"(%3#1) <{ops = ["tensor.parallel_insert_slice"]}> : (!transform.any_op) -> !transform.op<"tensor.parallel_insert_slice">
@@ -98,14 +98,14 @@
       "linalg.yield"(%9) : (f32) -> ()
     }) : (tensor<4x4x128x256xf32>, tensor<4x4x128x256xf32>, tensor<1x1x128x256xf32>) -> tensor<1x1x128x256xf32>
     %7 = "tensor.empty"() : () -> tensor<128x256xf32>
-    %8 = "linalg.unpack"(%6, %7) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 128, 256>}> : (tensor<1x1x128x256xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
+    %8 = "linalg.unpack"(%6, %7) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 128, 256>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x128x256xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
     "func.return"(%8) : (tensor<128x256xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       %2 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %3:2 = "transform.structured.tile_using_forall"(%2) <{operandSegmentSizes = array<i32: 1, 0, 0, 0, 0>, static_num_threads = array<i64: 4, 4>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       %4 = "transform.structured.match"(%3#1) <{ops = ["tensor.parallel_insert_slice"]}> : (!transform.any_op) -> !transform.op<"tensor.parallel_insert_slice">

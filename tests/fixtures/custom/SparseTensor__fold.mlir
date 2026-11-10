@@ -23,18 +23,18 @@ module {
     return
   }
   func.func @sparse_get_specifier_dce_fold(%arg0: !sparse_tensor.storage_specifier<#sparse1>, %arg1: index, %arg2: index) -> index {
-    %0 = sparse_tensor.storage_specifier.set %arg0  lvl_sz at 0 with %arg1 : !sparse_tensor.storage_specifier<#sparse1>
-    %1 = sparse_tensor.storage_specifier.set %0  pos_mem_sz at 0 with %arg2 : !sparse_tensor.storage_specifier<#sparse1>
-    %2 = sparse_tensor.storage_specifier.get %1  lvl_sz at 0 : !sparse_tensor.storage_specifier<#sparse1>
+    %0 = sparse_tensor.storage_specifier.set %arg0 lvl_sz at 0 with %arg1 : !sparse_tensor.storage_specifier<#sparse1>
+    %1 = sparse_tensor.storage_specifier.set %0 pos_mem_sz at 0 with %arg2 : !sparse_tensor.storage_specifier<#sparse1>
+    %2 = sparse_tensor.storage_specifier.get %1 lvl_sz at 0 : !sparse_tensor.storage_specifier<#sparse1>
     return %2 : index
   }
   func.func @sparse_reorder_coo(%arg0: tensor<?x?xf32, #sparse2>) -> tensor<?x?xf32, #sparse2> {
-    %0 = sparse_tensor.reorder_coo  quick_sort %arg0 : tensor<?x?xf32, #sparse2> to tensor<?x?xf32, #sparse2>
+    %0 = sparse_tensor.reorder_coo quick_sort %arg0 : tensor<?x?xf32, #sparse2> to tensor<?x?xf32, #sparse2>
     return %0 : tensor<?x?xf32, #sparse2>
   }
   func.func @sparse_crd_translate(%arg0: index, %arg1: index) -> (index, index) {
-    %0:4 = sparse_tensor.crd_translate  dim_to_lvl[%arg0, %arg1] as #sparse3 : index, index, index, index
-    %1:2 = sparse_tensor.crd_translate  lvl_to_dim[%0#0, %0#1, %0#2, %0#3] as #sparse3 : index, index
+    %0:4 = sparse_tensor.crd_translate dim_to_lvl[%arg0, %arg1] as #sparse3 : index, index, index, index
+    %1:2 = sparse_tensor.crd_translate lvl_to_dim[%0#0, %0#1, %0#2, %0#3] as #sparse3 : index, index
     return %1#0, %1#1 : index, index
   }
   func.func @sparse_lvl_0(%arg0: tensor<10x?xi32, #sparse3>) -> index {

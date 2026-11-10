@@ -91,14 +91,14 @@
   "func.func"() <{function_type = (tensor<17x2x16x16x32x8xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>, sym_name = "unpack"}> ({
   ^bb0(%arg1: tensor<17x2x16x16x32x8xf32>, %arg2: tensor<129x47x16x16xf32>):
     %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
-    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> : (tensor<17x2x16x16x32x8xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
+    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<17x2x16x16x32x8xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
     "func.return"(%3) : (tensor<129x47x16x16xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -109,14 +109,14 @@
   "func.func"() <{function_type = (tensor<17x2x16x16x32x8xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>, sym_name = "unpack_with_identity_outer_dims_perm"}> ({
   ^bb0(%arg1: tensor<17x2x16x16x32x8xf32>, %arg2: tensor<129x47x16x16xf32>):
     %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
-    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 0>, outer_dims_perm = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 32, 8>}> : (tensor<17x2x16x16x32x8xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
+    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 0>, outer_dims_perm = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 32, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<17x2x16x16x32x8xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
     "func.return"(%3) : (tensor<129x47x16x16xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -127,14 +127,14 @@
   "func.func"() <{function_type = (tensor<1x1x1x1x136x64x16x16xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>, sym_name = "unpack_as_pad"}> ({
   ^bb0(%arg1: tensor<1x1x1x1x136x64x16x16xf32>, %arg2: tensor<129x47x16x16xf32>):
     %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
-    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 136, 64, 16, 16>}> : (tensor<1x1x1x1x136x64x16x16xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
+    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 136, 64, 16, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x1x1x136x64x16x16xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
     "func.return"(%3) : (tensor<129x47x16x16xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -145,14 +145,14 @@
   "func.func"() <{function_type = (tensor<1x1x1x1x136x64x16x16xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>, sym_name = "unpack_as_pad_disabled_extract_slice"}> ({
   ^bb0(%arg1: tensor<1x1x1x1x136x64x16x16xf32>, %arg2: tensor<129x47x16x16xf32>):
     %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
-    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 136, 64, 16, 16>}> : (tensor<1x1x1x1x136x64x16x16xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
+    %3 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 136, 64, 16, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x1x1x136x64x16x16xf32>, tensor<129x47x16x16xf32>) -> tensor<129x47x16x16xf32>
     "func.return"(%3) : (tensor<129x47x16x16xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = false}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = false}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -278,14 +278,14 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<32x2x49x16x16xf32>, tensor<32x?x?xf32>) -> tensor<32x?x?xf32>, sym_name = "unpack_with_dynamic_dest"}> ({
   ^bb0(%arg1: tensor<32x2x49x16x16xf32>, %arg2: tensor<32x?x?xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 2>, static_inner_tiles = array<i64: 16, 16>}> : (tensor<32x2x49x16x16xf32>, tensor<32x?x?xf32>) -> tensor<32x?x?xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 2>, static_inner_tiles = array<i64: 16, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<32x2x49x16x16xf32>, tensor<32x?x?xf32>) -> tensor<32x?x?xf32>
     "func.return"(%2) : (tensor<32x?x?xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -295,14 +295,14 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<?x?x8x16xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>, sym_name = "unpack_with_dynamic_input_dest"}> ({
   ^bb0(%arg1: tensor<?x?x8x16xf32>, %arg2: tensor<?x?xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 16>}> : (tensor<?x?x8x16xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<?x?x8x16xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
     "func.return"(%2) : (tensor<?x?xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -312,14 +312,14 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<?x?x?x?xf32>, tensor<?x?xf32>, index, index) -> tensor<?x?xf32>, sym_name = "unpack_fully_dynamic"}> ({
   ^bb0(%arg1: tensor<?x?x?x?xf32>, %arg2: tensor<?x?xf32>, %arg3: index, %arg4: index):
-    %2 = "linalg.unpack"(%arg1, %arg2, %arg3, %arg4) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: -9223372036854775808, -9223372036854775808>}> : (tensor<?x?x?x?xf32>, tensor<?x?xf32>, index, index) -> tensor<?x?xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2, %arg3, %arg4) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: -9223372036854775808, -9223372036854775808>}> {operandSegmentSizes = array<i32: 1, 1, 0, 2>} : (tensor<?x?x?x?xf32>, tensor<?x?xf32>, index, index) -> tensor<?x?xf32>
     "func.return"(%2) : (tensor<?x?xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -329,14 +329,57 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x1x1x1x136x64x16x16xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>, sym_name = "unpack_as_pad_dynamic"}> ({
   ^bb0(%arg1: tensor<1x1x1x1x136x64x16x16xf32>, %arg2: tensor<?x?x?x?xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 136, 64, 16, 16>}> : (tensor<1x1x1x1x136x64x16x16xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1, 2, 3>, static_inner_tiles = array<i64: 136, 64, 16, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x1x1x136x64x16x16xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
     "func.return"(%2) : (tensor<?x?x?x?xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<256x128xf32>, index) -> tensor<?x128x?xf32>, sym_name = "pack_dynamic_inner_tile"}> ({
+  ^bb0(%arg1: tensor<256x128xf32>, %arg2: index):
+    %2 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %4 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %5 = "arith.ceildivui"(%4, %arg2) : (index, index) -> index
+    %6 = "tensor.empty"(%5, %arg2) : (index, index) -> tensor<?x128x?xf32>
+    %7 = "linalg.pack"(%arg1, %6, %3, %arg2) <{inner_dims_pos = array<i64: 0>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, static_inner_tiles = array<i64: -9223372036854775808>}> : (tensor<256x128xf32>, tensor<?x128x?xf32>, f32, index) -> tensor<?x128x?xf32>
+    "func.return"(%7) : (tensor<?x128x?xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.op<"linalg.pack">
+      %1:3 = "transform.structured.lower_pack"(%0) <{lowerPadLikeWithInsertSlice = true}> : (!transform.op<"linalg.pack">) -> (!transform.op<"tensor.pad">, !transform.op<"tensor.expand_shape">, !transform.op<"linalg.transpose">)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<64x128xf32>, index) -> tensor<?x64x?xf32>, sym_name = "pack_dynamic_inner_tile_with_outer_dims_perm"}> ({
+  ^bb0(%arg1: tensor<64x128xf32>, %arg2: index):
+    %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %3 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %4 = "arith.ceildivui"(%3, %arg2) : (index, index) -> index
+    %5 = "tensor.empty"(%4, %arg2) : (index, index) -> tensor<?x64x?xf32>
+    %6 = "linalg.pack"(%arg1, %5, %2, %arg2) <{inner_dims_pos = array<i64: 1>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: -9223372036854775808>}> : (tensor<64x128xf32>, tensor<?x64x?xf32>, f32, index) -> tensor<?x64x?xf32>
+    "func.return"(%6) : (tensor<?x64x?xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.op<"linalg.pack">
+      %1:3 = "transform.structured.lower_pack"(%0) <{lowerPadLikeWithInsertSlice = true}> : (!transform.op<"linalg.pack">) -> (!transform.op<"tensor.pad">, !transform.op<"tensor.expand_shape">, !transform.op<"linalg.transpose">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -346,14 +389,14 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<32x64xf32>, tensor<2x4x32x8xf32>) -> tensor<32x64xf32>, sym_name = "unpack_with_outer_dims_perm"}> ({
   ^bb0(%arg1: tensor<32x64xf32>, %arg2: tensor<2x4x32x8xf32>):
-    %2 = "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 1, 0>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> : (tensor<2x4x32x8xf32>, tensor<32x64xf32>) -> tensor<32x64xf32>
+    %2 = "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 1, 0>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<2x4x32x8xf32>, tensor<32x64xf32>) -> tensor<32x64xf32>
     "func.return"(%2) : (tensor<32x64xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %1:4 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %1:5 = "transform.structured.lower_unpack"(%0) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()

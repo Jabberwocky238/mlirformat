@@ -669,3 +669,108 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i8_unsigned_full_range"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = 0 : i8}> : () -> i8
+    %1 = "arith.constant"() <{value = -1 : i8}> : () -> i8
+    %2 = "arith.constant"() <{value = 1 : i8}> : () -> i8
+    %3 = "scf.for"(%0, %1, %2, %arg0) <{unsignedCmp}> ({
+    ^bb0(%arg2: i8, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i8, i8, i8, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i8_unsigned_partial_range"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = 0 : i8}> : () -> i8
+    %1 = "arith.constant"() <{value = -56 : i8}> : () -> i8
+    %2 = "arith.constant"() <{value = 1 : i8}> : () -> i8
+    %3 = "scf.for"(%0, %1, %2, %arg0) <{unsignedCmp}> ({
+    ^bb0(%arg2: i8, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i8, i8, i8, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i8_unsigned_high_range"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = -56 : i8}> : () -> i8
+    %1 = "arith.constant"() <{value = -1 : i8}> : () -> i8
+    %2 = "arith.constant"() <{value = 1 : i8}> : () -> i8
+    %3 = "scf.for"(%0, %1, %2, %arg0) <{unsignedCmp}> ({
+    ^bb0(%arg2: i8, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i8, i8, i8, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i8_signed_crossing_zero"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = -128 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = 127 : i32}> : () -> i32
+    %2 = "arith.constant"() <{value = 1 : i32}> : () -> i32
+    %3 = "scf.for"(%0, %1, %2, %arg0) ({
+    ^bb0(%arg2: i32, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i32, i32, i32, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i8_signed_overflow_fix"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = -128 : i8}> : () -> i8
+    %1 = "arith.constant"() <{value = 127 : i8}> : () -> i8
+    %2 = "arith.constant"() <{value = 1 : i8}> : () -> i8
+    %3 = "scf.for"(%0, %1, %2, %arg0) ({
+    ^bb0(%arg2: i8, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i8, i8, i8, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i16_unsigned_full_range"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = 0 : i16}> : () -> i16
+    %1 = "arith.constant"() <{value = -1 : i16}> : () -> i16
+    %2 = "arith.constant"() <{value = 1 : i16}> : () -> i16
+    %3 = "scf.for"(%0, %1, %2, %arg0) <{unsignedCmp}> ({
+    ^bb0(%arg2: i16, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i16, i16, i16, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "trip_count_i8_unsigned_step_2"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "arith.constant"() <{value = 0 : i8}> : () -> i8
+    %1 = "arith.constant"() <{value = -1 : i8}> : () -> i8
+    %2 = "arith.constant"() <{value = 2 : i8}> : () -> i8
+    %3 = "scf.for"(%0, %1, %2, %arg0) <{unsignedCmp}> ({
+    ^bb0(%arg2: i8, %arg3: i32):
+      "scf.yield"(%arg1) : (i32) -> ()
+    }) : (i8, i8, i8, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+

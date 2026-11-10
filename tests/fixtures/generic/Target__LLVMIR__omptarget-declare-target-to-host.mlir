@@ -9,8 +9,8 @@
     %2 = "llvm.mlir.constant"() <{value = 11 : index}> : () -> i64
     %3 = "llvm.mlir.addressof"() <{global_name = @_QMtest_0Ezii}> : () -> !llvm.ptr
     %4 = "omp.map.bounds"(%1, %2, %2, %0, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1>, stride_in_bytes = true}> : (i64, i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %5 = "omp.map.info"(%3, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<11 x f32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    "omp.target"(%5) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0>}> ({
+    %5 = "omp.map.info"(%3, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<11 x f32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    "omp.target"(%5) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr):
       %6 = "llvm.mlir.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
       %7 = "llvm.mlir.constant"() <{value = 0 : i64}> : () -> i64

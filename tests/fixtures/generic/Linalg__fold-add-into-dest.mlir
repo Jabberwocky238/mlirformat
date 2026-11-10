@@ -394,3 +394,36 @@
   }) {transform.with_named_sequence} : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2048x2048xf32>, tensor<2048x2048xf32>, tensor<2048x2048xf32>, tensor<2048x2048xf32>) -> tensor<2048x2048xf32>, sym_name = "expect_no_fold_when_dominated_dest_is_block_arg"}> ({
+  ^bb0(%arg1: tensor<2048x2048xf32>, %arg2: tensor<2048x2048xf32>, %arg3: tensor<2048x2048xf32>, %arg4: tensor<2048x2048xf32>):
+    %1 = "linalg.matmul"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({
+    ^bb0(%arg8: f32, %arg9: f32, %arg10: f32):
+      %5 = "arith.mulf"(%arg8, %arg9) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      %6 = "arith.addf"(%arg10, %5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%6) : (f32) -> ()
+    }) : (tensor<2048x2048xf32>, tensor<2048x2048xf32>, tensor<2048x2048xf32>) -> tensor<2048x2048xf32>
+    %2 = "tensor.empty"() : () -> tensor<2048x2048xf32>
+    %3 = "linalg.add"(%1, %arg4, %2) <{operandSegmentSizes = array<i32: 2, 1>}> ({
+    ^bb0(%arg5: f32, %arg6: f32, %arg7: f32):
+      %4 = "arith.addf"(%arg5, %arg6) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%4) : (f32) -> ()
+    }) : (tensor<2048x2048xf32>, tensor<2048x2048xf32>, tensor<2048x2048xf32>) -> tensor<2048x2048xf32>
+    "func.return"(%3) : (tensor<2048x2048xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["func.func"]}> : (!transform.any_op) -> !transform.any_op
+      "transform.apply_patterns"(%0) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
+        "transform.apply_patterns.linalg.fold_add_into_dest"() : () -> ()
+      }) : (!transform.any_op) -> ()
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+

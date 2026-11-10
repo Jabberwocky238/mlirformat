@@ -167,3 +167,83 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @unroll_unsigned_i2_tc2() -> (i32, i32) {
+    %c7_i32 = arith.constant 7 : i32
+    %c0_i2 = arith.constant 0 : i2
+    %c-2_i2 = arith.constant -2 : i2
+    %c1_i2 = arith.constant 1 : i2
+    %0:2 = scf.for unsigned %arg0 = %c0_i2 to %c-2_i2 step %c1_i2 iter_args(%arg1 = %c7_i32, %arg2 = %c7_i32) -> (i32, i32)  : i2 {
+      %1 = arith.addi %arg1, %arg2 : i32
+      %2 = arith.muli %arg1, %arg2 : i32
+      scf.yield %1, %2 : i32, i32
+    }
+    return %0#0, %0#1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @unroll_unsigned_i3_tc4() -> (i32, i32) {
+    %c7_i32 = arith.constant 7 : i32
+    %c0_i3 = arith.constant 0 : i3
+    %c-4_i3 = arith.constant -4 : i3
+    %c1_i3 = arith.constant 1 : i3
+    %0:2 = scf.for unsigned %arg0 = %c0_i3 to %c-4_i3 step %c1_i3 iter_args(%arg1 = %c7_i32, %arg2 = %c7_i32) -> (i32, i32)  : i3 {
+      %1 = arith.addi %arg1, %arg2 : i32
+      %2 = arith.muli %arg1, %arg2 : i32
+      scf.yield %1, %2 : i32, i32
+    }
+    return %0#0, %0#1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @unroll_unsigned_i1_tc1() -> (i32, i32) {
+    %c7_i32 = arith.constant 7 : i32
+    %false = arith.constant false
+    %true = arith.constant true
+    %true_0 = arith.constant true
+    %0:2 = scf.for unsigned %arg0 = %false to %true step %true_0 iter_args(%arg1 = %c7_i32, %arg2 = %c7_i32) -> (i32, i32)  : i1 {
+      %1 = arith.addi %arg1, %arg2 : i32
+      %2 = arith.muli %arg1, %arg2 : i32
+      scf.yield %1, %2 : i32, i32
+    }
+    return %0#0, %0#1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @unroll_unsigned_i3_tc5_with_epilogue() -> (i32, i32) {
+    %c7_i32 = arith.constant 7 : i32
+    %c0_i3 = arith.constant 0 : i3
+    %c-3_i3 = arith.constant -3 : i3
+    %c1_i3 = arith.constant 1 : i3
+    %0:2 = scf.for unsigned %arg0 = %c0_i3 to %c-3_i3 step %c1_i3 iter_args(%arg1 = %c7_i32, %arg2 = %c7_i32) -> (i32, i32)  : i3 {
+      %1 = arith.addi %arg1, %arg2 : i32
+      %2 = arith.muli %arg1, %arg2 : i32
+      scf.yield %1, %2 : i32, i32
+    }
+    return %0#0, %0#1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @unroll_unsigned_i2_step2_bug2() -> (i32, i32) {
+    %c7_i32 = arith.constant 7 : i32
+    %c0_i2 = arith.constant 0 : i2
+    %c-2_i2 = arith.constant -2 : i2
+    %c-2_i2_0 = arith.constant -2 : i2
+    %0:2 = scf.for unsigned %arg0 = %c0_i2 to %c-2_i2 step %c-2_i2_0 iter_args(%arg1 = %c7_i32, %arg2 = %c7_i32) -> (i32, i32)  : i2 {
+      %1 = arith.addi %arg1, %arg2 : i32
+      %2 = arith.muli %arg1, %arg2 : i32
+      scf.yield %1, %2 : i32, i32
+    }
+    return %0#0, %0#1 : i32, i32
+  }
+}
+

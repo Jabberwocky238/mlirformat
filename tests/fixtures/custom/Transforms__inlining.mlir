@@ -204,3 +204,28 @@ module {
   }
 }
 
+// -----
+module {
+  llvm.func @inline_test_return_arity_mismatch(%arg0: f16, %arg1: f16) attributes {llvm.emit_c_interface} {
+    llvm.call @inline_test_return_arity_mismatch_callee(%arg0, %arg1) : (f16, f16) -> ()
+    llvm.return
+  }
+  llvm.func @inline_test_return_arity_mismatch_callee(%arg0: f16, %arg1: f16) {
+    %0 = "test.op_with_bitcast_type"(%arg0) : (f16) -> tensor<4xf32>
+    %1 = "test.op_with_bitcast_type"(%arg1) : (f16) -> tensor<2xi32>
+    "test.return"(%0, %1) : (tensor<4xf32>, tensor<2xi32>) -> ()
+  }
+  func.func @inline_functional_region_multiblock(%arg0: i32) -> i32 {
+    %0 = "test.functional_region_op"() ({
+    ^bb0(%arg1: i32):
+      %2 = arith.addi %arg1, %arg1 : i32
+      cf.br ^bb1(%2 : i32)
+    ^bb1(%3: i32):  // pred: ^bb0
+      %4 = arith.addi %3, %3 : i32
+      "test.return"(%4) : (i32) -> ()
+    }) : () -> ((i32) -> i32)
+    %1 = call_indirect %0(%arg0) : (i32) -> i32
+    return %1 : i32
+  }
+}
+

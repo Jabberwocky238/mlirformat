@@ -1,6 +1,6 @@
 "builtin.module"() <{sym_name = "subview"}> ({
   "gpu.module"() <{sym_name = "kernel"}> ({
-    "gpu.func"() <{function_type = (memref<256xf32>, memref<256xf32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<256xf32>, memref<256xf32>) -> (), kernel}> ({
     ^bb0(%arg4: memref<256xf32>, %arg5: memref<256xf32>):
       %14 = "memref.subview"(%arg4) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 5>, static_sizes = array<i64: 251>, static_strides = array<i64: 1>}> : (memref<256xf32>) -> memref<251xf32, strided<[1], offset: 5>>
       %15 = "memref.subview"(%arg5) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 10>, static_sizes = array<i64: 246>, static_strides = array<i64: 1>}> : (memref<256xf32>) -> memref<246xf32, strided<[1], offset: 10>>
@@ -9,7 +9,7 @@
       %18 = "xegpu.load"(%14, %16, %17) : (memref<251xf32, strided<[1], offset: 5>>, index, i1) -> f32
       "xegpu.store"(%18, %15, %16, %17) : (f32, memref<246xf32, strided<[1], offset: 10>>, index, i1) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "subview", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "subview"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (memref<256xf32>, memref<256xf32>) -> memref<256xf32>, sym_name = "test"}> ({
   ^bb0(%arg2: memref<256xf32>, %arg3: memref<256xf32>):

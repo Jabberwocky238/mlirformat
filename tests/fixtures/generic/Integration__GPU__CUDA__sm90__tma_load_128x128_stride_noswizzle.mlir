@@ -111,13 +111,13 @@
             "scf.yield"() : () -> ()
           }, {
           }) : (i1) -> ()
-          "gpu.barrier"() : () -> ()
+          "gpu.barrier"() <{scope = #gpu.barrier_scope<workgroup>}> : () -> ()
           "scf.yield"() : () -> ()
         }) : (index, index, index) -> ()
         "scf.yield"() : () -> ()
       }) : (index, index, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index, i32) -> ()
+    }) : (index, index, index, index, index, index, i32) -> ()
     %30 = "gpu.memcpy"(%25, %20, %23#0) : (!gpu.async.token, memref<128x128xf16>, memref<128x128xf16>) -> !gpu.async.token
     "gpu.wait"(%30) : (!gpu.async.token) -> ()
     %31:2 = "scf.for"(%7, %12, %13, %7, %7) ({

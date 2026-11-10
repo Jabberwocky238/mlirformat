@@ -69,3 +69,21 @@ module {
   }
 }
 
+// -----
+module {
+  func.func private @insert_slice_non_zero_offset_for_dyn_dim(%arg0: tensor<?x3x?x1xi32>, %arg1: index) -> tensor<?x3xi32> {
+    %c2 = arith.constant 2 : index
+    %0 = tensor.empty(%arg1) : tensor<?x3xi32>
+    %extracted_slice = tensor.extract_slice %arg0[0, %c2, 0, 0] [1, 1, 6, 1] [1, 1, 1, 1] : tensor<?x3x?x1xi32> to tensor<6x1xi32>
+    %inserted_slice = tensor.insert_slice %extracted_slice into %0[%c2, 0] [6, 1] [1, 1] : tensor<6x1xi32> into tensor<?x3xi32>
+    return %inserted_slice : tensor<?x3xi32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["tensor.insert_slice"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      transform.structured.vectorize %0 vector_sizes [8, 1] : !transform.any_op
+      transform.yield 
+    }
+  }
+}
+

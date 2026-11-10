@@ -18,14 +18,17 @@
     %3 = "llvm.alloca"(%2) <{elem_type = i32}> {bindc_name = "t2"} : (i64) -> !llvm.ptr
     %4 = "llvm.alloca"(%2) <{elem_type = i32}> {bindc_name = "t1"} : (i64) -> !llvm.ptr
     %5 = "llvm.alloca"(%2) <{elem_type = i32}> {bindc_name = "i"} : (i64) -> !llvm.ptr
-    "omp.taskloop"(%4, %3, %5) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 3, 0>, private_syms = [@_QFtestEt1_private_i32, @_QFtestEt2_private_i32, @_QFtestEi_private_i32]}> ({
+    "omp.taskloop.context"(%4, %3, %5) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 3, 0>, private_syms = [@_QFtestEt1_private_i32, @_QFtestEt2_private_i32, @_QFtestEi_private_i32]}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: !llvm.ptr):
-      "omp.loop_nest"(%0, %1, %0) <{loop_inclusive}> ({
-      ^bb0(%arg3: i32):
-        "llvm.store"(%arg3, %arg2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-        "omp.yield"() : () -> ()
-      }) : (i32, i32, i32) -> ()
-    }) : (!llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
+      "omp.taskloop.wrapper"() ({
+        "omp.loop_nest"(%0, %1, %0) <{loop_inclusive}> ({
+        ^bb0(%arg3: i32):
+          "llvm.store"(%arg3, %arg2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+          "omp.yield"() : () -> ()
+        }) : (i32, i32, i32) -> ()
+      }) : () -> ()
+      "omp.terminator"() : () -> ()
+    }) {omp.combined} : (!llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

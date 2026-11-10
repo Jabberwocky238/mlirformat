@@ -227,3 +227,28 @@
   }) {transform.with_named_sequence} : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1) -> (d0 + d1)>
+#map1 = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<16xf32>, tensor<1x3xf32>, index) -> tensor<1x3xf32>, sym_name = "masked_contiguous_extract_rank_reducing_mask"}> ({
+  ^bb0(%arg1: tensor<16xf32>, %arg2: tensor<1x3xf32>, %arg3: index):
+    %1 = "linalg.generic"(%arg2) <{indexing_maps = [#map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 0, 1>}> ({
+    ^bb0(%arg4: f32):
+      %2 = "linalg.index"() <{dim = 1 : i64}> : () -> index
+      %3 = "affine.apply"(%2, %arg3) <{map = #map}> : (index, index) -> index
+      %4 = "tensor.extract"(%arg1, %3) : (tensor<16xf32>, index) -> f32
+      "linalg.yield"(%4) : (f32) -> ()
+    }) : (tensor<1x3xf32>) -> tensor<1x3xf32>
+    "func.return"(%1) : (tensor<1x3xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      "transform.structured.vectorize"(%0) <{scalable_sizes = array<i1: false, false>, static_vector_sizes = array<i64: 1, 4>, vectorize_nd_extract}> : (!transform.any_op) -> ()
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+

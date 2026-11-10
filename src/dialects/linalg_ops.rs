@@ -350,6 +350,18 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
             "rsqrt" => "math.rsqrt",
             "tanh" => "math.tanh",
             "erf" => "math.erf",
+            "sin" => "math.sin",
+            "cos" => "math.cos",
+            "tan" => "math.tan",
+            "acos" => "math.acos",
+            "acosh" => "math.acosh",
+            "asin" => "math.asin",
+            "asinh" => "math.asinh",
+            "atan" => "math.atan",
+            "atanh" => "math.atanh",
+            "log10" => "math.log10",
+            "log1p" => "math.log1p",
+            "log2" => "math.log2",
             "square" => return Some(self.emit("arith.mulf", &[&a, &a], Some(ty), Vec::new())),
             "reciprocal" => {
                 let one = Attribute::Float { lit: Str::Borrowed("1.000000e+00"), ty: Some(ty.clone()) };
@@ -579,7 +591,7 @@ include!("linalg_named.gen.rs");
 // ---- 乘加类（ODS：matmul / batch_matmul / batch_reduce_matmul / contract）--------------------
 //
 // 体都是 `out + cast(a) * cast(b)`（`regionBuilder`）；`indexing_maps` 是固有属性，自定义形式里写在最前面：
-// matmul、batch_matmul、batch_reduce_matmul 不是缺省的才写（`indexing_maps = [..]`，22.1.8 的
+// matmul、batch_matmul、batch_reduce_matmul 不是缺省的才写（`indexing_maps = [..]`，23.1.5 的
 // `BatchReduceMatmulOp::print` 也带前后缀），contract 总写。
 
 /// `indexing_maps` 在自定义形式里怎么写。
@@ -1012,7 +1024,8 @@ impl Elementwise<'_> {
         let Attribute::Extended { ext: Extended { name, body: Some(b), .. }, .. } = kind else { return None };
         let k = b.strip_prefix('<')?.strip_suffix('>')?.trim();
         let n = match k {
-            "exp" | "log" | "abs" | "ceil" | "floor" | "negf" | "reciprocal" | "round" | "sqrt" | "rsqrt" | "square" | "tanh" | "erf" => 1,
+            "exp" | "log" | "abs" | "ceil" | "floor" | "negf" | "reciprocal" | "round" | "sqrt" | "rsqrt" | "square" | "tanh" | "erf" | "sin" | "cos" | "tan" | "acos"
+            | "acosh" | "asin" | "asinh" | "atan" | "atanh" | "log10" | "log1p" | "log2" => 1,
             "add" | "sub" | "mul" | "div" | "div_unsigned" | "max_signed" | "min_signed" | "max_unsigned" | "min_unsigned" | "powf" => 2,
             "select" => 3,
             _ => return None,

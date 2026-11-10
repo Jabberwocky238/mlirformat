@@ -65,10 +65,10 @@
     %22 = "llvm.sub"(%21, %4) <{overflowFlags = 0 : i32}> : (i64, i64) -> i64
     %23 = "omp.map.bounds"(%5, %22, %21, %4, %5) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1>, stride_in_bytes = true}> : (i64, i64, i64, i64, i64) -> !omp.map_bounds_ty
     %24 = "llvm.getelementptr"(%3) <{elem_type = !llvm.struct<(ptr, i64)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 0>}> : (!llvm.ptr) -> !llvm.ptr
-    %25 = "omp.map.info"(%3, %24, %23) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|implicit>, operandSegmentSizes = array<i32: 1, 1, 0, 1>, partial_map = false, var_type = i8}> : (!llvm.ptr, !llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    %26 = "omp.map.info"(%3, %25) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, members_index = [[0]], operandSegmentSizes = array<i32: 1, 0, 1, 0>, partial_map = false, var_type = !llvm.struct<(ptr, i64)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
-    %27 = "omp.map.info"(%1) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%26, %27, %25, %18, %1) <{nowait, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 0>, private_maps = array<i64: 0, 1>, private_syms = [@boxchar_firstprivate, @private_eye]}> ({
+    %25 = "omp.map.info"(%3, %24, %23) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|implicit>, operandSegmentSizes = array<i32: 1, 1, 0, 1>, partial_map = false, var_ptr_ptr_type = i8, var_ptr_type = !llvm.struct<(ptr, i64)>}> : (!llvm.ptr, !llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    %26 = "omp.map.info"(%3, %25) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, members_index = [[0]], operandSegmentSizes = array<i32: 1, 0, 1, 0>, partial_map = false, var_ptr_type = !llvm.struct<(ptr, i64)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
+    %27 = "omp.map.info"(%1) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%26, %27, %25, %18, %1) <{kernel_type = #omp<kernel_type(generic)>, nowait, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 2, 0>, private_maps = array<i64: 0, 1>, private_syms = [@boxchar_firstprivate, @private_eye]}> ({
     ^bb0(%arg1: !llvm.ptr, %arg2: !llvm.ptr, %arg3: !llvm.ptr, %arg4: !llvm.struct<(ptr, i64)>, %arg5: !llvm.ptr):
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.struct<(ptr, i64)>, !llvm.ptr) -> ()

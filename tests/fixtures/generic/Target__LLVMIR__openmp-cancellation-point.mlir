@@ -29,7 +29,7 @@
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "cancellation_point_taskgroup", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "omp.taskgroup"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> ({
-      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
         "omp.cancellation_point"() <{cancel_directive = #omp<cancellationconstructtype taskgroup>}> : () -> ()
         "omp.terminator"() : () -> ()
       }) : () -> ()

@@ -42,3 +42,12 @@
 42	parse	expected integer value
 43	parse	expected floating point literal
 44	parse	scale 6.600000e+04 out of expressed type range [5.960464e-08, 6.550400e+04]
+45	parse	illegal storage type maximum: 60000
+46	parse	illegal storage type minimum: -60000
+47	parse	illegal storage type maximum: 500
+48	parse	illegal storage type minimum: -500
+49	parse	illegal storage type maximum: 10
+50	parse	illegal storage type minimum: -10
+51	parse	quantile LUT size (16) must equal the number of representable storage values (5)
+52	parse	storage min must be less than storage max
+53	parse	quantile LUT size (3) must equal the number of representable storage values (16)

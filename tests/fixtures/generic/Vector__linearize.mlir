@@ -347,3 +347,21 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<2x4xf32>, vector<2x4xf32>) -> vector<2x8xf32>, sym_name = "linearize_vector_interleave"}> ({
+  ^bb0(%arg0: vector<2x4xf32>, %arg1: vector<2x4xf32>):
+    %0 = "vector.interleave"(%arg0, %arg1) : (vector<2x4xf32>, vector<2x4xf32>) -> vector<2x8xf32>
+    "func.return"(%0) : (vector<2x8xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<2x8xf32>) -> (vector<2x4xf32>, vector<2x4xf32>), sym_name = "linearize_vector_deinterleave"}> ({
+  ^bb0(%arg0: vector<2x8xf32>):
+    %0:2 = "vector.deinterleave"(%arg0) : (vector<2x8xf32>) -> (vector<2x4xf32>, vector<2x4xf32>)
+    "func.return"(%0#0, %0#1) : (vector<2x4xf32>, vector<2x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

@@ -13,7 +13,7 @@ module {
       yield %3 : index
     }
     emitc.for %arg3 = %0 to %1 step %2 {
-      %3 = call_opaque "f"() : () -> i32
+      %3 = call_opaque "f"()  : () -> i32
     }
     return
   }
@@ -31,9 +31,9 @@ module {
     emitc.assign %4 : f32 to %8 : <f32>
     emitc.for %arg0 = %0 to %1 step %2 {
       %11 = load %7 : <i32>
-      %12 = call_opaque "add"(%11, %arg0) : (i32, index) -> i32
+      %12 = call_opaque "add"(%11, %arg0)  : (i32, index) -> i32
       %13 = load %8 : <f32>
-      %14 = call_opaque "mul"(%13, %arg0) : (f32, index) -> f32
+      %14 = call_opaque "mul"(%13, %arg0)  : (f32, index) -> f32
       assign %12 : i32 to %7 : <i32>
       assign %14 : f32 to %8 : <f32>
     }
@@ -57,9 +57,9 @@ module {
     emitc.assign %4 : f32 to %8 : <f32>
     emitc.for %arg0 = %0 to %1 step %2 {
       %11 = load %7 : <i32>
-      %12 = call_opaque "add"(%11, %arg0) : (i32, index) -> i32
+      %12 = call_opaque "add"(%11, %arg0)  : (i32, index) -> i32
       %13 = load %8 : <f32>
-      %14 = call_opaque "mul"(%13, %arg0) : (f32, index) -> f32
+      %14 = call_opaque "mul"(%13, %arg0)  : (f32, index) -> f32
       assign %12 : i32 to %7 : <i32>
       assign %14 : f32 to %8 : <f32>
     }

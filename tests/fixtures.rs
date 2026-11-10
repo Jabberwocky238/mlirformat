@@ -1,4 +1,4 @@
-//! Fixtures copied from llvm-project 22.1.8 (`mlir/test`), plus `mlir-opt` 22.1.8 output for
+//! Fixtures copied from llvm-project 23.1.5 (`mlir/test`), plus `mlir-opt` 23.1.5 output for
 //! each file in custom (default) and generic (`--mlir-print-op-generic`) form.
 
 use std::fs;
@@ -9,6 +9,9 @@ mod common;
 
 use common::Fixtures;
 use mlirformat::*;
+
+/// Each worker's stack: deep regions recurse in parsing, printing and serde.
+const STACK: usize = 64 << 20;
 
 /// Runs `check` on every `// -----` chunk of every file in `dir`, on all cores, collecting failures.
 fn each_chunk(dir: &str, check: impl Fn(&str) -> Result<(), String> + Sync) {
@@ -24,7 +27,7 @@ fn each_chunk_at(dir: &str, check: impl Fn(&Path, usize, &str) -> Result<(), Str
     let (total, mut failures) = std::thread::scope(|s| {
         let workers: Vec<_> = (0..threads)
             .map(|_| {
-                s.spawn(|| {
+                std::thread::Builder::new().stack_size(STACK).spawn_scoped(s, || {
                     let (mut total, mut failures) = (0, Vec::new());
                     while let Some(path) = files.get(next.fetch_add(1, Ordering::Relaxed)) {
                         let src = fs::read_to_string(path).unwrap();
@@ -37,6 +40,7 @@ fn each_chunk_at(dir: &str, check: impl Fn(&Path, usize, &str) -> Result<(), Str
                     }
                     (total, failures)
                 })
+                .unwrap()
             })
             .collect();
         workers.into_iter().map(|w| w.join().unwrap()).fold((0, Vec::new()), |(t, mut f), (n, more)| {
@@ -54,12 +58,23 @@ fn roundtrip(src: &str, opt: &MlirOpt) -> Result<(), String> {
     let text = opt.show(&m).to_string();
     let mut again = opt.parse(&text).map_err(|e| format!("reparse: {e}\n{text}"))?;
     // linalg 命名 op 的区域自定义形式留不住（`mlir-opt` 不印）：比较前两边一起抹掉（`common::Elided`）
+    // `DefaultValuedOptionalAttr` 等于缺省值：同样印不出来。
     let mut first = m.clone();
-    common::Elided::module(&mut first);
-    common::Elided::module(&mut again);
+    for m in [&mut first, &mut again] {
+        common::Elided::module(m);
+        for i in &mut m.items {
+            if let Item::Op(op) = i {
+                common::Elided::optional_defaults(opt, op);
+            }
+        }
+    }
     (again == first).then_some(()).ok_or_else(|| format!("print/parse mismatch:\n{text}"))?;
     let json = serde_json::to_string(&m).unwrap();
-    let back: Module<'_> = serde_json::from_str(&json).map_err(|e| e.to_string())?;
+    // Deeply nested regions (`OpenACC/acc-specialize-for-host-deep-nesting.mlir`) go past
+    // serde_json's 128 levels: no limit, on the workers' large stacks.
+    let mut de = serde_json::Deserializer::from_str(&json);
+    de.disable_recursion_limit();
+    let back: Module<'_> = serde::Deserialize::deserialize(&mut de).map_err(|e| e.to_string())?;
     (back == m).then_some(()).ok_or_else(|| "json mismatch".into())
 }
 
@@ -95,7 +110,7 @@ fn rejected(path: &Path, i: usize) -> Option<Rejected> {
     })
 }
 
-/// How `mlir-opt` 22.1.8 rejects a chunk when it only reads it (no pass).
+/// How `mlir-opt` 23.1.5 rejects a chunk when it only reads it (no pass).
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Rejected {
     /// The text does not read.

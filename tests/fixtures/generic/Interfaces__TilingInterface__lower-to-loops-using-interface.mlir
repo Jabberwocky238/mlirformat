@@ -223,3 +223,173 @@
   }) {transform.with_named_sequence} : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<4x8x32x32xf32>) -> (), sym_name = "NC_to_NCnc"}> ({
+  ^bb0(%arg1: memref<128x256xf32>, %arg2: memref<4x8x32x32xf32>):
+    "linalg.pack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_inner_tiles = array<i64: 32, 32>}> : (memref<128x256xf32>, memref<4x8x32x32xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<13x15xf32>, memref<2x8x8x2xf32>, f32) -> (), sym_name = "NC_to_NCnc_pad"}> ({
+  ^bb0(%arg1: memref<13x15xf32>, %arg2: memref<2x8x8x2xf32>, %arg3: f32):
+    "linalg.pack"(%arg1, %arg2, %arg3) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, static_inner_tiles = array<i64: 8, 2>}> : (memref<13x15xf32>, memref<2x8x8x2xf32>, f32) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<4x8x32x32xf32>) -> (), sym_name = "KC_to_KCck"}> ({
+  ^bb0(%arg1: memref<128x256xf32>, %arg2: memref<4x8x32x32xf32>):
+    "linalg.pack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 0>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_inner_tiles = array<i64: 32, 32>}> : (memref<128x256xf32>, memref<4x8x32x32xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<4x8x32x32xf32>) -> (), sym_name = "NCnc_to_NC"}> ({
+  ^bb0(%arg1: memref<128x256xf32>, %arg2: memref<4x8x32x32xf32>):
+    "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<4x8x32x32xf32>, memref<128x256xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<4x8x32x32xf32>) -> (), sym_name = "KCck_to_KC"}> ({
+  ^bb0(%arg1: memref<128x256xf32>, %arg2: memref<4x8x32x32xf32>):
+    "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<4x8x32x32xf32>, memref<128x256xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<32x4x32x8xf32>) -> (), sym_name = "KC_to_CKkc"}> ({
+  ^bb0(%arg1: memref<128x256xf32>, %arg2: memref<32x4x32x8xf32>):
+    "linalg.pack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> : (memref<128x256xf32>, memref<32x4x32x8xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<32x4x32x8xf32>) -> (), sym_name = "CKkc_to_KC"}> ({
+  ^bb0(%arg1: memref<128x256xf32>, %arg2: memref<32x4x32x8xf32>):
+    "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<32x4x32x8xf32>, memref<128x256xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x1x128x64xf32>, memref<1x1x4x8x8x32xf32>) -> (), sym_name = "KCRSsr_to_KCRS_static"}> ({
+  ^bb0(%arg1: memref<1x1x128x64xf32>, %arg2: memref<1x1x4x8x8x32xf32>):
+    "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 3, 2>, static_inner_tiles = array<i64: 8, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<1x1x4x8x8x32xf32>, memref<1x1x128x64xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?x?x?x?xf32>, memref<?x?x?x?x8x32xf32>) -> (), sym_name = "KCRSsr_to_KCRS_dynamic_with_static_inner_tiles"}> ({
+  ^bb0(%arg1: memref<?x?x?x?xf32>, %arg2: memref<?x?x?x?x8x32xf32>):
+    "linalg.unpack"(%arg2, %arg1) <{inner_dims_pos = array<i64: 3, 2>, static_inner_tiles = array<i64: 8, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<?x?x?x?x8x32xf32>, memref<?x?x?x?xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?x?x?x?xf32>, memref<?x?x?x?x8x?xf32>, index) -> (), sym_name = "KCRSsr_to_KCRS_dynamic_with_dynamic_inner_tiles"}> ({
+  ^bb0(%arg1: memref<?x?x?x?xf32>, %arg2: memref<?x?x?x?x8x?xf32>, %arg3: index):
+    "linalg.unpack"(%arg2, %arg1, %arg3) <{inner_dims_pos = array<i64: 3, 2>, static_inner_tiles = array<i64: 8, -9223372036854775808>}> {operandSegmentSizes = array<i32: 1, 1, 0, 1>} : (memref<?x?x?x?x8x?xf32>, memref<?x?x?x?xf32>, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.unpack"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.convert_to_loops"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+

@@ -84,6 +84,13 @@ module {
 
 // -----
 module {
+  spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [Shader, Linkage, TransformFeedback], []> {
+    spirv.GlobalVariable @spirv_var_64 {offset = 0 : i32, xfb_buffer = 0 : i32, xfb_stride = 112 : i32} : !spirv.ptr<vector<3xf32>, Output>
+  }
+}
+
+// -----
+module {
   spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [Shader, Linkage], []> {
     spirv.GlobalVariable @var1 {linkage_attributes = #spirv.linkage_attributes<linkage_name = "outSideGlobalVar1", linkage_type = <Import>>} : !spirv.ptr<f32, Private>
   }

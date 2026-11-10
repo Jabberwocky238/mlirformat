@@ -3,8 +3,12 @@ module {
   func.func private @vector_array_type(!spirv.array<32 x vector<4xf32>>)
   func.func private @array_type_stride(!spirv.array<4 x !spirv.array<4 x f32, stride=4>, stride=128>)
   func.func private @vector_array_type_bf16(!spirv.array<32 x vector<4xbf16>>)
+  func.func private @scalar_array_type_f64(!spirv.array<16 x f16>, !spirv.array<16 x f64>)
+  func.func private @scalar_array_type_f8(!spirv.array<16 x f8E4M3FN>, !spirv.array<16 x f8E5M2>)
 }
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -25,6 +29,8 @@ module {
   func.func private @vector_ptr_type(!spirv.ptr<vector<4xi32>, PushConstant>)
 }
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -59,6 +65,11 @@ module {
 // -----
 // -----
 module {
+  func.func private @sampler_type(!spirv.sampler)
+}
+
+// -----
+module {
   func.func private @sampled_image_type(!spirv.sampled_image<!spirv.image<f32, Dim1D, NoDepth, NonArrayed, SingleSampled, NoSampler, Unknown>>)
 }
 
@@ -89,6 +100,7 @@ module {
   func.func private @struct_two_dec(!spirv.struct<(vector<4xf32> [BuiltIn=0], f32 [BuiltIn=1]), Block, CPacked>)
 }
 
+// -----
 // -----
 // -----
 // -----
@@ -157,6 +169,9 @@ module {
 // -----
 module {
   func.func private @coop_matrix_types(!spirv.coopmatrix<8x16xi32, Subgroup, MatrixA>, !spirv.coopmatrix<8x8xf32, Workgroup, MatrixB>, !spirv.coopmatrix<4x8xf32, Workgroup, MatrixAcc>)
+  func.func private @coop_matrix_types_f8E4M3FN(!spirv.coopmatrix<8x16xf8E4M3FN, Subgroup, MatrixA>)
+  func.func private @coop_matrix_types_f8E5M2(!spirv.coopmatrix<8x16xf8E5M2, Subgroup, MatrixA>)
+  func.func private @coop_matrix_types_bf16(!spirv.coopmatrix<8x16xbf16, Subgroup, MatrixA>)
 }
 
 // -----
@@ -200,6 +215,14 @@ module {
 // -----
 // -----
 module {
+  func.func private @type_f8E4M3FN(f8E4M3FN)
+  func.func private @vector_type_f8E4M3FN(vector<4xf8E4M3FN>)
+  func.func private @type_f8E5M2(f8E5M2)
+  func.func private @vector_type_f8E5M2(vector<4xf8E5M2>)
+}
+
+// -----
+module {
   func.func private @arm_tensor_type_single_dim_i32(!spirv.arm.tensor<1xi32>)
 }
 
@@ -236,3 +259,18 @@ module {
 }
 
 // -----
+// -----
+module {
+  func.func private @arm_tensor_type_bf16(!spirv.arm.tensor<2x3xbf16>)
+}
+
+// -----
+module {
+  func.func private @arm_tensor_type_fp8e4m3fn(!spirv.arm.tensor<2x3xf8E4M3FN>)
+}
+
+// -----
+module {
+  func.func private @arm_tensor_type_fp8e5m2(!spirv.arm.tensor<2x3xf8E5M2>)
+}
+

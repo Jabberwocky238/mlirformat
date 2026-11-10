@@ -18,7 +18,7 @@
     %3 = "llvm.alloca"(%1) <{elem_type = i32}> : (i32) -> !llvm.ptr
     "llvm.store"(%0, %2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
     "llvm.store"(%1, %3) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-    "omp.task"(%2, %3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 2, 0>, private_syms = [@privatizer, @firstprivatizer]}> ({
+    "omp.task"(%2, %3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0>, private_syms = [@privatizer, @firstprivatizer]}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
       %4 = "llvm.load"(%arg1) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
       "llvm.store"(%4, %arg0) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()

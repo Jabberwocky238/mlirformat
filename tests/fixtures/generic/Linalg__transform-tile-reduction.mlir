@@ -94,54 +94,6 @@
 }) : () -> ()
 
 // -----
-#map = affine_map<(d0, d1) -> (d0, d1)>
-#map1 = affine_map<(d0, d1) -> (d0)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?x?xf32>, tensor<?xf32>) -> tensor<?xf32>, sym_name = "reduction_untiled_forall"}> ({
-  ^bb0(%arg1: tensor<?x?xf32>, %arg2: tensor<?xf32>):
-    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 1, 1>}> ({
-    ^bb0(%arg3: f32, %arg4: f32):
-      %3 = "arith.mulf"(%arg3, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %4 = "arith.addf"(%3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%4) : (f32) -> ()
-    }) : (tensor<?x?xf32>, tensor<?xf32>) -> tensor<?xf32>
-    "func.return"(%2) : (tensor<?xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:4 = "transform.structured.tile_reduction_using_forall"(%0) <{mapping = [#gpu.thread<x>], num_threads = array<i64: 5>, reduction_dims = [], tile_sizes = array<i64: 3>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1) -> (d0, d1)>
-#map1 = affine_map<(d0, d1) -> (d0)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?x?xf32>, tensor<?xf32>) -> tensor<?xf32>, sym_name = "fail_for_float_neutral"}> ({
-  ^bb0(%arg1: tensor<?x?xf32>, %arg2: tensor<?xf32>):
-    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 1, 1>}> ({
-    ^bb0(%arg3: f32, %arg4: f32):
-      %3 = "llvm.fmul"(%arg3, %arg3) <{fastmathFlags = #llvm.fastmath<none>}> : (f32, f32) -> f32
-      %4 = "llvm.fadd"(%3, %arg4) <{fastmathFlags = #llvm.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%4) : (f32) -> ()
-    }) : (tensor<?x?xf32>, tensor<?xf32>) -> tensor<?xf32>
-    "func.return"(%2) : (tensor<?xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:4 = "transform.structured.tile_reduction_using_for"(%0) <{reduction_dims = [], tile_sizes = [0, 5]}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
 #map = affine_map<(d0, d1, d2) -> (d1, d2)>
 #map1 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
 #map2 = affine_map<(d0, d1, d2) -> (d0)>
@@ -358,6 +310,169 @@
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %1:4 = "transform.structured.tile_reduction_using_forall"(%0) <{num_threads = array<i64>, reduction_dims = [1, 2], tile_sizes = array<i64: 0, 0, 64>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+#map1 = affine_map<(d0, d1) -> (d0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<8x128xf32>, tensor<8xi32>) -> tensor<8xi32>, sym_name = "reduction_tile_with_linalg_index"}> ({
+  ^bb0(%arg1: tensor<8x128xf32>, %arg2: tensor<8xi32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: i32):
+      %3 = "linalg.index"() <{dim = 1 : i64}> : () -> index
+      %4 = "arith.index_cast"(%3) : (index) -> i32
+      %5 = "arith.addi"(%4, %arg4) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "linalg.yield"(%5) : (i32) -> ()
+    }) : (tensor<8x128xf32>, tensor<8xi32>) -> tensor<8xi32>
+    "func.return"(%2) : (tensor<8xi32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_for"(%0) <{reduction_dims = [], tile_sizes = [0, 32]}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d0, 0, d2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4096x64xf32>, tensor<1x1x64xf32>) -> tensor<1x1x64xf32>, sym_name = "reduction_tile_with_constant_in_output_map"}> ({
+  ^bb0(%arg1: tensor<1x4096x64xf32>, %arg2: tensor<1x1x64xf32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<1x4096x64xf32>, tensor<1x1x64xf32>) -> tensor<1x1x64xf32>
+    "func.return"(%2) : (tensor<1x1x64xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_forall"(%0) <{num_threads = array<i64>, reduction_dims = [], tile_sizes = array<i64: 0, 4, 0>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d0, 0, d2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4096x64xf32>, tensor<1x3x64xf32>) -> tensor<1x3x64xf32>, sym_name = "reduction_tile_forall_constant_dim_k_gt_1"}> ({
+  ^bb0(%arg1: tensor<1x4096x64xf32>, %arg2: tensor<1x3x64xf32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<1x4096x64xf32>, tensor<1x3x64xf32>) -> tensor<1x3x64xf32>
+    "func.return"(%2) : (tensor<1x3x64xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_forall"(%0) <{num_threads = array<i64>, reduction_dims = [], tile_sizes = array<i64: 0, 4, 0>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d0, 0, d2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4096x64xf32>, tensor<1x3x64xf32>) -> tensor<1x3x64xf32>, sym_name = "reduction_tile_for_constant_dim_k_gt_1"}> ({
+  ^bb0(%arg1: tensor<1x4096x64xf32>, %arg2: tensor<1x3x64xf32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<1x4096x64xf32>, tensor<1x3x64xf32>) -> tensor<1x3x64xf32>
+    "func.return"(%2) : (tensor<1x3x64xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_for"(%0) <{reduction_dims = [], tile_sizes = [0, 4, 0]}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d0, 0, d2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x4096x?xf32>, tensor<?x3x?xf32>) -> tensor<?x3x?xf32>, sym_name = "reduction_tile_dynamic_constant_map"}> ({
+  ^bb0(%arg1: tensor<?x4096x?xf32>, %arg2: tensor<?x3x?xf32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<?x4096x?xf32>, tensor<?x3x?xf32>) -> tensor<?x3x?xf32>
+    "func.return"(%2) : (tensor<?x3x?xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_forall"(%0) <{num_threads = array<i64>, reduction_dims = [], tile_sizes = array<i64: 0, 4, 0>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (0, 0, d2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4096x64xf32>, tensor<3x5x64xf32>) -> tensor<3x5x64xf32>, sym_name = "reduction_tile_two_constants_in_map"}> ({
+  ^bb0(%arg1: tensor<1x4096x64xf32>, %arg2: tensor<3x5x64xf32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<reduction>, #linalg.iterator_type<reduction>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<1x4096x64xf32>, tensor<3x5x64xf32>) -> tensor<3x5x64xf32>
+    "func.return"(%2) : (tensor<3x5x64xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_forall"(%0) <{num_threads = array<i64>, reduction_dims = [], tile_sizes = array<i64: 0, 4, 0>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d0, 0, d2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x4096x?xf32>, tensor<?x3x?xf32>) -> tensor<?x3x?xf32>, sym_name = "reduction_tile_for_dynamic_constant_map"}> ({
+  ^bb0(%arg1: tensor<?x4096x?xf32>, %arg2: tensor<?x3x?xf32>):
+    %2 = "linalg.generic"(%arg1, %arg2) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<?x4096x?xf32>, tensor<?x3x?xf32>) -> tensor<?x3x?xf32>
+    "func.return"(%2) : (tensor<?x3x?xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:4 = "transform.structured.tile_reduction_using_for"(%0) <{reduction_dims = [], tile_sizes = [0, 4, 0]}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()

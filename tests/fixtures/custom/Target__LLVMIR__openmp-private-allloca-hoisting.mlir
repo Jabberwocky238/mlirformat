@@ -44,7 +44,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
   llvm.func @parallel_op_private_multi_block(%arg0: !llvm.ptr, %arg1: !llvm.ptr) {
     %0 = omp.map.info var_ptr(%arg0 : !llvm.ptr, !llvm.ptr) map_clauses(is_device_ptr) capture(ByRef) -> !llvm.ptr {name = ""}
     %1 = omp.map.info var_ptr(%arg1 : !llvm.ptr, !llvm.ptr) map_clauses(is_device_ptr) capture(ByRef) -> !llvm.ptr {name = ""}
-    omp.target map_entries(%0 -> %arg2, %1 -> %arg3 : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%0 -> %arg2, %1 -> %arg3 : !llvm.ptr, !llvm.ptr) {
       omp.parallel private(@multi_block.privatizer %arg2 -> %arg4, @multi_block.privatizer2 %arg3 -> %arg5 : !llvm.ptr, !llvm.ptr) {
         %2 = llvm.load %arg4 : !llvm.ptr -> f32
         %3 = llvm.load %arg5 : !llvm.ptr -> f32

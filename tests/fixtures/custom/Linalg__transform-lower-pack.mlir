@@ -86,7 +86,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -102,7 +102,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -118,7 +118,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -134,7 +134,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 {lowerUnpadLikeWithExtractSlice = false} : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 {lowerUnpadLikeWithExtractSlice = false} : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -253,7 +253,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -268,7 +268,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -283,7 +283,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }
@@ -298,7 +298,46 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @pack_dynamic_inner_tile(%arg0: tensor<256x128xf32>, %arg1: index) -> tensor<?x128x?xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %c256 = arith.constant 256 : index
+    %0 = arith.ceildivui %c256, %arg1 : index
+    %1 = tensor.empty(%0, %arg1) : tensor<?x128x?xf32>
+    %pack = linalg.pack %arg0 padding_value(%cst : f32) inner_dims_pos = [0] inner_tiles = [%arg1] into %1 : tensor<256x128xf32> -> tensor<?x128x?xf32>
+    return %pack : tensor<?x128x?xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.pack">
+      %pad_op, %expand_shape_op, %transpose_op = transform.structured.lower_pack %0 : (!transform.op<"linalg.pack">) -> (!transform.op<"tensor.pad">, !transform.op<"tensor.expand_shape">, !transform.op<"linalg.transpose">)
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @pack_dynamic_inner_tile_with_outer_dims_perm(%arg0: tensor<64x128xf32>, %arg1: index) -> tensor<?x64x?xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %c128 = arith.constant 128 : index
+    %0 = arith.ceildivui %c128, %arg1 : index
+    %1 = tensor.empty(%0, %arg1) : tensor<?x64x?xf32>
+    %pack = linalg.pack %arg0 padding_value(%cst : f32) outer_dims_perm = [1, 0] inner_dims_pos = [1] inner_tiles = [%arg1] into %1 : tensor<64x128xf32> -> tensor<?x64x?xf32>
+    return %pack : tensor<?x64x?xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.pack">
+      %pad_op, %expand_shape_op, %transpose_op = transform.structured.lower_pack %0 : (!transform.op<"linalg.pack">) -> (!transform.op<"tensor.pad">, !transform.op<"tensor.expand_shape">, !transform.op<"linalg.transpose">)
       transform.yield 
     }
   }
@@ -313,7 +352,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
   }

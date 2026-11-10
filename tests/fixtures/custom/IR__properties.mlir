@@ -15,5 +15,7 @@ module {
   test.with_optional_properties anAttr = 0 simple = 1 nonTrivialStorage = "foo" hasDefault = some<0> nested = some<1> longSyntax = some<"bar"> hasUnit maybeUnit = some<unit>
   test.with_optional_properties nested = some<none>
   test.with_array_properties ints = [1, 2] strings = ["a", "b"] nested = [[1, 2], [3, 4]] opt = [-1, -2] explicitOptions = [none, 0] explicitUnits = [unit, unit_absent]
+  test.op_with_property_predicates <{array = [], more_constrained = 1 : i64, non_empty_constrained = [1], non_empty_unconstrained = [1], scalar = 1 : i64, unconstrained = 0 : i64}>
+  test.op_with_property_predicates <{array = [], defaulted = 3 : i64, more_constrained = 1 : i64, non_empty_constrained = [1], non_empty_unconstrained = [1], scalar = 1 : i64, unconstrained = 0 : i64}>
 }
 

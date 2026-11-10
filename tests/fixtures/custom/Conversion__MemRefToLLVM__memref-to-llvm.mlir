@@ -190,6 +190,19 @@ module {
 
 // -----
 module {
+  llvm.func @generic_atomic_rmw_f16() {
+    %0 = "test.foo"() : () -> memref<10xf16>
+    %1 = "test.foo"() : () -> index
+    %2 = memref.generic_atomic_rmw %0[%1] : memref<10xf16> {
+    ^bb0(%arg0: f16):
+      memref.atomic_yield %arg0 : f16
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
   llvm.func @generic_atomic_rmw_in_alloca_scope() {
     %c1 = arith.constant 1 : index
     %alloc = memref.alloc() : memref<2x3xi32>
@@ -293,6 +306,15 @@ module {
 
 // -----
 module {
+  func.func @load_invariant(%arg0: memref<32xf32>) {
+    %c7 = arith.constant 7 : index
+    %0 = memref.load %arg0[%c7] {invariant = true} : memref<32xf32>
+    return
+  }
+}
+
+// -----
+module {
   func.func @load_with_alignment(%arg0: memref<32xf32>, %arg1: index) {
     %0 = memref.load %arg0[%arg1] {alignment = 32 : i64} : memref<32xf32>
     return
@@ -321,6 +343,14 @@ module {
 module {
   func.func @alloca_unconvertable_memory_space() {
     %alloca = memref.alloca() : memref<1x32x33xi32, #spirv.storage_class<StorageBuffer>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @alloca_huge(%arg0: index) {
+    %alloca = memref.alloca() : memref<9223372036854775807x3xi32>
     return
   }
 }

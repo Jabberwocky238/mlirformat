@@ -79,3 +79,18 @@ module {
   }
 }
 
+// -----
+module {
+  llvm.func @aliased_func() {
+    llvm.return
+  }
+  llvm.mlir.alias external @func_alias {addr_space = 0 : i32} : !llvm.ptr {
+    %0 = llvm.mlir.addressof @aliased_func : !llvm.ptr
+    llvm.return %0 : !llvm.ptr
+  }
+  llvm.func @caller() {
+    llvm.call @func_alias() : () -> ()
+    llvm.return
+  }
+}
+

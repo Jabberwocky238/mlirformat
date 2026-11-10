@@ -59,6 +59,30 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = () -> tensor<5xui16>, sym_name = "test_unsigned_const_data_i16"}> ({
+    %0 = "tosa.const"() <{values = dense<[65535, 65534, 0, 1, 32768]> : tensor<5xui16>}> : () -> tensor<5xui16>
+    "func.return"(%0) : (tensor<5xui16>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> tensor<5xui32>, sym_name = "test_unsigned_const_data_i32"}> ({
+    %0 = "tosa.const"() <{values = dense<[4294967295, 4294967294, 0, 1, 2147483648]> : tensor<5xui32>}> : () -> tensor<5xui32>
+    "func.return"(%0) : (tensor<5xui32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> tensor<5xui48>, sym_name = "test_unsigned_const_data_i48"}> ({
+    %0 = "tosa.const"() <{values = dense<[281474976710655, 281474976710654, 0, 1, 140737488355328]> : tensor<5xui48>}> : () -> tensor<5xui48>
+    "func.return"(%0) : (tensor<5xui48>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (tensor<13x21x3xi8>) -> tensor<13x21x3xi8>, sym_name = "test_no_change"}> ({
   ^bb0(%arg0: tensor<13x21x3xi8>):
     %0 = "tosa.reverse"(%arg0) <{axis = 0 : i32}> : (tensor<13x21x3xi8>) -> tensor<13x21x3xi8>

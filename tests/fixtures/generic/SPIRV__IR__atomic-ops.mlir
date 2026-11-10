@@ -45,42 +45,90 @@
 // -----
 // -----
 // -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_iadd"}> ({
-  ^bb0(%arg16: !spirv.ptr<i32, StorageBuffer>, %arg17: i32):
-    %9 = "spirv.AtomicIAdd"(%arg16, %arg17) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
-    "func.return"(%9) : (i32) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>) -> i32, sym_name = "atomic_idecrement"}> ({
-  ^bb0(%arg15: !spirv.ptr<i32, StorageBuffer>):
-    %8 = "spirv.AtomicIDecrement"(%arg15) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>) -> i32
-    "func.return"(%8) : (i32) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>) -> i32, sym_name = "atomic_iincrement"}> ({
-  ^bb0(%arg14: !spirv.ptr<i32, StorageBuffer>):
-    %7 = "spirv.AtomicIIncrement"(%arg14) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>) -> i32
-    "func.return"(%7) : (i32) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_isub"}> ({
-  ^bb0(%arg12: !spirv.ptr<i32, StorageBuffer>, %arg13: i32):
-    %6 = "spirv.AtomicISub"(%arg12, %arg13) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
-    "func.return"(%6) : (i32) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_or"}> ({
-  ^bb0(%arg10: !spirv.ptr<i32, StorageBuffer>, %arg11: i32):
-    %5 = "spirv.AtomicOr"(%arg10, %arg11) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
-    "func.return"(%5) : (i32) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_smax"}> ({
-  ^bb0(%arg8: !spirv.ptr<i32, StorageBuffer>, %arg9: i32):
-    %4 = "spirv.AtomicSMax"(%arg8, %arg9) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
-    "func.return"(%4) : (i32) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_smin"}> ({
-  ^bb0(%arg6: !spirv.ptr<i32, StorageBuffer>, %arg7: i32):
-    %3 = "spirv.AtomicSMin"(%arg6, %arg7) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
+  ^bb0(%arg4: !spirv.ptr<i32, StorageBuffer>, %arg5: i32):
+    %3 = "spirv.AtomicIAdd"(%arg4, %arg5) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
     "func.return"(%3) : (i32) -> ()
   }) : () -> ()
+  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>) -> i32, sym_name = "atomic_idecrement"}> ({
+  ^bb0(%arg3: !spirv.ptr<i32, StorageBuffer>):
+    %2 = "spirv.AtomicIDecrement"(%arg3) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>) -> i32
+    "func.return"(%2) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>) -> i32, sym_name = "atomic_iincrement"}> ({
+  ^bb0(%arg2: !spirv.ptr<i32, StorageBuffer>):
+    %1 = "spirv.AtomicIIncrement"(%arg2) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>) -> i32
+    "func.return"(%1) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_isub"}> ({
+  ^bb0(%arg0: !spirv.ptr<i32, StorageBuffer>, %arg1: i32):
+    %0 = "spirv.AtomicISub"(%arg0, %arg1) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
+    "func.return"(%0) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.ptr<i32, Workgroup>) -> i32, sym_name = "atomic_load"}> ({
+  ^bb0(%arg0: !spirv.ptr<i32, Workgroup>):
+    %0 = "spirv.AtomicLoad"(%arg0) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<Acquire>}> : (!spirv.ptr<i32, Workgroup>) -> i32
+    "func.return"(%0) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.ptr<f32, StorageBuffer>) -> f32, sym_name = "atomic_load_float"}> ({
+  ^bb0(%arg0: !spirv.ptr<f32, StorageBuffer>):
+    %0 = "spirv.AtomicLoad"(%arg0) <{memory_scope = #spirv.scope<Device>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<f32, StorageBuffer>) -> f32
+    "func.return"(%0) : (f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_or"}> ({
+  ^bb0(%arg4: !spirv.ptr<i32, StorageBuffer>, %arg5: i32):
+    %2 = "spirv.AtomicOr"(%arg4, %arg5) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
+    "func.return"(%2) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_smax"}> ({
+  ^bb0(%arg2: !spirv.ptr<i32, StorageBuffer>, %arg3: i32):
+    %1 = "spirv.AtomicSMax"(%arg2, %arg3) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
+    "func.return"(%1) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_smin"}> ({
+  ^bb0(%arg0: !spirv.ptr<i32, StorageBuffer>, %arg1: i32):
+    %0 = "spirv.AtomicSMin"(%arg0, %arg1) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32
+    "func.return"(%0) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.ptr<i32, Workgroup>, i32) -> (), sym_name = "atomic_store"}> ({
+  ^bb0(%arg0: !spirv.ptr<i32, Workgroup>, %arg1: i32):
+    "spirv.AtomicStore"(%arg0, %arg1) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<Release>}> : (!spirv.ptr<i32, Workgroup>, i32) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.ptr<f32, StorageBuffer>, f32) -> (), sym_name = "atomic_store_float"}> ({
+  ^bb0(%arg0: !spirv.ptr<f32, StorageBuffer>, %arg1: f32):
+    "spirv.AtomicStore"(%arg0, %arg1) <{memory_scope = #spirv.scope<Device>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<f32, StorageBuffer>, f32) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (!spirv.ptr<i32, StorageBuffer>, i32) -> i32, sym_name = "atomic_umax"}> ({
   ^bb0(%arg4: !spirv.ptr<i32, StorageBuffer>, %arg5: i32):
     %2 = "spirv.AtomicUMax"(%arg4, %arg5) <{memory_scope = #spirv.scope<Workgroup>, semantics = #spirv.memory_semantics<None>}> : (!spirv.ptr<i32, StorageBuffer>, i32) -> i32

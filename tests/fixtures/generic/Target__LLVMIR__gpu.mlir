@@ -49,6 +49,29 @@
 
 // -----
 "builtin.module"() ({
+  "gpu.binary"() <{objects = [#gpu.object<#nvvm.target, "BLOB">], offloadingHandler = #gpu.select_object, sym_name = "kernel_module"}> : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "cooperative_no_cluster", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.constant"() <{value = 2 : index}> : () -> i64
+    %1 = "llvm.mlir.constant"() <{value = 3 : index}> : () -> i64
+    "gpu.launch_func"(%0, %0, %0, %1, %1, %1) <{cooperative, kernel = @kernel_module::@kernel, operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0>}> : (i64, i64, i64, i64, i64, i64) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) {gpu.container_module} : () -> ()
+
+// -----
+"builtin.module"() ({
+  "gpu.binary"() <{objects = [#gpu.object<#nvvm.target, "BLOB">], offloadingHandler = #gpu.select_object, sym_name = "kernel_module"}> : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "cooperative_with_cluster", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
+    %1 = "llvm.mlir.constant"() <{value = 2 : index}> : () -> i64
+    %2 = "llvm.mlir.constant"() <{value = 3 : index}> : () -> i64
+    "gpu.launch_func"(%1, %1, %1, %2, %2, %2, %0, %0, %0) <{cooperative, kernel = @kernel_module::@kernel, operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0>}> : (i64, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) {gpu.container_module} : () -> ()
+
+// -----
+"builtin.module"() ({
   "gpu.binary"() <{objects = [#gpu.object<#nvvm.target, properties = {section = "__nv_rel_fatbin"}, "BLOB">], offloadingHandler = #gpu.select_object, sym_name = "cuda_device_mod"}> : () -> ()
 }) {gpu.container_module} : () -> ()
 

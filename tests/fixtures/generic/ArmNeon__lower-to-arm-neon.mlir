@@ -6,7 +6,7 @@
   ^bb0(%arg0: vector<2x8xi8>, %arg1: vector<2x8xi4>, %arg2: vector<2x2xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<2x8xi8>) -> vector<2x8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<2x8xi4>) -> vector<2x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%2) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -18,7 +18,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<2x8xi8>, vector<2x8xi8>, vector<2x2xi32>) -> vector<2x2xi32>, sym_name = "vector_arm_neon_implicit_extsi"}> ({
   ^bb0(%arg0: vector<2x8xi8>, %arg1: vector<2x8xi8>, %arg2: vector<2x2xi32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi8>, vector<2x8xi8>, vector<2x2xi32>) -> vector<2x2xi32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi8>, vector<2x8xi8>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%0) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -32,7 +32,7 @@
   ^bb0(%arg0: vector<2x8xi8>, %arg1: vector<2x8xi8>, %arg2: vector<2x2xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<2x8xi8>) -> vector<2x8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<2x8xi8>) -> vector<2x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%2) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -46,7 +46,7 @@
   ^bb0(%arg0: vector<2x8xi8>, %arg1: vector<2x8xi8>, %arg2: vector<2x2xi32>):
     %0 = "arith.extui"(%arg0) : (vector<2x8xi8>) -> vector<2x8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<2x8xi8>) -> vector<2x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%2) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -60,7 +60,7 @@
   ^bb0(%arg0: vector<2x8xi8>, %arg1: vector<2x8xi8>, %arg2: vector<2x2xi32>):
     %0 = "arith.extui"(%arg0) : (vector<2x8xi8>) -> vector<2x8xi32>
     %1 = "arith.extui"(%arg1) : (vector<2x8xi8>) -> vector<2x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%2) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -74,7 +74,7 @@
   ^bb0(%arg0: vector<2x8xi8>, %arg1: vector<2x8xi8>, %arg2: vector<2x2xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<2x8xi8>) -> vector<2x8xi32>
     %1 = "arith.extui"(%arg1) : (vector<2x8xi8>) -> vector<2x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x8xi32>, vector<2x8xi32>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%2) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -88,7 +88,7 @@
   ^bb0(%arg0: vector<4x8xi8>, %arg1: vector<4x8xi8>, %arg2: vector<4x4xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<4x8xi8>) -> vector<4x8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<4x8xi8>) -> vector<4x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<4x8xi32>, vector<4x4xi32>) -> vector<4x4xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<4x8xi32>, vector<4x4xi32>) -> vector<4x4xi32>
     "func.return"(%2) : (vector<4x4xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -102,7 +102,7 @@
   ^bb0(%arg0: vector<4x8xi8>, %arg1: vector<2x8xi4>, %arg2: vector<4x2xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<4x8xi8>) -> vector<4x8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<2x8xi4>) -> vector<2x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<2x8xi32>, vector<4x2xi32>) -> vector<4x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<2x8xi32>, vector<4x2xi32>) -> vector<4x2xi32>
     "func.return"(%2) : (vector<4x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -116,7 +116,7 @@
   ^bb0(%arg0: vector<4x12xi8>, %arg1: vector<4x12xi8>, %arg2: vector<4x4xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<4x12xi8>) -> vector<4x12xi32>
     %1 = "arith.extsi"(%arg1) : (vector<4x12xi8>) -> vector<4x12xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x12xi32>, vector<4x12xi32>, vector<4x4xi32>) -> vector<4x4xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x12xi32>, vector<4x12xi32>, vector<4x4xi32>) -> vector<4x4xi32>
     "func.return"(%2) : (vector<4x4xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -130,7 +130,7 @@
   ^bb0(%arg0: vector<8xi8>, %arg1: vector<8x8xi8>, %arg2: vector<8xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<8xi8>) -> vector<8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<8x8xi8>) -> vector<8x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8xi32>, vector<8x8xi32>, vector<8xi32>) -> vector<8xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8xi32>, vector<8x8xi32>, vector<8xi32>) -> vector<8xi32>
     "func.return"(%2) : (vector<8xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -144,7 +144,7 @@
   ^bb0(%arg0: vector<1x8xi8>, %arg1: vector<8x8xi8>, %arg2: vector<1x8xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<1x8xi8>) -> vector<1x8xi32>
     %1 = "arith.extsi"(%arg1) : (vector<8x8xi8>) -> vector<8x8xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x8xi32>, vector<8x8xi32>, vector<1x8xi32>) -> vector<1x8xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x8xi32>, vector<8x8xi32>, vector<1x8xi32>) -> vector<1x8xi32>
     "func.return"(%2) : (vector<1x8xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -158,7 +158,7 @@
   ^bb0(%arg0: vector<8x8xi8>, %arg1: vector<8xi8>, %arg2: vector<8xi32>):
     %0 = "arith.extsi"(%arg1) : (vector<8xi8>) -> vector<8xi32>
     %1 = "arith.extsi"(%arg0) : (vector<8x8xi8>) -> vector<8x8xi32>
-    %2 = "vector.contract"(%1, %0, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8x8xi32>, vector<8xi32>, vector<8xi32>) -> vector<8xi32>
+    %2 = "vector.contract"(%1, %0, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8x8xi32>, vector<8xi32>, vector<8xi32>) -> vector<8xi32>
     "func.return"(%2) : (vector<8xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -172,7 +172,7 @@
   ^bb0(%arg0: vector<2x16xi8>, %arg1: vector<2x16xi4>, %arg2: vector<2x2xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<2x16xi8>) -> vector<2x16xi32>
     %1 = "arith.extsi"(%arg1) : (vector<2x16xi4>) -> vector<2x16xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x16xi32>, vector<2x16xi32>, vector<2x2xi32>) -> vector<2x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x16xi32>, vector<2x16xi32>, vector<2x2xi32>) -> vector<2x2xi32>
     "func.return"(%2) : (vector<2x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -186,7 +186,7 @@
   ^bb0(%arg0: vector<1x32xi8>, %arg1: vector<2x32xi4>, %arg2: vector<1x2xi32>):
     %0 = "arith.extsi"(%arg0) : (vector<1x32xi8>) -> vector<1x32xi32>
     %1 = "arith.extsi"(%arg1) : (vector<2x32xi4>) -> vector<2x32xi32>
-    %2 = "vector.contract"(%0, %1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x32xi32>, vector<2x32xi32>, vector<1x2xi32>) -> vector<1x2xi32>
+    %2 = "vector.contract"(%0, %1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x32xi32>, vector<2x32xi32>, vector<1x2xi32>) -> vector<1x2xi32>
     "func.return"(%2) : (vector<1x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -200,7 +200,7 @@
   ^bb0(%arg1: vector<4x16xi8>, %arg2: vector<4x16xi8>, %arg3: vector<4x4xi32>):
     %1 = "arith.extsi"(%arg1) : (vector<4x16xi8>) -> vector<4x16xi32>
     %2 = "arith.extsi"(%arg2) : (vector<4x16xi8>) -> vector<4x16xi32>
-    %3 = "vector.contract"(%1, %2, %arg3) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x16xi32>, vector<4x16xi32>, vector<4x4xi32>) -> vector<4x4xi32>
+    %3 = "vector.contract"(%1, %2, %arg3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x16xi32>, vector<4x16xi32>, vector<4x4xi32>) -> vector<4x4xi32>
     "func.return"(%3) : (vector<4x4xi32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

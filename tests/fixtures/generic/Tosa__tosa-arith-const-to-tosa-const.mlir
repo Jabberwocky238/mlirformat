@@ -55,14 +55,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = () -> tensor<2xui8>, sym_name = "rewrite_quant_tensor"}> ({
-    %0 = "arith.constant"() <{value = dense<[10, 20]> : tensor<2xui8>}> : () -> tensor<2xui8>
-    "func.return"(%0) : (tensor<2xui8>) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = () -> tensor<2x!quant.uniform<i8:f32, 5.000000e-01>>, sym_name = "rewrite_quant_uniform_tensor"}> ({
     %0 = "arith.constant"() <{value = dense<["10", "20"]> : tensor<2x!quant.uniform<i8:f32, 5.000000e-01>>}> : () -> tensor<2x!quant.uniform<i8:f32, 5.000000e-01>>
     "func.return"(%0) : (tensor<2x!quant.uniform<i8:f32, 5.000000e-01>>) -> ()

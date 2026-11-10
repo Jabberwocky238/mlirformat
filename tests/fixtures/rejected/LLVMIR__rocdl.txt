@@ -1,1 +1,2 @@
-12	verify	'"rocdl.kernel"' attribute attached to unexpected op
+21	verify	'"rocdl.kernel"' attribute attached to unexpected op
+23	parse	expected one of [any, relaxed, strict] for ROCDL buffer out-of-bounds mode, got: invalid

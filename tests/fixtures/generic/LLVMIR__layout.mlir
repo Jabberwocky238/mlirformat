@@ -74,3 +74,16 @@
 }) {dlti.dl_spec = #dlti.dl_spec<!llvm.struct<()> = dense<64> : vector<1xi64>>} : () -> ()
 
 // -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "byte_types"}> ({
+    %0 = "test.data_layout_query"() : () -> !llvm.byte<8>
+    %1 = "test.data_layout_query"() : () -> !llvm.byte<16>
+    %2 = "test.data_layout_query"() : () -> !llvm.byte<32>
+    %3 = "test.data_layout_query"() : () -> !llvm.byte<64>
+    %4 = "test.data_layout_query"() : () -> !llvm.byte<24>
+    %5 = "test.data_layout_query"() : () -> !llvm.byte<1>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

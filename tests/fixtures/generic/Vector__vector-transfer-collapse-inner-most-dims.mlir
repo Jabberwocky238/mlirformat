@@ -129,6 +129,18 @@
 }) : () -> ()
 
 // -----
+#map = affine_map<(d0, d1, d2, d3) -> (d1, d2, d3)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, vector<1x8x1xi1>) -> vector<1x8x1xf32>, sym_name = "contiguous_inner_most_with_mask"}> ({
+  ^bb0(%arg0: memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, %arg1: vector<1x8x1xi1>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %2 = "vector.transfer_read"(%arg0, %0, %0, %0, %0, %1, %arg1) <{in_bounds = [true, true, true], operandSegmentSizes = array<i32: 1, 4, 1, 1>, permutation_map = #map}> : (memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, index, index, index, index, f32, vector<1x8x1xi1>) -> vector<1x8x1xf32>
+    "func.return"(%2) : (vector<1x8x1xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
 #map = affine_map<(d0, d1) -> (d0, d1)>
 "builtin.module"() ({
   "func.func"() <{function_type = (memref<4x1xf32>) -> vector<4x8xf32>, sym_name = "negative_non_unit_inner_vec_dim"}> ({
@@ -280,6 +292,17 @@
     %1 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
     %2 = "memref.subview"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808, 0, 0>, static_sizes = array<i64: 40, 1, 1>, static_strides = array<i64: 1, 1, 1>}> : (memref<1000x1x1xf32>, index) -> memref<40x1x1xf32, strided<[1, 1, 1], offset: ?>>
     "vector.transfer_write"(%arg3, %2, %arg2, %0, %0) <{in_bounds = [true, true, true], operandSegmentSizes = array<i32: 1, 1, 3, 0>, permutation_map = #map}> : (vector<[4]x1x1xf32>, memref<40x1x1xf32, strided<[1, 1, 1], offset: ?>>, index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2, d3) -> (d1, d2, d3)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, vector<1x8x1xf32>, vector<1x8x1xi1>) -> (), sym_name = "contiguous_inner_most_with_mask"}> ({
+  ^bb0(%arg0: memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, %arg1: vector<1x8x1xf32>, %arg2: vector<1x8x1xi1>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "vector.transfer_write"(%arg1, %arg0, %0, %0, %0, %0, %arg2) <{in_bounds = [true, true, true], operandSegmentSizes = array<i32: 1, 1, 4, 1>, permutation_map = #map}> : (vector<1x8x1xf32>, memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, index, index, index, index, vector<1x8x1xi1>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

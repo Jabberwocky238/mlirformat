@@ -16,7 +16,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg7: !transform.any_op):
-      %5 = "transform.structured.match"(%arg7) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %5 = "transform.structured.match"(%arg7) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %6 = "transform.get_parent_op"(%5) <{isolated_from_above, nth_parent = 1 : i64}> : (!transform.any_op) -> !transform.any_op
       %7 = "transform.structured.vectorize_children_and_apply_patterns"(%6) <{flatten_1d_depthwise_conv}> : (!transform.any_op) -> !transform.any_op
       "transform.yield"() : () -> ()
@@ -35,7 +35,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %1 = "transform.get_parent_op"(%0) <{isolated_from_above, nth_parent = 1 : i64}> : (!transform.any_op) -> !transform.any_op
       %2 = "transform.structured.vectorize_children_and_apply_patterns"(%1) <{flatten_1d_depthwise_conv}> : (!transform.any_op) -> !transform.any_op
       "transform.yield"() : () -> ()
@@ -63,7 +63,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %1 = "transform.get_parent_op"(%0) <{isolated_from_above, nth_parent = 1 : i64}> : (!transform.any_op) -> !transform.any_op
       %2 = "transform.structured.vectorize_children_and_apply_patterns"(%1) <{flatten_1d_depthwise_conv}> : (!transform.any_op) -> !transform.any_op
       "transform.yield"() : () -> ()
@@ -89,7 +89,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %1 = "transform.get_parent_op"(%0) <{isolated_from_above, nth_parent = 1 : i64}> : (!transform.any_op) -> !transform.any_op
       %2 = "transform.structured.vectorize_children_and_apply_patterns"(%1) <{flatten_1d_depthwise_conv}> : (!transform.any_op) -> !transform.any_op
       "transform.yield"() : () -> ()

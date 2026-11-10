@@ -869,7 +869,7 @@ module {
 // -----
 module {
   func.func @transfer_read_prop_operands(%arg0: vector<1x2xindex>, %arg1: memref<1x4x2xi32>, %arg2: memref<1x4x1024xf32>) -> vector<2xf32> {
-    %thread_id_x = gpu.thread_id  x
+    %thread_id_x = gpu.thread_id x
     %c0 = arith.constant 0 : index
     %c0_0 = arith.constant 0 : index
     %cst = arith.constant dense<0> : vector<1x64xi32>
@@ -914,6 +914,48 @@ module {
       gpu.yield %2 : vector<4096xf32>
     }
     return %0 : vector<4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @warp_propagate_shape_cast_rank_extending(%arg0: index, %arg1: memref<4096xf32>) -> vector<1x1x4xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = gpu.warp_execute_on_lane_0(%arg0)[1024] -> (vector<1x1x4xf32>) {
+      %1 = vector.transfer_read %arg1[%c0], %cst : memref<4096xf32>, vector<4096xf32>
+      %2 = vector.shape_cast %1 : vector<4096xf32> to vector<32x4x32xf32>
+      gpu.yield %2 : vector<32x4x32xf32>
+    }
+    return %0 : vector<1x1x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @warp_propagate_shape_cast_rank_extending_flat(%arg0: index, %arg1: memref<128xf32>) -> vector<1x2x4xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = gpu.warp_execute_on_lane_0(%arg0)[16] -> (vector<1x2x4xf32>) {
+      %1 = vector.transfer_read %arg1[%c0], %cst : memref<128xf32>, vector<128xf32>
+      %2 = vector.shape_cast %1 : vector<128xf32> to vector<4x4x8xf32>
+      gpu.yield %2 : vector<4x4x8xf32>
+    }
+    return %0 : vector<1x2x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @warp_do_not_propagate_shape_cast_rank_extending_ambiguous(%arg0: index, %arg1: memref<32x4xf32>) -> vector<2x4x8xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = gpu.warp_execute_on_lane_0(%arg0)[2] -> (vector<2x4x8xf32>) {
+      %1 = vector.transfer_read %arg1[%c0, %c0], %cst : memref<32x4xf32>, vector<32x4xf32>
+      %2 = vector.shape_cast %1 : vector<32x4xf32> to vector<4x4x8xf32>
+      gpu.yield %2 : vector<4x4x8xf32>
+    }
+    return %0 : vector<2x4x8xf32>
   }
 }
 

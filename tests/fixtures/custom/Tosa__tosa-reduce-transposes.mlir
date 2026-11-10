@@ -133,6 +133,18 @@ module {
 
 // -----
 module {
+  func.func @test_multi_dim_reshape_for_broadcast(%arg0: tensor<1x4x1xi32>, %arg1: tensor<4x3x2xi32>) -> tensor<4x3x2xi32> {
+    %0 = tosa.const_shape  {values = dense<[1, 1, 4]> : tensor<3xindex>} : () -> !tosa.shape<3>
+    %1 = tosa.reshape %arg0, %0 : (tensor<1x4x1xi32>, !tosa.shape<3>) -> tensor<1x1x4xi32>
+    %2 = tosa.transpose %arg1 {perms = array<i32: 2, 1, 0>} : (tensor<4x3x2xi32>) -> tensor<2x3x4xi32>
+    %3 = tosa.add %2, %1 : (tensor<2x3x4xi32>, tensor<1x1x4xi32>) -> tensor<2x3x4xi32>
+    %4 = tosa.transpose %3 {perms = array<i32: 2, 1, 0>} : (tensor<2x3x4xi32>) -> tensor<4x3x2xi32>
+    return %4 : tensor<4x3x2xi32>
+  }
+}
+
+// -----
+module {
   func.func @test_resnet18_common_case(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>, %arg2: tensor<1x112x112x64xf32>) -> tensor<1x112x112x64xf32> {
     %0 = "tosa.const"() <{values = dense<0> : tensor<1xi8>}> : () -> tensor<1xi8>
     %1 = tosa.const_shape  {values = dense<[1, 64, 1, 1]> : tensor<4xindex>} : () -> !tosa.shape<4>
@@ -415,6 +427,16 @@ module {
     %4 = tosa.add %2, %3 : (tensor<1x3x4x2xi32>, tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
     %5 = tosa.transpose %4 {perms = array<i32: 0, 3, 1, 2>} : (tensor<1x3x4x2xi32>) -> tensor<1x2x3x4xi32>
     return %5 : tensor<1x2x3x4xi32>
+  }
+  func.func @test_transpose_bool() -> tensor<3x2xi1> {
+    %0 = "tosa.const"() <{values = dense<[[true, false, false], [false, false, true]]> : tensor<2x3xi1>}> : () -> tensor<2x3xi1>
+    %1 = tosa.transpose %0 {perms = array<i32: 1, 0>} : (tensor<2x3xi1>) -> tensor<3x2xi1>
+    return %1 : tensor<3x2xi1>
+  }
+  func.func @test_transpose_i4() -> tensor<3x2xi4> {
+    %0 = "tosa.const"() <{values = dense<[[1, 2, 3], [4, 5, 6]]> : tensor<2x3xi4>}> : () -> tensor<2x3xi4>
+    %1 = tosa.transpose %0 {perms = array<i32: 1, 0>} : (tensor<2x3xi4>) -> tensor<3x2xi4>
+    return %1 : tensor<3x2xi4>
   }
 }
 

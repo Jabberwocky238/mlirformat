@@ -1400,7 +1400,7 @@
       }) : () -> ()
       "affine.yield"() : () -> ()
     }) : () -> ()
-    "affine.dma_start"(%1, %2, %3, %0, %0) {dst_map = #map, src_map = #map, tag_map = #map5} : (memref<f16, 1>, memref<f16>, memref<1xi32>, index, index) -> ()
+    "affine.dma_start"(%1, %2, %3, %0, %0) <{dst_map = #map, src_map = #map, tag_map = #map5}> : (memref<f16, 1>, memref<f16>, memref<1xi32>, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

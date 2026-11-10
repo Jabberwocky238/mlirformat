@@ -25,7 +25,7 @@
         "gpu.yield"() : () -> ()
       }) : (index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({

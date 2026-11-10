@@ -34,7 +34,8 @@
   "func.func"() <{function_type = (index, vector<8xi4>) -> (), sym_name = "vector_store_2d_i4"}> ({
   ^bb0(%arg0: index, %arg1: vector<8xi4>):
     %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x8xi4>
-    "vector.store"(%arg1, %0, %arg0, %arg0) : (vector<8xi4>, memref<4x8xi4>, index, index) -> ()
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "vector.store"(%arg1, %0, %arg0, %1) : (vector<8xi4>, memref<4x8xi4>, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

@@ -3,39 +3,6 @@
 #map2 = affine_map<(d0, d1, d2) -> (d2, d1)>
 #map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
-  "func.func"() <{function_type = (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>, index, index, index) -> tensor<24x25xf32>, sym_name = "static_sizes_output_divisible"}> ({
-  ^bb0(%arg1: tensor<24x12xf32>, %arg2: tensor<12x25xf32>, %arg3: tensor<24x25xf32>, %arg4: index, %arg5: index, %arg6: index):
-    %3 = "affine.min"(%arg6) <{map = #map}> : (index) -> index
-    %4 = "tensor.extract_slice"(%arg1, %arg4, %arg6, %3) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 4, -9223372036854775808>, static_strides = array<i64: 1, 1>}> : (tensor<24x12xf32>, index, index, index) -> tensor<4x?xf32>
-    %5 = "tensor.extract_slice"(%arg2, %arg6, %arg5, %3) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: -9223372036854775808, 5>, static_strides = array<i64: 1, 1>}> : (tensor<12x25xf32>, index, index, index) -> tensor<?x5xf32>
-    %6 = "tensor.extract_slice"(%arg3, %arg4, %arg5) <{operandSegmentSizes = array<i32: 1, 2, 0, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 4, 5>, static_strides = array<i64: 1, 1>}> : (tensor<24x25xf32>, index, index) -> tensor<4x5xf32>
-    %7 = "linalg.matmul"(%4, %5, %6) <{indexing_maps = [#map1, #map2, #map3], operandSegmentSizes = array<i32: 2, 1>}> ({
-    ^bb0(%arg7: f32, %arg8: f32, %arg9: f32):
-      %9 = "arith.mulf"(%arg7, %arg8) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %10 = "arith.addf"(%arg9, %9) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%10) : (f32) -> ()
-    }) : (tensor<4x?xf32>, tensor<?x5xf32>, tensor<4x5xf32>) -> tensor<4x5xf32>
-    %8 = "tensor.insert_slice"(%7, %arg3, %arg4, %arg5) <{operandSegmentSizes = array<i32: 1, 1, 2, 0, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 4, 5>, static_strides = array<i64: 1, 1>}> : (tensor<4x5xf32>, tensor<24x25xf32>, index, index) -> tensor<24x25xf32>
-    "func.return"(%8) : (tensor<24x25xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.pad"(%0) <{copy_back_op = "bufferization.materialize_in_destination", nofold_flags = [1, 1, 0], padding_dimensions = [0, 1, 2], padding_values = [0.000000e+00 : f32, 0.000000e+00 : f32, 0.000000e+00 : f32], transpose_paddings = []}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.op<"bufferization.materialize_in_destination">)
-      %2 = "transform.num_associations"(%1#2) : (!transform.op<"bufferization.materialize_in_destination">) -> !transform.param<i64>
-      "transform.debug.emit_param_as_remark"(%2) : (!transform.param<i64>) -> ()
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<()[s0] -> (-s0 + 12, 7)>
-#map1 = affine_map<(d0, d1, d2) -> (d0, d2)>
-#map2 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>, index, index, index) -> tensor<24x25xf32>, sym_name = "pad_to_multiple"}> ({
   ^bb0(%arg1: tensor<24x12xf32>, %arg2: tensor<12x25xf32>, %arg3: tensor<24x25xf32>, %arg4: index, %arg5: index, %arg6: index):
     %2 = "affine.min"(%arg6) <{map = #map}> : (index) -> index
@@ -129,56 +96,6 @@
 #map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
 #map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
 "builtin.module"() ({
-  "func.func"() <{function_type = (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>) -> tensor<24x25xf32>, sym_name = "pad"}> ({
-  ^bb0(%arg1: tensor<24x12xf32>, %arg2: tensor<12x25xf32>, %arg3: tensor<24x25xf32>):
-    %2 = "linalg.matmul"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({
-    ^bb0(%arg4: f32, %arg5: f32, %arg6: f32):
-      %3 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %4 = "arith.addf"(%arg6, %3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%4) : (f32) -> ()
-    }) : (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>) -> tensor<24x25xf32>
-    "func.return"(%2) : (tensor<24x25xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.pad"(%0) <{copy_back_op = "bufferization.materialize_in_destination", nofold_flags = [1, 1, 0], padding_dimensions = [0, 1, 2], padding_values = [0 : i32, 0.000000e+00 : f32, 0.000000e+00 : f32], transpose_paddings = []}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1, d2) -> (d0, d2)>
-#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>) -> tensor<24x25xf32>, sym_name = "pad"}> ({
-  ^bb0(%arg1: tensor<24x12xf32>, %arg2: tensor<12x25xf32>, %arg3: tensor<24x25xf32>):
-    %2 = "linalg.matmul"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({
-    ^bb0(%arg4: f32, %arg5: f32, %arg6: f32):
-      %3 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %4 = "arith.addf"(%arg6, %3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%4) : (f32) -> ()
-    }) : (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>) -> tensor<24x25xf32>
-    "func.return"(%2) : (tensor<24x25xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.pad"(%0) <{copy_back_op = "bufferization.materialize_in_destination", nofold_flags = [1, 1, 0], padding_dimensions = [0, 1, 2], padding_values = ["{foo}", 0.000000e+00 : f32, 0.000000e+00 : f32], transpose_paddings = []}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1, d2) -> (d0, d2)>
-#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<24x12xf32>, tensor<12x25xf32>, tensor<24x25xf32>) -> tensor<24x25xf32>, sym_name = "zero_pad_static"}> ({
   ^bb0(%arg1: tensor<24x12xf32>, %arg2: tensor<12x25xf32>, %arg3: tensor<24x25xf32>):
     %2 = "linalg.matmul"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({
@@ -219,31 +136,6 @@
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
       %1:3 = "transform.structured.pad"(%0) <{copy_back_op = "bufferization.materialize_in_destination", nofold_flags = [1, 1, 1], padding_dimensions = [2], padding_values = [0.000000e+00 : f32, 0.000000e+00 : f32, 0.000000e+00 : f32], transpose_paddings = []}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1, d2) -> (d0, d2)>
-#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?x12xf32>, tensor<12x?xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>, sym_name = "negative_no_ub_estimate"}> ({
-  ^bb0(%arg1: tensor<?x12xf32>, %arg2: tensor<12x?xf32>, %arg3: tensor<?x?xf32>):
-    %2 = "linalg.matmul"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({
-    ^bb0(%arg4: f32, %arg5: f32, %arg6: f32):
-      %3 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %4 = "arith.addf"(%arg6, %3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%4) : (f32) -> ()
-    }) : (tensor<?x12xf32>, tensor<12x?xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
-    "func.return"(%2) : (tensor<?x?xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.pad"(%0) <{copy_back_op = "bufferization.materialize_in_destination", nofold_flags = [1, 1, 1], padding_dimensions = [1], padding_values = [0.000000e+00 : f32, 0.000000e+00 : f32, 0.000000e+00 : f32], transpose_paddings = []}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()

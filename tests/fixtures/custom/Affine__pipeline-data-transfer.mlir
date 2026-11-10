@@ -199,3 +199,38 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @same_memref_source_and_tag(%arg0: index, %arg1: index) {
+    %c0 = arith.constant 0 : index
+    %alloc = memref.alloc() : memref<1xf32>
+    %alloc_0 = memref.alloc() : memref<100x100xf32, 2>
+    affine.for %arg2 = 0 to 1 {
+      affine.dma_start %alloc[%arg0], %alloc_0[%arg0, %arg0], %alloc[%c0], %c0 : memref<1xf32>, memref<100x100xf32, 2>, memref<1xf32>
+      affine.dma_wait %alloc[%c0], %c0 : memref<1xf32>
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @loop_trip_count_non_positive() {
+    %alloc = memref.alloc() : memref<256xf32>
+    %alloc_0 = memref.alloc() : memref<32xf32, 1>
+    %alloc_1 = memref.alloc() : memref<1xf32>
+    %c0 = arith.constant 0 : index
+    %c32 = arith.constant 32 : index
+    affine.for %arg0 = 0 to -1 {
+      affine.dma_start %alloc[%arg0], %alloc_0[%arg0], %alloc_1[%c0], %c32 : memref<256xf32>, memref<32xf32, 1>, memref<1xf32>
+      affine.dma_wait %alloc_1[%c0], %c32 : memref<1xf32>
+      %0 = affine.load %alloc_0[%arg0] : memref<32xf32, 1>
+      %1 = "compute"(%0) : (f32) -> f32
+      affine.store %1, %alloc_0[%arg0] : memref<32xf32, 1>
+    }
+    memref.dealloc %alloc_1 : memref<1xf32>
+    memref.dealloc %alloc_0 : memref<32xf32, 1>
+    return
+  }
+}
+

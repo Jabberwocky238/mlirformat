@@ -1,0 +1,5 @@
+4	parse	expected attribute value
+5	parse	incompatible attribute for element type
+6	parse	expected 3 elements in dimension, got 2
+7	parse	dense elements type must have static shape
+8	parse	expected a shaped type for dense elements

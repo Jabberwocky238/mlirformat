@@ -1,4 +1,4 @@
-//! `complex` (formats from `ComplexOps.td`, checked against `mlir-opt` 22.1.8 output).
+//! `complex` (formats from `ComplexOps.td`, checked against `mlir-opt` 23.1.5 output).
 
 use crate::{Attribute, Type, Value, mlir};
 

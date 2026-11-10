@@ -77,12 +77,41 @@ module {
 
 // -----
 module {
-  func.func @negative_memref_subview_non_contiguous(%arg0: index) -> i4 {
+  func.func @memref_subview_dynamic_inner_offset_i4(%arg0: index) -> i4 {
     %c0 = arith.constant 0 : index
-    %alloc = memref.alloc() : memref<40x40xi4>
-    %subview = memref.subview %alloc[%arg0, 0] [4, 8] [1, 1] : memref<40x40xi4> to memref<4x8xi4, strided<[40, 1], offset: ?>>
-    %0 = memref.load %subview[%c0, %c0] : memref<4x8xi4, strided<[40, 1], offset: ?>>
+    %alloc = memref.alloc() : memref<128xi4>
+    %subview = memref.subview %alloc[%arg0] [32] [1] : memref<128xi4> to memref<32xi4, strided<[1], offset: ?>>
+    %0 = memref.load %subview[%c0] : memref<32xi4, strided<[1], offset: ?>>
     return %0 : i4
+  }
+}
+
+// -----
+#map = affine_map<()[s0] -> (s0 * 2)>
+module {
+  func.func @memref_subview_aligned_dynamic_inner_offset_i4(%arg0: index) -> i4 {
+    %c0 = arith.constant 0 : index
+    %0 = affine.apply #map()[%arg0]
+    %alloc = memref.alloc() : memref<128xi4>
+    %subview = memref.subview %alloc[%0] [32] [1] : memref<128xi4> to memref<32xi4, strided<[1], offset: ?>>
+    %1 = memref.load %subview[%c0] : memref<32xi4, strided<[1], offset: ?>>
+    return %1 : i4
+  }
+}
+
+// -----
+module {
+  func.func @reinterpret_cast_memref_rank3_static_offset_i4(%arg0: memref<2x4x8xi4>) -> memref<4x4x8xi4, strided<[32, 8, 1]>> {
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [0], sizes: [4, 4, 8], strides: [32, 8, 1] : memref<2x4x8xi4> to memref<4x4x8xi4, strided<[32, 8, 1]>>
+    return %reinterpret_cast : memref<4x4x8xi4, strided<[32, 8, 1]>>
+  }
+}
+
+// -----
+module {
+  func.func @reinterpret_cast_memref_rank3_dynamic_offset_i4(%arg0: memref<2x4x8xi4>, %arg1: index) -> memref<4x4x8xi4, strided<[32, 8, 1], offset: ?>> {
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [%arg1], sizes: [4, 4, 8], strides: [32, 8, 1] : memref<2x4x8xi4> to memref<4x4x8xi4, strided<[32, 8, 1], offset: ?>>
+    return %reinterpret_cast : memref<4x4x8xi4, strided<[32, 8, 1], offset: ?>>
   }
 }
 
@@ -193,21 +222,6 @@ module {
 module {
   func.func @memref_copy_i4(%arg0: memref<32x128xi4, 1>, %arg1: memref<32x128xi4>) {
     memref.copy %arg0, %arg1 : memref<32x128xi4, 1> to memref<32x128xi4>
-    return
-  }
-}
-
-// -----
-module {
-  func.func @alloc_non_contiguous() {
-    %alloc = memref.alloc() : memref<8x8xi4, strided<[1, 8]>>
-    return
-  }
-}
-
-// -----
-module {
-  func.func @argument_non_contiguous(%arg0: memref<8x8xi4, strided<[1, 8]>>) {
     return
   }
 }

@@ -1,36 +1,46 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (f32) -> (), sym_name = "cast1"}> ({
-  ^bb0(%arg5: f32):
-    %5 = "spirv.Bitcast"(%arg5) : (f32) -> i32
+  ^bb0(%arg6: f32):
+    %6 = "spirv.Bitcast"(%arg6) : (f32) -> i32
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<2xf32>) -> (), sym_name = "cast2"}> ({
-  ^bb0(%arg4: vector<2xf32>):
-    %4 = "spirv.Bitcast"(%arg4) : (vector<2xf32>) -> vector<2xi32>
+  ^bb0(%arg5: vector<2xf32>):
+    %5 = "spirv.Bitcast"(%arg5) : (vector<2xf32>) -> vector<2xi32>
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<2xf32>) -> (), sym_name = "cast3"}> ({
-  ^bb0(%arg3: vector<2xf32>):
-    %3 = "spirv.Bitcast"(%arg3) : (vector<2xf32>) -> i64
+  ^bb0(%arg4: vector<2xf32>):
+    %4 = "spirv.Bitcast"(%arg4) : (vector<2xf32>) -> i64
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (!spirv.ptr<f32, Function>) -> (), sym_name = "cast4"}> ({
-  ^bb0(%arg2: !spirv.ptr<f32, Function>):
-    %2 = "spirv.Bitcast"(%arg2) : (!spirv.ptr<f32, Function>) -> !spirv.ptr<i32, Function>
+  ^bb0(%arg3: !spirv.ptr<f32, Function>):
+    %3 = "spirv.Bitcast"(%arg3) : (!spirv.ptr<f32, Function>) -> !spirv.ptr<i32, Function>
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (!spirv.ptr<f32, Function>) -> (), sym_name = "cast5"}> ({
-  ^bb0(%arg1: !spirv.ptr<f32, Function>):
-    %1 = "spirv.Bitcast"(%arg1) : (!spirv.ptr<f32, Function>) -> !spirv.ptr<vector<2xi32>, Function>
+  ^bb0(%arg2: !spirv.ptr<f32, Function>):
+    %2 = "spirv.Bitcast"(%arg2) : (!spirv.ptr<f32, Function>) -> !spirv.ptr<vector<2xi32>, Function>
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<4xf32>) -> (), sym_name = "cast6"}> ({
-  ^bb0(%arg0: vector<4xf32>):
-    %0 = "spirv.Bitcast"(%arg0) : (vector<4xf32>) -> vector<2xi64>
+  ^bb0(%arg1: vector<4xf32>):
+    %1 = "spirv.Bitcast"(%arg1) : (vector<4xf32>) -> vector<2xi64>
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>) -> (), sym_name = "cast_coop_matrix"}> ({
+  ^bb0(%arg0: !spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>):
+    %0 = "spirv.Bitcast"(%arg0) : (!spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>) -> !spirv.coopmatrix<4x4xi32, Subgroup, MatrixA>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -364,5 +374,6 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
 // -----
 // -----

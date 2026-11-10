@@ -1,4 +1,0 @@
-0	verify	'index.casts' op operand type 'index' and result type 'index' are cast incompatible
-1	verify	'index.casts' op operand type 'i64' and result type 'i64' are cast incompatible
-2	verify	'index.castu' op operand type 'index' and result type 'index' are cast incompatible
-3	verify	'index.castu' op operand type 'i64' and result type 'i64' are cast incompatible

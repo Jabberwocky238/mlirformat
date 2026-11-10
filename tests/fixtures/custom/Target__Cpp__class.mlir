@@ -35,5 +35,24 @@ module {
       return
     }
   }
+  emitc.class struct @structClass {
+    emitc.field @x : i32
+    emitc.field @y : i32
+  }
+  emitc.class union @unionClass {
+    emitc.field @asInt : i32
+    emitc.field @asFloat : f32
+  }
+  emitc.class @expressionClass {
+    emitc.field @x : i32
+    emitc.func @test_precedence() -> i32 {
+      %0 = get_field @x : i32
+      %1 = expression %0 : (i32) -> i32 {
+        %2 = add %0, %0 : (i32, i32) -> i32
+        yield %2 : i32
+      }
+      return %1 : i32
+    }
+  }
 }
 

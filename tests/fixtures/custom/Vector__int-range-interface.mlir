@@ -75,5 +75,25 @@ module {
     %1 = test.reflect_bounds %0 : vector<8xindex>
     return %1 : vector<8xindex>
   }
+  func.func @vector_step_i32() -> vector<8xi32> {
+    %0 = vector.step : vector<8xi32>
+    %1 = test.reflect_bounds %0 : vector<8xi32>
+    return %1 : vector<8xi32>
+  }
+  func.func @vector_step_i8_no_wrap_boundary() -> vector<255xi8> {
+    %0 = vector.step : vector<255xi8>
+    %1 = test.reflect_bounds %0 : vector<255xi8>
+    return %1 : vector<255xi8>
+  }
+  func.func @vector_step_i8_exact_fit() -> vector<256xi8> {
+    %0 = vector.step : vector<256xi8>
+    %1 = test.reflect_bounds %0 : vector<256xi8>
+    return %1 : vector<256xi8>
+  }
+  func.func @vector_step_i8_wrap() -> vector<300xi8> {
+    %0 = vector.step : vector<300xi8>
+    %1 = test.reflect_bounds %0 : vector<300xi8>
+    return %1 : vector<300xi8>
+  }
 }
 

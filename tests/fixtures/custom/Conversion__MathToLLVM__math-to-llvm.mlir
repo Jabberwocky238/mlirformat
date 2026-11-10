@@ -26,6 +26,14 @@ module {
 
 // -----
 module {
+  func.func @absi_2dvector(%arg0: vector<4x3xi32>) {
+    %0 = math.absi %arg0 : vector<4x3xi32>
+    return
+  }
+}
+
+// -----
+module {
   func.func @log1p(%arg0: f32) {
     %0 = math.log1p %arg0 : f32
     return
@@ -439,6 +447,34 @@ module {
     %0 = math.absf %arg0 : f4E2M1FN
     %1 = math.cos %arg0 : f4E2M1FN
     %2 = math.fma %arg1, %arg1, %arg2 : f4E2M1FN
+    return
+  }
+}
+
+// -----
+module {
+  func.func @experimental_constrained_fma(%arg0: f64, %arg1: f64, %arg2: f64) {
+    %0 = math.fma %arg0, %arg1, %arg2 to_nearest_even : f64
+    %1 = math.fma %arg0, %arg1, %arg2 downward : f64
+    %2 = math.fma %arg0, %arg1, %arg2 upward : f64
+    %3 = math.fma %arg0, %arg1, %arg2 toward_zero : f64
+    %4 = math.fma %arg0, %arg1, %arg2 to_nearest_away : f64
+    return
+  }
+}
+
+// -----
+module {
+  func.func @experimental_constrained_fma_vector(%arg0: vector<4xf32>, %arg1: vector<4xf32>, %arg2: vector<4xf32>) {
+    %0 = math.fma %arg0, %arg1, %arg2 to_nearest_even : vector<4xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @constrained_fma_with_fastmath(%arg0: f64, %arg1: f64, %arg2: f64) {
+    %0 = math.fma %arg0, %arg1, %arg2 to_nearest_even fastmath<fast> : f64
     return
   }
 }

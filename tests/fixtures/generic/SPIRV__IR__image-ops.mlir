@@ -133,5 +133,41 @@
 // -----
 // -----
 // -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Rgba8>, vector<2xsi32>, si32) -> (), sym_name = "lod_with_image_fetch"}> ({
+  ^bb0(%arg0: !spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Rgba8>, %arg1: vector<2xsi32>, %arg2: si32):
+    %0 = "spirv.ImageFetch"(%arg0, %arg1, %arg2) <{image_operands = #spirv.image_operands<Lod>}> : (!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Rgba8>, vector<2xsi32>, si32) -> vector<4xf32>
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>, !spirv.sampler) -> (), sym_name = "sampled_image"}> ({
+  ^bb0(%arg0: !spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>, %arg1: !spirv.sampler):
+    %0 = "spirv.SampledImage"(%arg0, %arg1) : (!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>, !spirv.sampler) -> !spirv.sampled_image<!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>>
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, SamplerUnknown, Unknown>, !spirv.sampler) -> (), sym_name = "sampled_image_sampler_unknown"}> ({
+  ^bb0(%arg0: !spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, SamplerUnknown, Unknown>, %arg1: !spirv.sampler):
+    %0 = "spirv.SampledImage"(%arg0, %arg1) : (!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, SamplerUnknown, Unknown>, !spirv.sampler) -> !spirv.sampled_image<!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, SamplerUnknown, Unknown>>
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
 // -----
 // -----

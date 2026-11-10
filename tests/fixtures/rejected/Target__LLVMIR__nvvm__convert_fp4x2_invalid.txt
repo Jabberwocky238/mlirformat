@@ -1,0 +1,2 @@
+1	verify	'nvvm.convert.f16x2.to.f4x2' op attribute 'dstTy' failed to satisfy constraint: type attribute of f4E2M1FN type
+2	verify	'nvvm.convert.bf16x2.to.f4x2' op attribute 'dstTy' failed to satisfy constraint: type attribute of f4E2M1FN type

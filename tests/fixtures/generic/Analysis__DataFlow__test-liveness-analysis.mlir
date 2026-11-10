@@ -268,3 +268,15 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, i1) -> f32, sym_name = "unstructured_cf"}> ({
+  ^bb0(%arg0: f32, %arg1: i1):
+    "cf.br"(%arg0)[^bb2] : (f32) -> ()
+  ^bb1(%0: f32):  // no predecessors
+    "func.return"(%0) : (f32) -> ()
+  ^bb2(%1: f32):  // pred: ^bb0
+    "func.return"(%1) : (f32) -> ()
+  }) {tag = "func"} : () -> ()
+}) : () -> ()
+

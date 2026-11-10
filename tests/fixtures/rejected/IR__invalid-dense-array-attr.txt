@@ -1,0 +1,4 @@
+1	parse	expected integer or float type, got: 'index'
+2	parse	expected integer or float type, got: 'tensor<2xi32>'
+3	parse	expected integer or float type, got: 'memref<2xi32>'
+4	parse	expected integer or float type, got: 'complex<f32>'

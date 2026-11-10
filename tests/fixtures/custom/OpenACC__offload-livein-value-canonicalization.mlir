@@ -59,7 +59,7 @@ module {
 
 // -----
 module {
-  memref.global @memref_global_with_declare : memref<10xf32> = dense<0.000000e+00> {acc.declare = #acc.declare<dataClause =  acc_copyin>}
+  memref.global @memref_global_with_declare : memref<10xf32> = dense<0.000000e+00> {acc.declare = #acc.declare<dataClause = acc_copyin>}
   func.func private @use_memref(memref<10xf32>)
   func.func @test_memref_get_global_sink() {
     %0 = memref.get_global @memref_global_with_declare : memref<10xf32>
@@ -73,7 +73,7 @@ module {
 
 // -----
 module {
-  memref.global @memref_global_reinterpret : memref<2x5xf32> = dense<0.000000e+00> {acc.declare = #acc.declare<dataClause =  acc_copyin>}
+  memref.global @memref_global_reinterpret : memref<2x5xf32> = dense<0.000000e+00> {acc.declare = #acc.declare<dataClause = acc_copyin>}
   func.func private @use_memref_1d(memref<10xf32>)
   func.func @test_memref_reinterpret_cast_sink() {
     %0 = memref.get_global @memref_global_reinterpret : memref<2x5xf32>

@@ -690,6 +690,72 @@ module {
 module {
   module @patterns {
     pdl_interp.func @matcher(%arg0: !pdl.operation) {
+      pdl_interp.check_operation_name of %arg0 is "test.success_op" -> ^bb1, ^bb2
+    ^bb1:  // pred: ^bb0
+      %0 = pdl_interp.get_results of %arg0 : !pdl.range<value>
+      %1 = pdl_interp.get_value_type of %0 : !pdl.range<type>
+      pdl_interp.foreach %arg1 : !pdl.type in %1 {
+        pdl_interp.check_type %arg1 is i64 -> ^bb1, ^bb2
+      ^bb1:  // pred: ^bb0
+        pdl_interp.record_match @rewriters::@success(%arg0, %arg1 : !pdl.operation, !pdl.type) : benefit(1), loc([%arg0]) -> ^bb2
+      ^bb2:  // 2 preds: ^bb0, ^bb1
+        pdl_interp.continue
+      } -> ^bb2
+    ^bb2:  // 2 preds: ^bb0, ^bb1
+      pdl_interp.finalize
+    }
+    module @rewriters {
+      pdl_interp.func @success(%arg0: !pdl.operation, %arg1: !pdl.type) {
+        %0 = pdl_interp.create_operation "test.type_found"  -> (%arg1 : !pdl.type)
+        pdl_interp.erase %arg0
+        pdl_interp.finalize
+      }
+    }
+  }
+  module @ir attributes {test.foreach_type} {
+    %0:2 = "test.success_op"() : () -> (i32, i64)
+  }
+}
+
+// -----
+module {
+  module @patterns {
+    pdl_interp.func @matcher(%arg0: !pdl.operation) {
+      pdl_interp.check_operation_name of %arg0 is "test.success_op" -> ^bb1, ^bb3
+    ^bb1:  // pred: ^bb0
+      %0 = pdl_interp.apply_constraint "op_constr_return_value_range"(%arg0 : !pdl.operation) : !pdl.range<value> -> ^bb2, ^bb3
+    ^bb2:  // pred: ^bb1
+      pdl_interp.foreach %arg1 : !pdl.value in %0 {
+        %1 = pdl_interp.get_value_type of %arg1 : !pdl.type
+        pdl_interp.check_type %1 is f16 -> ^bb1, ^bb2
+      ^bb1:  // pred: ^bb0
+        pdl_interp.record_match @rewriters::@success(%arg0, %arg1 : !pdl.operation, !pdl.value) : benefit(1), loc([%arg0]) -> ^bb2
+      ^bb2:  // 2 preds: ^bb0, ^bb1
+        pdl_interp.continue
+      } -> ^bb3
+    ^bb3:  // 3 preds: ^bb0, ^bb1, ^bb2
+      pdl_interp.finalize
+    }
+    module @rewriters {
+      pdl_interp.func @success(%arg0: !pdl.operation, %arg1: !pdl.value) {
+        %0 = pdl_interp.get_value_type of %arg1 : !pdl.type
+        %1 = pdl_interp.create_operation "test.value_found"(%arg1 : !pdl.value)  -> (%0 : !pdl.type)
+        pdl_interp.erase %arg0
+        pdl_interp.finalize
+      }
+    }
+  }
+  module @ir attributes {test.foreach_value} {
+    %0 = "test.input0"() : () -> f32
+    %1 = "test.input1"() : () -> f16
+    "test.success_op"(%0, %1) : (f32, f16) -> ()
+  }
+}
+
+// -----
+module {
+  module @patterns {
+    pdl_interp.func @matcher(%arg0: !pdl.operation) {
       %0 = pdl_interp.get_result 0 of %arg0
       %1 = pdl_interp.get_users of %0 : !pdl.value
       pdl_interp.foreach %arg1 : !pdl.operation in %1 {

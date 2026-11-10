@@ -21,7 +21,9 @@ module {
       %1 = transform.get_parent_op %0 : (!transform.any_op) -> !transform.op<"func.func">
       transform.structured.vectorize %0 vector_sizes [4, 4, 2] : !transform.any_op
       transform.apply_patterns to %1 {
-        transform.apply_patterns.vector.lower_multi_reduction lowering_strategy = innerreduction
+        transform.apply_patterns.vector.reorder_multi_reduction_dims lowering_strategy = innerreduction
+        transform.apply_patterns.vector.multi_reduction_flattening lowering_strategy = innerreduction
+        transform.apply_patterns.vector.multi_reduction_unrolling lowering_strategy = innerreduction
       } : !transform.op<"func.func">
       transform.yield 
     }

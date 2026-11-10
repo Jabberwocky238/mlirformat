@@ -8,7 +8,7 @@ module attributes {omp.is_target_device = false, omp.target_triples = ["amdgcn-a
     %5 = omp.map.info var_ptr(%1 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "cond"}
     %6 = omp.map.info var_ptr(%arg0 : !llvm.ptr, f32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "var"}
     %7 = omp.map.info var_ptr(%arg1 : !llvm.ptr, f32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "val"}
-    omp.target if(%4) nowait map_entries(%6 -> %arg2, %7 -> %arg3 : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) if(%4) nowait map_entries(%6 -> %arg2, %7 -> %arg3 : !llvm.ptr, !llvm.ptr) {
       %8 = llvm.load %arg3 : !llvm.ptr -> f32
       llvm.store %8, %arg2 : f32, !llvm.ptr
       omp.terminator

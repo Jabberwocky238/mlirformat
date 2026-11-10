@@ -1,6 +1,6 @@
 "builtin.module"() <{sym_name = "gemm"}> ({
   "gpu.module"() <{sym_name = "kernel"}> ({
-    "gpu.func"() <{function_type = (memref<256x256xf16>, memref<256x256xf16>, memref<256x256xf32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<256x256xf16>, memref<256x256xf16>, memref<256x256xf32>) -> (), kernel}> ({
     ^bb0(%arg9: memref<256x256xf16>, %arg10: memref<256x256xf16>, %arg11: memref<256x256xf32>):
       %28 = "arith.constant"() <{value = 0 : index}> : () -> index
       %29 = "arith.constant"() <{value = 1 : index}> : () -> index
@@ -12,10 +12,10 @@
       %35 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index
       %36 = "arith.muli"(%34, %30) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
       %37 = "arith.muli"(%35, %31) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-      %38 = "xegpu.create_nd_tdesc"(%arg11) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf32>) -> !xegpu.tensor_desc<8x16xf32>
+      %38 = "xegpu.create_nd_tdesc"(%arg11) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf32>) -> !xegpu.tensor_desc<8x16xf32>
       %39 = "xegpu.load_nd"(%38, %36, %37) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>}> : (!xegpu.tensor_desc<8x16xf32>, index, index) -> vector<8xf32>
-      %40 = "xegpu.create_nd_tdesc"(%arg9) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<8x16xf16>
-      %41 = "xegpu.create_nd_tdesc"(%arg10) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<16x16xf16>
+      %40 = "xegpu.create_nd_tdesc"(%arg9) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<8x16xf16>
+      %41 = "xegpu.create_nd_tdesc"(%arg10) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<16x16xf16>
       %42 = "scf.for"(%28, %33, %31, %39) ({
       ^bb0(%arg12: index, %arg13: vector<8xf32>):
         %43 = "xegpu.load_nd"(%40, %36, %arg12) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>}> : (!xegpu.tensor_desc<8x16xf16>, index, index) -> vector<8xf16>
@@ -25,7 +25,7 @@
       }) : (index, index, index, vector<8xf32>) -> vector<8xf32>
       "xegpu.store_nd"(%42, %38, %36, %37) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, l1_hint = #xegpu.cache_hint<write_back>, l2_hint = #xegpu.cache_hint<uncached>}> : (vector<8xf32>, !xegpu.tensor_desc<8x16xf32>, index, index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "simple_gemm", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "simple_gemm"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (memref<256x256xf16>, memref<256x256xf16>, memref<256x256xf32>) -> memref<256x256xf32>, sym_name = "test"}> ({
   ^bb0(%arg6: memref<256x256xf16>, %arg7: memref<256x256xf16>, %arg8: memref<256x256xf32>):

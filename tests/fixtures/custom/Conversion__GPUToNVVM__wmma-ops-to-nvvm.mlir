@@ -109,8 +109,8 @@ module {
 module {
   gpu.module @test_module {
     func.func @gpu_wmma_elementwise(%arg0: !gpu.mma_matrix<16x16xf16, "COp">, %arg1: !gpu.mma_matrix<16x16xf16, "COp">) -> !gpu.mma_matrix<16x16xf16, "COp"> {
-      %0 = gpu.subgroup_mma_elementwise  addf %arg0, %arg1 : (!gpu.mma_matrix<16x16xf16, "COp">, !gpu.mma_matrix<16x16xf16, "COp">) -> !gpu.mma_matrix<16x16xf16, "COp">
-      %1 = gpu.subgroup_mma_elementwise  maxf %0, %arg1 : (!gpu.mma_matrix<16x16xf16, "COp">, !gpu.mma_matrix<16x16xf16, "COp">) -> !gpu.mma_matrix<16x16xf16, "COp">
+      %0 = gpu.subgroup_mma_elementwise addf %arg0, %arg1 : (!gpu.mma_matrix<16x16xf16, "COp">, !gpu.mma_matrix<16x16xf16, "COp">) -> !gpu.mma_matrix<16x16xf16, "COp">
+      %1 = gpu.subgroup_mma_elementwise maxf %0, %arg1 : (!gpu.mma_matrix<16x16xf16, "COp">, !gpu.mma_matrix<16x16xf16, "COp">) -> !gpu.mma_matrix<16x16xf16, "COp">
       return %1 : !gpu.mma_matrix<16x16xf16, "COp">
     }
   }

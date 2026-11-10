@@ -4,4 +4,6 @@
 6	parse	expected 2 attribute arguments, but had 1
 9	verify	'test.dynamic_one_operand_two_results' op expected 1 operand, but had 0
 10	verify	'test.dynamic_one_operand_two_results' op expected 2 results, but had 0
-12	verify	expected a single result, no operands and no regions
+12	verify	empty block: expect at least a terminator
+14	verify	'test.dynamic_terminator' op must be the last operation in the parent block
+16	verify	expected a single result, no operands and no regions

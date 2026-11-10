@@ -64,18 +64,18 @@
     "llvm.store"(%22, %17) <{ordering = 0 : i64}> : (f64, !llvm.ptr) -> ()
     "llvm.store"(%21, %14) <{ordering = 0 : i64}> : (f32, !llvm.ptr) -> ()
     "llvm.store"(%21, %11) <{ordering = 0 : i64}> : (f32, !llvm.ptr) -> ()
-    %30 = "omp.map.info"(%20) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce1", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = f64}> : (!llvm.ptr) -> !llvm.ptr
-    %31 = "omp.map.info"(%17) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce2", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = f64}> : (!llvm.ptr) -> !llvm.ptr
-    %32 = "omp.map.info"(%14) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce3", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = f32}> : (!llvm.ptr) -> !llvm.ptr
-    %33 = "omp.map.info"(%11) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce4", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = f32}> : (!llvm.ptr) -> !llvm.ptr
-    %34 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "j", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%30, %31, %32, %33, %34) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0>}> ({
+    %30 = "omp.map.info"(%20) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce1", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = f64}> : (!llvm.ptr) -> !llvm.ptr
+    %31 = "omp.map.info"(%17) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce2", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = f64}> : (!llvm.ptr) -> !llvm.ptr
+    %32 = "omp.map.info"(%14) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce3", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = f32}> : (!llvm.ptr) -> !llvm.ptr
+    %33 = "omp.map.info"(%11) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "ce4", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = f32}> : (!llvm.ptr) -> !llvm.ptr
+    %34 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "j", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%30, %31, %32, %33, %34) <{kernel_type = #omp<kernel_type(spmd)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: !llvm.ptr, %arg3: !llvm.ptr, %arg4: !llvm.ptr):
       %35 = "llvm.mlir.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
       %36 = "llvm.mlir.constant"() <{value = 1.000000e+00 : f64}> : () -> f64
       %37 = "llvm.mlir.constant"() <{value = 1000 : i32}> : () -> i32
       %38 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-      "omp.teams"(%arg0, %arg1, %arg2, %arg3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 4, 0>, reduction_byref = array<i1: false, false, false, false>, reduction_syms = [@add_reduction_f64, @add_reduction_f64, @add_reduction_f32, @add_reduction_f32]}> ({
+      "omp.teams"(%arg0, %arg1, %arg2, %arg3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 4, 0>, reduction_byref = array<i1: false, false, false, false>, reduction_syms = [@add_reduction_f64, @add_reduction_f64, @add_reduction_f32, @add_reduction_f32]}> ({
       ^bb0(%arg5: !llvm.ptr, %arg6: !llvm.ptr, %arg7: !llvm.ptr, %arg8: !llvm.ptr):
         "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
           "omp.distribute"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
@@ -106,9 +106,9 @@
           "omp.terminator"() : () -> ()
         }) {omp.composite} : () -> ()
         "omp.terminator"() : () -> ()
-      }) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
+      }) {omp.combined} : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
-    }) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
+    }) {omp.combined} : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) {fir.bindc_name = "reduction", omp.declare_target = #omp.declaretarget<device_type = (host), capture_clause = (to)>} : () -> ()
 }) {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 : ui32>, llvm.data_layout = "e-p:64:64-p1:64:64-p2:32:32-p3:32:32-p4:64:64-p5:32:32-p6:32:32-p7:160:256:256:32-p8:128:128:128:48-i64:64-v16:16-v24:32-v32:32-v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024-v2048:2048-n32:64-S32-A5-G1-ni:7:8", llvm.target_triple = "amdgcn-amd-amdhsa", omp.is_gpu = true, omp.is_target_device = true} : () -> ()

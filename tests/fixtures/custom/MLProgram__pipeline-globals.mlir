@@ -125,6 +125,17 @@ module {
 // -----
 module {
   ml_program.global private mutable @global_variable(dense<4> : tensor<4xi32>) : tensor<4xi32>
+  func.func @call_with_unresolvable_callee(%arg0: memref<f32>) {
+    %global_variable = ml_program.global_load @global_variable : tensor<4xi32>
+    test.call_and_store @callee(%arg0), %arg0 {store_before_call = false} : (memref<f32>, memref<f32>) -> ()
+    %global_variable_0 = ml_program.global_load @global_variable : tensor<4xi32>
+    return
+  }
+}
+
+// -----
+module {
+  ml_program.global private mutable @global_variable(dense<4> : tensor<4xi32>) : tensor<4xi32>
   func.func @call_recursive() {
     %global_variable = ml_program.global_load @global_variable : tensor<4xi32>
     %0 = "unregistered.dummy"(%global_variable) : (tensor<4xi32>) -> tensor<4xi32>

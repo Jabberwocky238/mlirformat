@@ -53,6 +53,15 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (index) -> index, sym_name = "ctlz_index"}> ({
+  ^bb0(%arg0: index):
+    %0 = "math.ctlz"(%arg0) : (index) -> index
+    "func.return"(%0) : (index) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (f64, f64, f64) -> f64, sym_name = "fmaf_func"}> ({
   ^bb0(%arg0: f64, %arg1: f64, %arg2: f64):
     %0 = "math.fma"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>}> : (f64, f64, f64) -> f64
@@ -66,6 +75,15 @@
   ^bb0(%arg0: f64):
     %0 = "math.ceil"(%arg0) <{fastmath = #arith.fastmath<none>}> : (f64) -> f64
     "func.return"(%0) : (f64) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f8E5M2FNUZ) -> f8E5M2FNUZ, sym_name = "ceilf_fnuz_func"}> ({
+  ^bb0(%arg0: f8E5M2FNUZ):
+    %0 = "math.ceil"(%arg0) <{fastmath = #arith.fastmath<none>}> : (f8E5M2FNUZ) -> f8E5M2FNUZ
+    "func.return"(%0) : (f8E5M2FNUZ) -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -346,6 +364,186 @@
   ^bb0(%arg0: vector<3x4xf32>, %arg1: vector<3x4xf32>, %arg2: vector<3x4xf32>):
     %0 = "math.clampf"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<fast>}> : (vector<3x4xf32>, vector<3x4xf32>, vector<3x4xf32>) -> vector<3x4xf32>
     "func.return"(%0) : (vector<3x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_sinh_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.sinh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_sinh_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.sinh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_cosh_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.cosh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_cosh_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.cosh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_tanh_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.tanh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_tanh_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.tanh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_asinh_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.asinh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_asinh_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.asinh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_acosh_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.acosh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_acosh_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.acosh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_atanh_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.atanh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_atanh_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.atanh"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_exp2_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.exp2"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_exp2_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.exp2"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_round_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.round"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_round_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.round"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "non_static_shape_roundeven_op"}> ({
+  ^bb0(%arg0: tensor<?xf32>):
+    %0 = "math.roundeven"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>) -> tensor<?xf32>
+    "func.return"(%0) : (tensor<?xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_roundeven_op"}> ({
+  ^bb0(%arg0: tensor<*xf32>):
+    %0 = "math.roundeven"(%arg0) <{fastmath = #arith.fastmath<none>}> : (tensor<*xf32>) -> tensor<*xf32>
+    "func.return"(%0) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?xi32>) -> tensor<?xi32>, sym_name = "non_static_shape_ctlz_op"}> ({
+  ^bb0(%arg0: tensor<?xi32>):
+    %0 = "math.ctlz"(%arg0) : (tensor<?xi32>) -> tensor<?xi32>
+    "func.return"(%0) : (tensor<?xi32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xi32>) -> tensor<*xi32>, sym_name = "unranked_ctlz_op"}> ({
+  ^bb0(%arg0: tensor<*xi32>):
+    %0 = "math.ctlz"(%arg0) : (tensor<*xi32>) -> tensor<*xi32>
+    "func.return"(%0) : (tensor<*xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
 

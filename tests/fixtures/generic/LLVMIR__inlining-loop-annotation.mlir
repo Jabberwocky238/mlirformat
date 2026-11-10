@@ -1,7 +1,7 @@
 #di_file = #llvm.di_file<"file.mlir" in "/">
 #loc = loc("test.mlir":42:4)
 #loc1 = loc("test.mlir":52:4)
-#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_C, file = #di_file, isOptimized = false, emissionKind = None>
+#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_C, file = #di_file>
 #di_subprogram = #llvm.di_subprogram<compileUnit = #di_compile_unit, scope = #di_file, name = "callee", file = #di_file, subprogramFlags = Definition>
 #loc2 = loc(fused<#di_subprogram>[#loc])
 #loc3 = loc(fused<#di_subprogram>[#loc1])

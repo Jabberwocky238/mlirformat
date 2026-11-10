@@ -32,3 +32,21 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<8xindex>) -> (), sym_name = "make_isolated_from_above_nested_region"}> ({
+  ^bb0(%arg0: memref<8xindex>):
+    %0 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 8 : index}> : () -> index
+    "test.one_region_with_operands_op"() ({
+      "scf.for"(%0, %1, %0) ({
+      ^bb0(%arg1: index):
+        "memref.store"(%0, %arg0, %arg1) : (index, memref<8xindex>, index) -> ()
+        "scf.yield"() : () -> ()
+      }) : (index, index, index) -> ()
+      "foo.yield"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

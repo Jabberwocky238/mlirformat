@@ -207,7 +207,7 @@ pub struct CeilDivUOp<'a> {
 /// // Not equal comparison.
 /// %2 = index.cmp ne(%a, %b)
 /// ```
-#[mlir::op("index.cmp", format = "`` $pred `(` $lhs `,` $rhs `)` attr-dict", results(result))]
+#[mlir::op("index.cmp", format = "$pred `(` $lhs `,` $rhs `)` attr-dict", results(result))]
 pub struct CmpOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,

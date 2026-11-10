@@ -17,7 +17,7 @@ module {
       %3 = arith.addi %arg3, %2 : index
       %4 = arith.index_cast %3 : index to i32
       %5 = arith.sitofp %4 : i32 to f32
-      %6 = gpu.all_reduce  add %5 uniform {
+      %6 = gpu.all_reduce add %5 uniform {
       } : (f32) -> f32
       memref.store %6, %cast[%arg5, %arg4, %arg3] : memref<?x?x?xf32>
       gpu.terminator

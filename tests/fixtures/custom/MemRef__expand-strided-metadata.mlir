@@ -69,8 +69,8 @@ module {
 
 // -----
 module {
-  func.func @simplify_expand_shape(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>> {
-    %expand_shape = memref.expand_shape %arg0 [[0, 1, 2, 3], [4, 5, 6, 7]] output_shape [%arg10, 7, 8, 9, 10, 2, %arg11, 3] : memref<?x?xf32, strided<[?, ?], offset: ?>> into memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
+  func.func @simplify_expand_shape(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>> {
+    %expand_shape = memref.expand_shape %arg0 [[0, 1, 2, 3], [4, 5, 6, 7]] output_shape [%arg1, 7, 8, 9, 10, 2, %arg2, 3] : memref<?x?xf32, strided<[?, ?], offset: ?>> into memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
     return %expand_shape : memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
   }
 }
@@ -86,9 +86,9 @@ module {
 
 // -----
 module {
-  func.func @extract_strided_metadata_of_expand_shape_all_dynamic(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index) -> (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index) {
-    %expand_shape = memref.expand_shape %arg0 [[0, 1, 2, 3], [4, 5, 6, 7]] output_shape [%arg10, 7, 8, 9, 10, 2, %arg11, 3] : memref<?x?xf32, strided<[?, ?], offset: ?>> into memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
-    %base_buffer, %offset, %sizes:8, %strides:8 = memref.extract_strided_metadata %expand_shape : memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>> -> memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index
+  func.func @extract_strided_metadata_of_expand_shape_all_dynamic(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index) -> (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index) {
+    %expand_shape = memref.expand_shape %arg0 [[0, 1, 2, 3], [4, 5, 6, 7]] output_shape [%arg1, %arg2, 8, 9, 10, %arg3, %arg4, 3] : memref<?x?xf32, strided<[?, ?], offset: ?>> into memref<?x?x8x9x10x?x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
+    %base_buffer, %offset, %sizes:8, %strides:8 = memref.extract_strided_metadata %expand_shape : memref<?x?x8x9x10x?x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>> -> memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index
     return %base_buffer, %offset, %sizes#0, %sizes#1, %sizes#2, %sizes#3, %sizes#4, %sizes#5, %sizes#6, %sizes#7, %strides#0, %strides#1, %strides#2, %strides#3, %strides#4, %strides#5, %strides#6, %strides#7 : memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index
   }
 }

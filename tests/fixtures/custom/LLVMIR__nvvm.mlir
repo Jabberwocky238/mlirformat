@@ -18,14 +18,21 @@ module {
     %0 = nvvm.rcp.approx.ftz.f %arg0 : f32
     llvm.return %0 : f32
   }
-  func.func @llvm_nvvm_barrier0() {
-    nvvm.barrier0
-    llvm.return
-  }
   llvm.func @llvm_nvvm_barrier(%arg0: i32, %arg1: i32) {
     nvvm.barrier
     nvvm.barrier id = %arg0
     nvvm.barrier id = %arg0 number_of_threads = %arg1
+    nvvm.barrier number_of_threads = %arg1
+    nvvm.barrier {aligned = false}
+    nvvm.barrier id = %arg0 number_of_threads = %arg1 {aligned = false}
+    llvm.return
+  }
+  llvm.func @llvm_nvvm_barrier_reduction(%arg0: i32, %arg1: i32) {
+    %0 = nvvm.barrier.reduction #nvvm.reduction<and> %arg1 -> i32
+    %1 = nvvm.barrier.reduction #nvvm.reduction<or> %arg1 -> i32
+    %2 = nvvm.barrier.reduction #nvvm.reduction<popc> %arg1 -> i32
+    %3 = nvvm.barrier.reduction #nvvm.reduction<and> %arg1 id = %arg0 -> i32
+    %4 = nvvm.barrier.reduction #nvvm.reduction<and> %arg1 -> i32 {aligned = false}
     llvm.return
   }
   llvm.func @llvm_nvvm_barrier_arrive(%arg0: i32, %arg1: i32) {
@@ -49,86 +56,106 @@ module {
     llvm.return
   }
   func.func @nvvm_shfl(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: f32) -> i32 {
-    %0 = nvvm.shfl.sync  bfly %arg0, %arg3, %arg1, %arg2 : i32 -> i32
-    %1 = nvvm.shfl.sync  bfly %arg0, %arg4, %arg1, %arg2 : f32 -> f32
-    %2 = nvvm.shfl.sync  up %arg0, %arg4, %arg1, %arg2 : f32 -> f32
-    %3 = nvvm.shfl.sync  down %arg0, %arg4, %arg1, %arg2 : f32 -> f32
-    %4 = nvvm.shfl.sync  idx %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %0 = nvvm.shfl.sync bfly %arg0, %arg3, %arg1, %arg2 : i32 -> i32
+    %1 = nvvm.shfl.sync bfly %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %2 = nvvm.shfl.sync up %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %3 = nvvm.shfl.sync down %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %4 = nvvm.shfl.sync idx %arg0, %arg4, %arg1, %arg2 : f32 -> f32
     llvm.return %0 : i32
   }
   func.func @nvvm_shfl_pred(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: f32) -> !llvm.struct<(i32, i1)> {
-    %0 = nvvm.shfl.sync  bfly %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
-    %1 = nvvm.shfl.sync  bfly %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
+    %0 = nvvm.shfl.sync bfly %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
+    %1 = nvvm.shfl.sync bfly %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
     llvm.return %0 : !llvm.struct<(i32, i1)>
   }
   func.func @nvvm_vote(%arg0: i32, %arg1: i1) -> i32 {
-    %0 = nvvm.vote.sync  ballot %arg0, %arg1 -> i32
-    %1 = nvvm.vote.sync  all %arg0, %arg1 -> i1
-    %2 = nvvm.vote.sync  any %arg0, %arg1 -> i1
-    %3 = nvvm.vote.sync  uni %arg0, %arg1 -> i1
+    %0 = nvvm.vote.sync ballot %arg0, %arg1 -> i32
+    %1 = nvvm.vote.sync all %arg0, %arg1 -> i1
+    %2 = nvvm.vote.sync any %arg0, %arg1 -> i1
+    %3 = nvvm.vote.sync uni %arg0, %arg1 -> i1
+    llvm.return %0 : i32
+  }
+  func.func @nvvm_movmatrix(%arg0: i32) -> i32 {
+    %0 = nvvm.movmatrix %arg0 {eltType = #nvvm.ld_st_matrix_elt_type<b16>, shape = #nvvm.ld_st_matrix_shape<m = 8, n = 8>} : i32
     llvm.return %0 : i32
   }
   func.func @llvm_nvvm_bar_warp_sync(%arg0: i32) {
     nvvm.bar.warp.sync %arg0 : i32
     llvm.return
   }
-  func.func @nvvm_mma_m8n8k4_row_col_f32_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32, %arg10: f32, %arg11: f32) {
+  func.func @nvvm_mma_m8n8k4_row_col_f32_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32, %arg10: f32, %arg11: f32) -> !llvm.struct<(f32, f32, f32, f32, f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2, %arg3]  C[%arg4, %arg5, %arg6, %arg7, %arg8, %arg9, %arg10, %arg11]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, shape = #nvvm.shape<m = 8, n = 8, k = 4>} : (vector<2xf16>, vector<2xf16>, f32) -> !llvm.struct<(f32, f32, f32, f32, f32, f32, f32, f32)>
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32, f32, f32, f32, f32)>
   }
-  func.func @nvvm_mma_m8n8k4_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: vector<2xf16>, %arg7: vector<2xf16>) {
+  func.func @nvvm_mma_m8n8k4_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: vector<2xf16>, %arg7: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>, vector<2xf16>, vector<2xf16>)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2, %arg3]  C[%arg4, %arg5, %arg6, %arg7]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, shape = #nvvm.shape<m = 8, n = 8, k = 4>} : (vector<2xf16>, vector<2xf16>, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>, vector<2xf16>, vector<2xf16>)>
     llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>, vector<2xf16>, vector<2xf16>)>
   }
-  func.func @nvvm_mma_m16n8k8_bf16_bf16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32, %arg4: f32, %arg5: f32, %arg6: f32) {
+  func.func @nvvm_mma_m16n8k8_bf16_bf16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32, %arg4: f32, %arg5: f32, %arg6: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<bf16>, multiplicandBPtxType = #nvvm.mma_type<bf16>, shape = #nvvm.shape<m = 16, n = 8, k = 8>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
   }
-  func.func @nvvm_mma_m16n8k16_bf16_bf16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) {
+  func.func @nvvm_mma_m16n8k16_bf16_bf16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<bf16>, multiplicandBPtxType = #nvvm.mma_type<bf16>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
   }
-  func.func @nvvm_mma_m8n8k16_s8_s8(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) {
+  func.func @nvvm_mma_m16n8k16_e4m3_e4m3(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32, %arg4: f32, %arg5: f32, %arg6: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e4m3>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
+    llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
+  }
+  func.func @nvvm_mma_m16n8k32_e4m3_e5m2(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e5m2>, shape = #nvvm.shape<m = 16, n = 8, k = 32>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
+    llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
+  }
+  func.func @nvvm_mma_m16n8k16_e4m3_e4m3_f16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: vector<2xf16>, %arg4: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e4m3>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+    llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+  }
+  func.func @nvvm_mma_m16n8k32_e4m3_e5m2_f16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: vector<2xf16>, %arg7: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e5m2>, shape = #nvvm.shape<m = 16, n = 8, k = 32>} : (i32, i32, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+    llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+  }
+  func.func @nvvm_mma_m8n8k16_s8_s8(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) -> !llvm.struct<(i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0]  B[%arg1]  C[%arg2, %arg3]  {intOverflowBehavior = #nvvm.mma_int_overflow<wrapped>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<s8>, multiplicandBPtxType = #nvvm.mma_type<s8>, shape = #nvvm.shape<m = 8, n = 8, k = 16>} : (i32, i32, i32) -> !llvm.struct<(i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32)>
   }
-  func.func @nvvm_mma_m16n8k8_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>) {
+  func.func @nvvm_mma_m16n8k8_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, shape = #nvvm.shape<m = 16, n = 8, k = 8>} : (vector<2xf16>, vector<2xf16>, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)>
     llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>)>
   }
-  func.func @nvvm_mma_m16n8k16_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: vector<2xf16>, %arg7: vector<2xf16>) {
+  func.func @nvvm_mma_m16n8k16_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: vector<2xf16>, %arg7: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (vector<2xf16>, vector<2xf16>, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)>
     llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>)>
   }
-  func.func @nvvm_mma_m16n8k16_f32_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) {
+  func.func @nvvm_mma_m16n8k16_f32_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (vector<2xf16>, vector<2xf16>, f32) -> !llvm.struct<(f32, f32, f32, f32)>
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
   }
-  func.func @nvvm_mma_m16n8k4_tf32_f32(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32, %arg4: f32, %arg5: f32, %arg6: f32) {
+  func.func @nvvm_mma_m16n8k4_tf32_f32(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32, %arg4: f32, %arg5: f32, %arg6: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<tf32>, multiplicandBPtxType = #nvvm.mma_type<tf32>, shape = #nvvm.shape<m = 16, n = 8, k = 4>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
   }
-  func.func @nvvm_mma_m16n8k16_s8_s8(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) {
+  func.func @nvvm_mma_m16n8k16_s8_s8(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) -> !llvm.struct<(i32, i32, i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {intOverflowBehavior = #nvvm.mma_int_overflow<wrapped>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<s8>, multiplicandBPtxType = #nvvm.mma_type<s8>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, i32) -> !llvm.struct<(i32, i32, i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32, i32, i32)>
   }
-  func.func @nvvm_mma_m16n8k16_s8_u8(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) {
+  func.func @nvvm_mma_m16n8k16_s8_u8(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) -> !llvm.struct<(i32, i32, i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {intOverflowBehavior = #nvvm.mma_int_overflow<satfinite>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<s8>, multiplicandBPtxType = #nvvm.mma_type<u8>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, i32) -> !llvm.struct<(i32, i32, i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32, i32, i32)>
   }
-  func.func @nvvm_mma_m16n8k256_b1_b1(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32, %arg7: i32, %arg8: i32, %arg9: i32) {
+  func.func @nvvm_mma_m16n8k256_b1_b1(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32, %arg7: i32, %arg8: i32, %arg9: i32) -> !llvm.struct<(i32, i32, i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {b1Op = #nvvm.mma_b1op<xor_popc>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<b1>, multiplicandBPtxType = #nvvm.mma_type<b1>, shape = #nvvm.shape<m = 16, n = 8, k = 256>} : (i32, i32, i32) -> !llvm.struct<(i32, i32, i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32, i32, i32)>
   }
-  func.func @nvvm_mma_m16n8k128_b1_b1(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) {
+  func.func @nvvm_mma_m16n8k128_b1_b1(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) -> !llvm.struct<(i32, i32, i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {b1Op = #nvvm.mma_b1op<xor_popc>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<b1>, multiplicandBPtxType = #nvvm.mma_type<b1>, shape = #nvvm.shape<m = 16, n = 8, k = 128>} : (i32, i32, i32) -> !llvm.struct<(i32, i32, i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32, i32, i32)>
   }
-  func.func @nvvm_mma_m8n8k128_b1_b1(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) {
+  func.func @nvvm_mma_m8n8k128_b1_b1(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) -> !llvm.struct<(i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0]  B[%arg1]  C[%arg2, %arg3]  {b1Op = #nvvm.mma_b1op<xor_popc>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<b1>, multiplicandBPtxType = #nvvm.mma_type<b1>, shape = #nvvm.shape<m = 8, n = 8, k = 128>} : (i32, i32, i32) -> !llvm.struct<(i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32)>
   }
-  func.func @nvvm_mma_m16n8k32_s4_s4(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) {
+  func.func @nvvm_mma_m16n8k32_s4_s4(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) -> !llvm.struct<(i32, i32, i32, i32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {intOverflowBehavior = #nvvm.mma_int_overflow<wrapped>, layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<s4>, multiplicandBPtxType = #nvvm.mma_type<s4>, shape = #nvvm.shape<m = 16, n = 8, k = 32>} : (i32, i32, i32) -> !llvm.struct<(i32, i32, i32, i32)>
     llvm.return %0 : !llvm.struct<(i32, i32, i32, i32)>
   }
@@ -141,32 +168,32 @@ module {
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32, f32, f32, f32, f32)>
   }
   llvm.func @cp_async(%arg0: !llvm.ptr<3>, %arg1: !llvm.ptr<1>) {
-    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache =  ca : !llvm.ptr<3>, !llvm.ptr<1>
-    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache =  cg : !llvm.ptr<3>, !llvm.ptr<1>
+    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache = ca : !llvm.ptr<3>, !llvm.ptr<1>
+    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache = cg : !llvm.ptr<3>, !llvm.ptr<1>
     nvvm.cp.async.commit.group
     nvvm.cp.async.wait.group 0
     llvm.return
   }
   llvm.func @redux_sync(%arg0: i32, %arg1: i32) -> i32 {
-    %0 = nvvm.redux.sync  add %arg0, %arg1 : i32 -> i32
-    %1 = nvvm.redux.sync  max %arg0, %arg1 : i32 -> i32
-    %2 = nvvm.redux.sync  min %arg0, %arg1 : i32 -> i32
-    %3 = nvvm.redux.sync  umax %arg0, %arg1 : i32 -> i32
-    %4 = nvvm.redux.sync  umin %arg0, %arg1 : i32 -> i32
-    %5 = nvvm.redux.sync  and %arg0, %arg1 : i32 -> i32
-    %6 = nvvm.redux.sync  or %arg0, %arg1 : i32 -> i32
-    %7 = nvvm.redux.sync  xor %arg0, %arg1 : i32 -> i32
+    %0 = nvvm.redux.sync add %arg0, %arg1 : i32 -> i32
+    %1 = nvvm.redux.sync max %arg0, %arg1 : i32 -> i32
+    %2 = nvvm.redux.sync min %arg0, %arg1 : i32 -> i32
+    %3 = nvvm.redux.sync umax %arg0, %arg1 : i32 -> i32
+    %4 = nvvm.redux.sync umin %arg0, %arg1 : i32 -> i32
+    %5 = nvvm.redux.sync and %arg0, %arg1 : i32 -> i32
+    %6 = nvvm.redux.sync or %arg0, %arg1 : i32 -> i32
+    %7 = nvvm.redux.sync xor %arg0, %arg1 : i32 -> i32
     llvm.return %0 : i32
   }
   llvm.func @redux_sync_f32(%arg0: f32, %arg1: i32) -> f32 {
-    %0 = nvvm.redux.sync  fmin %arg0, %arg1 : f32 -> f32
-    %1 = nvvm.redux.sync  fmin %arg0, %arg1 {abs = true} : f32 -> f32
-    %2 = nvvm.redux.sync  fmin %arg0, %arg1 {NaN = true} : f32 -> f32
-    %3 = nvvm.redux.sync  fmin %arg0, %arg1 {NaN = true, abs = true} : f32 -> f32
-    %4 = nvvm.redux.sync  fmax %arg0, %arg1 : f32 -> f32
-    %5 = nvvm.redux.sync  fmax %arg0, %arg1 {abs = true} : f32 -> f32
-    %6 = nvvm.redux.sync  fmax %arg0, %arg1 {NaN = true} : f32 -> f32
-    %7 = nvvm.redux.sync  fmax %arg0, %arg1 {NaN = true, abs = true} : f32 -> f32
+    %0 = nvvm.redux.sync fmin %arg0, %arg1 : f32 -> f32
+    %1 = nvvm.redux.sync fmin %arg0, %arg1 {abs = true} : f32 -> f32
+    %2 = nvvm.redux.sync fmin %arg0, %arg1 {NaN = true} : f32 -> f32
+    %3 = nvvm.redux.sync fmin %arg0, %arg1 {NaN = true, abs = true} : f32 -> f32
+    %4 = nvvm.redux.sync fmax %arg0, %arg1 : f32 -> f32
+    %5 = nvvm.redux.sync fmax %arg0, %arg1 {abs = true} : f32 -> f32
+    %6 = nvvm.redux.sync fmax %arg0, %arg1 {NaN = true} : f32 -> f32
+    %7 = nvvm.redux.sync fmax %arg0, %arg1 {NaN = true, abs = true} : f32 -> f32
     llvm.return %0 : f32
   }
 }
@@ -210,6 +237,10 @@ module {
     %1 = nvvm.mbarrier.arrive.nocomplete %arg0, %0 : !llvm.ptr<3>, i32 -> i64
     llvm.return
   }
+  llvm.func private @mbarrier_arrive_expect_tx_predicate(%arg0: !llvm.ptr<3>, %arg1: i32, %arg2: i1) {
+    nvvm.mbarrier.arrive.expect_tx %arg0, %arg1, predicate = %arg2 : !llvm.ptr<3>, i32, i1
+    llvm.return
+  }
   func.func @wgmma_fence_aligned() {
     nvvm.wgmma.fence.aligned
     return
@@ -223,11 +254,11 @@ module {
     return
   }
   func.func @griddepcontrol_wait() {
-    nvvm.griddepcontrol  wait
+    nvvm.griddepcontrol wait
     return
   }
   func.func @griddepcontrol_launch_dependents() {
-    nvvm.griddepcontrol  launch_dependents
+    nvvm.griddepcontrol launch_dependents
     return
   }
   func.func @mapa(%arg0: !llvm.ptr, %arg1: !llvm.ptr<3>, %arg2: i32) {
@@ -236,10 +267,10 @@ module {
     return
   }
   func.func @match_sync(%arg0: i32, %arg1: i64, %arg2: i32) {
-    %0 = nvvm.match.sync  any %arg2, %arg0 : i32 -> i32
-    %1 = nvvm.match.sync  all %arg2, %arg0 : i32 -> !llvm.struct<(i32, i1)>
-    %2 = nvvm.match.sync  any %arg2, %arg1 : i64 -> i32
-    %3 = nvvm.match.sync  all %arg2, %arg1 : i64 -> !llvm.struct<(i32, i1)>
+    %0 = nvvm.match.sync any %arg2, %arg0 : i32 -> i32
+    %1 = nvvm.match.sync all %arg2, %arg0 : i32 -> !llvm.struct<(i32, i1)>
+    %2 = nvvm.match.sync any %arg2, %arg1 : i64 -> i32
+    %3 = nvvm.match.sync all %arg2, %arg1 : i64 -> !llvm.struct<(i32, i1)>
     return
   }
   func.func @st_bulk(%arg0: !llvm.ptr, %arg1: !llvm.ptr<3>, %arg2: i64) {
@@ -258,15 +289,15 @@ module {
     return
   }
   func.func @prefetch(%arg0: !llvm.ptr, %arg1: !llvm.ptr<5>, %arg2: !llvm.ptr<1>, %arg3: !llvm.ptr<4>) {
-    nvvm.prefetch level =  L1, %arg0 : !llvm.ptr
-    nvvm.prefetch level =  L1, %arg1 : !llvm.ptr<5>
-    nvvm.prefetch level =  L1, %arg2 : !llvm.ptr<1>
-    nvvm.prefetch level =  L2, %arg0 : !llvm.ptr
-    nvvm.prefetch level =  L2, %arg1 : !llvm.ptr<5>
-    nvvm.prefetch level =  L2, %arg2 : !llvm.ptr<1>
-    nvvm.prefetch level =  L2, evict_priority =  evict_last, %arg2 : !llvm.ptr<1>
-    nvvm.prefetch level =  L2, evict_priority =  evict_normal, %arg2 : !llvm.ptr<1>
-    nvvm.prefetch level =  L1 uniform, %arg0 : !llvm.ptr
+    nvvm.prefetch level = L1, %arg0 : !llvm.ptr
+    nvvm.prefetch level = L1, %arg1 : !llvm.ptr<5>
+    nvvm.prefetch level = L1, %arg2 : !llvm.ptr<1>
+    nvvm.prefetch level = L2, %arg0 : !llvm.ptr
+    nvvm.prefetch level = L2, %arg1 : !llvm.ptr<5>
+    nvvm.prefetch level = L2, %arg2 : !llvm.ptr<1>
+    nvvm.prefetch level = L2, evict_priority = evict_last, %arg2 : !llvm.ptr<1>
+    nvvm.prefetch level = L2, evict_priority = evict_normal, %arg2 : !llvm.ptr<1>
+    nvvm.prefetch level = L1 uniform, %arg0 : !llvm.ptr
     nvvm.prefetch tensormap, %arg0 : !llvm.ptr
     nvvm.prefetch tensormap, %arg3 : !llvm.ptr<4>
     nvvm.prefetch tensormap in_param_space, %arg0 : !llvm.ptr

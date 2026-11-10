@@ -91,9 +91,7 @@ pub struct AwaitOp<'a> {
 /// ```mlir
 /// %2 = async.call @my_add(%0, %1) : (f32, f32) -> !async.value<f32>
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("async.call", results(result))]
+#[mlir::op("async.call", format = "$callee `(` $operands `)` attr-dict `:` functional-type($operands, $result)", results(result))]
 pub struct CallOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
@@ -122,7 +120,7 @@ pub struct CoroBeginOp<'a> {
 ///
 /// The `async.coro.end` marks the point where a coroutine needs to return
 /// control back to the caller if it is not an initial invocation of the
-/// coroutine. It the start part of the coroutine is is no-op.
+/// coroutine. In the start part of the coroutine it is no-op.
 #[mlir::op("async.coro.end", format = "$handle attr-dict")]
 pub struct CoroEndOp<'a> {
     #[slot(handle_ty)]

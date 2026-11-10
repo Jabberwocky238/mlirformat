@@ -5,3 +5,11 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @copying_rank0(%arg0: memref<i32>, %arg1: memref<i32>) {
+    memref.copy %arg0, %arg1 : memref<i32> to memref<i32>
+    return
+  }
+}
+

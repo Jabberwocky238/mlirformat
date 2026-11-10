@@ -53,6 +53,34 @@
 // -----
 // -----
 // -----
+// -----
+// -----
+"builtin.module"() ({
+^bb0:
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> f32, sym_name = "group_non_uniform_broadcast_first_scalar"}> ({
+  ^bb0(%arg0: f32):
+    %0 = "spirv.GroupNonUniformBroadcastFirst"(%arg0) <{execution_scope = #spirv.scope<Subgroup>}> : (f32) -> f32
+    "func.return"(%0) : (f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf32>) -> vector<4xf32>, sym_name = "group_non_uniform_broadcast_first_vector"}> ({
+  ^bb0(%arg0: vector<4xf32>):
+    %0 = "spirv.GroupNonUniformBroadcastFirst"(%arg0) <{execution_scope = #spirv.scope<Subgroup>}> : (vector<4xf32>) -> vector<4xf32>
+    "func.return"(%0) : (vector<4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = () -> i1, sym_name = "group_non_uniform_elect"}> ({
     %0 = "spirv.GroupNonUniformElect"() <{execution_scope = #spirv.scope<Workgroup>}> : () -> i1
@@ -176,6 +204,8 @@
 // -----
 // -----
 // -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (f32, i32) -> f32, sym_name = "group_non_uniform_shuffle1"}> ({
   ^bb0(%arg2: f32, %arg3: i32):
@@ -189,6 +219,8 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -208,6 +240,8 @@
 // -----
 // -----
 // -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (f32, i32) -> f32, sym_name = "group_non_uniform_shuffle1"}> ({
   ^bb0(%arg2: f32, %arg3: i32):
@@ -221,6 +255,8 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -368,9 +404,10 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (f32) -> f32, sym_name = "group_non_uniform_quad_swap"}> ({
   ^bb0(%arg0: f32):
-    %0 = "spirv.Constant"() <{value = 0 : i32}> : () -> i32
-    %1 = "spirv.GroupNonUniformQuadSwap"(%arg0, %0) <{execution_scope = #spirv.scope<Subgroup>}> : (f32, i32) -> f32
-    "func.return"(%1) : (f32) -> ()
+    %0 = "spirv.GroupNonUniformQuadSwap"(%arg0) <{direction = #spirv.quad_swap_direction<Horizontal>, execution_scope = #spirv.scope<Subgroup>}> : (f32) -> f32
+    %1 = "spirv.GroupNonUniformQuadSwap"(%0) <{direction = #spirv.quad_swap_direction<Vertical>, execution_scope = #spirv.scope<Subgroup>}> : (f32) -> f32
+    %2 = "spirv.GroupNonUniformQuadSwap"(%1) <{direction = #spirv.quad_swap_direction<Diagonal>, execution_scope = #spirv.scope<Subgroup>}> : (f32) -> f32
+    "func.return"(%2) : (f32) -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -378,12 +415,26 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<4xf32>) -> vector<4xf32>, sym_name = "group_non_uniform_quad_swap"}> ({
   ^bb0(%arg0: vector<4xf32>):
-    %0 = "spirv.Constant"() <{value = 0 : i32}> : () -> i32
-    %1 = "spirv.GroupNonUniformQuadSwap"(%arg0, %0) <{execution_scope = #spirv.scope<Subgroup>}> : (vector<4xf32>, i32) -> vector<4xf32>
-    "func.return"(%1) : (vector<4xf32>) -> ()
+    %0 = "spirv.GroupNonUniformQuadSwap"(%arg0) <{direction = #spirv.quad_swap_direction<Horizontal>, execution_scope = #spirv.scope<Subgroup>}> : (vector<4xf32>) -> vector<4xf32>
+    "func.return"(%0) : (vector<4xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xi32>) -> i32, sym_name = "group_non_uniform_ballot_bit_count"}> ({
+  ^bb0(%arg0: vector<4xi32>):
+    %0 = "spirv.GroupNonUniformBallotBitCount"(%arg0) <{execution_scope = #spirv.scope<Subgroup>, group_operation = #spirv.group_operation<Reduce>}> : (vector<4xi32>) -> i32
+    "func.return"(%0) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----

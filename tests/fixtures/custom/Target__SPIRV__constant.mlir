@@ -1,5 +1,5 @@
 module {
-  spirv.module Logical Vulkan requires #spirv.vce<v1.3, [VulkanMemoryModel, Shader, Int64, Int16, Int8, Float64, Float16, CooperativeMatrixKHR, TensorsARM, Linkage], [SPV_KHR_vulkan_memory_model, SPV_KHR_cooperative_matrix, SPV_ARM_tensors]> {
+  spirv.module Logical Vulkan requires #spirv.vce<v1.3, [VulkanMemoryModel, Shader, Int64, Int16, Int8, Float64, Float16, BFloat16TypeKHR, Float8EXT, CooperativeMatrixKHR, Linkage], [SPV_KHR_vulkan_memory_model, SPV_KHR_cooperative_matrix, SPV_KHR_bfloat16, SPV_EXT_float8]> {
     spirv.func @bool_const() "None" {
       %true = spirv.Constant true
       %false = spirv.Constant false
@@ -82,6 +82,27 @@ module {
       %cst_f16 = spirv.Constant 5.120000e+02 : f16
       %cst_f16_0 = spirv.Constant -5.120000e+02 : f16
       %0 = spirv.FAdd %cst_f16, %cst_f16_0 : f16
+      spirv.Return
+    }
+    spirv.func @bf16() "None" {
+      %cst_bf16 = spirv.Constant 5.120000e+02 : bf16
+      %cst_bf16_0 = spirv.Constant -5.120000e+02 : bf16
+      %0 = spirv.FConvert %cst_bf16 : bf16 to f32
+      %1 = spirv.FConvert %cst_bf16_0 : bf16 to f32
+      spirv.Return
+    }
+    spirv.func @f8E4M3FN() "None" {
+      %cst_f8E4M3FN = spirv.Constant 1.280000e+02 : f8E4M3FN
+      %cst_f8E4M3FN_0 = spirv.Constant -1.280000e+02 : f8E4M3FN
+      %0 = spirv.FConvert %cst_f8E4M3FN : f8E4M3FN to f32
+      %1 = spirv.FConvert %cst_f8E4M3FN_0 : f8E4M3FN to f32
+      spirv.Return
+    }
+    spirv.func @f8E5M2() "None" {
+      %cst_f8E5M2 = spirv.Constant 1.280000e+02 : f8E5M2
+      %cst_f8E5M2_0 = spirv.Constant -1.280000e+02 : f8E5M2
+      %0 = spirv.FConvert %cst_f8E5M2 : f8E5M2 to f32
+      %1 = spirv.FConvert %cst_f8E5M2_0 : f8E5M2 to f32
       spirv.Return
     }
     spirv.func @bool_vector_const() "None" {
@@ -169,6 +190,14 @@ module {
     spirv.func @coop_matrix_const_non_zero_i8() -> !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc> "None" {
       %cst = spirv.Constant dense<4> : !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>
       spirv.ReturnValue %cst : !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>
+    }
+    spirv.func @struct_const() -> !spirv.struct<(i32, f32)> "None" {
+      %cst = spirv.Constant [1 : i32, 2.000000e+00 : f32] : !spirv.struct<(i32, f32)>
+      spirv.ReturnValue %cst : !spirv.struct<(i32, f32)>
+    }
+    spirv.func @struct_const_nested() -> !spirv.struct<(i32, !spirv.array<2 x i32>)> "None" {
+      %cst = spirv.Constant [1 : i32, [2 : i32, 3 : i32]] : !spirv.struct<(i32, !spirv.array<2 x i32>)>
+      spirv.ReturnValue %cst : !spirv.struct<(i32, !spirv.array<2 x i32>)>
     }
     spirv.EntryPoint "GLCompute" @bool_const
   }

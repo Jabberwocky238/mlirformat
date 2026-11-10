@@ -155,20 +155,22 @@ module {
   %14:3 = test.format_types_match_variadic %0, %0, %0 : i64, i64, i64
   %15 = test.format_types_match_attr 1 : i64
   %16 = test.format_types_match_context %0 : i64
-  %17 = test.format_infer_type
-  %18 = test.format_infer_type2
-  %19:2 = test.format_infer_type_all_operands_and_types(%0, %1) : i64, i32
-  %20:2 = test.format_infer_type_all_types_one_operand(%0, %1) : i64, i32
-  %21:4 = test.format_infer_type_all_types_two_operands(%0, %1) (%0, %1) : i64, i32, i64, i32
-  %22:2 = test.format_infer_type_all_types(%0, %1) : i64, i32
-  %23:2 = test.format_infer_type_regions {
+  %17 = test.format_types_match_optional(%0 : i64)
+  test.format_types_match_optional
+  %18 = test.format_infer_type
+  %19 = test.format_infer_type2
+  %20:2 = test.format_infer_type_all_operands_and_types(%0, %1) : i64, i32
+  %21:2 = test.format_infer_type_all_types_one_operand(%0, %1) : i64, i32
+  %22:4 = test.format_infer_type_all_types_two_operands(%0, %1) (%0, %1) : i64, i32, i64, i32
+  %23:2 = test.format_infer_type_all_types(%0, %1) : i64, i32
+  %24:2 = test.format_infer_type_regions {
   ^bb0(%arg0: i32, %arg1: f32):
     "test.terminator"() : () -> ()
   }
-  %24:4 = test.format_infer_type_variadic_operands(%1, %1 : i32, i32) (%0, %0 : i64, i64)
+  %25:4 = test.format_infer_type_variadic_operands(%1, %1 : i32, i32) (%0, %0 : i64, i64)
   test.with_properties_and_attr 16 <{rhs = 16 : i64}>
-  %25 = test.with_properties_and_inferred_type 16 <{packed, rhs = 16 : i64}>
-  %26 = test.format_all_types_match_var %25, %1 : i32
+  %26 = test.with_properties_and_inferred_type 16 <{packed, rhs = 16 : i64}>
+  %27 = test.format_all_types_match_var %26, %1 : i32
   test.using_property_in_custom_and_other [1, 4, 20] <{other = 16 : i64}>
   test.has_str_value
   func.func @else_anchor_op(%arg0: !test.else_anchor<?>, %arg1: !test.else_anchor<5>) {

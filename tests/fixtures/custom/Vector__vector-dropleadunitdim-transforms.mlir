@@ -87,6 +87,17 @@ module {
 }
 
 // -----
+#map = affine_map<(d0, d1) -> (d0)>
+#map1 = affine_map<(d0, d1) -> (d1, d0)>
+#map2 = affine_map<(d0, d1) -> (d1)>
+module {
+  func.func @cast_away_contraction_leading_one_dims_to_dot_product(%arg0: vector<64xf32>, %arg1: vector<1x64xf32>, %arg2: vector<1xf32>) -> vector<1xf32> {
+    %0 = vector.contract {indexing_maps = [#map, #map1, #map2], iterator_types = ["reduction", "parallel"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<64xf32>, vector<1x64xf32> into vector<1xf32>
+    return %0 : vector<1xf32>
+  }
+}
+
+// -----
 module {
   func.func @cast_away_extract_strided_slice_leading_one_dims(%arg0: vector<1x8x8xf16>) -> vector<1x1x8xf16> {
     %0 = vector.extract_strided_slice %arg0 {offsets = [0, 4], sizes = [1, 1], strides = [1, 1]} : vector<1x8x8xf16> to vector<1x1x8xf16>
@@ -321,6 +332,70 @@ module {
   func.func @drop_unit_dims_scalar_cond_select(%arg0: i1, %arg1: vector<1x16xi1>, %arg2: vector<1x16xi1>) -> vector<1x16xi1> {
     %0 = arith.select %arg0, %arg1, %arg2 : vector<1x16xi1>
     return %0 : vector<1x16xi1>
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_load_leading_one_dims(%arg0: memref<8x16xf32>, %arg1: index, %arg2: index) -> vector<1x4xf32> {
+    %0 = vector.load %arg0[%arg1, %arg2] : memref<8x16xf32>, vector<1x4xf32>
+    return %0 : vector<1x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_maskedload_leading_one_dims(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>) -> vector<1x4xf32> {
+    %0 = vector.maskedload %arg0[%arg1], %arg2, %arg3 : memref<16xf32>, vector<1x4xi1>, vector<1x4xf32> into vector<1x4xf32>
+    return %0 : vector<1x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_expandload_leading_one_dims(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>) -> vector<1x4xf32> {
+    %0 = vector.expandload %arg0[%arg1], %arg2, %arg3 : memref<16xf32>, vector<1x4xi1>, vector<1x4xf32> into vector<1x4xf32>
+    return %0 : vector<1x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_gather_leading_one_dims(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi32>, %arg3: vector<1x4xi1>, %arg4: vector<1x4xf32>) -> vector<1x4xf32> {
+    %0 = vector.gather %arg0[%arg1] [%arg2], %arg3, %arg4 : memref<16xf32>, vector<1x4xi32>, vector<1x4xi1>, vector<1x4xf32> into vector<1x4xf32>
+    return %0 : vector<1x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_store_leading_one_dims(%arg0: vector<1x4xf32>, %arg1: memref<8x16xf32>, %arg2: index, %arg3: index) {
+    vector.store %arg0, %arg1[%arg2, %arg3] : memref<8x16xf32>, vector<1x4xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_maskedstore_leading_one_dims(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>) {
+    vector.maskedstore %arg0[%arg1], %arg2, %arg3 : memref<16xf32>, vector<1x4xi1>, vector<1x4xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_compressstore_leading_one_dims(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>) {
+    vector.compressstore %arg0[%arg1], %arg2, %arg3 : memref<16xf32>, vector<1x4xi1>, vector<1x4xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @cast_away_scatter_leading_one_dims(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi32>, %arg3: vector<1x4xi1>, %arg4: vector<1x4xf32>) {
+    vector.scatter %arg0[%arg1] [%arg2], %arg3, %arg4 : memref<16xf32>, vector<1x4xi32>, vector<1x4xi1>, vector<1x4xf32>
+    return
   }
 }
 

@@ -8,60 +8,6 @@ module {
     return %padded : tensor<?x?xindex>
   }
   module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["tensor.pad"]} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %allocated_buffer, %new_ops = transform.structured.bufferize_to_allocation %0 {emit_dealloc} : !transform.any_op
-      %1 = transform.select "linalg.fill" in %new_ops : (!transform.any_op) -> !transform.any_op
-      %2 = transform.num_associations %1 : (!transform.any_op) -> !transform.param<i64>
-      transform.debug.emit_param_as_remark %2 : !transform.param<i64>
-      %3 = transform.select "bufferization.materialize_in_destination" in %new_ops : (!transform.any_op) -> !transform.any_op
-      %4 = transform.num_associations %3 : (!transform.any_op) -> !transform.param<i64>
-      transform.debug.emit_param_as_remark %4 : !transform.param<i64>
-      transform.yield 
-    }
-  }
-}
-
-// -----
-module {
-  func.func @tensor_pad_constant_with_custom_copy(%arg0: tensor<?x10xindex>, %arg1: index, %arg2: index, %arg3: index) -> tensor<?x?xindex> {
-    %padded = tensor.pad %arg0 low[5, %arg1] high[%arg2, %arg3] {
-    ^bb0(%arg4: index, %arg5: index):
-      %c50 = arith.constant 50 : index
-      tensor.yield %c50 : index
-    } : tensor<?x10xindex> to tensor<?x?xindex>
-    return %padded : tensor<?x?xindex>
-  }
-  module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.consumed}) {
-      %0 = transform.structured.match ops{["tensor.pad"]} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %allocated_buffer, %new_ops = transform.structured.bufferize_to_allocation %0 {alloc_op = "memref.alloca", emit_dealloc, memcpy_op = "linalg.copy", memory_space = 3 : i64} : !transform.any_op
-      %1 = transform.select "linalg.fill" in %new_ops : (!transform.any_op) -> !transform.any_op
-      %2 = transform.num_associations %1 : (!transform.any_op) -> !transform.param<i64>
-      transform.debug.emit_param_as_remark %2 : !transform.param<i64>
-      %3 = transform.select "linalg.copy" in %new_ops : (!transform.any_op) -> !transform.any_op
-      %4 = transform.num_associations %3 : (!transform.any_op) -> !transform.param<i64>
-      transform.debug.emit_param_as_remark %4 : !transform.param<i64>
-      %5 = transform.select "memref.alloca" in %new_ops : (!transform.any_op) -> !transform.any_op
-      %6 = transform.num_associations %5 : (!transform.any_op) -> !transform.param<i64>
-      transform.debug.emit_param_as_remark %6 : !transform.param<i64>
-      %7 = transform.bufferization.one_shot_bufferize %arg0 : (!transform.any_op) -> !transform.any_op
-      transform.yield 
-    }
-  }
-}
-
-// -----
-module {
-  func.func @tensor_pad_constant(%arg0: tensor<?x10xindex>, %arg1: index, %arg2: index, %arg3: index) -> tensor<?x?xindex> {
-    %padded = tensor.pad %arg0 low[5, %arg1] high[%arg2, %arg3] {
-    ^bb0(%arg4: index, %arg5: index):
-      %c50 = arith.constant 50 : index
-      tensor.yield %c50 : index
-    } : tensor<?x10xindex> to tensor<?x?xindex>
-    return %padded : tensor<?x?xindex>
-  }
-  module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.consumed}) {
       %0 = transform.structured.match ops{["tensor.pad"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %allocated_buffer, %new_ops = transform.structured.bufferize_to_allocation %0 {emit_dealloc} : !transform.any_op
@@ -99,21 +45,6 @@ module {
       %0 = transform.structured.match ops{["tensor.insert"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %allocated_buffer, %new_ops = transform.structured.bufferize_to_allocation %0 {emit_dealloc, memory_space = 4 : i64} : !transform.any_op
       %1 = transform.bufferization.one_shot_bufferize %arg0 : (!transform.any_op) -> !transform.any_op
-      transform.yield 
-    }
-  }
-}
-
-// -----
-module {
-  func.func @tensor_extract(%arg0: tensor<?x10xindex>, %arg1: index) -> index {
-    %extracted = tensor.extract %arg0[%arg1, %arg1] : tensor<?x10xindex>
-    return %extracted : index
-  }
-  module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["tensor.extract"]} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %allocated_buffer, %new_ops = transform.structured.bufferize_to_allocation %0 {emit_dealloc, memory_space = 4 : i64} : !transform.any_op
       transform.yield 
     }
   }

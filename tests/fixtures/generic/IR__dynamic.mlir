@@ -59,3 +59,25 @@
 }) : () -> ()
 
 // -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "dynamicTerminatorOp"}> ({
+    "test.dynamic_generic"() ({
+      "test.dynamic_terminator"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "dynamicNoTerminatorOp"}> ({
+    "test.dynamic_noterminator"() ({
+    ^bb0:
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----

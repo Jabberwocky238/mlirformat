@@ -1,4 +1,4 @@
-//! `math` (formats from `MathOps.td`, checked against `mlir-opt` 22.1.8 output).
+//! `math` (formats from `MathOps.td`, checked against `mlir-opt` 23.1.5 output).
 
 use crate::{Attribute, Type, Value, mlir};
 
@@ -97,7 +97,7 @@ pub struct FPowIOp<'a> {
     pub rhs_ty: Type<'a>,
 }
 
-#[mlir::op("math.fma", format = "$a `,` $b `,` $c (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+#[mlir::op("math.fma", format = "$a `,` $b `,` $c ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct FmaOp<'a> {
     #[slot(result)]
     pub a: Value<'a>,
@@ -107,6 +107,8 @@ pub struct FmaOp<'a> {
     pub c: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<crate::arith::RoundingMode>,
     pub result: Type<'a>,
 }
 

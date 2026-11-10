@@ -259,11 +259,12 @@ impl Records {
             _ if call.contains("getF16Type") || call.contains("Float16Type>") => "f16".into(),
             _ if call.contains("getF32Type") || call.contains("Float32Type>") => "f32".into(),
             _ if call.contains("getF64Type") || call.contains("Float64Type>") => "f64".into(),
-            // LLVM's opaque pointer (`<3>`: in address space 3), and its token.
+            // The builtin `token` (MLIR 23; LLVM's `!llvm.token` is gone).
+            _ if call.contains("::mlir::TokenType>") => "token".into(),
+            // LLVM's opaque pointer (`<3>`: in address space 3).
             _ if let Some(space) = packed.split_once("LLVMPointerType>(").and_then(|(_, r)| r.strip_suffix(')')).filter(|n| n.parse::<u32>().is_ok()) => {
                 if space == "0" { "!llvm.ptr".into() } else { format!("!llvm.ptr<{space}>") }
             }
-            _ if call.contains("LLVMTokenType::get(") => "!llvm.token".into(),
             // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
             _ if call.trim_end().ends_with(">()") && let Some(c) = constraint && let Some(m) = self.text(c, "mnemonic").filter(|m| !m.is_empty()) => {
                 let dialect = self.field(c, "dialect").and_then(Self::def_of)?;
@@ -392,7 +393,12 @@ impl Records {
                 let c = Self::def_of(c)?;
                 Some((self.text(c, "str")?.to_string(), self.field(c, "value")?.as_i64()?))
             })
-            .collect::<Option<_>>()?;
+            .collect::<Option<Vec<_>>>()?
+            .into_iter()
+            // A negative case is a sentinel no valid attribute holds (`RoundingMode`'s `invalid`,
+            // which `ValidRoundingModeAttr` confines away): a case's value is its position here.
+            .filter(|(_, v)| *v >= 0)
+            .collect();
         let ascending = cases.first().is_some_and(|(_, v)| *v >= 0) && cases.windows(2).all(|w| w[0].1 < w[1].1) && cases.last().is_some_and(|(_, v)| *v < 256);
         ascending.then(|| (self.text(attr, "className").unwrap_or(attr).to_string(), cases, self.field(attr, "bitwidth").and_then(Json::as_u64).unwrap_or(64)))
     }
@@ -479,6 +485,18 @@ impl Records {
 
     /// A property field: (marker, Rust type).
     fn property(&self, constraint: &str, ods: &str, dialect: &mut GenDialect) -> (String, String) {
+        let (marker, ty) = self.property_of(constraint, ods, dialect);
+        // `DefaultValuedOptionalAttr`: the default only elides it in print (ODS's
+        // `genNonDefaultValueCheck`); parsing and building leave it absent.
+        let optional = self.field(constraint, "isOptional").and_then(Json::as_i64) == Some(1) || self.is_a(constraint, "OptionalAttr");
+        match marker.strip_suffix(")]") {
+            Some(head) if optional && head.contains(", default = ") => (format!("{head}, optional)]"), ty),
+            _ => (marker, ty),
+        }
+    }
+
+    /// [`Self::property`] before `optional`.
+    fn property_of(&self, constraint: &str, ods: &str, dialect: &mut GenDialect) -> (String, String) {
         let unit = |c: &str| self.is_a(c, "UnitAttr") || self.is_a(c, "UnitProp");
         let base = self.field(constraint, "baseAttr").and_then(Self::def_of).unwrap_or(constraint);
         // The constraint and what it wraps (`DefaultValuedAttr<ConfinedAttr<I32Attr, ..>, "0">`).
@@ -487,9 +505,9 @@ impl Records {
         // As ODS's `Attribute::hasDefaultValue`: a `defaultValue` set, by `DefaultValuedAttr` or on
         // the attribute itself (`ArmSME_TileSliceLayoutAttr`: `TileSliceLayout::Horizontal`).
         let defaulted = self.text(constraint, "defaultValue").is_some_and(|v| !v.is_empty());
-        // Only a non-optional one is filled in when absent; a `DefaultValuedOptionalAttr`'s
-        // default is for its getter alone (`memref.load` parses without `nontemporal`).
-        let filled = defaulted && !optional;
+        // A `DefaultValuedOptionalAttr`'s too, marked `optional` by [`Self::property`]: it is
+        // never filled in (`memref.load` parses without `nontemporal`).
+        let filled = defaulted;
         let name = format!("name = {ods:?}");
         if unit(constraint) || unit(base) {
             return (format!("#[attr({name})]"), "bool".into());
@@ -500,17 +518,19 @@ impl Records {
                 None => (format!("#[attr({name}, int = \"i{width}\", bits = {bits:?})]"), "Attribute<'a>".into()),
             };
         }
-        if let Some((rust, cases, width)) = self.int_enum(base) {
+        // Through wrappers too (`OptionalAttr<DefaultValuedAttr<AsmATTOrIntel, ..>>`).
+        if let Some((enum_rec, (rust, cases, width))) = core::iter::once(base).chain(chain.iter().skip(2).copied()).find_map(|c| Some((c, self.int_enum(c)?))) {
             dialect.enums.insert(rust.clone(), cases);
             // `DefaultValuedAttr<AtomicOrdering, "AtomicOrdering::not_atomic">`: the case's value.
-            let default = filled.then(|| self.text(constraint, "defaultValue")).flatten().and_then(|v| self.case_value(base, v.rsplit("::").next()?));
+            let default = filled.then(|| chain.iter().find_map(|c| self.text(c, "defaultValue").filter(|v| !v.is_empty()))).flatten().and_then(|v| self.case_value(enum_rec, v.rsplit("::").next()?));
             return match default {
                 Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), format!("Option<{rust}>")),
                 None if optional || defaulted => (format!("#[attr({name}, int = \"i{width}\")]"), format!("Option<{rust}>")),
                 None => (format!("#[attr({name}, int = \"i{width}\")]"), rust),
             };
         }
-        if let Some((attr, cases)) = self.dialect_enum(base).or_else(|| self.wrapped_enum(base)) {
+        // Through a `ConfinedAttr` too (`DefaultValuedAttr<ConfinedAttr<SaturationModeAttr, ..>>`).
+        if let Some((attr, cases)) = core::iter::once(base).chain(chain.iter().skip(2).copied()).find_map(|c| self.dialect_enum(c).or_else(|| self.wrapped_enum(c))) {
             let default = filled
                 .then(|| self.text(constraint, "defaultValue"))
                 .flatten()
@@ -531,6 +551,15 @@ impl Records {
             return (format!("#[attr({name}, dialect = {attr:?}, default = \"\")]"), "Option<Attribute<'a>>".into());
         }
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
+        // An `AttrDef` spelled `` `kw` `=` $param `` (`#xevm<src_etype src_etype = f16>`): stripped,
+        // it is `src_etype = f16`, read as a bare case.
+        if self.is_a(base, "AttrDef")
+            && let (Some(attr), Some(f)) = (self.text(base, "attrName"), self.text(base, "assemblyFormat"))
+            && let [kw, eq, param] = f.split_whitespace().collect::<Vec<_>>()[..]
+            && kw.len() > 2 && kw.starts_with('`') && kw.ends_with('`') && eq == "`=`" && param.starts_with('$')
+        {
+            return (format!("#[attr({name}, dialect = {:?})]", attr.replacen('.', "<", 1)), ty.into());
+        }
         // An attribute of one `AttrDef`: ODS prints it stripped (`<function = @f, tag = <id = 1>>`).
         // A custom printer too (`LLVM_ConstantRangeAttr`: `range <i32, 0, 32>`).
         let custom = self.field(base, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(base, "mnemonic").is_some_and(|m| !m.is_empty());
@@ -678,9 +707,9 @@ impl Records {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `getUnaryOpResultType`: `i1`, or a vector of as many `i1` (SPIR-V's
-                        // comparisons).
-                        _ if plain == "getUnaryOpResultType($_self)" => {
+                        // `getMatchingBoolType` (`getUnaryOpResultType` before MLIR 23): `i1`, or
+                        // a vector of as many `i1` (SPIR-V's comparisons).
+                        _ if plain == "getMatchingBoolType($_self)" => {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
@@ -815,7 +844,8 @@ impl Records {
                 fields.push(GenField { marker: format!("#[dtype(name = {ods:?}{infer})]"), ident: var, ty: ty.into() });
             }
         }
-        let (format, generic_why) = self.format(op, &fields, &results);
+        let variadic: Vec<bool> = groups.iter().filter(|g| g.result).map(|g| g.variadic).collect();
+        let (format, generic_why) = self.format(op, &fields, &results, &variadic);
         GenOp { rust, name, summary, description, format, generic_why, results: results.iter().map(|r| Self::ident(r)).collect(), fields }
     }
 
@@ -824,18 +854,18 @@ impl Records {
     /// what the spelled out form prints too while each group is one value (or there is one
     /// group); otherwise, and inside `functional-type(..)`, the directive is left for the check
     /// to refuse.
-    fn spell_groups(format: &str, fields: &[GenField], results: &[String]) -> String {
+    /// `variadic`: which of `results` are `Variadic` / `Optional` (a variadic of a fixed type is
+    /// no `Vec` field: `memref.extract_strided_metadata`'s `index` sizes).
+    fn spell_groups(format: &str, fields: &[GenField], results: &[String], variadic: &[bool]) -> String {
         let name_of = |f: &GenField| f.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).map(String::from);
         let operands: Vec<(String, bool)> = fields.iter().filter(|f| f.marker.starts_with("#[slot(")).filter_map(|f| Some((name_of(f)?, f.ty.starts_with("Vec<")))).collect();
-        let results: Vec<(String, bool)> = results
-            .iter()
-            .map(|r| (r.clone(), fields.iter().any(|f| f.marker.starts_with(&format!("#[dtype(name = {r:?}")) && f.ty.starts_with("Vec<"))))
-            .collect();
+        let results: Vec<(String, bool)> = results.iter().cloned().zip(variadic.iter().copied()).collect();
         let spelled = |groups: &[(String, bool)], typed: bool| -> Option<String> {
             if groups.len() > 1 && groups.iter().any(|(_, v)| *v) {
                 return None;
             }
-            let one = |(n, _): &(String, bool)| if typed { format!("type(${n})") } else { format!("${n}") };
+            // `type(operands)` prints each type whole (`!llvm.ptr<6>`): no `type($x)` stripping.
+            let one = |(n, _): &(String, bool)| if typed { format!("qualified(type(${n}))") } else { format!("${n}") };
             Some(groups.iter().map(one).collect::<Vec<_>>().join(" `,` "))
         };
         let (mut out, mut rest) = (String::new(), format);
@@ -851,9 +881,20 @@ impl Records {
             let directive = [("type(operands)", &operands, true), ("type(results)", &results, true), ("operands", &operands, false), ("results", &results, false)]
                 .into_iter()
                 .find(|(w, _, _)| word_start && rest.starts_with(w) && !rest[w.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_'));
+            // Inside `functional-type(` the list is one argument: its variables space-separated,
+            // at most one of them variadic.
+            let in_fn = out.trim_end().ends_with("functional-type(") || (out.trim_end().ends_with(',') && out.contains("functional-type(") && !out.rsplit("functional-type(").next().is_some_and(|t| t.contains(')')));
+            let listed = |g: &[(String, bool)]| (g.iter().filter(|(_, v)| *v).count() <= 1 && !g.is_empty()).then(|| g.iter().map(|(n, _)| format!("${n}")).collect::<Vec<_>>().join(" "));
+            match directive {
+                Some((w, g, false)) if in_fn && let Some(s) = listed(g) => {
+                    out.push_str(&s);
+                    rest = &rest[w.len()..];
+                    continue;
+                }
+                _ => {}
+            }
             match directive.and_then(|(w, g, typed)| Some((w, spelled(g, typed)?))) {
-                // Inside `functional-type(` the list is one argument: not spelled out.
-                Some((w, s)) if !out.trim_end().ends_with("functional-type(") && !out.trim_end().ends_with(',') || w.starts_with("type(") => {
+                Some((w, s)) if !in_fn && !out.trim_end().ends_with(',') || w.starts_with("type(") => {
                     out.push_str(&s);
                     rest = &rest[w.len()..];
                 }
@@ -868,7 +909,7 @@ impl Records {
     }
 
     /// The assembly format if the runtime format engine can read it, else why not.
-    fn format(&self, op: &str, fields: &[GenField], results: &[String]) -> (Option<String>, Option<String>) {
+    fn format(&self, op: &str, fields: &[GenField], results: &[String], variadic: &[bool]) -> (Option<String>, Option<String>) {
         // An `assemblyFormat` wins over an inherited `hasCustomAssemblyFormat`
         // (`OpEmitter::genParser`: SPIR-V's base op sets the bit, most of its ops a format).
         let Some(raw) = self.text(op, "assemblyFormat").filter(|f| !f.trim().is_empty()) else {
@@ -892,7 +933,7 @@ impl Records {
             }
             None => String::from(raw),
         };
-        let format = Self::spell_groups(&raw.split_whitespace().collect::<Vec<_>>().join(" "), fields, results);
+        let format = Self::spell_groups(&raw.split_whitespace().collect::<Vec<_>>().join(" "), fields, results, variadic);
         // Outside literals, only `$name`, type(), functional-type(), qualified(), attr-dict and groups.
         let mut rest = format.as_str();
         let known: BTreeSet<String> = fields.iter().filter_map(|f| f.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).map(String::from)).collect();

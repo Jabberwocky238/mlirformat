@@ -8,6 +8,15 @@ module {
 
 // -----
 module {
+  func.func @test_drop_rank_expansion(%arg0: tensor<128x480xf32>, %arg1: tensor<1x1x128x480xf32>) -> tensor<123xf32> {
+    %inserted_slice = tensor.insert_slice %arg0 into %arg1[0, 0, 0, 0] [1, 1, 128, 480] [1, 1, 1, 1] : tensor<128x480xf32> into tensor<1x1x128x480xf32>
+    %extracted_slice = tensor.extract_slice %inserted_slice[0, 0, 0, 0] [1, 1, 123, 1] [1, 1, 1, 1] : tensor<1x1x128x480xf32> to tensor<123xf32>
+    return %extracted_slice : tensor<123xf32>
+  }
+}
+
+// -----
+module {
   func.func @fold_casting_insert_slice_of_extract_slice(%arg0: tensor<?x8x2x8xf32>, %arg1: tensor<8x1x8xf32>) -> tensor<8x1x8xf32> {
     %extracted_slice = tensor.extract_slice %arg0[0, 0, 0, 0] [1, 8, 1, 8] [1, 1, 1, 1] : tensor<?x8x2x8xf32> to tensor<8x8xf32>
     %inserted_slice = tensor.insert_slice %extracted_slice into %arg1[0, 0, 0] [8, 1, 8] [1, 1, 1] : tensor<8x8xf32> into tensor<8x1x8xf32>

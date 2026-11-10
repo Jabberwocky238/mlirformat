@@ -801,6 +801,60 @@ module {
 
 // -----
 module {
+  func.func @reinterpret_cast_with_negative_size(%arg0: memref<2x3xf32>) -> memref<?x?xf32, strided<[?, ?], offset: ?>> {
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %c-1 = arith.constant -1 : index
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [%c0], sizes: [%c1, %c-1], strides: [%c-1, %c1] : memref<2x3xf32> to memref<?x?xf32, strided<[?, ?], offset: ?>>
+    return %reinterpret_cast : memref<?x?xf32, strided<[?, ?], offset: ?>>
+  }
+}
+
+// -----
+module {
+  func.func @reinterpret_cast_with_negative_offset(%arg0: memref<2x3xf32>) -> memref<?x?xf32, strided<[?, ?], offset: ?>> {
+    %c1 = arith.constant 1 : index
+    %c2 = arith.constant 2 : index
+    %c-1 = arith.constant -1 : index
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [%c-1], sizes: [%c1, %c2], strides: [%c2, %c1] : memref<2x3xf32> to memref<?x?xf32, strided<[?, ?], offset: ?>>
+    return %reinterpret_cast : memref<?x?xf32, strided<[?, ?], offset: ?>>
+  }
+}
+
+// -----
+module {
+  func.func @reinterpret_cast_with_negative_size_and_offset(%arg0: memref<2x3xf32>) -> memref<?x?xf32, strided<[?, ?], offset: ?>> {
+    %c1 = arith.constant 1 : index
+    %c2 = arith.constant 2 : index
+    %c-1 = arith.constant -1 : index
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [%c-1], sizes: [%c1, %c-1], strides: [%c2, %c1] : memref<2x3xf32> to memref<?x?xf32, strided<[?, ?], offset: ?>>
+    return %reinterpret_cast : memref<?x?xf32, strided<[?, ?], offset: ?>>
+  }
+}
+
+// -----
+module {
+  func.func @reinterpret_cast_no_fold_with_all_negative_size_and_offset(%arg0: memref<2x3xf32>) -> memref<?x?xf32, strided<[?, ?], offset: ?>> {
+    %c-1 = arith.constant -1 : index
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [%c-1], sizes: [%c-1, %c-1], strides: [2, 1] : memref<2x3xf32> to memref<?x?xf32, strided<[?, ?], offset: ?>>
+    return %reinterpret_cast : memref<?x?xf32, strided<[?, ?], offset: ?>>
+  }
+}
+
+// -----
+module {
+  func.func @reinterpret_cast_fold_negative_stride(%arg0: memref<2x3xf32>) -> memref<?x?xf32, strided<[?, ?], offset: ?>> {
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %c2 = arith.constant 2 : index
+    %c-1 = arith.constant -1 : index
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [%c0], sizes: [%c1, %c2], strides: [%c-1, %c1] : memref<2x3xf32> to memref<?x?xf32, strided<[?, ?], offset: ?>>
+    return %reinterpret_cast : memref<?x?xf32, strided<[?, ?], offset: ?>>
+  }
+}
+
+// -----
+module {
   func.func @canonicalize_rank_reduced_subview(%arg0: memref<8x?xf32>, %arg1: index) -> memref<?xf32, strided<[?], offset: ?>> {
     %c0 = arith.constant 0 : index
     %c1 = arith.constant 1 : index
@@ -830,6 +884,42 @@ module {
 
 // -----
 module {
+  func.func @expand_collapse_fold_to_internal_stride_cast(%arg0: memref<3x1x2x384xui8, strided<[1179648, 768, 384, 1]>>) -> memref<3x1x2x384xui8, strided<[1179648, 1179648, 384, 1]>> {
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1], [2], [3]] : memref<3x1x2x384xui8, strided<[1179648, 768, 384, 1]>> into memref<3x2x384xui8, strided<[1179648, 384, 1]>>
+    %expand_shape = memref.expand_shape %collapse_shape [[0, 1], [2], [3]] output_shape [3, 1, 2, 384] : memref<3x2x384xui8, strided<[1179648, 384, 1]>> into memref<3x1x2x384xui8, strided<[1179648, 1179648, 384, 1]>>
+    return %expand_shape : memref<3x1x2x384xui8, strided<[1179648, 1179648, 384, 1]>>
+  }
+}
+
+// -----
+module {
+  func.func @expand_collapse_fold_to_outermost_stride_cast(%arg0: memref<1x3x2x384xui8, strided<[1179648, 768, 384, 1]>>) -> memref<1x3x2x384xui8, strided<[2304, 768, 384, 1]>> {
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1], [2], [3]] : memref<1x3x2x384xui8, strided<[1179648, 768, 384, 1]>> into memref<3x2x384xui8, strided<[768, 384, 1]>>
+    %expand_shape = memref.expand_shape %collapse_shape [[0, 1], [2], [3]] output_shape [1, 3, 2, 384] : memref<3x2x384xui8, strided<[768, 384, 1]>> into memref<1x3x2x384xui8, strided<[2304, 768, 384, 1]>>
+    return %expand_shape : memref<1x3x2x384xui8, strided<[2304, 768, 384, 1]>>
+  }
+}
+
+// -----
+module {
+  func.func @expand_collapse_do_not_fold_to_cast(%arg0: memref<1x3x2x384xui8, strided<[1179648, 768, 384, 1]>>) -> memref<3x1x2x384xui8, strided<[768, 768, 384, 1]>> {
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1], [2], [3]] : memref<1x3x2x384xui8, strided<[1179648, 768, 384, 1]>> into memref<3x2x384xui8, strided<[768, 384, 1]>>
+    %expand_shape = memref.expand_shape %collapse_shape [[0, 1], [2], [3]] output_shape [3, 1, 2, 384] : memref<3x2x384xui8, strided<[768, 384, 1]>> into memref<3x1x2x384xui8, strided<[768, 768, 384, 1]>>
+    return %expand_shape : memref<3x1x2x384xui8, strided<[768, 768, 384, 1]>>
+  }
+}
+
+// -----
+module {
+  func.func @expand_collapse_dynamic_do_not_fold_to_cast(%arg0: memref<1x?x1x32xsi8, strided<[?, 32, 32, 1]>>, %arg1: index) -> memref<1x1x?x32xsi8, strided<[?, ?, 32, 1]>> {
+    %collapse_shape = memref.collapse_shape %arg0 [[0], [1, 2], [3]] : memref<1x?x1x32xsi8, strided<[?, 32, 32, 1]>> into memref<1x?x32xsi8, strided<[?, 32, 1]>>
+    %expand_shape = memref.expand_shape %collapse_shape [[0, 1], [2], [3]] output_shape [1, 1, %arg1, 32] : memref<1x?x32xsi8, strided<[?, 32, 1]>> into memref<1x1x?x32xsi8, strided<[?, ?, 32, 1]>>
+    return %expand_shape : memref<1x1x?x32xsi8, strided<[?, ?, 32, 1]>>
+  }
+}
+
+// -----
+module {
   func.func @fold_trivial_subviews(%arg0: memref<?xf32, strided<[?], offset: ?>>, %arg1: index) -> memref<?xf32, strided<[?], offset: ?>> {
     %subview = memref.subview %arg0[5] [%arg1] [1] : memref<?xf32, strided<[?], offset: ?>> to memref<?xf32, strided<[?], offset: ?>>
     %subview_0 = memref.subview %subview[0] [%arg1] [1] : memref<?xf32, strided<[?], offset: ?>> to memref<?xf32, strided<[?], offset: ?>>
@@ -844,6 +934,23 @@ module {
     %0 = memref.load %arg0[%c7] {nontemporal = true} : memref<32xf32>
     memref.store %0, %arg1[%c7] {nontemporal = true} : memref<32xf32>
     return
+  }
+}
+
+// -----
+module {
+  memref.global "private" constant @__constant_32xf32 : memref<32xf32> = dense<1.000000e+00>
+  func.func @fold_const_splat_global() -> memref<32xf32> {
+    %0 = memref.get_global @__constant_32xf32 : memref<32xf32>
+    %alloc = memref.alloc() : memref<32xf32>
+    %c32 = arith.constant 32 : index
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg0 = %c0 to %c32 step %c1 {
+      %1 = memref.load %0[%arg0] : memref<32xf32>
+      memref.store %1, %alloc[%arg0] : memref<32xf32>
+    }
+    return %alloc : memref<32xf32>
   }
 }
 
@@ -964,6 +1071,34 @@ module {
     %c0 = arith.constant 0 : index
     %view = memref.view %arg0[%c0][%arg1] : memref<?xi8> to memref<?xi8>
     return %view : memref<?xi8>
+  }
+}
+
+// -----
+module {
+  func.func @replace_view_static_dims(%arg0: memref<?xi8>, %arg1: index) -> memref<?x4xi32> {
+    %c5 = arith.constant 5 : index
+    %view = memref.view %arg0[%arg1][%c5] : memref<?xi8> to memref<?x4xi32>
+    return %view : memref<?x4xi32>
+  }
+}
+
+// -----
+module {
+  func.func @non_replace_view_negative_static_dims(%arg0: memref<?xi8>, %arg1: index) -> memref<?x4xi32> {
+    %c-1 = arith.constant -1 : index
+    %view = memref.view %arg0[%arg1][%c-1] : memref<?xi8> to memref<?x4xi32>
+    return %view : memref<?x4xi32>
+  }
+}
+
+// -----
+module {
+  func.func @no_crash_dim_of_ambiguous_subview(%arg0: memref<?x?x?xf32, strided<[?, ?, ?], offset: ?>>, %arg1: index) -> index {
+    %c1 = arith.constant 1 : index
+    %subview = memref.subview %arg0[0, 0, 0] [1, %arg1, 1] [1, 1, 1] : memref<?x?x?xf32, strided<[?, ?, ?], offset: ?>> to memref<1x?xf32, strided<[?, ?], offset: ?>>
+    %dim = memref.dim %subview, %c1 : memref<1x?xf32, strided<[?, ?], offset: ?>>
+    return %dim : index
   }
 }
 

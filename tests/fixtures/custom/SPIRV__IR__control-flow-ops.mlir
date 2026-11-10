@@ -187,6 +187,8 @@ module {
 // -----
 // -----
 // -----
+// -----
+// -----
 module {
   func.func @in_selection(%arg0: i1) {
     spirv.mlir.selection {
@@ -379,6 +381,8 @@ module {
 }
 
 // -----
+// -----
+// -----
 module {
   func.func @unreachable_no_pred() {
     spirv.Return
@@ -443,6 +447,16 @@ module {
   ^bb3(%2: i32):  // pred: ^bb0
     spirv.Branch ^bb4
   ^bb4:  // 3 preds: ^bb1, ^bb2, ^bb3
+    spirv.Return
+  }
+  func.func @switch_targets_no_literals(%arg0: i32) {
+    spirv.Switch %arg0 : i32, [
+      default: ^bb1]
+  ^bb1:  // pred: ^bb0
+    spirv.Branch ^bb3
+  ^bb2:  // pred: ^bb0
+    spirv.Branch ^bb3
+  ^bb3:  // 2 preds: ^bb1, ^bb2
     spirv.Return
   }
 }

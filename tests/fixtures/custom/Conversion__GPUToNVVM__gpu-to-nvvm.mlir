@@ -1,18 +1,18 @@
 module {
   gpu.module @test_module_0 {
     func.func @gpu_index_ops() -> (index, index, index, index, index, index, index, index, index, index, index, index, index) {
-      %thread_id_x = gpu.thread_id  x
-      %thread_id_y = gpu.thread_id  y
-      %thread_id_z = gpu.thread_id  z
-      %block_dim_x = gpu.block_dim  x
-      %block_dim_y = gpu.block_dim  y
-      %block_dim_z = gpu.block_dim  z
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
-      %block_id_z = gpu.block_id  z
-      %grid_dim_x = gpu.grid_dim  x
-      %grid_dim_y = gpu.grid_dim  y
-      %grid_dim_z = gpu.grid_dim  z
+      %thread_id_x = gpu.thread_id x
+      %thread_id_y = gpu.thread_id y
+      %thread_id_z = gpu.thread_id z
+      %block_dim_x = gpu.block_dim x
+      %block_dim_y = gpu.block_dim y
+      %block_dim_z = gpu.block_dim z
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
+      %block_id_z = gpu.block_id z
+      %grid_dim_x = gpu.grid_dim x
+      %grid_dim_y = gpu.grid_dim y
+      %grid_dim_z = gpu.grid_dim z
       %0 = gpu.lane_id
       return %thread_id_x, %thread_id_y, %thread_id_z, %block_dim_x, %block_dim_y, %block_dim_z, %block_id_x, %block_id_y, %block_id_z, %grid_dim_x, %grid_dim_y, %grid_dim_z, %0 : index, index, index, index, index, index, index, index, index, index, index, index, index
     }
@@ -26,7 +26,7 @@ module {
   gpu.module @test_module_2 {
     gpu.func @gpu_all_reduce_op() {
       %cst = arith.constant 1.000000e+00 : f32
-      %0 = gpu.all_reduce  add %cst uniform {
+      %0 = gpu.all_reduce add %cst uniform {
       } : (f32) -> f32
       gpu.return
     }
@@ -47,26 +47,42 @@ module {
       %cst = arith.constant 1.000000e+00 : f32
       %c4_i32 = arith.constant 4 : i32
       %c23_i32 = arith.constant 23 : i32
-      %shuffleResult, %valid = gpu.shuffle  xor %cst, %c4_i32, %c23_i32 : f32
-      %shuffleResult_0, %valid_1 = gpu.shuffle  up %cst, %c4_i32, %c23_i32 : f32
-      %shuffleResult_2, %valid_3 = gpu.shuffle  down %cst, %c4_i32, %c23_i32 : f32
-      %shuffleResult_4, %valid_5 = gpu.shuffle  idx %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult, %valid = gpu.shuffle xor %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult_0, %valid_1 = gpu.shuffle up %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult_2, %valid_3 = gpu.shuffle down %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult_4, %valid_5 = gpu.shuffle idx %cst, %c4_i32, %c23_i32 : f32
       return %shuffleResult, %shuffleResult_0, %shuffleResult_2, %shuffleResult_4, %valid, %valid_1, %valid_3, %valid_5 : f32, f32, f32, f32, i1, i1, i1, i1
     }
     func.func @gpu_shuffle_unused_pred() -> (f32, f32, f32, f32) {
       %cst = arith.constant 1.000000e+00 : f32
       %c4_i32 = arith.constant 4 : i32
       %c23_i32 = arith.constant 23 : i32
-      %shuffleResult, %valid = gpu.shuffle  xor %cst, %c4_i32, %c23_i32 : f32
-      %shuffleResult_0, %valid_1 = gpu.shuffle  up %cst, %c4_i32, %c23_i32 : f32
-      %shuffleResult_2, %valid_3 = gpu.shuffle  down %cst, %c4_i32, %c23_i32 : f32
-      %shuffleResult_4, %valid_5 = gpu.shuffle  idx %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult, %valid = gpu.shuffle xor %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult_0, %valid_1 = gpu.shuffle up %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult_2, %valid_3 = gpu.shuffle down %cst, %c4_i32, %c23_i32 : f32
+      %shuffleResult_4, %valid_5 = gpu.shuffle idx %cst, %c4_i32, %c23_i32 : f32
       return %shuffleResult, %shuffleResult_0, %shuffleResult_2, %shuffleResult_4 : f32, f32, f32, f32
     }
   }
   gpu.module @test_module_5 {
     func.func @gpu_sync() {
       gpu.barrier
+      return
+    }
+    func.func @gpu_sync_subgroup() {
+      gpu.barrier scope <subgroup>
+      return
+    }
+    func.func @gpu_named_barriers(%arg0: i32) {
+      %0 = gpu.initialize_named_barrier %arg0 : i32 -> !gpu.named_barrier
+      %c2_i32 = arith.constant 2 : i32
+      %1 = gpu.initialize_named_barrier %c2_i32 : i32 -> !gpu.named_barrier
+      gpu.barrier named(%0 : !gpu.named_barrier)
+      gpu.barrier named(%1 : !gpu.named_barrier)
+      return
+    }
+    func.func @gpu_named_barrier_arg(%arg0: !gpu.named_barrier) {
+      gpu.barrier named(%arg0 : !gpu.named_barrier)
       return
     }
   }
@@ -258,28 +274,34 @@ module {
     }
   }
   gpu.module @test_module_30 {
-    gpu.func @subgroup_reduce_add(%arg0: i32) {
-      %0 = gpu.subgroup_reduce  add %arg0 uniform : (i32) -> i32
+    gpu.func @subgroup_reduce_add(%arg0: i32, %arg1: memref<i32>) {
+      %0 = gpu.subgroup_reduce add %arg0 uniform : (i32) -> i32
+      memref.store %0, %arg1[] : memref<i32>
       gpu.return
     }
-    gpu.func @subgroup_reduce_minsi(%arg0: i32) {
-      %0 = gpu.subgroup_reduce  minsi %arg0 uniform : (i32) -> i32
+    gpu.func @subgroup_reduce_minsi(%arg0: i32, %arg1: memref<i32>) {
+      %0 = gpu.subgroup_reduce minsi %arg0 uniform : (i32) -> i32
+      memref.store %0, %arg1[] : memref<i32>
       gpu.return
     }
-    gpu.func @subgroup_reduce_maxsi(%arg0: i32) {
-      %0 = gpu.subgroup_reduce  maxsi %arg0 uniform : (i32) -> i32
+    gpu.func @subgroup_reduce_maxsi(%arg0: i32, %arg1: memref<i32>) {
+      %0 = gpu.subgroup_reduce maxsi %arg0 uniform : (i32) -> i32
+      memref.store %0, %arg1[] : memref<i32>
       gpu.return
     }
-    gpu.func @subgroup_reduce_and(%arg0: i32) {
-      %0 = gpu.subgroup_reduce  and %arg0 uniform : (i32) -> i32
+    gpu.func @subgroup_reduce_and(%arg0: i32, %arg1: memref<i32>) {
+      %0 = gpu.subgroup_reduce and %arg0 uniform : (i32) -> i32
+      memref.store %0, %arg1[] : memref<i32>
       gpu.return
     }
-    gpu.func @subgroup_reduce_or(%arg0: i32) {
-      %0 = gpu.subgroup_reduce  or %arg0 uniform : (i32) -> i32
+    gpu.func @subgroup_reduce_or(%arg0: i32, %arg1: memref<i32>) {
+      %0 = gpu.subgroup_reduce or %arg0 uniform : (i32) -> i32
+      memref.store %0, %arg1[] : memref<i32>
       gpu.return
     }
-    gpu.func @subgroup_reduce_xor(%arg0: i32) {
-      %0 = gpu.subgroup_reduce  xor %arg0 uniform : (i32) -> i32
+    gpu.func @subgroup_reduce_xor(%arg0: i32, %arg1: memref<i32>) {
+      %0 = gpu.subgroup_reduce xor %arg0 uniform : (i32) -> i32
+      memref.store %0, %arg1[] : memref<i32>
       gpu.return
     }
   }
@@ -299,9 +321,9 @@ module {
   }
   gpu.module @test_module_33 {
     gpu.func @kernel_with_block_size(%arg0: !llvm.ptr) kernel attributes {known_block_size = array<i32: 32, 4, 2>} {
-      %thread_id_x = gpu.thread_id  x
-      %thread_id_y = gpu.thread_id  y
-      %thread_id_z = gpu.thread_id  z
+      %thread_id_x = gpu.thread_id x
+      %thread_id_y = gpu.thread_id y
+      %thread_id_z = gpu.thread_id z
       %0 = arith.addi %thread_id_x, %thread_id_y : index
       %1 = arith.addi %0, %thread_id_z : index
       %2 = arith.index_cast %1 : index to i64
@@ -416,17 +438,17 @@ module {
   }
   gpu.module @test_module_49 {
     func.func @explicit_id_bounds() -> (index, index, index) {
-      %thread_id_x = gpu.thread_id  x upper_bound 32
-      %block_dim_x = gpu.block_dim  x upper_bound 32
+      %thread_id_x = gpu.thread_id x upper_bound 32
+      %block_dim_x = gpu.block_dim x upper_bound 32
       %0 = gpu.lane_id upper_bound 16
       return %thread_id_x, %block_dim_x, %0 : index, index, index
     }
   }
   gpu.module @test_module_50 {
     gpu.func @kernel_with_grid_size(%arg0: !llvm.ptr) kernel attributes {known_grid_size = array<i32: 32, 4, 2>} {
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
-      %block_id_z = gpu.block_id  z
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
+      %block_id_z = gpu.block_id z
       %0 = arith.addi %block_id_x, %block_id_y : index
       %1 = arith.addi %0, %block_id_z : index
       %2 = arith.index_cast %1 : index to i64
@@ -458,7 +480,7 @@ module {
         transform.apply_conversion_patterns.nvgpu.nvgpu_to_nvvm
       } with type_converter {
         transform.apply_conversion_patterns.memref.memref_to_llvm_type_converter
-      } {illegal_dialects = ["gpu"], illegal_ops = ["llvm.copysign", "llvm.cos", "llvm.exp", "llvm.exp2", "llvm.fabs", "llvm.fceil", "llvm.ffloor", "llvm.frem", "llvm.log", "llvm.log10", "llvm.log2", "llvm.pow", "llvm.roundeven", "llvm.round", "llvm.sin", "llvm.sqrt"], legal_dialects = ["llvm", "memref", "nvvm", "test"], legal_ops = ["func.func", "gpu.module", "gpu.yield"], partial_conversion} : !transform.any_op
+      } {illegal_dialects = ["gpu"], illegal_ops = ["llvm.copysign", "llvm.cos", "llvm.exp", "llvm.exp2", "llvm.fabs", "llvm.fceil", "llvm.ffloor", "llvm.frem", "llvm.log", "llvm.log10", "llvm.log2", "llvm.pow", "llvm.roundeven", "llvm.round", "llvm.sin", "llvm.sqrt"], legal_dialects = ["llvm", "memref", "nvvm", "test"], legal_ops = ["gpu.module", "gpu.yield"], partial_conversion} : !transform.any_op
       transform.yield 
     }
   }
@@ -522,12 +544,12 @@ module {
 module {
   gpu.module @test_module_cluster_block_ops {
     gpu.func @kernel_with_cluster_size(%arg0: !llvm.ptr) kernel attributes {known_cluster_size = array<i32: 8, 4, 2>} {
-      %cluster_block_id_x = gpu.cluster_block_id  x
-      %cluster_block_id_y = gpu.cluster_block_id  y
-      %cluster_block_id_z = gpu.cluster_block_id  z
-      %cluster_dim_blocks_x = gpu.cluster_dim_blocks  x
-      %cluster_dim_blocks_y = gpu.cluster_dim_blocks  y
-      %cluster_dim_blocks_z = gpu.cluster_dim_blocks  z
+      %cluster_block_id_x = gpu.cluster_block_id x
+      %cluster_block_id_y = gpu.cluster_block_id y
+      %cluster_block_id_z = gpu.cluster_block_id z
+      %cluster_dim_blocks_x = gpu.cluster_dim_blocks x
+      %cluster_dim_blocks_y = gpu.cluster_dim_blocks y
+      %cluster_dim_blocks_z = gpu.cluster_dim_blocks z
       %0 = arith.addi %cluster_block_id_x, %cluster_block_id_y : index
       %1 = arith.addi %0, %cluster_block_id_z : index
       %2 = arith.addi %1, %cluster_dim_blocks_x : index
@@ -536,6 +558,17 @@ module {
       %5 = arith.index_cast %4 : index to i64
       llvm.store %5, %arg0 : i64, !llvm.ptr
       gpu.return
+    }
+  }
+}
+
+// -----
+module attributes {gpu.container_module} {
+  gpu.module @kernels {
+    gpu.func @gpu_ballot(%arg0: i1) -> (i32, i64) {
+      %0 = gpu.ballot %arg0 : i32
+      %1 = gpu.ballot %arg0 : i64
+      gpu.return %0, %1 : i32, i64
     }
   }
 }

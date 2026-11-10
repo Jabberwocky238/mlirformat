@@ -29,12 +29,12 @@
     %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %1 = "llvm.alloca"(%0) <{elem_type = !llvm.array<5 x f32>}> {bindc_name = "x"} : (i64) -> !llvm.ptr<5>
     %2 = "llvm.addrspacecast"(%1) : (!llvm.ptr<5>) -> !llvm.ptr
-    %3 = "omp.map.info"(%2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "x", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = !llvm.array<5 x f32>}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0>}> ({
+    %3 = "omp.map.info"(%2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "x", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.array<5 x f32>}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%3) <{kernel_type = #omp<kernel_type(spmd)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr):
       %4 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
       %5 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32
-      "omp.teams"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0>, reduction_byref = array<i1: true>, reduction_syms = [@add_reduction_byref_box_5xf32]}> ({
+      "omp.teams"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 1, 0>, reduction_byref = array<i1: true>, reduction_syms = [@add_reduction_byref_box_5xf32]}> ({
       ^bb0(%arg1: !llvm.ptr):
         "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
           "omp.distribute"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
@@ -48,9 +48,9 @@
           "omp.terminator"() : () -> ()
         }) {omp.composite} : () -> ()
         "omp.terminator"() : () -> ()
-      }) : (!llvm.ptr) -> ()
+      }) {omp.combined} : (!llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
-    }) : (!llvm.ptr) -> ()
+    }) {omp.combined} : (!llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 : ui64, "dlti.global_memory_space" = 1 : ui64>, llvm.target_triple = "amdgcn-amd-amdhsa", omp.is_gpu = true, omp.is_target_device = true} : () -> ()

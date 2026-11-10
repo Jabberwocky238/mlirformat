@@ -18,6 +18,16 @@ module {
     %collapsed = tensor.collapse_shape %0 [[0, 1], [2], [3, 4, 5]] : tensor<2x3x5x4x?x7xf32> into tensor<6x5x?xf32>
     return %collapsed : tensor<6x5x?xf32>
   }
+  func.func @empty_expand_encoding() -> tensor<2x3x4x2xf32, #test.tensor_encoding<"encoding">> {
+    %0 = tensor.empty() : tensor<6x8xf32, #test.tensor_encoding<"encoding">>
+    %expanded = tensor.expand_shape %0 [[0, 1], [2, 3]] output_shape [2, 3, 4, 2] : tensor<6x8xf32, #test.tensor_encoding<"encoding">> into tensor<2x3x4x2xf32, #test.tensor_encoding<"encoding">>
+    return %expanded : tensor<2x3x4x2xf32, #test.tensor_encoding<"encoding">>
+  }
+  func.func @empty_collapse_encoding() -> tensor<6x8xf32, #test.tensor_encoding<"encoding">> {
+    %0 = tensor.empty() : tensor<2x3x4x2xf32, #test.tensor_encoding<"encoding">>
+    %collapsed = tensor.collapse_shape %0 [[0, 1], [2, 3]] : tensor<2x3x4x2xf32, #test.tensor_encoding<"encoding">> into tensor<6x8xf32, #test.tensor_encoding<"encoding">>
+    return %collapsed : tensor<6x8xf32, #test.tensor_encoding<"encoding">>
+  }
   func.func @fold_empty_tensor_with_slice(%arg0: index, %arg1: index) -> tensor<5x?x20xf32> {
     %0 = tensor.empty(%arg0) : tensor<?x10x40xf32>
     %extracted_slice = tensor.extract_slice %0[0, 0, 0] [5, %arg1, 20] [1, 1, 1] : tensor<?x10x40xf32> to tensor<5x?x20xf32>
@@ -65,6 +75,12 @@ module {
     %1 = tensor.empty(%arg2, %arg3) : tensor<5x?x?xf32>
     %concat = tensor.concat dim(1) %0, %1 : (tensor<5x?x?xf32>, tensor<5x?x?xf32>) -> tensor<5x?x?xf32>
     return %concat : tensor<5x?x?xf32>
+  }
+  func.func @concats_of_empty_encoding(%arg0: index, %arg1: index, %arg2: index, %arg3: index) -> tensor<5x?x?xf32, #test.tensor_encoding<"encoding">> {
+    %0 = tensor.empty(%arg0, %arg1) : tensor<5x?x?xf32, #test.tensor_encoding<"encoding">>
+    %1 = tensor.empty(%arg2, %arg3) : tensor<5x?x?xf32, #test.tensor_encoding<"encoding">>
+    %concat = tensor.concat dim(1) %0, %1 : (tensor<5x?x?xf32, #test.tensor_encoding<"encoding">>, tensor<5x?x?xf32, #test.tensor_encoding<"encoding">>) -> tensor<5x?x?xf32, #test.tensor_encoding<"encoding">>
+    return %concat : tensor<5x?x?xf32, #test.tensor_encoding<"encoding">>
   }
 }
 

@@ -1,8 +1,12 @@
 "builtin.module"() ({
   "func.func"() <{function_type = () -> (f8E4M3FN, f32), sym_name = "foo"}> ({
-    %14 = "arith.constant"() <{value = 2.250000e+00 : f8E4M3FN}> : () -> f8E4M3FN
-    %15 = "arith.constant"() <{value = 2.200000e+00 : f32}> : () -> f32
-    "func.return"(%14, %15) : (f8E4M3FN, f32) -> ()
+    %18 = "arith.constant"() <{value = 2.250000e+00 : f8E4M3FN}> : () -> f8E4M3FN
+    %19 = "arith.constant"() <{value = 2.200000e+00 : f32}> : () -> f32
+    "func.return"(%18, %19) : (f8E4M3FN, f32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = () -> f8E4M3FN, sym_name = "denormal_f8"}> ({
+    %17 = "arith.constant"() <{value = 1.953130e-03 : f8E4M3FN}> : () -> f8E4M3FN
+    "func.return"(%17) : (f8E4M3FN) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "entry"}> ({
     %0 = "arith.constant"() <{value = 1.375000e+00 : f8E4M3FN}> : () -> f8E4M3FN
@@ -30,6 +34,11 @@
     "vector.print"(%12) <{punctuation = #vector.punctuation<newline>}> : (f4E2M1FN) -> ()
     %13 = "arith.uitofp"(%11) : (i16) -> f4E2M1FN
     "vector.print"(%13) <{punctuation = #vector.punctuation<newline>}> : (f4E2M1FN) -> ()
+    %14 = "func.call"() <{callee = @denormal_f8}> : () -> f8E4M3FN
+    %15 = "arith.flush_denormals"(%14) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> f8E4M3FN
+    "vector.print"(%15) <{punctuation = #vector.punctuation<newline>}> : (f8E4M3FN) -> ()
+    %16 = "arith.flush_denormals"(%5) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> f8E4M3FN
+    "vector.print"(%16) <{punctuation = #vector.punctuation<newline>}> : (f8E4M3FN) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

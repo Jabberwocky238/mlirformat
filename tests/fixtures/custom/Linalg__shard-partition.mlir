@@ -60,6 +60,29 @@ module {
 }
 
 // -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+#map1 = affine_map<(d0, d1) -> (d0)>
+module {
+  shard.grid @grid_1d(shape = 3)
+  func.func @generic_1d_grid_static_tensors_andi_reduction_iterator_sharding(%arg0: tensor<4x6xi8>, %arg1: tensor<4xi8>) -> tensor<4xi8> {
+    %sharding = shard.sharding @grid_1d split_axes = [[], [0]] : !shard.sharding
+    %sharding_annotated = shard.shard %arg0 to %sharding : tensor<4x6xi8>
+    %sharding_annotated_0 = shard.shard %sharding_annotated to %sharding annotate_for_users : tensor<4x6xi8>
+    %sharding_1 = shard.sharding @grid_1d split_axes = [[]] : !shard.sharding
+    %sharding_annotated_2 = shard.shard %arg1 to %sharding_1 : tensor<4xi8>
+    %sharding_annotated_3 = shard.shard %sharding_annotated_2 to %sharding_1 annotate_for_users : tensor<4xi8>
+    %0 = linalg.generic {indexing_maps = [#map, #map1], iterator_types = ["parallel", "reduction"]} ins(%sharding_annotated_0 : tensor<4x6xi8>) outs(%sharding_annotated_3 : tensor<4xi8>) {
+    ^bb0(%in: i8, %out: i8):
+      %1 = arith.andi %in, %out : i8
+      linalg.yield %1 : i8
+    } -> tensor<4xi8>
+    %sharding_annotated_4 = shard.shard %0 to %sharding_1 : tensor<4xi8>
+    %sharding_annotated_5 = shard.shard %sharding_annotated_4 to %sharding_1 annotate_for_users : tensor<4xi8>
+    return %sharding_annotated_5 : tensor<4xi8>
+  }
+}
+
+// -----
 module {
   shard.grid @grid_1d(shape = 4)
   func.func @matmul_1d_grid_static_tensors_parallel_iterator_unsplit_last_axis(%arg0: tensor<4x6xi8>, %arg1: tensor<6x8xi8>, %arg2: tensor<4x8xi8>) -> tensor<4x8xi8> {

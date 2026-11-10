@@ -41,6 +41,8 @@ module {
 // -----
 // -----
 // -----
+// -----
+// -----
 module {
   func.func @atomic_iadd(%arg0: !spirv.ptr<i32, StorageBuffer>, %arg1: i32) -> i32 {
     %0 = spirv.AtomicIAdd <Workgroup> <None> %arg0, %arg1 : !spirv.ptr<i32, StorageBuffer>
@@ -58,6 +60,27 @@ module {
     %0 = spirv.AtomicISub <Workgroup> <None> %arg0, %arg1 : !spirv.ptr<i32, StorageBuffer>
     return %0 : i32
   }
+}
+
+// -----
+module {
+  func.func @atomic_load(%arg0: !spirv.ptr<i32, Workgroup>) -> i32 {
+    %0 = spirv.AtomicLoad <Workgroup> <Acquire> %arg0 : !spirv.ptr<i32, Workgroup>
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @atomic_load_float(%arg0: !spirv.ptr<f32, StorageBuffer>) -> f32 {
+    %0 = spirv.AtomicLoad <Device> <None> %arg0 : !spirv.ptr<f32, StorageBuffer>
+    return %0 : f32
+  }
+}
+
+// -----
+// -----
+module {
   func.func @atomic_or(%arg0: !spirv.ptr<i32, StorageBuffer>, %arg1: i32) -> i32 {
     %0 = spirv.AtomicOr <Workgroup> <None> %arg0, %arg1 : !spirv.ptr<i32, StorageBuffer>
     return %0 : i32
@@ -70,6 +93,27 @@ module {
     %0 = spirv.AtomicSMin <Workgroup> <None> %arg0, %arg1 : !spirv.ptr<i32, StorageBuffer>
     return %0 : i32
   }
+}
+
+// -----
+module {
+  func.func @atomic_store(%arg0: !spirv.ptr<i32, Workgroup>, %arg1: i32) {
+    spirv.AtomicStore <Workgroup> <Release> %arg0, %arg1 : !spirv.ptr<i32, Workgroup>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @atomic_store_float(%arg0: !spirv.ptr<f32, StorageBuffer>, %arg1: f32) {
+    spirv.AtomicStore <Device> <None> %arg0, %arg1 : !spirv.ptr<f32, StorageBuffer>
+    return
+  }
+}
+
+// -----
+// -----
+module {
   func.func @atomic_umax(%arg0: !spirv.ptr<i32, StorageBuffer>, %arg1: i32) -> i32 {
     %0 = spirv.AtomicUMax <Workgroup> <None> %arg0, %arg1 : !spirv.ptr<i32, StorageBuffer>
     return %0 : i32

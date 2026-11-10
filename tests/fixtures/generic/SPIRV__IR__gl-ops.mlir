@@ -183,6 +183,21 @@
     %2 = "spirv.GL.Atanh"(%arg4) : (vector<3xf16>) -> vector<3xf16>
     "func.return"() : () -> ()
   }) : () -> ()
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "atan2"}> ({
+  ^bb0(%arg2: f32, %arg3: f32):
+    %1 = "spirv.GL.Atan2"(%arg2, %arg3) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>, vector<3xf16>) -> (), sym_name = "atan2vec"}> ({
+  ^bb0(%arg0: vector<3xf16>, %arg1: vector<3xf16>):
+    %0 = "spirv.GL.Atan2"(%arg0, %arg1) : (vector<3xf16>, vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (f32, f32) -> (), sym_name = "pow"}> ({
   ^bb0(%arg2: f32, %arg3: f32):
     %1 = "spirv.GL.Pow"(%arg2, %arg3) : (f32, f32) -> f32
@@ -215,6 +230,20 @@
   "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "round_even_vec"}> ({
   ^bb0(%arg0: vector<3xf16>):
     %0 = "spirv.GL.RoundEven"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "trunc"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.GL.Trunc"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "trunc_vec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.GL.Trunc"(%arg0) : (vector<3xf16>) -> vector<3xf16>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -482,6 +511,35 @@
 // -----
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "step_scalar"}> ({
+  ^bb0(%arg2: f32, %arg3: f32):
+    %1 = "spirv.GL.Step"(%arg2, %arg3) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf32>, vector<3xf32>) -> (), sym_name = "step_vector"}> ({
+  ^bb0(%arg0: vector<3xf32>, %arg1: vector<3xf32>):
+    %0 = "spirv.GL.Step"(%arg0, %arg1) : (vector<3xf32>, vector<3xf32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32, f32) -> (), sym_name = "smoothstep_scalar"}> ({
+  ^bb0(%arg3: f32, %arg4: f32, %arg5: f32):
+    %1 = "spirv.GL.SmoothStep"(%arg3, %arg4, %arg5) : (f32, f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf32>, vector<3xf32>, vector<3xf32>) -> (), sym_name = "smoothstep_vector"}> ({
+  ^bb0(%arg0: vector<3xf32>, %arg1: vector<3xf32>, %arg2: vector<3xf32>):
+    %0 = "spirv.GL.SmoothStep"(%arg0, %arg1, %arg2) : (vector<3xf32>, vector<3xf32>, vector<3xf32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (f32) -> (), sym_name = "fract"}> ({
   ^bb0(%arg1: f32):
     %1 = "spirv.GL.Fract"(%arg1) : (f32) -> f32
@@ -616,3 +674,75 @@
 // -----
 // -----
 // -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "radians"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.GL.Radians"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "radiansvec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.GL.Radians"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "degrees"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.GL.Degrees"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "degreesvec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.GL.Degrees"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "nmax"}> ({
+  ^bb0(%arg2: f32, %arg3: f32):
+    %1 = "spirv.GL.NMax"(%arg2, %arg3) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>, vector<3xf16>) -> (), sym_name = "nmaxvec"}> ({
+  ^bb0(%arg0: vector<3xf16>, %arg1: vector<3xf16>):
+    %0 = "spirv.GL.NMax"(%arg0, %arg1) : (vector<3xf16>, vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "nmin"}> ({
+  ^bb0(%arg2: f32, %arg3: f32):
+    %1 = "spirv.GL.NMin"(%arg2, %arg3) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>, vector<3xf16>) -> (), sym_name = "nminvec"}> ({
+  ^bb0(%arg0: vector<3xf16>, %arg1: vector<3xf16>):
+    %0 = "spirv.GL.NMin"(%arg0, %arg1) : (vector<3xf16>, vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32, f32) -> (), sym_name = "nclamp"}> ({
+  ^bb0(%arg3: f32, %arg4: f32, %arg5: f32):
+    %1 = "spirv.GL.NClamp"(%arg3, %arg4, %arg5) : (f32, f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf32>, vector<3xf32>, vector<3xf32>) -> (), sym_name = "nclampvec"}> ({
+  ^bb0(%arg0: vector<3xf32>, %arg1: vector<3xf32>, %arg2: vector<3xf32>):
+    %0 = "spirv.GL.NClamp"(%arg0, %arg1, %arg2) : (vector<3xf32>, vector<3xf32>, vector<3xf32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

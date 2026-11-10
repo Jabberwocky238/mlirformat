@@ -28,22 +28,6 @@ module {
 
 // -----
 module {
-  func.func @test_i64_argmax_large_axis_dim(%arg0: tensor<1x513x513x2147483650xi8>) -> tensor<1x513x513xi64> {
-    %0 = tosa.argmax %arg0 {axis = 3 : i32} : (tensor<1x513x513x2147483650xi8>) -> tensor<1x513x513xi64>
-    return %0 : tensor<1x513x513xi64>
-  }
-}
-
-// -----
-module {
-  func.func @test_add(%arg0: tensor<13x21x1xi64>, %arg1: tensor<13x21x3xi64>) -> tensor<13x21x3xi64> {
-    %0 = tosa.add %arg0, %arg1 : (tensor<13x21x1xi64>, tensor<13x21x3xi64>) -> tensor<13x21x3xi64>
-    return %0 : tensor<13x21x3xi64>
-  }
-}
-
-// -----
-module {
   func.func @test_regions(%arg0: tensor<1x2xi32>, %arg1: tensor<1xi32>, %arg2: tensor<i1>) -> tensor<1xi32> {
     %0 = tosa.cond_if %arg2 : tensor<i1> -> tensor<1xi32> {
       %1 = tosa.argmax %arg0 {axis = 1 : i32} : (tensor<1x2xi32>) -> tensor<1xi64>
@@ -95,7 +79,7 @@ module {
   func.func @test_slice(%arg0: tensor<13x21x3xi64>) -> tensor<4x11x1xi64> {
     %0 = tosa.const_shape  {values = dense<[4, 11, 1]> : tensor<3xindex>} : () -> !tosa.shape<3>
     %1 = tosa.const_shape  {values = dense<[6, 8, 0]> : tensor<3xindex>} : () -> !tosa.shape<3>
-    %2 = tosa.slice %arg0, %0, %1 : (tensor<13x21x3xi64>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xi64>
+    %2 = tosa.slice %arg0, %1, %0 : (tensor<13x21x3xi64>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xi64>
     return %2 : tensor<4x11x1xi64>
   }
 }
@@ -147,17 +131,17 @@ module {
 
 // -----
 module {
-  func.func @test_clamp_max_outside_i32_range(%arg0: tensor<100xi64>) -> tensor<100xi64> {
-    %0 = tosa.clamp %arg0 {max_val = 2147483648 : i64, min_val = -2147483648 : i64} : (tensor<100xi64>) -> tensor<100xi64>
-    return %0 : tensor<100xi64>
+  func.func @test_dense_ressource_i64() -> tensor<1x2xi64> {
+    %0 = "tosa.const"() <{values = dense_resource<resource> : tensor<1x2xi64>}> : () -> tensor<1x2xi64>
+    return %0 : tensor<1x2xi64>
   }
 }
 
-// -----
-module {
-  func.func @test_clamp_min_outside_i32_range(%arg0: tensor<100xi64>) -> tensor<100xi64> {
-    %0 = tosa.clamp %arg0 {max_val = 2147483647 : i64, min_val = -2147483649 : i64} : (tensor<100xi64>) -> tensor<100xi64>
-    return %0 : tensor<100xi64>
+{-#
+  dialect_resources: {
+    builtin: {
+      resource: "0x0800000000000000000000000000000000000000"
+    }
   }
-}
+#-}
 

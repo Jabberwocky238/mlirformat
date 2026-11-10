@@ -62,3 +62,18 @@ module {
   }
 }
 
+// -----
+module {
+  llvm.func @dummy()
+  func.func @test_func() {
+    return
+  }
+}
+
+// -----
+module {
+  llvm.func @callsite_unknown_callee() {
+    llvm.return
+  }
+}
+

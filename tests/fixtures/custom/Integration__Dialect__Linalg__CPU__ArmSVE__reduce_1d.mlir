@@ -65,7 +65,9 @@ module {
       transform.structured.vectorize %tiled_linalg_op vector_sizes [[4]] : !transform.any_op
       transform.apply_patterns to %arg0 {
         transform.apply_patterns.vector.lower_masked_transfers
-        transform.apply_patterns.vector.lower_multi_reduction lowering_strategy = innerreduction
+        transform.apply_patterns.vector.reorder_multi_reduction_dims lowering_strategy = innerreduction
+        transform.apply_patterns.vector.multi_reduction_flattening lowering_strategy = innerreduction
+        transform.apply_patterns.vector.multi_reduction_unrolling lowering_strategy = innerreduction
       } : !transform.op<"func.func">
       transform.yield 
     }

@@ -52,3 +52,39 @@
   }) {test.ptr = "func"} : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2xf32>) -> (), sym_name = "nonaddressable_write"}> ({
+  ^bb0(%arg0: memref<2xf32>):
+    %0 = "test.side_effect_op"() {effects = [{effect = "write", test_nonaddressable_resource}], test.ptr = "side_effect_op"} : () -> i32
+    "func.return"() {test.ptr = "return"} : () -> ()
+  }) {test.ptr = "func"} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2xf32>) -> (), sym_name = "addressable_write"}> ({
+  ^bb0(%arg0: memref<2xf32>):
+    %0 = "test.side_effect_op"() {effects = [{effect = "write"}], test.ptr = "side_effect_op"} : () -> i32
+    "func.return"() {test.ptr = "return"} : () -> ()
+  }) {test.ptr = "func"} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2xf32>) -> (), sym_name = "conditional_no_effects"}> ({
+  ^bb0(%arg0: memref<2xf32>):
+    %0 = "test.conditional_side_effect_op"() <{has_effects = false}> {test.ptr = "conditional_side_effect_op"} : () -> i32
+    "func.return"() {test.ptr = "return"} : () -> ()
+  }) {test.ptr = "func"} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2xf32>) -> (), sym_name = "conditional_all_effects"}> ({
+  ^bb0(%arg0: memref<2xf32>):
+    %0 = "test.conditional_side_effect_op"() <{has_effects = true}> {test.ptr = "conditional_side_effect_op"} : () -> i32
+    "func.return"() {test.ptr = "return"} : () -> ()
+  }) {test.ptr = "func"} : () -> ()
+}) : () -> ()
+

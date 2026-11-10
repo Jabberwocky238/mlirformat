@@ -51,9 +51,9 @@
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "parallel_op_private_multi_block", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
-    %0 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags is_device_ptr>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = !llvm.ptr}> : (!llvm.ptr) -> !llvm.ptr
-    %1 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags is_device_ptr>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = !llvm.ptr}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%0, %1) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0>}> ({
+    %0 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags is_device_ptr>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.ptr}> : (!llvm.ptr) -> !llvm.ptr
+    %1 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags is_device_ptr>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.ptr}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%0, %1) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0>}> ({
     ^bb0(%arg2: !llvm.ptr, %arg3: !llvm.ptr):
       "omp.parallel"(%arg2, %arg3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 2, 0>, private_syms = [@multi_block.privatizer, @multi_block.privatizer2]}> ({
       ^bb0(%arg4: !llvm.ptr, %arg5: !llvm.ptr):

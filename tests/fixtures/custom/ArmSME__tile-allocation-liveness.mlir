@@ -11,17 +11,6 @@ module {
 
 // -----
 module {
-  func.func @value_with_multiple_users(%arg0: vector<[4]x[4]xf32>, %arg1: vector<[4]xf32>, %arg2: vector<[4]xf32>, %arg3: index) {
-    %0 = arm_sme.insert_tile_slice %arg1, %arg0[%arg3] : vector<[4]xf32> into vector<[4]x[4]xf32>
-    %1 = arm_sme.insert_tile_slice %arg2, %arg0[%arg3] : vector<[4]xf32> into vector<[4]x[4]xf32>
-    "test.some_use"(%0) : (vector<[4]x[4]xf32>) -> ()
-    "test.some_use"(%1) : (vector<[4]x[4]xf32>) -> ()
-    return
-  }
-}
-
-// -----
-module {
   func.func @reuse_tiles_after_initial_use() {
     %0 = arm_sme.get_tile : vector<[4]x[4]xf32>
     %1 = arm_sme.get_tile : vector<[4]x[4]xf32>
@@ -100,19 +89,6 @@ module {
     } else {
       %1 = arm_sme.get_tile : vector<[4]x[4]xf32>
       scf.yield %1 : vector<[4]x[4]xf32>
-    }
-    "test.some_use"(%0) : (vector<[4]x[4]xf32>) -> ()
-    return
-  }
-}
-
-// -----
-module {
-  func.func @overlapping_branches(%arg0: i1, %arg1: vector<[4]x[4]xf32>, %arg2: vector<[4]x[4]xf32>) {
-    %0 = scf.if %arg0 -> (vector<[4]x[4]xf32>) {
-      scf.yield %arg1 : vector<[4]x[4]xf32>
-    } else {
-      scf.yield %arg2 : vector<[4]x[4]xf32>
     }
     "test.some_use"(%0) : (vector<[4]x[4]xf32>) -> ()
     return

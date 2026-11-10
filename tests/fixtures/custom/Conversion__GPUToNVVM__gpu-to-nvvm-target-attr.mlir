@@ -1,7 +1,7 @@
 module {
   gpu.module @nvvm_module [#nvvm.target] {
     func.func @kernel_0() -> index {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %0 = gpu.lane_id
       %1 = index.add %thread_id_x, %0
       return %1 : index
@@ -12,7 +12,7 @@ module {
   }
   gpu.module @nvvm_module_2 {
     func.func @kernel_0() -> index {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %0 = gpu.lane_id
       %1 = index.add %thread_id_x, %0
       return %1 : index

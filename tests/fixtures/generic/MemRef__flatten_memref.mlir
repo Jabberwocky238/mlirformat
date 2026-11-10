@@ -181,6 +181,28 @@
 }) : () -> ()
 
 // -----
+#map = affine_map<(d0, d1) -> (d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x8xf32, strided<[18, 2]>>, index, index) -> vector<4xf32>, sym_name = "negative_transfer_read_strided_memref"}> ({
+  ^bb0(%arg0: memref<4x8xf32, strided<[18, 2]>>, %arg1: index, %arg2: index):
+    %0 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %1 = "vector.transfer_read"(%arg0, %arg1, %arg2, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x8xf32, strided<[18, 2]>>, index, index, f32) -> vector<4xf32>
+    "func.return"(%1) : (vector<4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x8xf32>, index, index) -> vector<2x4xf32>, sym_name = "negative_transfer_read_memref_2d_transfer"}> ({
+  ^bb0(%arg0: memref<4x8xf32>, %arg1: index, %arg2: index):
+    %0 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %1 = "vector.transfer_read"(%arg0, %arg1, %arg2, %0) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x8xf32>, index, index, f32) -> vector<2x4xf32>
+    "func.return"(%1) : (vector<2x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = () -> memref<4x8xf32>, sym_name = "alloc"}> ({
     %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x8xf32>
@@ -193,6 +215,57 @@
   "func.func"() <{function_type = () -> memref<4x8xf32>, sym_name = "alloca"}> ({
     %0 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x8xf32>
     "func.return"(%0) : (memref<4x8xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (index) -> memref<?x4xf32>, sym_name = "alloc_dynamic"}> ({
+  ^bb0(%arg0: index):
+    %0 = "memref.alloc"(%arg0) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?x4xf32>
+    "func.return"(%0) : (memref<?x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (index) -> memref<?x4xf32>, sym_name = "alloca_dynamic"}> ({
+  ^bb0(%arg0: index):
+    %0 = "memref.alloca"(%arg0) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?x4xf32>
+    "func.return"(%0) : (memref<?x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> memref<4x8xf32, strided<[8, 1]>>, sym_name = "flatten_alloc_strided_row_major"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x8xf32, strided<[8, 1]>>
+    "func.return"(%0) : (memref<4x8xf32, strided<[8, 1]>>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> memref<4x8xf32, strided<[8, 1], offset: 50>>, sym_name = "flatten_alloc_strided_offset"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x8xf32, strided<[8, 1], offset: 50>>
+    "func.return"(%0) : (memref<4x8xf32, strided<[8, 1], offset: 50>>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> memref<4x8xf32, strided<[18, 2]>>, sym_name = "flatten_alloc_strided_padded"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x8xf32, strided<[18, 2]>>
+    "func.return"(%0) : (memref<4x8xf32, strided<[18, 2]>>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (index, index) -> memref<?x?xf32>, sym_name = "alloc_multi_dynamic"}> ({
+  ^bb0(%arg0: index, %arg1: index):
+    %0 = "memref.alloc"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 2, 0>}> : (index, index) -> memref<?x?xf32>
+    "func.return"(%0) : (memref<?x?xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -213,6 +286,25 @@
   ^bb0(%arg0: memref<4x8xf32, strided<[1, 4], offset: 100>>, %arg1: index, %arg2: index):
     %0 = "memref.load"(%arg0, %arg2, %arg1) : (memref<4x8xf32, strided<[1, 4], offset: 100>>, index, index) -> f32
     "func.return"(%0) : (f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x8xf32>, index, index) -> (), sym_name = "prefetch_from_memref"}> ({
+  ^bb0(%arg0: memref<4x8xf32>, %arg1: index, %arg2: index):
+    "memref.prefetch"(%arg0, %arg1, %arg2) <{isDataCache = true, isWrite = false, localityHint = 3 : i32}> : (memref<4x8xf32>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x8xf32>, memref<2x16xf32, 1>, memref<1xi32>, index, index, index, index, index) -> (), sym_name = "dma_start_flatten_src_and_dst"}> ({
+  ^bb0(%arg0: memref<4x8xf32>, %arg1: memref<2x16xf32, 1>, %arg2: memref<1xi32>, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "memref.dma_start"(%arg0, %arg4, %arg5, %arg1, %arg6, %arg7, %arg3, %arg2, %0) : (memref<4x8xf32>, index, index, memref<2x16xf32, 1>, index, index, index, memref<1xi32>, index) -> ()
+    "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 

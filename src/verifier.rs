@@ -8,11 +8,13 @@
 //!
 //! This file is the structure every dialect shares: the walk, aliases, locations, SSA scopes.
 //! What one dialect's types and attributes must be is its [`DialectRules`], one file each under
-//! `verifier/` (`arm_sve.rs`, `builtin.rs`, `llvm.rs`, `ptr.rs`, `quant.rs`, `spirv.rs`, `xegpu.rs`), listed in [`DIALECTS`].
+//! `verifier/` (`acc.rs`, `arm_sve.rs`, `builtin.rs`, `llvm.rs`, `ptr.rs`, `quant.rs`, `rocdl.rs`, `spirv.rs`, `xegpu.rs`), listed in [`DIALECTS`].
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
+/// `acc` attributes and ops.
+mod acc;
 /// `arm_sve` ops.
 mod arm_sve;
 /// The builtin types and attributes.
@@ -25,6 +27,8 @@ mod ods;
 mod ptr;
 /// `quant` types.
 mod quant;
+/// `rocdl` attributes.
+mod rocdl;
 /// SPIR-V types.
 mod spirv;
 /// `test` dialect types and attributes.
@@ -77,6 +81,9 @@ pub enum Invalid {
     /// `array<tf32: ..>`: a dense array of elements that are not whole bytes.
     #[error("element type bitwidth must be a multiple of 8: `{0}`")]
     DenseArrayWidth(String),
+    /// `array<index: 1>`: a dense array holds integers or floats.
+    #[error("expected integer or float type, got: `{0}`")]
+    DenseArrayType(String),
     /// `vector<memref<2xf32>>`: a vector holds integers, floats, `index` or a dialect's
     /// `VectorElementTypeInterface` type.
     #[error("invalid vector element type `{0}`")]
@@ -270,7 +277,9 @@ impl<'x> Verifier<'x> {
                     continue;
                 }
             }
-            if matches!(sigil, b'!' | b'#') && text[i + 1..i + 1 + name].contains('.') {
+            // `#ns.x<..>`, or `#ns<..>` of a dialect checked here (`#acc<par_dims[..]>`).
+            let word = &text[i + 1..i + 1 + name];
+            if matches!(sigil, b'!' | b'#') && (word.contains('.') || (sigil == b'#' && text[i + 1 + name..].starts_with('<') && DIALECTS.iter().any(|d| d.namespace() == word))) {
                 let rest = &text[i..];
                 let opt = self.opt;
                 let read = crate::Parser::new(rest, opt);
@@ -300,7 +309,7 @@ impl<'x> Verifier<'x> {
             let a = p.attr().ok()?;
             match &a {
                 // Its body may nest more (`#dlti.dl_entry<.., #ptr.spec<..>>`).
-                Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(&v, &a)).and_then(|()| match &ext.body {
+                Attribute::Extended { ext, .. } => owner(ext).map_or(Ok(()), |d| d.attr(&v, &a)).and_then(|()| match &ext.body {
                     Some(b) => Verifier::new(opt).raw_text(b.get(1..).unwrap_or("")),
                     None => Ok(()),
                 }),
@@ -506,7 +515,7 @@ impl<'x> Verify<'x> for Type<'x> {
             Type::Function(f) => f.verify(v),
             Type::Shaped(s) => s.verify(v),
             Type::Extended(e) => e.verify(v),
-            Type::Integer { .. } | Type::Float(_) | Type::Index | Type::NoneType => Ok(()),
+            Type::Integer { .. } | Type::Float(_) | Type::Index | Type::NoneType | Type::Token => Ok(()),
         }
     }
 }
@@ -528,7 +537,7 @@ impl<'x> Verify<'x> for Extended<'x> {
 impl<'x> Verify<'x> for Attribute<'x> {
     fn verify(&'x self, v: &mut Verifier<'x>) -> Result<(), Invalid> {
         match self {
-            Attribute::Extended { ext, .. } => rules(&ext.name).map_or(Ok(()), |d| d.attr(v, self))?,
+            Attribute::Extended { ext, .. } => owner(ext).map_or(Ok(()), |d| d.attr(v, self))?,
             _ => builtin::Builtin.attr(v, self)?,
         }
         match self {
@@ -584,7 +593,7 @@ trait DialectRules: Sync {
 }
 
 /// Every dialect with rules.
-const DIALECTS: &[&dyn DialectRules] = &[&arm_sve::ArmSve, &builtin::Builtin, &llvm::Llvm, &ptr::Ptr, &quant::Quant, &spirv::Spirv, &test::Test, &tosa::Tosa, &xegpu::XeGpu];
+const DIALECTS: &[&dyn DialectRules] = &[&acc::Acc, &arm_sve::ArmSve, &builtin::Builtin, &llvm::Llvm, &ptr::Ptr, &quant::Quant, &rocdl::Rocdl, &spirv::Spirv, &test::Test, &tosa::Tosa, &xegpu::XeGpu];
 
 /// The rules of the dialect owning `!ns.mnemonic` / `#ns.mnemonic`; an alias (`!t`, `#map`)
 /// has none: its definition is checked.
@@ -592,6 +601,12 @@ const DIALECTS: &[&dyn DialectRules] = &[&arm_sve::ArmSve, &builtin::Builtin, &l
 fn rules(name: &str) -> Option<&'static dyn DialectRules> {
     let ns = name.split_once('.')?.0;
     DIALECTS.iter().copied().find(|d| d.namespace() == ns)
+}
+
+/// The rules of the dialect owning a dialect attribute: by `ns.mnemonic`, or `#ns<..>` (an
+/// alias has no body).
+fn owner(ext: &Extended<'_>) -> Option<&'static dyn DialectRules> {
+    rules(&ext.name).or_else(|| ext.body.as_ref().and_then(|_| DIALECTS.iter().copied().find(|d| d.namespace() == ext.name)))
 }
 
 impl Extended<'_> {

@@ -43,3 +43,20 @@ module attributes {gpu.container_module} {
   }
 }
 
+// -----
+module attributes {gpu.container_module} {
+  gpu.module @kernel_module [#nvvm.target] {
+    llvm.func @kernel() attributes {gpu.kernel} {
+      llvm.return
+    }
+  }
+  func.func @multi_dep_launch() {
+    %c1 = arith.constant 1 : index
+    %0 = gpu.wait async
+    %1 = gpu.wait async
+    %2 = gpu.launch_func async [%0, %1] @kernel_module::@kernel blocks in (%c1, %c1, %c1) threads in (%c1, %c1, %c1)  
+    gpu.wait [%2]
+    return
+  }
+}
+

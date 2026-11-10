@@ -1,8 +1,8 @@
 module {
-  func.func @test_fold_unary_op_f32_to_si32() -> tensor<4x2xsi32> {
+  func.func @test_fold_unary_op_f32_to_i32() -> tensor<4x2xi32> {
     %cst = arith.constant dense<5.100000e+00> : tensor<4x2xf32>
-    %0 = test.sign %cst : (tensor<4x2xf32>) -> tensor<4x2xsi32>
-    return %0 : tensor<4x2xsi32>
+    %0 = test.sign %cst : (tensor<4x2xf32>) -> tensor<4x2xi32>
+    return %0 : tensor<4x2xi32>
   }
 }
 

@@ -23,3 +23,21 @@ module {
 }
 
 // -----
+// -----
+module {
+  func.func @named_barrier_initialize(%arg0: i32) {
+    %0 = spirv.NamedBarrierInitialize %arg0 : i32 -> !spirv.named_barrier
+    return
+  }
+}
+
+// -----
+module {
+  func.func @memory_named_barrier(%arg0: i32) {
+    %0 = spirv.NamedBarrierInitialize %arg0 : i32 -> !spirv.named_barrier
+    spirv.MemoryNamedBarrier %0, <Workgroup>, <AcquireRelease|WorkgroupMemory> : !spirv.named_barrier
+    return
+  }
+}
+
+// -----

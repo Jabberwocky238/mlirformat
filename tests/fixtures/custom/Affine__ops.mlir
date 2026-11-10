@@ -89,21 +89,6 @@ module {
 
 // -----
 module {
-  func.func @valid_dim_linearize_delinearize(%arg0: index, %arg1: index, %arg2: memref<?xf32>, %arg3: memref<?x32x?xf32>) {
-    affine.for %arg4 = 0 to %arg0 {
-      affine.for %arg5 = 0 to %arg1 {
-        %0 = affine.linearize_index disjoint [%arg4, %arg5] by (%arg0, %arg1) : index
-        %1:2 = affine.delinearize_index %arg1 into (32) : index, index
-        %2 = affine.load %arg2[%0] : memref<?xf32>
-        affine.store %2, %arg3[%arg4, %1#1, %1#0] : memref<?x32x?xf32>
-      }
-    }
-    return
-  }
-}
-
-// -----
-module {
   %0 = "test.foo"() : () -> index
   "test.func"() ({
   ^bb0(%arg0: memref<?xf32>):
@@ -208,6 +193,30 @@ module {
     %0 = affine.linearize_index disjoint [%arg0, %arg1, %arg2] by (2, %arg3, 3) : index
     return %0 : index
   }
+  func.func @delinearize_vector(%arg0: vector<16xindex>) -> (vector<16xindex>, vector<16xindex>) {
+    %0:2 = affine.delinearize_index %arg0 into (4, 8) : vector<16xindex>, vector<16xindex>
+    return %0#0, %0#1 : vector<16xindex>, vector<16xindex>
+  }
+  func.func @delinearize_vector_3d(%arg0: vector<8xindex>) -> (vector<8xindex>, vector<8xindex>, vector<8xindex>) {
+    %0:3 = affine.delinearize_index %arg0 into (2, 3, 4) : vector<8xindex>, vector<8xindex>, vector<8xindex>
+    return %0#0, %0#1, %0#2 : vector<8xindex>, vector<8xindex>, vector<8xindex>
+  }
+  func.func @delinearize_vector_dynamic_basis(%arg0: vector<4xindex>, %arg1: index, %arg2: index) -> (vector<4xindex>, vector<4xindex>) {
+    %0:2 = affine.delinearize_index %arg0 into (%arg1, %arg2) : vector<4xindex>, vector<4xindex>
+    return %0#0, %0#1 : vector<4xindex>, vector<4xindex>
+  }
+  func.func @linearize_vector(%arg0: vector<16xindex>, %arg1: vector<16xindex>) -> vector<16xindex> {
+    %0 = affine.linearize_index [%arg0, %arg1] by (4, 8) : vector<16xindex>
+    return %0 : vector<16xindex>
+  }
+  func.func @linearize_vector_disjoint(%arg0: vector<16xindex>, %arg1: vector<16xindex>) -> vector<16xindex> {
+    %0 = affine.linearize_index disjoint [%arg0, %arg1] by (4, 8) : vector<16xindex>
+    return %0 : vector<16xindex>
+  }
+  func.func @linearize_vector_3d(%arg0: vector<8xindex>, %arg1: vector<8xindex>, %arg2: vector<8xindex>) -> vector<8xindex> {
+    %0 = affine.linearize_index [%arg0, %arg1, %arg2] by (2, 3, 4) : vector<8xindex>
+    return %0 : vector<8xindex>
+  }
 }
 
 // -----
@@ -215,7 +224,7 @@ module {
   func.func @gpu_launch_affine() {
     %c1 = arith.constant 1 : index
     gpu.launch blocks(%arg0, %arg1, %arg2) in (%arg6 = %c1, %arg7 = %c1, %arg8 = %c1) threads(%arg3, %arg4, %arg5) in (%arg9 = %c1, %arg10 = %c1, %arg11 = %c1) {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %c128 = arith.constant 128 : index
       affine.for %arg12 = %thread_id_x to %c128 step 8 {
       }
@@ -234,7 +243,7 @@ module {
       %dim = memref.dim %arg0, %c3 : memref<?x?xf32>
       %c0 = arith.constant 0 : index
       affine.for %arg1 = %c0 to %dim step 32 {
-        %thread_id_x = gpu.thread_id  x
+        %thread_id_x = gpu.thread_id x
         %0 = affine.apply #map()[%thread_id_x]
         %c128 = arith.constant 128 : index
         affine.for %arg2 = %0 to %c128 step 8 {
@@ -267,6 +276,42 @@ module {
       %0 = arith.addi %arg0, %arg0 : index
       affine.for %arg2 = #map(%0)[%arg0] to 7 {
       }
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @parallel_xori_reduce() {
+    %alloc = memref.alloc() : memref<100xi32>
+    %0 = affine.parallel (%arg0) = (0) to (100) reduce ("xori") -> (i32) {
+      %1 = affine.load %alloc[%arg0] : memref<100xi32>
+      affine.yield %1 : i32
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @parallel_maxnumf_reduce() {
+    %alloc = memref.alloc() : memref<100xf32>
+    %0 = affine.parallel (%arg0) = (0) to (100) reduce ("maxnumf") -> (f32) {
+      %1 = affine.load %alloc[%arg0] : memref<100xf32>
+      affine.yield %1 : f32
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @parallel_minnumf_reduce() {
+    %alloc = memref.alloc() : memref<100xf32>
+    %0 = affine.parallel (%arg0) = (0) to (100) reduce ("minnumf") -> (f32) {
+      %1 = affine.load %alloc[%arg0] : memref<100xf32>
+      affine.yield %1 : f32
     }
     return
   }

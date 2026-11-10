@@ -101,7 +101,7 @@ pub struct BatchMatmulOp<'a> {
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn", default = "<cast_signed>", optional)]
     pub cast: Option<Attribute<'a>>,
     pub region: Region<'a>,
     pub inputs_ty: Vec<Type<'a>>,
@@ -194,7 +194,7 @@ pub struct BatchReduceMatmulOp<'a> {
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn", default = "<cast_signed>", optional)]
     pub cast: Option<Attribute<'a>>,
     pub region: Region<'a>,
     pub inputs_ty: Vec<Type<'a>>,
@@ -332,7 +332,7 @@ pub struct ContractOp<'a> {
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
     pub indexing_maps: Attribute<'a>,
-    #[attr(dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn", default = "<cast_signed>", optional)]
     pub cast: Option<Attribute<'a>>,
     pub combiner: Region<'a>,
     pub inputs_ty: Vec<Type<'a>>,
@@ -780,7 +780,7 @@ pub struct CopyOp<'a> {
     pub inputs: Vec<Value<'a>>,
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
-    #[attr(dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn", default = "<cast_signed>", optional)]
     pub cast: Option<Attribute<'a>>,
     pub region: Region<'a>,
     pub inputs_ty: Vec<Type<'a>>,
@@ -1469,7 +1469,9 @@ pub struct IndexOp<'a> {
 /// //                             \
 /// //            expect tensor<2x8xf32> because CeilDiv(9, 8) = 2
 /// ```
-#[mlir::op("linalg.pack", format = "$source (`padding_value` `(` $padding_value^ `:` type($padding_value) `)`)? (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("linalg.pack", results(result))]
 pub struct PackOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -1582,7 +1584,9 @@ pub struct SoftmaxOp<'a> {
 /// //                       \  /   \ /
 /// //          Outer Dims: 9x3x8   Inner Dims: 4x2
 /// ```
-#[mlir::op("linalg.unpack", format = "$source (`outer_dims_perm` `=` $outer_dims_perm^)? `inner_dims_pos` `=` $inner_dims_pos `inner_tiles` `=` custom<DynamicIndexList>($inner_tiles, $static_inner_tiles) `into` $dest attr-dict `:` type($source) `->` type($dest)", results(result))]
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("linalg.unpack", results(result))]
 pub struct UnPackOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -1817,7 +1821,7 @@ pub struct MatmulOp<'a> {
     #[slot(outputs_ty)]
     pub outputs: Vec<Value<'a>>,
     pub indexing_maps: Option<Attribute<'a>>,
-    #[attr(dialect = "linalg.type_fn")]
+    #[attr(dialect = "linalg.type_fn", default = "<cast_signed>", optional)]
     pub cast: Option<Attribute<'a>>,
     pub region: Region<'a>,
     pub inputs_ty: Vec<Type<'a>>,

@@ -14,28 +14,28 @@
     }) : () -> ()
     "irdl.operation"() <{sym_name = "eq"}> ({
       %29 = "irdl.is"() <{expected = i32}> : () -> !irdl.attribute
-      "irdl.results"(%29) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%29) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "anyof"}> ({
       %26 = "irdl.is"() <{expected = i32}> : () -> !irdl.attribute
       %27 = "irdl.is"() <{expected = i64}> : () -> !irdl.attribute
       %28 = "irdl.any_of"(%26, %27) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
-      "irdl.results"(%28) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%28) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "all_of"}> ({
       %22 = "irdl.is"() <{expected = i32}> : () -> !irdl.attribute
       %23 = "irdl.is"() <{expected = i64}> : () -> !irdl.attribute
       %24 = "irdl.any_of"(%22, %23) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
       %25 = "irdl.all_of"(%24, %23) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
-      "irdl.results"(%25) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%25) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "any"}> ({
       %21 = "irdl.any"() : () -> !irdl.attribute
-      "irdl.results"(%21) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%21) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "dyn_type_base"}> ({
       %20 = "irdl.base"() <{base_ref = @testd::@parametric}> : () -> !irdl.attribute
-      "irdl.results"(%20) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%20) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "dyn_attr_base"}> ({
       %19 = "irdl.base"() <{base_ref = @testd::@parametric_attr}> : () -> !irdl.attribute
@@ -43,7 +43,7 @@
     }) : () -> ()
     "irdl.operation"() <{sym_name = "named_type_base"}> ({
       %18 = "irdl.base"() <{base_name = "!builtin.integer"}> : () -> !irdl.attribute
-      "irdl.results"(%18) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%18) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "named_attr_base"}> ({
       %17 = "irdl.base"() <{base_name = "#builtin.integer"}> : () -> !irdl.attribute
@@ -54,13 +54,13 @@
       %14 = "irdl.is"() <{expected = i64}> : () -> !irdl.attribute
       %15 = "irdl.any_of"(%13, %14) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
       %16 = "irdl.parametric"(%15) <{base_type = @testd::@parametric}> : (!irdl.attribute) -> !irdl.attribute
-      "irdl.results"(%16) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%16) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "constraint_vars"}> ({
       %10 = "irdl.is"() <{expected = i32}> : () -> !irdl.attribute
       %11 = "irdl.is"() <{expected = i64}> : () -> !irdl.attribute
       %12 = "irdl.any_of"(%10, %11) : (!irdl.attribute, !irdl.attribute) -> !irdl.attribute
-      "irdl.results"(%12, %12) <{names = ["foo", "bar"], variadicity = #irdl<variadicity_array[ single,  single]>}> : (!irdl.attribute, !irdl.attribute) -> ()
+      "irdl.results"(%12, %12) <{names = ["foo", "bar"], variadicity = #irdl<variadicity_array[single, single]>}> : (!irdl.attribute, !irdl.attribute) -> ()
     }) : () -> ()
     "irdl.operation"() <{sym_name = "attrs"}> ({
       %8 = "irdl.is"() <{expected = i32}> : () -> !irdl.attribute
@@ -79,7 +79,7 @@
     "irdl.operation"() <{sym_name = "region_and_operand"}> ({
       %0 = "irdl.any"() : () -> !irdl.attribute
       %1 = "irdl.region"(%0) <{constrainedArguments}> : (!irdl.attribute) -> !irdl.region
-      "irdl.operands"(%0) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.operands"(%0) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
       "irdl.regions"(%1) <{names = ["bar"]}> : (!irdl.region) -> ()
     }) : () -> ()
   }) : () -> ()

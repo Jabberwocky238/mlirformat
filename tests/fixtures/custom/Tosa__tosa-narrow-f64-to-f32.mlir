@@ -20,22 +20,6 @@ module {
 
 // -----
 module {
-  func.func @test_f64_const_precision_loss() -> tensor<1xf64> {
-    %0 = "tosa.const"() <{values = dense<0x4170000010000000> : tensor<1xf64>}> : () -> tensor<1xf64>
-    return %0 : tensor<1xf64>
-  }
-}
-
-// -----
-module {
-  func.func @test_f64_const_precision_loss_small() -> tensor<1xf64> {
-    %0 = "tosa.const"() <{values = dense<1.000000e-46> : tensor<1xf64>}> : () -> tensor<1xf64>
-    return %0 : tensor<1xf64>
-  }
-}
-
-// -----
-module {
   func.func @test_f64_concat(%arg0: tensor<13x21x3xf64>, %arg1: tensor<13x21x3xf64>) -> tensor<26x21x3xf64> {
     %0 = tosa.concat %arg0, %arg1 {axis = 0 : i32} : (tensor<13x21x3xf64>, tensor<13x21x3xf64>) -> tensor<26x21x3xf64>
     return %0 : tensor<26x21x3xf64>
@@ -73,7 +57,7 @@ module {
   func.func @test_f64_slice(%arg0: tensor<13x21x3xf64>) -> tensor<4x11x1xf64> {
     %0 = tosa.const_shape  {values = dense<[4, 11, 1]> : tensor<3xindex>} : () -> !tosa.shape<3>
     %1 = tosa.const_shape  {values = dense<[6, 8, 0]> : tensor<3xindex>} : () -> !tosa.shape<3>
-    %2 = tosa.slice %arg0, %0, %1 : (tensor<13x21x3xf64>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xf64>
+    %2 = tosa.slice %arg0, %1, %0 : (tensor<13x21x3xf64>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xf64>
     return %2 : tensor<4x11x1xf64>
   }
 }
@@ -111,9 +95,17 @@ module {
 
 // -----
 module {
-  func.func @test_f64_add_diagnostic(%arg0: tensor<13x21x1xf64>, %arg1: tensor<13x21x3xf64>) -> tensor<13x21x3xf64> {
-    %0 = tosa.add %arg0, %arg1 : (tensor<13x21x1xf64>, tensor<13x21x3xf64>) -> tensor<13x21x3xf64>
-    return %0 : tensor<13x21x3xf64>
+  func.func @test_dense_ressource_f64() -> tensor<1x2xf64> {
+    %0 = "tosa.const"() <{values = dense_resource<resource> : tensor<1x2xf64>}> : () -> tensor<1x2xf64>
+    return %0 : tensor<1x2xf64>
   }
 }
+
+{-#
+  dialect_resources: {
+    builtin: {
+      resource: "0x0800000000000000000000000000000000000000"
+    }
+  }
+#-}
 

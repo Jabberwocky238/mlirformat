@@ -56,6 +56,12 @@
 #map55 = affine_map<(d0, d1)[s0, s1] -> (-d0 + s0 floordiv 2, -d1 + s1 mod 3)>
 #map56 = affine_map<(d0, d1)[s0, s1] -> (-d0 + s1 floordiv 2, -d1 + s0 mod 3)>
 #map57 = affine_map<(d0, d1)[s0] -> (d0 + d1 + s0)>
+#map58 = affine_map<(d0) -> (d0 mod 4)>
+#map59 = affine_map<(d0)[s0] -> (d0 mod (s0 * 4))>
+#map60 = affine_map<(d0) -> (d0 + d0 floordiv 4 - 4)>
+#map61 = affine_map<()[s0, s1] -> (1)>
+#map62 = affine_map<()[s0, s1] -> (2)>
+#map63 = affine_map<()[s0, s1] -> (0)>
 module {
   func.func private @f0(memref<2x4xi8, 1>)
   func.func private @f1(memref<2x4xi8, 1>)
@@ -128,5 +134,11 @@ module {
   "f62"() {map = #map55} : () -> ()
   "f63"() {map = #map56} : () -> ()
   "f64"() {map = #map57} : () -> ()
+  "f65"() {map = #map58} : () -> ()
+  "f65a"() {map = #map59} : () -> ()
+  "f66"() {map = #map60} : () -> ()
+  "f67"() {map = #map61} : () -> ()
+  "f68"() {map = #map62} : () -> ()
+  "f69"() {map = #map63} : () -> ()
 }
 

@@ -68,6 +68,21 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.5, [Shader
     memref.store %0, %arg0[] : memref<f16, #spirv.storage_class<PhysicalStorageBuffer>>
     return
   }
+  func.func @load_store_vec4f16_physical(%arg0: memref<5xvector<4xf16>, #spirv.storage_class<PhysicalStorageBuffer>>, %arg1: index) {
+    %0 = memref.load %arg0[%arg1] : memref<5xvector<4xf16>, #spirv.storage_class<PhysicalStorageBuffer>>
+    memref.store %0, %arg0[%arg1] : memref<5xvector<4xf16>, #spirv.storage_class<PhysicalStorageBuffer>>
+    return
+  }
+  func.func @load_store_vec4f32_physical(%arg0: memref<8xvector<4xf32>, #spirv.storage_class<PhysicalStorageBuffer>>, %arg1: index) {
+    %0 = memref.load %arg0[%arg1] : memref<8xvector<4xf32>, #spirv.storage_class<PhysicalStorageBuffer>>
+    memref.store %0, %arg0[%arg1] : memref<8xvector<4xf32>, #spirv.storage_class<PhysicalStorageBuffer>>
+    return
+  }
+  func.func @load_store_vec4f32_dynamic_physical(%arg0: memref<?xvector<4xf32>, #spirv.storage_class<PhysicalStorageBuffer>>, %arg1: index) {
+    %0 = memref.load %arg0[%arg1] : memref<?xvector<4xf32>, #spirv.storage_class<PhysicalStorageBuffer>>
+    memref.store %0, %arg0[%arg1] : memref<?xvector<4xf32>, #spirv.storage_class<PhysicalStorageBuffer>>
+    return
+  }
 }
 
 // -----

@@ -1,4 +1,4 @@
-1	verify	'xegpu.create_nd_tdesc' op Expecting the TensorDesc rank is not greater than the ranks of shape, strides, offsets or the memref source.
+1	verify	'xegpu.create_nd_tdesc' op Expecting the TensorDesc rank is not greater than the ranks of shape, strides or the memref source.
 2	verify	'xegpu.create_nd_tdesc' op TensorDesc should have the same element type with the source if it is a memref.
 3	parse	SLM is only supported for 1D block tensor
 4	verify	'xegpu.create_nd_tdesc' op Memory space mismatch. Source: 3, TensorDesc: 0
@@ -7,96 +7,88 @@
 7	parse	cannot distribute [128, 128] using #xegpu.layout<sg_layout = [4, 2], sg_data = [32, 64], inst_data = [64, 32]>
 8	verify	'xegpu.create_nd_tdesc' op expecting strides and shape to be present for integer source.
 9	verify	'xegpu.create_nd_tdesc' op expecting strides and shape to be present for integer source.
-10	verify	'xegpu.prefetch_nd' op invalid l1_hint: #xegpu.cache_hint<write_back>
-11	verify	'xegpu.prefetch_nd' op Expects a non-scattered TensorDesc.
+10	parse	unsupported element type 'index': expected integer or float
+11	verify	'xegpu.prefetch_nd' op invalid l1_hint: #xegpu.cache_hint<write_back>
 12	verify	'xegpu.load_nd' op invalid l1_hint: #xegpu.cache_hint<write_back>
-13	verify	'xegpu.load_nd' op Expects a non-scattered TensorDesc.
-15	verify	'xegpu.load_nd' op Result shape [8, 1] is not consistent with tensor descriptor '!xegpu.tensor_desc<8x16xf32>'
-16	verify	'xegpu.load_nd' op Expects a 1D or 2D TensorDesc.
-17	verify	'xegpu.load_nd' op Mismatched ranks between offsets and tensor descriptor
-18	verify	'xegpu.prefetch_nd' op Mismatched ranks between offsets and tensor descriptor
-19	verify	'xegpu.store_nd' op Mismatched ranks between offsets and tensor descriptor
-20	verify	'xegpu.load_nd' op Result shape [3] is not a valid distribution for tensor descriptor '!xegpu.tensor_desc<16xf32>'
-21	verify	'xegpu.load_nd' op TensorDesc doesn't need LayoutAttr for SIMT code
-22	verify	'xegpu.store_nd' op invalid l1_hint: #xegpu.cache_hint<streaming>
-23	verify	'xegpu.store_nd' op Expects a non-scattered TensorDesc.
-24	verify	'xegpu.store_nd' op array length is not supported by store_nd.
-25	verify	'xegpu.store_nd' op Expects a 1D or 2D TensorDesc.
-26	verify	'xegpu.store_nd' op Value shape [3] is not a valid distribution for tensor descriptor '!xegpu.tensor_desc<16xf32>'
-27	verify	'xegpu.store_nd' op TensorDesc doesn't need LayoutAttr for SIMT code
-28	verify	'xegpu.store_nd' op Value shape [8, 1] is not consistent with tensor descriptor '!xegpu.tensor_desc<8x16xf32>'
-29	verify	'xegpu.update_nd_offset' op Expects a non-scattered TensorDesc.
-30	verify	'xegpu.create_tdesc' op Expects a scattered TensorDesc.
-31	parse	invalid chunk size
-32	verify	'xegpu.create_tdesc' op Memory space mismatch. Source: 0, TensorDesc: 3
-33	parse	expected last dim of tensor to match chunk size
-34	parse	expected last dim of tensor to be a multiple of 2
-35	verify	'xegpu.prefetch' op Expects a scattered TensorDesc.
-36	verify	'xegpu.prefetch' op invalid l1_hint: #xegpu.cache_hint<write_back>
-37	parse	expected layout rank to match tensor rank
-38	parse	expected last dim of lane_data to be a multiple of: 2
-39	verify	'xegpu.load' op Value shape [6] is neither a valid distribution for SIMT nor consistent with the tensor descriptor for SIMD '!xegpu.tensor_desc<4x2xf32, #xegpu.scatter_tdesc_attr<chunk_size = 2 : i64>>'
-40	verify	'xegpu.store' op Value shape [6] is neither a valid distribution for SIMT nor consistent with the tensor descriptor for SIMD '!xegpu.tensor_desc<4x2xf32, #xegpu.scatter_tdesc_attr<chunk_size = 2 : i64>>'
-41	verify	'xegpu.load' op Expects a scattered TensorDesc.
-42	verify	'xegpu.load' op invalid l1_hint: #xegpu.cache_hint<write_back>
-43	verify	'xegpu.load' op Mask should match TensorDesc except the chunk size dim.
-44	verify	'xegpu.prefetch' op operand #0 must be TensorDesc describing regions of interested data. or 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got 'memref<4x4xf32>'
-45	verify	'xegpu.prefetch' op offsets not allowed.
-46	verify	'xegpu.prefetch' op Expects offsets.
-47	verify	'xegpu.prefetch' op offset_align_byte only allowed with integer source.
-48	verify	'xegpu.prefetch' op offset_align_byte is required with integer source.
-49	verify	'xegpu.load' op Mask should match value except the chunk size dim.
-50	verify	'xegpu.load' op value elements must match chunk size 2
-51	verify	'xegpu.store' op Mask should match value except the chunk size dim.
-52	verify	'xegpu.store' op operand #1 must be TensorDesc describing regions of interested data. or 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got 'memref<4x4xf16>'
-53	verify	'xegpu.store' op Expects offsets.
-54	verify	'xegpu.store' op offsets not allowed.
-55	verify	'xegpu.load' op offsets not allowed.
-56	verify	'xegpu.load' op Expects offsets.
-57	verify	'xegpu.load' op value elements must match chunk size 2
-58	verify	'xegpu.load' op operand #0 must be TensorDesc describing regions of interested data. or 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got 'memref<4x4xf32>'
-59	verify	'xegpu.store' op Expects a scattered TensorDesc.
-60	verify	'xegpu.store' op invalid l1_hint: #xegpu.cache_hint<streaming>
-61	verify	'xegpu.store' op Mask should match TensorDesc except the chunk size dim.
-62	verify	'xegpu.dpas' op K-dimension mismatch.
-63	verify	'xegpu.dpas' op expecting lhs and result to be a 2D vector, and rhs to be either 2D or 3D (packed) vector.
-64	verify	'xegpu.dpas' op K-dimension mismatch.
-65	verify	'xegpu.dpas' op M-dimension mismatch.
-66	verify	'xegpu.dpas' op N-dimension mismatch.
-67	verify	'xegpu.dpas' op Expecting B operand to be a multiple of 32 bits.
-68	verify	'xegpu.atomic_rmw' op failed to verify that all of {tensorDesc, value, result} have same shape
-69	parse	expected non-zero rank tensor
-70	parse	expected layout rank to match tensor rank
-71	parse	expected layout rank to match tensor rank
-72	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [1, 16], lane_data = [1, 1]>
-73	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [8, 2], lane_data = [1, 1]>
-74	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [2, 8], lane_data = [4, 1]>
-75	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [8, 2], lane_data = [1, 2]>
-76	parse	expected non-contiguous elements for 1D tensor
-77	parse	expected last dim of tensor to match chunk size
-78	verify	'xegpu.convert_layout' op expected input layout and target layout be WgLayout or SgLayout at the same time.
-79	parse	expected at least one of sg_layout, inst_data or lane_layout
-80	parse	expected sg_layout and lane_layout to have the same rank
-81	parse	expected sg_layout and inst_data to have the same rank
-82	parse	expected inst_data and lane_layout to have the same rank, got inst_data 3, lane_layout 2
-83	parse	expected lane_data and lane_layout to have the same rank
-84	parse	expected sg_data and sg_layout to have the same rank
-85	parse	expected layout rank to match tensor rank
-86	parse	expected sg_layout being used with sg_data
-87	parse	expected lane_layout being used with lane_data
-88	parse	expected sg_layout/lane_layout being used with order
-89	parse	expected order and sg_layout to have the same rank
-90	parse	expected order and lane_layout to have the same rank
-91	parse	repeated dim (2) in slice attribute.
-92	parse	invalid dim (3) in slice attribute.
-93	verify	'xegpu.create_mem_desc' op operand #0 must be reside in share memory and statically 1d shaped memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values  or reside in share memory and statically 2d shaped memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values , but got 'memref<2048xi8, 1>'
-94	verify	'xegpu.create_mem_desc' op failed to verify that all of {source, mem_desc} have same size in bits
-95	verify	'xegpu.load_matrix' op failed to verify that all of {mem_desc, res} have same element type
-96	verify	data shape must not exceed mem_desc shape.
-97	verify	mem_desc must be 2D.
-98	verify	'xegpu.store_matrix' op failed to verify that all of {mem_desc, data} have same element type
-99	verify	data shape must not exceed mem_desc shape.
-100	verify	mem_desc must be 2D.
-101	verify	With subgroup_block_io, accessed data must be contiguous and coalesced.
-102	verify	With subgroup_block_io, the distributed dimensions must be contiguous.
-103	verify	With subgroup_block_io, the block shape must match the lane layout.
+14	verify	'xegpu.load_nd' op Result shape [8, 1] is not consistent with tensor descriptor '!xegpu.tensor_desc<8x16xf32>'
+15	verify	'xegpu.load_nd' op Result shape [4, 8, 8] is not consistent with tensor descriptor '!xegpu.tensor_desc<4x8x16xf16>'
+16	verify	'xegpu.load_nd' op Mismatched ranks between offsets and tensor descriptor
+17	verify	'xegpu.prefetch_nd' op Mismatched ranks between offsets and tensor descriptor
+18	verify	'xegpu.store_nd' op Mismatched ranks between offsets and tensor descriptor
+19	verify	'xegpu.load_nd' op Result shape [3] is not a valid distribution for tensor descriptor '!xegpu.tensor_desc<16xf32>'
+20	verify	'xegpu.load_nd' op TensorDesc doesn't need LayoutAttr for SIMT code
+21	verify	'xegpu.store_nd' op invalid l1_hint: #xegpu.cache_hint<streaming>
+22	verify	'xegpu.store_nd' op array length is not supported by store_nd.
+23	verify	'xegpu.store_nd' op Value shape [8, 24, 16] is not consistent with tensor descriptor '!xegpu.tensor_desc<8x24x32xf16>'
+24	verify	'xegpu.store_nd' op Value shape [3] is not a valid distribution for tensor descriptor '!xegpu.tensor_desc<16xf32>'
+25	verify	'xegpu.store_nd' op TensorDesc doesn't need LayoutAttr for SIMT code
+26	verify	'xegpu.store_nd' op Value shape [8, 1] is not consistent with tensor descriptor '!xegpu.tensor_desc<8x16xf32>'
+27	verify	'xegpu.prefetch' op invalid l1_hint: #xegpu.cache_hint<write_back>
+28	verify	'xegpu.load' op invalid l1_hint: #xegpu.cache_hint<write_back>
+29	verify	'xegpu.load' op Mask should match value except the chunk size dim.
+30	verify	'xegpu.load' op value elements must match chunk size 2
+31	verify	'xegpu.store' op invalid l1_hint: #xegpu.cache_hint<streaming>
+32	verify	'xegpu.store' op Mask should match value except the chunk size dim.
+33	verify	'xegpu.store' op value elements must match chunk size 2
+34	verify	'xegpu.prefetch' op operand #0 must be 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got 'memref<4x4xf32>'
+35	verify	'xegpu.prefetch' op offset_align_byte only allowed with integer source.
+36	verify	'xegpu.prefetch' op offset_align_byte is required with integer source.
+37	verify	'xegpu.load' op Mask should match value except the chunk size dim.
+38	verify	'xegpu.load' op value elements must match chunk size 2
+39	verify	'xegpu.store' op Mask should match value except the chunk size dim.
+40	verify	'xegpu.store' op operand #1 must be 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got 'memref<4x4xf16>'
+41	verify	'xegpu.store' op operand #1 must be 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got '!xegpu.tensor_desc<1x1xf32>'
+42	verify	'xegpu.load' op operand #0 must be 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got '!xegpu.tensor_desc<1x2xf16>'
+43	verify	'xegpu.load' op value elements must match chunk size 2
+44	verify	'xegpu.load' op operand #0 must be 1D memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values or 64-bit unsigned integer or 32-bit unsigned integer or 64-bit signless integer or 32-bit signless integer, but got 'memref<4x4xf32>'
+45	verify	'xegpu.dpas' op K-dimension mismatch: A has K=8 but B has K=16.
+46	verify	'xegpu.dpas' op Rank mismatch among A, B, and result.
+47	verify	'xegpu.dpas' op K-dimension mismatch: A has K=8 but B has K=16.
+48	verify	'xegpu.dpas' op M-dimension mismatch: A has M=16 but result has M=8.
+49	verify	'xegpu.dpas' op N-dimension mismatch: B has N=8 but result has N=16.
+50	parse	expected non-zero rank tensor
+51	parse	expected layout rank to match tensor rank
+52	parse	expected layout rank to match tensor rank
+53	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [1, 16], lane_data = [1, 1]>
+54	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [8, 2], lane_data = [1, 1]>
+55	parse	cannot distribute [4, 8] using #xegpu.layout<lane_layout = [8, 2], lane_data = [1, 2]>
+56	verify	'xegpu.convert_layout' op expected input layout and target layout be WgLayout or SgLayout at the same time.
+57	parse	expected sg_layout and lane_layout to have the same rank
+58	parse	expected sg_layout and inst_data to have the same rank
+59	parse	expected inst_data and lane_layout to have the same rank, got inst_data 3, lane_layout 2
+60	parse	expected lane_data and lane_layout to have the same rank
+61	parse	expected sg_data and sg_layout to have the same rank
+62	parse	expected layout rank to match tensor rank
+63	parse	sg_layout and sg_data must be used together
+64	parse	lane_layout and lane_data must be used together
+65	parse	expected sg_layout/lane_layout being used with order
+66	parse	expected order and sg_layout to have the same rank
+67	parse	expected order and lane_layout to have the same rank
+68	parse	repeated dim (2) in slice attribute.
+69	verify	'xegpu.create_mem_desc' op operand #0 must be reside in share memory and statically 1d shaped memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values  or reside in share memory and statically 2d shaped memref of 1-bit signless integer or 4-bit signless integer or 8-bit signless integer or 16-bit signless integer or 32-bit signless integer or 64-bit signless integer or 1-bit signed integer or 8-bit signed integer or 16-bit signed integer or 32-bit signed integer or 64-bit signed integer or 1-bit unsigned integer or 8-bit unsigned integer or 16-bit unsigned integer or 32-bit unsigned integer or 64-bit unsigned integer or f4E2M1FN type or f8E4M3FN type or f8E5M2 type or f8E8M0FNU type or 16-bit float or 32-bit float or 64-bit float or bfloat16 type or tf32 type values , but got 'memref<2048xi8, 1>'
+70	verify	'xegpu.create_mem_desc' op failed to verify that all of {source, mem_desc} have same size in bits
+71	verify	'xegpu.load_matrix' op failed to verify that all of {mem_desc, res} have same element type
+72	verify	data shape must not exceed mem_desc shape.
+73	verify	data shape must not exceed mem_desc shape.
+74	verify	'xegpu.store_matrix' op failed to verify that all of {mem_desc, data} have same element type
+75	verify	data shape must not exceed mem_desc shape.
+76	verify	data shape must not exceed mem_desc shape.
+77	verify	With subgroup_block_io, accessed data must be contiguous and coalesced.
+78	verify	With subgroup_block_io, the distributed dimensions must be contiguous.
+79	verify	With subgroup_block_io, the block shape must match the lane layout.
+80	verify	'xegpu.truncf' op input type must be wider than result type.
+81	verify	'xegpu.dpas_mx' op Accumulator type must match result type.
+82	verify	'xegpu.dpas_mx' op A operand must be at least a 2D vector.
+83	verify	'xegpu.dpas_mx' op B operand must be at least a 2D vector.
+84	verify	'xegpu.dpas_mx' op Result must be at least a 2D vector.
+85	verify	'xegpu.dpas_mx' op K-dimension mismatch: A has K=16 but B has K=8.
+86	verify	'xegpu.dpas_mx' op M-dimension mismatch: A has M=8 but result has M=16.
+87	verify	'xegpu.dpas_mx' op N-dimension mismatch: B has N=16 but result has N=8.
+88	verify	'xegpu.dpas_mx' op Scale A M dimension [4] must match A M dimension [8].
+89	verify	'xegpu.dpas_mx' op Scale B N dimension [8] must match B N dimension [16].
+90	verify	'xegpu.dpas_mx' op Scale K dimension mismatch: scale_a has K=2 but scale_b has K=4.
+91	verify	'xegpu.dpas_mx' op A shape is not distributable with the layout
+92	verify	'xegpu.dpas_mx' op ScaleA shape is not distributable with the layout
+93	verify	'xegpu.dpas_mx' op ScaleB shape is not distributable with the layout
+94	verify	'xegpu.load' op contiguity = 1 (must be >= 2)
+95	verify	'xegpu.load' op contiguity = 4 (must divide the innermost offsets dim 6)

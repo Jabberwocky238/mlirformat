@@ -1,0 +1,11 @@
+1	verify	'nvvm.fma' op rounding mode must be specified
+2	parse	custom op 'nvvm.fma' 'nvvm.fma' op attribute 'sat' failed to satisfy constraint: Describes the saturation mode whose value is one of {none, sat}
+3	verify	'nvvm.fma' op relu and saturation are not supported together
+4	verify	'nvvm.fma' op oob is not supported with saturation or FTZ
+5	verify	'nvvm.fma' op relu and oob are only supported for f16 and bf16
+6	verify	'nvvm.fma' op relu and oob are only supported for f16 and bf16
+7	verify	'nvvm.fma' op FTZ and saturation are not supported for f64 type
+8	verify	'nvvm.fma' op only RN rounding mode is supported for f16 and vector<2xf16>
+9	verify	'nvvm.fma' op only RN rounding mode is supported for bf16 and vector<2xbf16>
+10	verify	'nvvm.fma' op FTZ and saturation are not supported for bf16 and vector<2xbf16>
+11	verify	'nvvm.fma' op FTZ and saturation are not supported for bf16 and vector<2xbf16>

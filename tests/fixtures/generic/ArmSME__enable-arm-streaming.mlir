@@ -4,7 +4,7 @@
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "not_arm_streaming"}> ({
     "func.return"() : () -> ()
-  }) {enable_arm_streaming_ignore} : () -> ()
+  }) {llvm.enable_arm_streaming_ignore} : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "requires_arm_streaming"}> ({
     %5 = "arm_sme.get_tile"() : () -> vector<[4]x[4]xi32>
     "func.return"() : () -> ()

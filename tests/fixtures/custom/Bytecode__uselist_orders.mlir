@@ -59,3 +59,20 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @test_with_8_uses(%arg0: i32) -> i32 {
+    %c45_i32 = arith.constant 45 : i32
+    %0 = "test.addi"(%arg0, %c45_i32) : (i32, i32) -> i32
+    %1 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %2 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %3 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %4 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %5 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %6 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %7 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    %8 = "test.addi"(%0, %c45_i32) : (i32, i32) -> i32
+    return %8 : i32
+  }
+}
+

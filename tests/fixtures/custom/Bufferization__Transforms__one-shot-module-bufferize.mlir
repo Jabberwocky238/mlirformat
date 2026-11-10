@@ -393,24 +393,12 @@ module {
 
 // -----
 module {
-  func.func @custom_types(%arg0: !test.test_tensor<[4, 4], f64>) -> (!test.test_tensor<[4, 8], f64>, !test.test_tensor<[4, 8], f64>) {
-    %0 = "test.dummy_tensor_op"(%arg0) : (!test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 8], f64>
-    %1 = "test.create_tensor_op"() : () -> !test.test_tensor<[4, 4], f64>
-    %2 = "test.dummy_tensor_op"(%1) : (!test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 8], f64>
-    return %0, %2 : !test.test_tensor<[4, 8], f64>, !test.test_tensor<[4, 8], f64>
+  func.func @ranked_return_via_unranked_call(%arg0: tensor<64x20x40xf32>) -> tensor<64x20x40xf32> {
+    %cast = tensor.cast %arg0 : tensor<64x20x40xf32> to tensor<*xf32>
+    %0 = call @relu_unranked(%cast) : (tensor<*xf32>) -> tensor<*xf32>
+    %cast_0 = tensor.cast %0 : tensor<*xf32> to tensor<64x20x40xf32>
+    return %cast_0 : tensor<64x20x40xf32>
   }
-}
-
-// -----
-module {
-  func.func @custom_types_foo(%arg0: !test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 4], f64> {
-    %0 = "test.dummy_tensor_op"(%arg0) : (!test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 4], f64>
-    return %0 : !test.test_tensor<[4, 4], f64>
-  }
-  func.func @custom_types_bar(%arg0: !test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 8], f64> {
-    %0 = call @custom_types_foo(%arg0) : (!test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 4], f64>
-    %1 = "test.dummy_tensor_op"(%0) : (!test.test_tensor<[4, 4], f64>) -> !test.test_tensor<[4, 8], f64>
-    return %1 : !test.test_tensor<[4, 8], f64>
-  }
+  func.func private @relu_unranked(tensor<*xf32>) -> tensor<*xf32>
 }
 

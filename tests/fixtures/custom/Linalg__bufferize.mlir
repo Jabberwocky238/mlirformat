@@ -88,3 +88,20 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @bufferize_pack(%arg0: tensor<200x127x256xf32>, %arg1: tensor<256x64x200x2xf32>) -> tensor<256x64x200x2xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %pack = linalg.pack %arg0 padding_value(%cst : f32) outer_dims_perm = [2, 1, 0] inner_dims_pos = [1] inner_tiles = [2] into %arg1 : tensor<200x127x256xf32> -> tensor<256x64x200x2xf32>
+    return %pack : tensor<256x64x200x2xf32>
+  }
+}
+
+// -----
+module {
+  func.func @bufferize_unpack(%arg0: tensor<256x64x200x2xf32>, %arg1: tensor<200x128x256xf32>) -> tensor<200x128x256xf32> {
+    %unpack = linalg.unpack %arg0 outer_dims_perm = [2, 1, 0] inner_dims_pos = [1] inner_tiles = [2] into %arg1 : tensor<256x64x200x2xf32> -> tensor<200x128x256xf32>
+    return %unpack : tensor<200x128x256xf32>
+  }
+}
+

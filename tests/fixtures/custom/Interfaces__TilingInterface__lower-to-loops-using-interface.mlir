@@ -156,3 +156,153 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @NC_to_NCnc(%arg0: memref<128x256xf32>, %arg1: memref<4x8x32x32xf32>) {
+    linalg.pack %arg0 inner_dims_pos = [0, 1] inner_tiles = [32, 32] into %arg1 : memref<128x256xf32> -> memref<4x8x32x32xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @NC_to_NCnc_pad(%arg0: memref<13x15xf32>, %arg1: memref<2x8x8x2xf32>, %arg2: f32) {
+    linalg.pack %arg0 padding_value(%arg2 : f32) inner_dims_pos = [0, 1] inner_tiles = [8, 2] into %arg1 : memref<13x15xf32> -> memref<2x8x8x2xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @KC_to_KCck(%arg0: memref<128x256xf32>, %arg1: memref<4x8x32x32xf32>) {
+    linalg.pack %arg0 inner_dims_pos = [1, 0] inner_tiles = [32, 32] into %arg1 : memref<128x256xf32> -> memref<4x8x32x32xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @NCnc_to_NC(%arg0: memref<128x256xf32>, %arg1: memref<4x8x32x32xf32>) {
+    linalg.unpack %arg1 inner_dims_pos = [0, 1] inner_tiles = [32, 32] into %arg0 : memref<4x8x32x32xf32> -> memref<128x256xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @KCck_to_KC(%arg0: memref<128x256xf32>, %arg1: memref<4x8x32x32xf32>) {
+    linalg.unpack %arg1 inner_dims_pos = [1, 0] inner_tiles = [32, 32] into %arg0 : memref<4x8x32x32xf32> -> memref<128x256xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @KC_to_CKkc(%arg0: memref<128x256xf32>, %arg1: memref<32x4x32x8xf32>) {
+    linalg.pack %arg0 outer_dims_perm = [1, 0] inner_dims_pos = [0, 1] inner_tiles = [32, 8] into %arg1 : memref<128x256xf32> -> memref<32x4x32x8xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @CKkc_to_KC(%arg0: memref<128x256xf32>, %arg1: memref<32x4x32x8xf32>) {
+    linalg.unpack %arg1 outer_dims_perm = [1, 0] inner_dims_pos = [0, 1] inner_tiles = [32, 8] into %arg0 : memref<32x4x32x8xf32> -> memref<128x256xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @KCRSsr_to_KCRS_static(%arg0: memref<1x1x128x64xf32>, %arg1: memref<1x1x4x8x8x32xf32>) {
+    linalg.unpack %arg1 inner_dims_pos = [3, 2] inner_tiles = [8, 32] into %arg0 : memref<1x1x4x8x8x32xf32> -> memref<1x1x128x64xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @KCRSsr_to_KCRS_dynamic_with_static_inner_tiles(%arg0: memref<?x?x?x?xf32>, %arg1: memref<?x?x?x?x8x32xf32>) {
+    linalg.unpack %arg1 inner_dims_pos = [3, 2] inner_tiles = [8, 32] into %arg0 : memref<?x?x?x?x8x32xf32> -> memref<?x?x?x?xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @KCRSsr_to_KCRS_dynamic_with_dynamic_inner_tiles(%arg0: memref<?x?x?x?xf32>, %arg1: memref<?x?x?x?x8x?xf32>, %arg2: index) {
+    linalg.unpack %arg1 inner_dims_pos = [3, 2] inner_tiles = [8, %arg2] into %arg0 : memref<?x?x?x?x8x?xf32> -> memref<?x?x?x?xf32>
+    return
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.convert_to_loops %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+

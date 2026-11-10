@@ -21,11 +21,15 @@
     %14 = "mpi.wait"(%10#1) : (!mpi.request) -> !mpi.retval
     "mpi.barrier"(%1) : (!mpi.comm) -> ()
     %15 = "mpi.barrier"(%1) : (!mpi.comm) -> !mpi.retval
-    %16 = "mpi.allreduce"(%arg0, %arg0, %1) <{op = 3 : i32}> : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> !mpi.retval
+    %16 = "mpi.allgather"(%arg0, %arg0, %1) : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> !mpi.retval
+    "mpi.allgather"(%arg0, %arg0, %1) : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> ()
+    %17 = "mpi.allreduce"(%arg0, %arg0, %1) <{op = 3 : i32}> : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> !mpi.retval
     "mpi.allreduce"(%arg0, %arg0, %1) <{op = 3 : i32}> : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> ()
-    %17 = "mpi.finalize"() : () -> !mpi.retval
-    %18 = "mpi.retval_check"(%3#0) <{errclass = #mpi.errclass<MPI_SUCCESS>}> : (!mpi.retval) -> i1
-    %19 = "mpi.error_class"(%0) : (!mpi.retval) -> !mpi.retval
+    %18 = "mpi.reduce_scatter_block"(%arg0, %arg0, %1) <{op = 3 : i32}> : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> !mpi.retval
+    "mpi.reduce_scatter_block"(%arg0, %arg0, %1) <{op = 3 : i32}> : (memref<100xf32>, memref<100xf32>, !mpi.comm) -> ()
+    %19 = "mpi.finalize"() : () -> !mpi.retval
+    %20 = "mpi.retval_check"(%3#0) <{errclass = #mpi.errclass<MPI_SUCCESS>}> : (!mpi.retval) -> i1
+    %21 = "mpi.error_class"(%0) : (!mpi.retval) -> !mpi.retval
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

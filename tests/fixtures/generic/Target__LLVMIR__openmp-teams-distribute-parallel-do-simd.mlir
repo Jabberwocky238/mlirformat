@@ -9,7 +9,7 @@
     %2 = "llvm.mlir.constant"() <{value = 1000 : i32}> : () -> i32
     %3 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
     %4 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
-    "omp.teams"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.teams"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
           "omp.wsloop"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0>}> ({

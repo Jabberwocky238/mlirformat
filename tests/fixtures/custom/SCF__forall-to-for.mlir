@@ -35,3 +35,19 @@ module {
   }
 }
 
+// -----
+module {
+  func.func private @callee(index)
+  func.func @shared_outs(%arg0: tensor<1xf32>, %arg1: index) -> tensor<1xf32> {
+    %0 = scf.forall (%arg2) in (1) shared_outs(%arg3 = %arg0) -> (tensor<1xf32>) {
+      scf.forall.in_parallel {
+        tensor.parallel_insert_slice %arg3 into %arg3[%arg2] [1] [1] : tensor<1xf32> into tensor<1xf32>
+      }
+    }
+    scf.forall (%arg2) in (%arg1) {
+      func.call @callee(%arg2) : (index) -> ()
+    }
+    return %0 : tensor<1xf32>
+  }
+}
+

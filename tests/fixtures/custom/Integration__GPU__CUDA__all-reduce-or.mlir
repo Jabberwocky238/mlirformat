@@ -38,7 +38,7 @@ module {
     memref.store %c11_i32, %alloc[%c1, %c5] : memref<2x6xi32>
     gpu.launch blocks(%arg0, %arg1, %arg2) in (%arg6 = %c2, %arg7 = %c1, %arg8 = %c1) threads(%arg3, %arg4, %arg5) in (%arg9 = %c6, %arg10 = %c1, %arg11 = %c1) {
       %0 = memref.load %alloc[%arg0, %arg3] : memref<2x6xi32>
-      %1 = gpu.all_reduce  or %0 uniform {
+      %1 = gpu.all_reduce or %0 uniform {
       } : (i32) -> i32
       memref.store %1, %alloc_0[%arg0] : memref<2xi32>
       gpu.terminator

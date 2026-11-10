@@ -33,7 +33,7 @@
     "func.return"(%13) : (memref<2x2x2xf32>) -> ()
   }) : () -> ()
   "gpu.module"() <{sym_name = "test_kernel"}> ({
-    "gpu.func"() <{function_type = (memref<2x2x2xf32>, memref<2x2x2xf32>, memref<2x2x2xf32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<2x2x2xf32>, memref<2x2x2xf32>, memref<2x2x2xf32>) -> (), kernel}> ({
     ^bb0(%arg0: memref<2x2x2xf32>, %arg1: memref<2x2x2xf32>, %arg2: memref<2x2x2xf32>):
       %0 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index
       %1 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index
@@ -43,7 +43,7 @@
       %5 = "arith.addf"(%3, %4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
       "memref.store"(%5, %arg2, %0, %1, %2) : (f32, memref<2x2x2xf32>, index, index, index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 2, 2, 2>, spirv.entry_point_abi = #spirv.entry_point_abi<>, sym_name = "test_kernel", workgroup_attributions = 0 : i64} : () -> ()
+    }) {gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 2, 2, 2>, spirv.entry_point_abi = #spirv.entry_point_abi<>, sym_name = "test_kernel"} : () -> ()
   }) {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Addresses, Int64, Kernel], []>, api=OpenCL, #spirv.resource_limits<>>} : () -> ()
 }) {gpu.container_module} : () -> ()
 

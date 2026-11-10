@@ -47,3 +47,13 @@ module {
   }
 }
 
+// -----
+module {
+  spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [Shader, Linkage], []> {
+    spirv.func @sampled_image(%arg0: !spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>, %arg1: !spirv.sampler) "None" {
+      %0 = spirv.SampledImage %arg0, %arg1 : !spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>, !spirv.sampler -> !spirv.sampled_image<!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>>
+      spirv.Return
+    }
+  }
+}
+

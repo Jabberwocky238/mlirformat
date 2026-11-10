@@ -11,7 +11,7 @@
       %24 = "arith.addf"(%22, %23) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
       "memref.store"(%24, %arg3, %arg7) : (f32, memref<5xf32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({

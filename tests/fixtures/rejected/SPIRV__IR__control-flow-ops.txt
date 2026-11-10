@@ -19,23 +19,27 @@
 28	verify	'spirv.mlir.loop' op requires a loop continue block branching to the loop header block
 29	verify	'spirv.mlir.loop' op second to last block must be the loop continue block that branches to the loop header block
 30	verify	'spirv.mlir.loop' op can only have the entry and loop continue block branching to the loop header block
-32	verify	'spirv.mlir.merge' op expects parent op to be one of 'spirv.mlir.selection, spirv.mlir.loop'
-33	verify	'spirv.mlir.selection' op should not have 'spirv.mlir.merge' op outside the merge block
-34	verify	empty block: expect at least a terminator
-35	verify	'spirv.mlir.loop' op should not have 'spirv.mlir.merge' op outside the merge block
-37	verify	'spirv.Return' op failed to verify that op must appear in a function-like op's block
-38	verify	'spirv.Return' op cannot be used in functions returning value
-39	verify	'spirv.Return' op cannot be used in functions returning value
-41	verify	'spirv.ReturnValue' op failed to verify that op must appear in a function-like op's block
-42	verify	'spirv.ReturnValue' op returns 1 value but enclosing function requires 0 results
-43	verify	'spirv.ReturnValue' op  return value's type ('i32') mismatch with function's result type ('f32')
+32	verify	'spirv.mlir.loop' op result types do not match types yielded with `spirv.mlir.merge`
+33	verify	'spirv.mlir.loop' op result types do not match types yielded with `spirv.mlir.merge`
+34	verify	'spirv.mlir.merge' op expects parent op to be one of 'spirv.mlir.selection, spirv.mlir.loop'
+35	verify	'spirv.mlir.selection' op should not have 'spirv.mlir.merge' op outside the merge block
+36	verify	empty block: expect at least a terminator
+37	verify	'spirv.mlir.loop' op should not have 'spirv.mlir.merge' op outside the merge block
+39	verify	'spirv.Return' op failed to verify that op must appear in a function-like op's block
+40	verify	'spirv.Return' op cannot be used in functions returning value
+41	verify	'spirv.Return' op cannot be used in functions returning value
+43	verify	'spirv.ReturnValue' op failed to verify that op must appear in a function-like op's block
 44	verify	'spirv.ReturnValue' op returns 1 value but enclosing function requires 0 results
-50	verify	'spirv.mlir.selection' op last block must be the merge block with only one 'spirv.mlir.merge' op
-51	verify	'spirv.mlir.selection' op must have a selection header block
-54	verify	'spirv.Unreachable' op cannot be used in reachable block
-57	parse	custom op 'spirv.Switch' invalid kind of type specified: expected builtin.integer, but found 'f32'
-58	parse	custom op 'spirv.Switch' expected integer value
-59	parse	custom op 'spirv.Switch' expected 'default'
-60	parse	expected block name
-61	parse	expected block name
-62	parse	expected ':'
+45	verify	'spirv.ReturnValue' op  return value's type ('i32') mismatch with function's result type ('f32')
+46	verify	'spirv.ReturnValue' op returns 1 value but enclosing function requires 0 results
+52	verify	'spirv.mlir.selection' op last block must be the merge block with only one 'spirv.mlir.merge' op
+53	verify	'spirv.mlir.selection' op must have a selection header block
+55	verify	'spirv.mlir.selection' op result types do not match types yielded with `spirv.mlir.merge`
+56	verify	'spirv.mlir.selection' op result types do not match types yielded with `spirv.mlir.merge`
+58	verify	'spirv.Unreachable' op cannot be used in reachable block
+61	parse	custom op 'spirv.Switch' invalid kind of type specified: expected builtin.integer, but found 'f32'
+62	parse	custom op 'spirv.Switch' expected integer value
+63	parse	custom op 'spirv.Switch' expected 'default'
+64	parse	expected block name
+65	parse	expected block name
+66	parse	expected ':'

@@ -103,5 +103,13 @@ module {
     %0 = spirv.SRem %arg0, %arg1 : vector<4xi32>
     spirv.Return
   }
+  spirv.func @snegate_scalar(%arg0: i32) "None" {
+    %0 = spirv.SNegate %arg0 : i32
+    spirv.Return
+  }
+  spirv.func @snegate_vector(%arg0: vector<4xi32>) "None" {
+    %0 = spirv.SNegate %arg0 : vector<4xi32>
+    spirv.Return
+  }
 }
 

@@ -34,3 +34,27 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @delinearize_vector_unroll(%arg0: vector<2xindex>) -> (vector<2xindex>, vector<2xindex>) {
+    %0:2 = affine.delinearize_index %arg0 into (4, 8) : vector<2xindex>, vector<2xindex>
+    return %0#0, %0#1 : vector<2xindex>, vector<2xindex>
+  }
+}
+
+// -----
+module {
+  func.func @linearize_vector_unroll(%arg0: vector<2xindex>, %arg1: vector<2xindex>) -> vector<2xindex> {
+    %0 = affine.linearize_index [%arg0, %arg1] by (4, 8) : vector<2xindex>
+    return %0 : vector<2xindex>
+  }
+}
+
+// -----
+module {
+  func.func @delinearize_2d_vector_unroll(%arg0: vector<2x2xindex>) -> (vector<2x2xindex>, vector<2x2xindex>) {
+    %0:2 = affine.delinearize_index %arg0 into (4, 8) : vector<2x2xindex>, vector<2x2xindex>
+    return %0#0, %0#1 : vector<2x2xindex>, vector<2x2xindex>
+  }
+}
+

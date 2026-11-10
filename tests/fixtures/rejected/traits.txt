@@ -1,4 +1,4 @@
-6	verify	'test.broadcastable' op result #0 must be tensor of any type values, but got 'vector<4xf32>'
+6	verify	'test.broadcastable' op result #0 must be tensor of any non-token type values, but got 'vector<4xf32>'
 7	verify	'test.broadcastable' op operands don't have broadcast-compatible shapes
 8	verify	'test.broadcastable' op result type '4x3x3' not broadcast compatible with broadcasted operands's shapes '4x3x2'
 9	verify	'test.broadcastable' op result type '8x7x6x1' not broadcast compatible with broadcasted operands's shapes '8x7x6x5'

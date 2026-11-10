@@ -820,9 +820,7 @@ pub struct ValueOfOp<'a> {
 /// the result may be less specified than `operand`'s shape as `shape` is
 /// merely used to construct the new ValueShape. If join behavior is desired
 /// then a join op should be used.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("shape.with_shape", results(result))]
+#[mlir::op("shape.with_shape", format = "$operand `,` $shape attr-dict `:` type($operand) `,` type($shape)", results(result))]
 pub struct WithOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,

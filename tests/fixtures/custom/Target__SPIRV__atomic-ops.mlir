@@ -15,10 +15,14 @@ module {
       %11 = spirv.AtomicXor <Workgroup> <AcquireRelease> %arg0, %arg1 : !spirv.ptr<i32, Workgroup>
       %12 = spirv.AtomicCompareExchange <Workgroup> <Release> <Acquire> %arg0, %arg1, %arg2 : !spirv.ptr<i32, Workgroup>
       %13 = spirv.AtomicExchange <Workgroup> <Release> %arg0, %arg1 : !spirv.ptr<i32, Workgroup>
+      %14 = spirv.AtomicLoad <Workgroup> <Acquire> %arg0 : !spirv.ptr<i32, Workgroup>
+      spirv.AtomicStore <Workgroup> <Release> %arg0, %arg1 : !spirv.ptr<i32, Workgroup>
       spirv.ReturnValue %0 : i32
     }
     spirv.func @test_float_atomics(%arg0: !spirv.ptr<f32, Workgroup>, %arg1: f32) -> f32 "None" {
       %0 = spirv.EXT.AtomicFAdd <Workgroup> <Acquire> %arg0, %arg1 : !spirv.ptr<f32, Workgroup>
+      %1 = spirv.AtomicLoad <Workgroup> <Acquire> %arg0 : !spirv.ptr<f32, Workgroup>
+      spirv.AtomicStore <Workgroup> <Release> %arg0, %arg1 : !spirv.ptr<f32, Workgroup>
       spirv.ReturnValue %0 : f32
     }
   }

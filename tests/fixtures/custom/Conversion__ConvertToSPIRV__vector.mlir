@@ -1,8 +1,7 @@
 module {
-  func.func @extract(%arg0: vector<2xf32>) -> (vector<1xf32>, f32) {
-    %0 = vector.extract %arg0[0] : vector<1xf32> from vector<2xf32>
-    %1 = vector.extract %arg0[1] : f32 from vector<2xf32>
-    return %0, %1 : vector<1xf32>, f32
+  func.func @extract(%arg0: vector<2xf32>) -> f32 {
+    %0 = vector.extract %arg0[1] : f32 from vector<2xf32>
+    return %0 : f32
   }
 }
 

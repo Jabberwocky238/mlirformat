@@ -7,12 +7,12 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<4x8xbf16>, vector<4x8xbf16>, vector<4x4xf32>) -> vector<4x4xf32>, sym_name = "vector_contract_to_bfmmla"}> ({
   ^bb0(%arg4: vector<4x8xbf16>, %arg5: vector<4x8xbf16>, %arg6: vector<4x4xf32>):
-    %2 = "vector.contract"(%arg4, %arg5, %arg6) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xbf16>, vector<4x8xbf16>, vector<4x4xf32>) -> vector<4x4xf32>
+    %2 = "vector.contract"(%arg4, %arg5, %arg6) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xbf16>, vector<4x8xbf16>, vector<4x4xf32>) -> vector<4x4xf32>
     "func.return"(%2) : (vector<4x4xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<8xbf16>, vector<4x8xbf16>, vector<4xf32>) -> vector<4xf32>, sym_name = "vector_contract_vecmat_to_bfmmla"}> ({
   ^bb0(%arg1: vector<8xbf16>, %arg2: vector<4x8xbf16>, %arg3: vector<4xf32>):
-    %1 = "vector.contract"(%arg1, %arg2, %arg3) <{indexing_maps = [#map3, #map4, #map5], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8xbf16>, vector<4x8xbf16>, vector<4xf32>) -> vector<4xf32>
+    %1 = "vector.contract"(%arg1, %arg2, %arg3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map3, #map4, #map5], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8xbf16>, vector<4x8xbf16>, vector<4xf32>) -> vector<4xf32>
     "func.return"(%1) : (vector<4xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

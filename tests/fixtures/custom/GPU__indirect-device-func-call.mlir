@@ -1,7 +1,7 @@
 module {
   gpu.module @kernels {
     func.func @hello(%arg0: f32) {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %c2_i8 = arith.constant 2 : i8
       gpu.printf "Hello from %lld, %d, %f\0A", %thread_id_x, %c2_i8, %arg0 : index, i8, f32
       return

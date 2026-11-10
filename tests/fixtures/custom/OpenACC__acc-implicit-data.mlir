@@ -175,3 +175,47 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @test_device_data_in_parallel() {
+    %alloca = memref.alloca() : memref<10xf32, #gpu.address_space<global>>
+    acc.parallel {
+      %c0 = arith.constant 0 : index
+      %0 = memref.load %alloca[%c0] : memref<10xf32, #gpu.address_space<global>>
+      acc.yield
+    }
+    return
+  }
+}
+
+// -----
+module {
+  memref.global @device_global : memref<10xf32, #gpu.address_space<global>>
+  func.func @test_device_global_in_parallel() {
+    %0 = memref.get_global @device_global : memref<10xf32, #gpu.address_space<global>>
+    acc.parallel {
+      %c0 = arith.constant 0 : index
+      %1 = memref.load %0[%c0] : memref<10xf32, #gpu.address_space<global>>
+      acc.yield
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @test_declare_deviceptr_arg_in_parallel(%arg0: memref<?xi8>) {
+    %c0 = arith.constant 0 : index
+    %view = memref.view %arg0[%c0][] {acc.declare = #acc.declare<dataClause = acc_deviceptr>} : memref<?xi8> to memref<10xf32>
+    %0 = acc.deviceptr varPtr(%view : memref<10xf32>) -> memref<10xf32> {name = "arg0"}
+    %1 = acc.declare_enter dataOperands(%0 : memref<10xf32>)
+    acc.parallel {
+      %c0_0 = arith.constant 0 : index
+      %2 = memref.load %arg0[%c0_0] : memref<?xi8>
+      acc.yield
+    }
+    acc.declare_exit token(%1) dataOperands(%0 : memref<10xf32>)
+    return
+  }
+}
+

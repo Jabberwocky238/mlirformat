@@ -10,6 +10,7 @@
 #map9 = affine_map<(d0) -> (d0 * 4)>
 #map10 = affine_map<(d0) -> (d0 mod 10)>
 #map11 = affine_map<(d0)[s0] -> (d0 mod s0)>
+#map12 = affine_map<(d0) -> (d0 mod 8)>
 module {
   func.func @affine_apply_constant() -> index {
     %0 = affine.apply #map()
@@ -93,6 +94,12 @@ module {
     %2 = affine.apply #map11(%0)[%1]
     %3 = test.reflect_bounds %2 : index
     return %3 : index
+  }
+  func.func @affine_apply_mod_cross_boundary() -> index {
+    %0 = test.with_bounds {smax = 17 : index, smin = 14 : index, umax = 17 : index, umin = 14 : index} : index
+    %1 = affine.apply #map12(%0)
+    %2 = test.reflect_bounds %1 : index
+    return %2 : index
   }
   func.func @affine_apply_mod_negative_dividend() -> index {
     %0 = test.with_bounds {smax = 2 : index, smin = -2 : index, umax = 2 : index, umin = 0 : index} : index

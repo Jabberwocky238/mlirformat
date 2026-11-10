@@ -127,3 +127,32 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i1) -> (), sym_name = "no_miscompile_block_arg_address_reuse"}> ({
+  ^bb0(%arg0: i1):
+    %0 = "arith.constant"() <{value = false}> : () -> i1
+    %1 = "arith.constant"() <{value = 4 : i64}> : () -> i64
+    %2 = "arith.constant"() <{value = 99 : i64}> : () -> i64
+    "cf.cond_br"(%0)[^bb1, ^bb2] <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (i1) -> ()
+  ^bb1:  // pred: ^bb0
+    "cf.br"(%1, %2)[^bb3] : (i64, i64) -> ()
+  ^bb2:  // pred: ^bb0
+    "cf.br"(%1, %2)[^bb3] : (i64, i64) -> ()
+  ^bb3(%3: i64, %4: i64):  // 2 preds: ^bb1, ^bb2
+    "test.use"(%3) : (i64) -> ()
+    "cf.br"()[^bb4] : () -> ()
+  ^bb4:  // pred: ^bb3
+    "cf.cond_br"(%arg0)[^bb5, ^bb6] <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (i1) -> ()
+  ^bb5:  // pred: ^bb4
+    %5 = "arith.constant"() <{value = 333 : i64}> : () -> i64
+    "cf.br"(%5)[^bb7] : (i64) -> ()
+  ^bb6:  // pred: ^bb4
+    %6 = "arith.constant"() <{value = 444 : i64}> : () -> i64
+    "cf.br"(%6)[^bb7] : (i64) -> ()
+  ^bb7(%7: i64):  // 2 preds: ^bb5, ^bb6
+    "vector.print"(%7) <{punctuation = #vector.punctuation<newline>}> : (i64) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

@@ -310,3 +310,19 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @linearize_vector_interleave(%arg0: vector<2x4xf32>, %arg1: vector<2x4xf32>) -> vector<2x8xf32> {
+    %0 = vector.interleave %arg0, %arg1 : vector<2x4xf32> -> vector<2x8xf32>
+    return %0 : vector<2x8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @linearize_vector_deinterleave(%arg0: vector<2x8xf32>) -> (vector<2x4xf32>, vector<2x4xf32>) {
+    %res1, %res2 = vector.deinterleave %arg0 : vector<2x8xf32> -> vector<2x4xf32>
+    return %res1, %res2 : vector<2x4xf32>, vector<2x4xf32>
+  }
+}
+

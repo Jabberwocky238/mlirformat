@@ -43,3 +43,30 @@
   }) {transform.with_named_sequence} : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<32x1024xf32>) -> (tensor<32x1024xf32>, tensor<2x512x16x2xi8>), sym_name = "fuse_pack_consumer_into_multi_output_generic"}> ({
+  ^bb0(%arg1: tensor<32x1024xf32>):
+    %2 = "arith.constant"() <{value = 0 : i8}> : () -> i8
+    %3 = "tensor.empty"() : () -> tensor<32x1024xf32>
+    %4 = "tensor.empty"() : () -> tensor<32x1024xi8>
+    %5 = "tensor.empty"() : () -> tensor<2x512x16x2xi8>
+    %6:2 = "linalg.generic"(%arg1, %3, %4) <{indexing_maps = [#map, #map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 2>}> ({
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: i8):
+      %8 = "arith.fptoui"(%arg2) : (f32) -> i8
+      "linalg.yield"(%arg2, %8) : (f32, i8) -> ()
+    }) : (tensor<32x1024xf32>, tensor<32x1024xf32>, tensor<32x1024xi8>) -> (tensor<32x1024xf32>, tensor<32x1024xi8>)
+    %7 = "linalg.pack"(%6#1, %5, %2) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, static_inner_tiles = array<i64: 16, 2>}> : (tensor<32x1024xi8>, tensor<2x512x16x2xi8>, i8) -> tensor<2x512x16x2xi8>
+    "func.return"(%6#0, %7) : (tensor<32x1024xf32>, tensor<2x512x16x2xi8>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.pack"]}> : (!transform.any_op) -> !transform.any_op
+      %1:2 = "transform.test.fuse_and_yield"(%0) <{tile_interchange = [], tile_sizes = [1], use_forall = true}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+

@@ -51,7 +51,7 @@
 
 // -----
 "builtin.module"() ({
-  "llvm.func"() <{CConv = #llvm.cconv<fastcc>, dso_local, function_entry_count = 42 : i64, function_type = !llvm.func<i32 ()>, linkage = #llvm.linkage<internal>, sym_name = "callee", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  "llvm.func"() <{CConv = #llvm.cconv<fastcc>, dso_local, function_type = !llvm.func<i32 ()>, linkage = #llvm.linkage<internal>, sym_name = "callee", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     %1 = "llvm.mlir.constant"() <{value = 42 : i32}> : () -> i32
     "llvm.return"(%1) : (i32) -> ()
   }) : () -> ()
@@ -402,6 +402,36 @@
 
 // -----
 "builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.align = 16 : i64, llvm.byval = i32}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "byval_aligned_arg", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg1: !llvm.ptr):
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "test_byval_memcpy_alignment", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr):
+    "llvm.call"(%arg0) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @byval_aligned_arg, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.byval = f32}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "byval_in_parallel", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg1: !llvm.ptr):
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "test_byval_in_parallel_region", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "test.alloca_scope_region"() ({
+      "llvm.call"(%arg0) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @byval_in_parallel, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> ()
+      "test.region_yield"(%0) : (index) -> ()
+    }) : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.alignstack = 32 : i64, llvm.inreg, llvm.nocapture, llvm.nofree, llvm.nonnull, llvm.noundef, llvm.preallocated = i32, llvm.returned, llvm.writeonly}, {llvm.zeroext}], function_type = !llvm.func<ptr (ptr, i32)>, linkage = #llvm.linkage<external>, res_attrs = [{llvm.inreg, llvm.nonnull, llvm.noundef}], sym_name = "ignored_attrs", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg2: !llvm.ptr, %arg3: i32):
     "llvm.return"(%arg2) : (!llvm.ptr) -> ()
@@ -515,6 +545,32 @@
   ^bb0(%arg0: i32):
     %0 = "func.call"(%arg0) <{callee = @func}> : (i32) -> i32
     "func.return"(%0) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i64 ()>, linkage = #llvm.linkage<external>, sym_name = "callee_malformed_terminator", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "test.foo"() : () -> ()
+  }) {llvm.emit_c_interface} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i64 ()>, linkage = #llvm.linkage<external>, sym_name = "caller_malformed_terminator", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @callee_malformed_terminator, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> i64
+    "llvm.return"(%0) : (i64) -> ()
+  }) {llvm.emit_c_interface} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i64 (i64)>, linkage = #llvm.linkage<external>, sym_name = "callee_cf_br_terminator", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg1: i64):
+    "cf.br"(%arg1)[^bb1] : (i64) -> ()
+  ^bb1(%1: i64):  // pred: ^bb0
+    "llvm.return"(%1) : (i64) -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i64 (i64)>, linkage = #llvm.linkage<external>, sym_name = "caller_cf_br_terminator", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: i64):
+    %0 = "llvm.call"(%arg0) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @callee_cf_br_terminator, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (i64) -> i64
+    "llvm.return"(%0) : (i64) -> ()
   }) : () -> ()
 }) : () -> ()
 

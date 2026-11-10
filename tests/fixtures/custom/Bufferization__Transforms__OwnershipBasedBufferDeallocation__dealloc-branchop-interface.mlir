@@ -216,3 +216,21 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @region_branch_op_followed_by_cf_br(%arg0: f32) -> f32 {
+    cf.br ^bb1
+  ^bb1:  // pred: ^bb0
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %c10 = arith.constant 10 : index
+    %0 = scf.for %arg1 = %c0 to %c10 step %c1 iter_args(%arg2 = %arg0) -> (f32) {
+      %1 = arith.addf %arg2, %arg2 : f32
+      scf.yield %1 : f32
+    }
+    cf.br ^bb2
+  ^bb2:  // pred: ^bb1
+    return %0 : f32
+  }
+}
+

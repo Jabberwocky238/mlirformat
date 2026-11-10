@@ -12,7 +12,7 @@ module {
       %1 = arith.sitofp %0 : i32 to f32
       %2 = arith.index_cast %arg9 : index to i32
       %c4_i32 = arith.constant 4 : i32
-      %shuffleResult, %valid = gpu.shuffle  xor %1, %c4_i32, %2 : f32
+      %shuffleResult, %valid = gpu.shuffle xor %1, %c4_i32, %2 : f32
       cf.cond_br %valid, ^bb2(%shuffleResult : f32), ^bb1
     ^bb1:  // pred: ^bb0
       %cst = arith.constant -1.000000e+00 : f32

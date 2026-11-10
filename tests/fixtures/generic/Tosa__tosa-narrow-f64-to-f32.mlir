@@ -22,22 +22,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = () -> tensor<1xf64>, sym_name = "test_f64_const_precision_loss"}> ({
-    %0 = "tosa.const"() <{values = dense<0x4170000010000000> : tensor<1xf64>}> : () -> tensor<1xf64>
-    "func.return"(%0) : (tensor<1xf64>) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = () -> tensor<1xf64>, sym_name = "test_f64_const_precision_loss_small"}> ({
-    %0 = "tosa.const"() <{values = dense<1.000000e-46> : tensor<1xf64>}> : () -> tensor<1xf64>
-    "func.return"(%0) : (tensor<1xf64>) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<13x21x3xf64>, tensor<13x21x3xf64>) -> tensor<26x21x3xf64>, sym_name = "test_f64_concat"}> ({
   ^bb0(%arg0: tensor<13x21x3xf64>, %arg1: tensor<13x21x3xf64>):
     %0 = "tosa.concat"(%arg0, %arg1) <{axis = 0 : i32}> : (tensor<13x21x3xf64>, tensor<13x21x3xf64>) -> tensor<26x21x3xf64>
@@ -80,7 +64,7 @@
   ^bb0(%arg0: tensor<13x21x3xf64>):
     %0 = "tosa.const_shape"() <{values = dense<[4, 11, 1]> : tensor<3xindex>}> : () -> !tosa.shape<3>
     %1 = "tosa.const_shape"() <{values = dense<[6, 8, 0]> : tensor<3xindex>}> : () -> !tosa.shape<3>
-    %2 = "tosa.slice"(%arg0, %0, %1) : (tensor<13x21x3xf64>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xf64>
+    %2 = "tosa.slice"(%arg0, %1, %0) : (tensor<13x21x3xf64>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xf64>
     "func.return"(%2) : (tensor<4x11x1xf64>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -121,10 +105,17 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (tensor<13x21x1xf64>, tensor<13x21x3xf64>) -> tensor<13x21x3xf64>, sym_name = "test_f64_add_diagnostic"}> ({
-  ^bb0(%arg0: tensor<13x21x1xf64>, %arg1: tensor<13x21x3xf64>):
-    %0 = "tosa.add"(%arg0, %arg1) : (tensor<13x21x1xf64>, tensor<13x21x3xf64>) -> tensor<13x21x3xf64>
-    "func.return"(%0) : (tensor<13x21x3xf64>) -> ()
+  "func.func"() <{function_type = () -> tensor<1x2xf64>, sym_name = "test_dense_ressource_f64"}> ({
+    %0 = "tosa.const"() <{values = dense_resource<resource> : tensor<1x2xf64>}> : () -> tensor<1x2xf64>
+    "func.return"(%0) : (tensor<1x2xf64>) -> ()
   }) : () -> ()
 }) : () -> ()
+
+{-#
+  dialect_resources: {
+    builtin: {
+      resource: "0x0800000000000000000000000000000000000000"
+    }
+  }
+#-}
 

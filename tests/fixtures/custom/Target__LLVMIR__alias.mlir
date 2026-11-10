@@ -70,3 +70,38 @@ module {
   }
 }
 
+// -----
+module {
+  llvm.func @aliased_func() {
+    llvm.return
+  }
+  llvm.mlir.alias external @func_alias {addr_space = 0 : i32} : !llvm.ptr {
+    %0 = llvm.mlir.addressof @aliased_func : !llvm.ptr
+    llvm.return %0 : !llvm.ptr
+  }
+  llvm.func @caller() {
+    llvm.call @func_alias() : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @__gxx_personality_v0(...) -> i32
+  llvm.func @aliased_func2() {
+    llvm.return
+  }
+  llvm.mlir.alias external @func_alias2 {addr_space = 0 : i32} : !llvm.ptr {
+    %0 = llvm.mlir.addressof @aliased_func2 : !llvm.ptr
+    llvm.return %0 : !llvm.ptr
+  }
+  llvm.func @invoke_caller() attributes {personality = @__gxx_personality_v0} {
+    llvm.invoke @func_alias2() to ^bb1 unwind ^bb2 : () -> ()
+  ^bb1:  // pred: ^bb0
+    llvm.return
+  ^bb2:  // pred: ^bb0
+    %0 = llvm.landingpad cleanup : !llvm.struct<(ptr, i32)>
+    llvm.resume %0 : !llvm.struct<(ptr, i32)>
+  }
+}
+

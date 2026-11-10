@@ -1,1 +1,0 @@
-4	verify	'transform.memref.multibuffer' op operand #0 must be Transform IR handle to memref.alloc operations, but got '!transform.op<"memref.alloca">'

@@ -1,6 +1,6 @@
 2	verify	'spirv.BitFieldInsert' op failed to verify that all of {base, insert, result} have same type
 4	verify	'spirv.BitFieldUExtract' op failed to verify that all of {base, result} have same type
-7	verify	'spirv.BitwiseOr' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'f16'
-9	verify	'spirv.BitwiseXor' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'f16'
-11	verify	'spirv.BitwiseAnd' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'f16'
+7	verify	'spirv.BitwiseOr' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'f16'
+9	verify	'spirv.BitwiseXor' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'f16'
+11	verify	'spirv.BitwiseAnd' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'f16'
 14	verify	'spirv.ShiftLeftLogical' op failed to verify that all of {operand1, result} have same type

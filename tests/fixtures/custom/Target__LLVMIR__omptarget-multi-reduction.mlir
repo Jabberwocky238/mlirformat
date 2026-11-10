@@ -58,7 +58,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
     %32 = omp.map.info var_ptr(%14 : !llvm.ptr, f32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = "ce3"}
     %33 = omp.map.info var_ptr(%11 : !llvm.ptr, f32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = "ce4"}
     %34 = omp.map.info var_ptr(%5 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "j"}
-    omp.target map_entries(%30 -> %arg0, %31 -> %arg1, %32 -> %arg2, %33 -> %arg3, %34 -> %arg4 : !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(spmd) map_entries(%30 -> %arg0, %31 -> %arg1, %32 -> %arg2, %33 -> %arg3, %34 -> %arg4 : !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) {
       %35 = llvm.mlir.constant(1.000000e+00 : f32) : f32
       %36 = llvm.mlir.constant(1.000000e+00 : f64) : f64
       %37 = llvm.mlir.constant(1000 : i32) : i32
@@ -90,9 +90,9 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
           omp.terminator
         } {omp.composite}
         omp.terminator
-      }
+      } {omp.combined}
       omp.terminator
-    }
+    } {omp.combined}
     llvm.return
   }
 }

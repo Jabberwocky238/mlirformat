@@ -1,5 +1,5 @@
 module {
-  func.func @fill(%arg0: f32, %arg1: memref<32x7xf32>) {
+  func.func @fill_memref(%arg0: f32, %arg1: memref<32x7xf32>) {
     linalg.fill ins(%arg0 : f32) outs(%arg1 : memref<32x7xf32>)
     return
   }
@@ -29,7 +29,7 @@ module {
 
 // -----
 module {
-  func.func @map(%arg0: memref<32x7xf32>, %arg1: memref<32x7xf32>, %arg2: memref<32x7xf32>) {
+  func.func @map_memref(%arg0: memref<32x7xf32>, %arg1: memref<32x7xf32>, %arg2: memref<32x7xf32>) {
     linalg.map { arith.addf } ins(%arg0, %arg1 : memref<32x7xf32>, memref<32x7xf32>) outs(%arg2 : memref<32x7xf32>)
     return
   }
@@ -44,7 +44,7 @@ module {
 
 // -----
 module {
-  func.func @map_already_flat(%arg0: memref<32xf32>, %arg1: memref<32xf32>, %arg2: memref<32xf32>) {
+  func.func @map_already_flat_memref(%arg0: memref<32xf32>, %arg1: memref<32xf32>, %arg2: memref<32xf32>) {
     linalg.map { arith.addf } ins(%arg0, %arg1 : memref<32xf32>, memref<32xf32>) outs(%arg2 : memref<32xf32>)
     return
   }
@@ -60,7 +60,7 @@ module {
 // -----
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
-  func.func @generic(%arg0: memref<32x7xf32>, %arg1: memref<32x7xf32>, %arg2: memref<32x7xf32>) {
+  func.func @elementwise_memref(%arg0: memref<32x7xf32>, %arg1: memref<32x7xf32>, %arg2: memref<32x7xf32>) {
     linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0, %arg1 : memref<32x7xf32>, memref<32x7xf32>) outs(%arg2 : memref<32x7xf32>) {
     ^bb0(%in: f32, %in_0: f32, %out: f32):
       %0 = arith.addf %in, %in_0 : f32

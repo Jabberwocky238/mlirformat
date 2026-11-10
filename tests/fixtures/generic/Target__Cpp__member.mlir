@@ -16,6 +16,7 @@
     %18 = "emitc.member"(%10) <{member = "d"}> : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.array<2xi32>
     %19 = "emitc.subscript"(%18, %arg5) : (!emitc.array<2xi32>, index) -> !emitc.lvalue<i32>
     "emitc.assign"(%19, %arg4) : (!emitc.lvalue<i32>, i32) -> ()
+    %20 = "emitc.member"(%arg3) <{member = "a"}> : (!emitc.opaque<"mystruct">) -> i32
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (!emitc.ptr<!emitc.opaque<"mystruct">>, i32, index) -> (), sym_name = "member_of_pointer"}> ({

@@ -12,6 +12,22 @@ module {
     %0 = arith.remsi %arg0, %arg1 : i32
     return
   }
+  func.func @scalar_ceildivui(%arg0: i32, %arg1: i32) -> i32 {
+    %0 = arith.ceildivui %arg0, %arg1 : i32
+    return %0 : i32
+  }
+  func.func @scalar_ceildivsi(%arg0: i32, %arg1: i32) -> i32 {
+    %0 = arith.ceildivsi %arg0, %arg1 : i32
+    return %0 : i32
+  }
+  func.func @scalar_floordivsi(%arg0: i32, %arg1: i32) -> i32 {
+    %0 = arith.floordivsi %arg0, %arg1 : i32
+    return %0 : i32
+  }
+  func.func @vector_ceildivsi(%arg0: vector<4xi32>, %arg1: vector<4xi32>) -> vector<4xi32> {
+    %0 = arith.ceildivsi %arg0, %arg1 : vector<4xi32>
+    return %0 : vector<4xi32>
+  }
 }
 
 // -----

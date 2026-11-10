@@ -11,13 +11,9 @@ module {
 
 // -----
 module {
-  func.func @test_no_terminator(%arg0: index) {
-    test.switch_with_no_break %arg0 
-    case 0 {
-    }
-    case 1 {
-    }
-    return
+  func.func @func_with_region_branch_terminator(%arg0: i32) -> f32 {
+    %0 = "test.constant"() <{value = 5.300000e+00 : f32}> : () -> f32
+    test.loop_block_term iter %arg0 exit %0
   }
 }
 

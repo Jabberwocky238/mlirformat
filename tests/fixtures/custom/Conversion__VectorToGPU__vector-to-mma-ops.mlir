@@ -1,3 +1,19 @@
+module {
+}
+
+// -----
+module {
+  func.func @no_convert_3d(%arg0: memref<2x2x2xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst {in_bounds = [true, true, true]} : memref<2x2x2xf16>, vector<2x2x2xf16>
+    %1 = arith.addf %0, %0 : vector<2x2x2xf16>
+    vector.transfer_write %1, %arg0[%c0, %c0, %c0] {in_bounds = [true, true, true]} : vector<2x2x2xf16>, memref<2x2x2xf16>
+    return
+  }
+}
+
+// -----
 #map = affine_map<(d0, d1) -> (d1, d0)>
 #map1 = affine_map<(d0, d1, d2) -> (d0, d2)>
 #map2 = affine_map<(d0, d1, d2) -> (d1, d2)>
@@ -317,6 +333,24 @@ module {
 
 // -----
 #map = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d1, d2)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+module {
+  func.func @cast_f32_to_f16_write(%arg0: memref<16x16xf32>, %arg1: memref<16x16xf32>, %arg2: memref<16x16xf32>, %arg3: memref<16x16xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%c0, %c0], %cst {in_bounds = [true, true]} : memref<16x16xf32>, vector<16x16xf32>
+    %1 = vector.transfer_read %arg1[%c0, %c0], %cst {in_bounds = [true, true]} : memref<16x16xf32>, vector<16x16xf32>
+    %2 = vector.transfer_read %arg2[%c0, %c0], %cst {in_bounds = [true, true]} : memref<16x16xf32>, vector<16x16xf32>
+    %3 = vector.contract {indexing_maps = [#map, #map1, #map2], iterator_types = ["parallel", "parallel", "reduction"], kind = #vector.kind<add>} %0, %1, %2 : vector<16x16xf32>, vector<16x16xf32> into vector<16x16xf32>
+    %4 = arith.truncf %3 : vector<16x16xf32> to vector<16x16xf16>
+    vector.transfer_write %4, %arg3[%c0, %c0] {in_bounds = [true, true]} : vector<16x16xf16>, memref<16x16xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d2)>
 #map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
 #map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
 module {
@@ -377,6 +411,93 @@ module {
     %1 = vector.transfer_read %arg1[%c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map} : memref<16x16xf16>, vector<16x16xf16>
     %2 = arith.addf %0, %1 : vector<16x16xf16>
     vector.transfer_write %2, %arg2[%c0, %c0] {in_bounds = [true, true]} : vector<16x16xf16>, memref<16x16xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d0, d2)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
+module {
+  func.func @matmul_with_strides(%arg0: memref<16x16xf16>, %arg1: memref<16x6x16xf16>, %arg2: memref<16x9x16xf16>) {
+    %cst = arith.constant dense<0.000000e+00> : vector<16x16xf16>
+    %c0 = arith.constant 0 : index
+    %cst_0 = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0], %cst_0 {in_bounds = [true, true]} : memref<16x16xf16>, vector<16x16xf16>
+    %1 = vector.transfer_read %arg1[%c0, %c0, %c0], %cst_0 {in_bounds = [true, true], permutation_map = #map} : memref<16x6x16xf16>, vector<16x16xf16>
+    %2 = vector.transfer_read %arg2[%c0, %c0, %c0], %cst_0 {in_bounds = [true, true], permutation_map = #map} : memref<16x9x16xf16>, vector<16x16xf16>
+    %3 = vector.contract {indexing_maps = [#map, #map1, #map2], iterator_types = ["parallel", "parallel", "reduction"], kind = #vector.kind<add>} %0, %1, %2 : vector<16x16xf16>, vector<16x16xf16> into vector<16x16xf16>
+    vector.transfer_write %3, %arg2[%c0, %c0, %c0] {in_bounds = [true, true], permutation_map = #map} : vector<16x16xf16>, memref<16x9x16xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d2, d0)>
+#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
+module {
+  func.func @read_transpose_with_strides_3d(%arg0: memref<5x7x3xf16>, %arg1: memref<2x5x3xf16>, %arg2: memref<3x5xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map} : memref<5x7x3xf16>, vector<3x5xf16>
+    %1 = vector.transfer_read %arg1[%c0, %c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map1} : memref<2x5x3xf16>, vector<3x5xf16>
+    %2 = arith.addf %0, %1 : vector<3x5xf16>
+    vector.transfer_write %2, %arg2[%c0, %c0] {in_bounds = [true, true]} : vector<3x5xf16>, memref<3x5xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2, d3) -> (d3, d0)>
+#map1 = affine_map<(d0, d1, d2, d3) -> (d3, d1)>
+module {
+  func.func @read_transpose_with_strides_4d(%arg0: memref<5x7x11x3xf16>, %arg1: memref<2x5x11x3xf16>, %arg2: memref<3x5xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map} : memref<5x7x11x3xf16>, vector<3x5xf16>
+    %1 = vector.transfer_read %arg1[%c0, %c0, %c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map1} : memref<2x5x11x3xf16>, vector<3x5xf16>
+    %2 = arith.addf %0, %1 : vector<3x5xf16>
+    vector.transfer_write %2, %arg2[%c0, %c0] {in_bounds = [true, true]} : vector<3x5xf16>, memref<3x5xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d1, d0)>
+module {
+  func.func @no_convert_read_transpose_not_last_dim(%arg0: memref<2x2x2xf16>, %arg1: memref<2x2xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map} : memref<2x2x2xf16>, vector<2x2xf16>
+    %1 = arith.addf %0, %0 : vector<2x2xf16>
+    vector.transfer_write %1, %arg1[%c0, %c0] {in_bounds = [true, true]} : vector<2x2xf16>, memref<2x2xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1) -> (d1, d0)>
+module {
+  func.func @no_convert_write_transpose(%arg0: memref<2x2xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0], %cst {in_bounds = [true, true]} : memref<2x2xf16>, vector<2x2xf16>
+    %1 = arith.addf %0, %0 : vector<2x2xf16>
+    vector.transfer_write %1, %arg0[%c0, %c0] {in_bounds = [true, true], permutation_map = #map} : vector<2x2xf16>, memref<2x2xf16>
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2) -> (d2, 0)>
+module {
+  func.func @read_transpose_with_broadcast_3d(%arg0: memref<2x2x2xf16>, %arg1: memref<2x2xf16>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst {in_bounds = [true, true], permutation_map = #map} : memref<2x2x2xf16>, vector<2x2xf16>
+    %1 = arith.addf %0, %0 : vector<2x2xf16>
+    vector.transfer_write %1, %arg1[%c0, %c0] {in_bounds = [true, true]} : vector<2x2xf16>, memref<2x2xf16>
     return
   }
 }

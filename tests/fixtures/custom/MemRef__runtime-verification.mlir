@@ -5,3 +5,11 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @subview(%arg0: memref<1xf32>, %arg1: index) {
+    %subview = memref.subview %arg0[%arg1] [1] [1] : memref<1xf32> to memref<1xf32, strided<[1], offset: ?>>
+    return
+  }
+}
+

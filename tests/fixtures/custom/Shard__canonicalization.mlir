@@ -41,19 +41,19 @@ module {
     return %reduce : tensor<4xf32>
   }
   func.func @reduce_scatter_empty_grid_axes(%arg0: tensor<4xf32>) -> tensor<4xf32> {
-    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 scatter_axis = 0 : tensor<4xf32> -> tensor<4xf32>
+    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 scatter_dim = 0 : tensor<4xf32> -> tensor<4xf32>
     return %reduce_scatter : tensor<4xf32>
   }
   func.func @reduce_scatter_empty_grid_axes_different_return_type(%arg0: tensor<4xf32>) -> tensor<4xf64> {
-    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 scatter_axis = 0 : tensor<4xf32> -> tensor<4xf64>
+    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 scatter_dim = 0 : tensor<4xf32> -> tensor<4xf64>
     return %reduce_scatter : tensor<4xf64>
   }
   func.func @reduce_scatter_default_reduction(%arg0: tensor<4xf32>) -> tensor<2xf64> {
-    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 grid_axes = [0] scatter_axis = 0 : tensor<4xf32> -> tensor<2xf64>
+    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 grid_axes = [0] scatter_dim = 0 : tensor<4xf32> -> tensor<2xf64>
     return %reduce_scatter : tensor<2xf64>
   }
   func.func @scatter_empty_grid_axes(%arg0: tensor<4xf32>) -> tensor<4xf32> {
-    %scatter = shard.scatter %arg0 on @grid0 scatter_axis = 0 root = [] : (tensor<4xf32>) -> tensor<4xf32>
+    %scatter = shard.scatter %arg0 on @grid0 scatter_dim = 0 root = [] : (tensor<4xf32>) -> tensor<4xf32>
     return %scatter : tensor<4xf32>
   }
   func.func @send_empty_grid_axes(%arg0: tensor<4xf32>) -> tensor<4xf32> {

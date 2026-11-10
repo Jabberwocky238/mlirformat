@@ -92,3 +92,14 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader
   }
 }
 
+// -----
+module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader], [SPV_KHR_storage_buffer_storage_class]>, #spirv.resource_limits<>>} {
+  func.func @alloc_dealloc_workgroup_mem_complex_f32(%arg0: index, %arg1: index) {
+    %alloc = memref.alloc() : memref<4x5xcomplex<f32>, #spirv.storage_class<Workgroup>>
+    %0 = memref.load %alloc[%arg0, %arg1] : memref<4x5xcomplex<f32>, #spirv.storage_class<Workgroup>>
+    memref.store %0, %alloc[%arg0, %arg1] : memref<4x5xcomplex<f32>, #spirv.storage_class<Workgroup>>
+    memref.dealloc %alloc : memref<4x5xcomplex<f32>, #spirv.storage_class<Workgroup>>
+    return
+  }
+}
+

@@ -9,8 +9,8 @@
     %74 = "llvm.alloca"(%72) <{elem_type = i32}> {bindc_name = "a"} : (i64) -> !llvm.ptr
     %75 = "llvm.mlir.constant"() <{value = 2 : i32}> : () -> i32
     "llvm.store"(%75, %74) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-    %76 = "omp.map.info"(%74) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%76, %73) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0>, private_maps = array<i64: -1>, private_syms = [@simple_var.privatizer]}> ({
+    %76 = "omp.map.info"(%74) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%76, %73) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0>, private_maps = array<i64: -1>, private_syms = [@simple_var.privatizer]}> ({
     ^bb0(%arg21: !llvm.ptr, %arg22: !llvm.ptr):
       %77 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32
       %78 = "llvm.load"(%arg21) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
@@ -31,8 +31,8 @@
     %62 = "llvm.alloca"(%59) <{elem_type = i32}> {bindc_name = "a"} : (i64) -> !llvm.ptr
     %63 = "llvm.mlir.constant"() <{value = 2 : i32}> : () -> i32
     "llvm.store"(%63, %62) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-    %64 = "omp.map.info"(%62) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%64, %60, %61) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0>, private_maps = array<i64: -1, -1>, private_syms = [@simple_var.privatizer, @n.privatizer]}> ({
+    %64 = "omp.map.info"(%62) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%64, %60, %61) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0>, private_maps = array<i64: -1, -1>, private_syms = [@simple_var.privatizer, @n.privatizer]}> ({
     ^bb0(%arg18: !llvm.ptr, %arg19: !llvm.ptr, %arg20: !llvm.ptr):
       %65 = "llvm.mlir.constant"() <{value = 1.100000e+01 : f32}> : () -> f32
       %66 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32
@@ -57,7 +57,7 @@
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "target_op_private_multi_block", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg14: !llvm.ptr):
-    "omp.target"(%arg14) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0>, private_maps = array<i64: -1>, private_syms = [@multi_block.privatizer]}> ({
+    "omp.target"(%arg14) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0>, private_maps = array<i64: -1>, private_syms = [@multi_block.privatizer]}> ({
     ^bb0(%arg15: !llvm.ptr):
       %58 = "llvm.load"(%arg15) <{ordering = 0 : i64}> : (!llvm.ptr) -> f32
       "omp.terminator"() : () -> ()
@@ -90,10 +90,10 @@
     %24 = "llvm.mlir.undef"() : () -> !llvm.struct<(ptr, i64)>
     %25 = "llvm.insertvalue"(%24, %23) <{position = array<i64: 0>}> : (!llvm.struct<(ptr, i64)>, !llvm.ptr) -> !llvm.struct<(ptr, i64)>
     %26 = "llvm.insertvalue"(%25, %22) <{position = array<i64: 1>}> : (!llvm.struct<(ptr, i64)>, i64) -> !llvm.struct<(ptr, i64)>
-    %27 = "omp.map.info"(%17) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "mapped_var", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %27 = "omp.map.info"(%17) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "mapped_var", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
     "llvm.store"(%26, %18) <{ordering = 0 : i64}> : (!llvm.struct<(ptr, i64)>, !llvm.ptr) -> ()
-    %28 = "omp.map.info"(%18) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = !llvm.struct<(ptr, i64)>}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%27, %28, %26) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0>, private_maps = array<i64: 1>, private_syms = [@_QFtarget_boxcharEchar_var_private_boxchar_c8xU]}> ({
+    %28 = "omp.map.info"(%18) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.struct<(ptr, i64)>}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%27, %28, %26) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 0>, private_maps = array<i64: 1>, private_syms = [@_QFtarget_boxcharEchar_var_private_boxchar_c8xU]}> ({
     ^bb0(%arg9: !llvm.ptr, %arg10: !llvm.ptr, %arg11: !llvm.struct<(ptr, i64)>):
       %29 = "llvm.mlir.constant"() <{value = 0 : index}> : () -> i64
       %30 = "llvm.mlir.constant"() <{value = 32 : i8}> : () -> i8
@@ -157,9 +157,9 @@
     %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %1 = "llvm.alloca"(%0) <{elem_type = i32}> {bindc_name = "sv"} : (i64) -> !llvm.ptr
     %2 = "llvm.alloca"(%0) <{elem_type = f32}> {bindc_name = "sf"} : (i64) -> !llvm.ptr
-    %3 = "omp.map.info"(%1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %4 = "omp.map.info"(%2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = f32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%3, %4, %1, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0>, private_maps = array<i64: 0, 1>, private_syms = [@sv.firstprivate, @sf.firstprivate]}> ({
+    %3 = "omp.map.info"(%1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %4 = "omp.map.info"(%2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = f32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%3, %4, %1, %2) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0>, private_maps = array<i64: 0, 1>, private_syms = [@sv.firstprivate, @sf.firstprivate]}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: !llvm.ptr, %arg3: !llvm.ptr):
       %5 = "llvm.mlir.constant"() <{value = 2.000000e+00 : f64}> : () -> f64
       %6 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32
@@ -167,9 +167,9 @@
       %8 = "llvm.add"(%7, %6) <{overflowFlags = 0 : i32}> : (i32, i32) -> i32
       "llvm.store"(%8, %arg2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
       %9 = "llvm.load"(%arg3) <{ordering = 0 : i64}> : (!llvm.ptr) -> f32
-      %10 = "llvm.fpext"(%9) : (f32) -> f64
+      %10 = "llvm.fpext"(%9) <{fastmathFlags = #llvm.fastmath<none>}> : (f32) -> f64
       %11 = "llvm.fadd"(%10, %5) <{fastmathFlags = #llvm.fastmath<contract>}> : (f64, f64) -> f64
-      %12 = "llvm.fptrunc"(%11) : (f64) -> f32
+      %12 = "llvm.fptrunc"(%11) <{fastmathFlags = #llvm.fastmath<none>}> : (f64) -> f32
       "llvm.store"(%12, %arg3) <{ordering = 0 : i64}> : (f32, !llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()

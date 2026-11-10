@@ -143,7 +143,7 @@
         "linalg.yield"(%16) : (f16) -> ()
       }) : (memref<16x16xf16>, memref<16x8xf16>, memref<16x8xf16>) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%3) <{callee = @print_res_as_memref_32}> : (memref<16x8xf16>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

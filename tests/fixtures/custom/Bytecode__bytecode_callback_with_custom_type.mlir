@@ -11,3 +11,10 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @test_memref_types(%arg0: memref<4xf32>, %arg1: memref<4x4xf32>) {
+    return
+  }
+}
+

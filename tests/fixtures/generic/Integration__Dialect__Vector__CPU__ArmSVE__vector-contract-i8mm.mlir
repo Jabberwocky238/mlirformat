@@ -61,7 +61,7 @@
     %74 = "vector.shape_cast"(%73) : (vector<[32]xi8>) -> vector<[4]x8xi8>
     %75 = "arith.extsi"(%70) : (vector<4x8xi8>) -> vector<4x8xi32>
     %76 = "arith.extsi"(%74) : (vector<[4]x8xi8>) -> vector<[4]x8xi32>
-    %77 = "vector.contract"(%75, %76, %67) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %77 = "vector.contract"(%75, %76, %67) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(SMMLA):\0A"}> : () -> ()
     %78 = "vector.extract"(%77) <{static_position = array<i64: 0>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
     %79 = "vector.extract"(%77) <{static_position = array<i64: 1>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
@@ -92,7 +92,7 @@
     %54 = "vector.shape_cast"(%53) : (vector<[32]xi8>) -> vector<[4]x8xi8>
     %55 = "arith.extui"(%50) : (vector<4x8xi8>) -> vector<4x8xi32>
     %56 = "arith.extui"(%54) : (vector<[4]x8xi8>) -> vector<[4]x8xi32>
-    %57 = "vector.contract"(%55, %56, %47) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %57 = "vector.contract"(%55, %56, %47) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(UMMLA):\0A"}> : () -> ()
     %58 = "vector.extract"(%57) <{static_position = array<i64: 0>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
     %59 = "vector.extract"(%57) <{static_position = array<i64: 1>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
@@ -123,7 +123,7 @@
     %34 = "vector.shape_cast"(%33) : (vector<[32]xi8>) -> vector<[4]x8xi8>
     %35 = "arith.extui"(%30) : (vector<4x8xi8>) -> vector<4x8xi32>
     %36 = "arith.extsi"(%34) : (vector<[4]x8xi8>) -> vector<[4]x8xi32>
-    %37 = "vector.contract"(%35, %36, %27) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %37 = "vector.contract"(%35, %36, %27) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(USMMLA):\0A"}> : () -> ()
     %38 = "vector.extract"(%37) <{static_position = array<i64: 0>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
     %39 = "vector.extract"(%37) <{static_position = array<i64: 1>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
@@ -154,7 +154,7 @@
     %14 = "vector.shape_cast"(%13) : (vector<[32]xi8>) -> vector<[4]x8xi8>
     %15 = "arith.extsi"(%10) : (vector<4x8xi8>) -> vector<4x8xi32>
     %16 = "arith.extui"(%14) : (vector<[4]x8xi8>) -> vector<[4]x8xi32>
-    %17 = "vector.contract"(%15, %16, %7) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %17 = "vector.contract"(%15, %16, %7) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(SUMMLA (i.e. USMMLA transposed)):\0A"}> : () -> ()
     %18 = "vector.extract"(%17) <{static_position = array<i64: 0>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>
     %19 = "vector.extract"(%17) <{static_position = array<i64: 1>}> : (vector<4x[4]xi32>) -> vector<[4]xi32>

@@ -8,7 +8,7 @@
 #map7 = affine_map<()[s0] -> (s0 + 24)>
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (memref<16x16xf16>, memref<16x2xi16>, memref<8x32xf16>, memref<16x8xf16>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<16x16xf16>, memref<16x2xi16>, memref<8x32xf16>, memref<16x8xf16>) -> (), kernel}> ({
     ^bb0(%arg10: memref<16x16xf16>, %arg11: memref<16x2xi16>, %arg12: memref<8x32xf16>, %arg13: memref<16x8xf16>):
       %29 = "arith.constant"() <{value = 0.000000e+00 : f16}> : () -> f16
       %30 = "arith.constant"() <{value = 4 : index}> : () -> index
@@ -49,14 +49,14 @@
       %65 = "vector.insert"(%59, %64) <{static_position = array<i64: 2>}> : (vector<2xf16>, vector<4x2xf16>) -> vector<4x2xf16>
       %66 = "vector.insert"(%61, %65) <{static_position = array<i64: 3>}> : (vector<2xf16>, vector<4x2xf16>) -> vector<4x2xf16>
       %67 = "arith.constant"() <{value = dense<0.000000e+00> : vector<2x2xf16>}> : () -> vector<2x2xf16>
-      "gpu.barrier"() : () -> ()
+      "gpu.barrier"() <{scope = #gpu.barrier_scope<workgroup>}> : () -> ()
       %68 = "nvgpu.mma.sp.sync"(%55, %66, %67, %42) <{mmaShape = [16, 8, 32], sparsitySelector = 0 : i32}> : (vector<4x2xf16>, vector<4x2xf16>, vector<2x2xf16>, vector<2xi16>) -> vector<2x2xf16>
       %69 = "vector.extract"(%68) <{static_position = array<i64: 0>}> : (vector<2x2xf16>) -> vector<2xf16>
       %70 = "vector.extract"(%68) <{static_position = array<i64: 1>}> : (vector<2x2xf16>) -> vector<2xf16>
       "vector.transfer_write"(%69, %arg13, %43#0, %44) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map4}> : (vector<2xf16>, memref<16x8xf16>, index, index) -> ()
       "vector.transfer_write"(%70, %arg13, %46, %44) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map4}> : (vector<2xf16>, memref<16x8xf16>, index, index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "mma_sp_sync_f16_16832", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "mma_sp_sync_f16_16832"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
     %0 = "arith.constant"() <{value = 0.000000e+00 : f16}> : () -> f16

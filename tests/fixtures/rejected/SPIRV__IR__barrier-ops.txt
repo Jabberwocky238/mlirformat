@@ -1,2 +1,3 @@
 1	parse	custom op 'spirv.ControlBarrier' expected ::mlir::spirv::Scope to be one of: CrossDevice, Device, Workgroup, Subgroup, Invocation, QueueFamily, ShaderCallKHR
 4	verify	expected at most one of these four memory constraints to be set: `Acquire`, `Release`,`AcquireRelease` or `SequentiallyConsistent`
+7	verify	expected at most one of these four memory constraints to be set: `Acquire`, `Release`,`AcquireRelease` or `SequentiallyConsistent`

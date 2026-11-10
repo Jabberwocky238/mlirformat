@@ -223,3 +223,22 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @expect_no_fold_when_dominated_dest_is_block_arg(%arg0: tensor<2048x2048xf32>, %arg1: tensor<2048x2048xf32>, %arg2: tensor<2048x2048xf32>, %arg3: tensor<2048x2048xf32>) -> tensor<2048x2048xf32> {
+    %0 = linalg.matmul ins(%arg0, %arg1 : tensor<2048x2048xf32>, tensor<2048x2048xf32>) outs(%arg2 : tensor<2048x2048xf32>) -> tensor<2048x2048xf32>
+    %1 = tensor.empty() : tensor<2048x2048xf32>
+    %2 = linalg.add ins(%0, %arg3 : tensor<2048x2048xf32>, tensor<2048x2048xf32>) outs(%1 : tensor<2048x2048xf32>) -> tensor<2048x2048xf32>
+    return %2 : tensor<2048x2048xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      transform.apply_patterns to %0 {
+        transform.apply_patterns.linalg.fold_add_into_dest
+      } : !transform.any_op
+      transform.yield 
+    }
+  }
+}
+

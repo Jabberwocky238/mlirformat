@@ -262,6 +262,28 @@ module {
 
 // -----
 module {
+  func.func @isubborrow_x_0(%arg0: i32) -> !spirv.struct<(i32, i32)> {
+    %cst0_i32 = spirv.Constant 0 : i32
+    %0 = spirv.ISubBorrow %arg0, %cst0_i32 : !spirv.struct<(i32, i32)>
+    return %0 : !spirv.struct<(i32, i32)>
+  }
+  func.func @const_fold_scalar_isubborrow() -> (!spirv.struct<(i32, i32)>, !spirv.struct<(i32, i32)>) {
+    %cst5_i32 = spirv.Constant 5 : i32
+    %cst8_i32 = spirv.Constant 8 : i32
+    %0 = spirv.ISubBorrow %cst5_i32, %cst8_i32 : !spirv.struct<(i32, i32)>
+    %1 = spirv.ISubBorrow %cst8_i32, %cst5_i32 : !spirv.struct<(i32, i32)>
+    return %0, %1 : !spirv.struct<(i32, i32)>, !spirv.struct<(i32, i32)>
+  }
+  func.func @const_fold_vector_isubborrow() -> !spirv.struct<(vector<3xi32>, vector<3xi32>)> {
+    %cst_vec_3xi32 = spirv.Constant dense<[5, 8, -1]> : vector<3xi32>
+    %cst_vec_3xi32_0 = spirv.Constant dense<[8, 5, 1]> : vector<3xi32>
+    %0 = spirv.ISubBorrow %cst_vec_3xi32, %cst_vec_3xi32_0 : !spirv.struct<(vector<3xi32>, vector<3xi32>)>
+    return %0 : !spirv.struct<(vector<3xi32>, vector<3xi32>)>
+  }
+}
+
+// -----
+module {
   func.func @imul_zero_one(%arg0: i32) -> (i32, i32) {
     %cst0_i32 = spirv.Constant 0 : i32
     %cst1_i32 = spirv.Constant 1 : i32
@@ -600,6 +622,20 @@ module {
     %cst_vec_4xi32 = spirv.Constant dense<4> : vector<4xi32>
     %0 = spirv.UMod %arg0, %cst_vec_4xi32 : vector<4xi32>
     %cst_vec_4xi32_0 = spirv.Constant dense<32> : vector<4xi32>
+    %1 = spirv.UMod %0, %cst_vec_4xi32_0 : vector<4xi32>
+    return %0, %1 : vector<4xi32>, vector<4xi32>
+  }
+  func.func @umod_fail_div_0_fold(%arg0: i32) -> (i32, i32) {
+    %cst32_i32 = spirv.Constant 32 : i32
+    %0 = spirv.UMod %arg0, %cst32_i32 : i32
+    %cst0_i32 = spirv.Constant 0 : i32
+    %1 = spirv.UMod %0, %cst0_i32 : i32
+    return %0, %1 : i32, i32
+  }
+  func.func @umod_vector_fail_div_0_fold(%arg0: vector<4xi32>) -> (vector<4xi32>, vector<4xi32>) {
+    %cst_vec_4xi32 = spirv.Constant dense<32> : vector<4xi32>
+    %0 = spirv.UMod %arg0, %cst_vec_4xi32 : vector<4xi32>
+    %cst_vec_4xi32_0 = spirv.Constant dense<[4, 0, 4, 0]> : vector<4xi32>
     %1 = spirv.UMod %0, %cst_vec_4xi32_0 : vector<4xi32>
     return %0, %1 : vector<4xi32>, vector<4xi32>
   }

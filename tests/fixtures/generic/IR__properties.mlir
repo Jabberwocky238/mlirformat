@@ -15,5 +15,7 @@
   "test.with_optional_properties"() <{anAttr = 0 : i32, hasDefault = [0], hasUnit, longSyntax = ["bar"], maybeUnit = [unit], nested = [[1]], nonTrivialStorage = ["foo"], simple = [1], simplei8 = [], simpleui8 = []}> : () -> ()
   "test.with_optional_properties"() <{hasDefault = [], hasUnit = false, longSyntax = [], maybeUnit = [], nested = [[]], nonTrivialStorage = [], simple = [], simplei8 = [], simpleui8 = []}> : () -> ()
   "test.with_array_properties"() <{explicitOptions = [[], [0]], explicitUnits = [unit, false], hasDefault = [], ints = [1, 2], nested = [[1 : i32, 2 : i32], [3 : i32, 4 : i32]], opt = [[-1 : i32, -2 : i32]], strings = ["a", "b"]}> : () -> ()
+  "test.op_with_property_predicates"() <{array = [], defaulted = 0 : i64, more_constrained = 1 : i64, non_empty_constrained = [1], non_empty_optional = [], non_empty_unconstrained = [1], optional = [], scalar = 1 : i64, unconstrained = 0 : i64}> : () -> ()
+  "test.op_with_property_predicates"() <{array = [], defaulted = 3 : i64, more_constrained = 1 : i64, non_empty_constrained = [1], non_empty_optional = [], non_empty_unconstrained = [1], optional = [], scalar = 1 : i64, unconstrained = 0 : i64}> : () -> ()
 }) : () -> ()
 

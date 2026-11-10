@@ -6,12 +6,12 @@
   ^bb0(%arg4: vector<4x8xi8>, %arg5: vector<[4]x8xi8>, %arg6: vector<4x[4]xi32>):
     %2 = "arith.extsi"(%arg4) : (vector<4x8xi8>) -> vector<4x8xi32>
     %3 = "arith.extsi"(%arg5) : (vector<[4]x8xi8>) -> vector<[4]x8xi32>
-    %4 = "vector.contract"(%2, %3, %arg6) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %4 = "vector.contract"(%2, %3, %arg6) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "func.return"(%4) : (vector<4x[4]xi32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<4x8xi8>, vector<[4]x8xi8>, vector<4x[4]xi32>) -> vector<4x[4]xi32>, sym_name = "test_vector_contract_to_smmla_implicit_sext"}> ({
   ^bb0(%arg1: vector<4x8xi8>, %arg2: vector<[4]x8xi8>, %arg3: vector<4x[4]xi32>):
-    %1 = "vector.contract"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi8>, vector<[4]x8xi8>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %1 = "vector.contract"(%arg1, %arg2, %arg3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi8>, vector<[4]x8xi8>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "func.return"(%1) : (vector<4x[4]xi32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

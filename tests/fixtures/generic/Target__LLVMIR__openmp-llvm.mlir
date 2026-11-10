@@ -1,7 +1,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "test_stand_alone_directives", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "omp.barrier"() : () -> ()
-    "omp.taskwait"() : () -> ()
+    "omp.taskwait"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
     "omp.taskyield"() : () -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
@@ -173,7 +173,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i32, i32, ptr)>, linkage = #llvm.linkage<external>, sym_name = "wsloop_linear", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: !llvm.ptr):
-    "omp.wsloop"(%arg3, %arg2) <{linear_var_types = [i32], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
+    "omp.wsloop"(%arg3, %arg2) <{linear_modifiers = [unit], linear_var_types = [i32], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
       "omp.loop_nest"(%arg0, %arg1, %arg2) ({
       ^bb0(%arg4: i32):
         "omp.yield"() : () -> ()
@@ -531,7 +531,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i32, i32, ptr)>, linkage = #llvm.linkage<external>, sym_name = "simd_linear", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: !llvm.ptr):
-    "omp.simd"(%arg3, %arg2) <{linear_var_types = [i32], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
+    "omp.simd"(%arg3, %arg2) <{linear_modifiers = [unit], linear_var_types = [i32], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
       "omp.loop_nest"(%arg0, %arg1, %arg2) ({
       ^bb0(%arg4: i32):
         "omp.yield"() : () -> ()
@@ -546,7 +546,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i32, ptr)>, linkage = #llvm.linkage<external>, sym_name = "simd_linear_i64_var_i32_step", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i32, %arg1: i32, %arg2: !llvm.ptr):
     %0 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-    "omp.simd"(%arg2, %0) <{linear_var_types = [i64], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
+    "omp.simd"(%arg2, %0) <{linear_modifiers = [unit], linear_var_types = [i64], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
       "omp.loop_nest"(%arg0, %arg1, %0) ({
       ^bb0(%arg3: i32):
         "omp.yield"() : () -> ()
@@ -561,7 +561,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i32, ptr)>, linkage = #llvm.linkage<external>, sym_name = "simd_linear_f64_var_i32_step", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i32, %arg1: i32, %arg2: !llvm.ptr):
     %0 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-    "omp.simd"(%arg2, %0) <{linear_var_types = [f64], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
+    "omp.simd"(%arg2, %0) <{linear_modifiers = [unit], linear_var_types = [f64], operandSegmentSizes = array<i32: 0, 0, 1, 1, 0, 0, 0>}> ({
       "omp.loop_nest"(%arg0, %arg1, %0) ({
       ^bb0(%arg3: i32):
         "omp.yield"() : () -> ()
@@ -1148,6 +1148,84 @@
 
 // -----
 "builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, f32, f32)>, linkage = #llvm.linkage<external>, sym_name = "atomic_update_float_multi_step", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: f32, %arg2: f32):
+    "omp.atomic.update"(%arg0) ({
+    ^bb0(%arg3: f32):
+      %0 = "llvm.fmul"(%arg3, %arg1) <{fastmathFlags = #llvm.fastmath<none>}> : (f32, f32) -> f32
+      %1 = "llvm.fadd"(%0, %arg2) <{fastmathFlags = #llvm.fastmath<none>}> : (f32, f32) -> f32
+      "omp.yield"(%1) : (f32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, f32)>, linkage = #llvm.linkage<external>, sym_name = "atomic_update_float_intrinsic", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: f32):
+    "omp.atomic.update"(%arg0) ({
+    ^bb0(%arg2: f32):
+      %0 = "llvm.intr.maxnum"(%arg2, %arg1) <{fastmathFlags = #llvm.fastmath<none>}> : (f32, f32) -> f32
+      "omp.yield"(%0) : (f32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_capture_complex_swap", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
+    %0 = "llvm.mlir.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %1 = "llvm.mlir.undef"() : () -> !llvm.struct<(f32, f32)>
+    %2 = "llvm.insertvalue"(%1, %0) <{position = array<i64: 0>}> : (!llvm.struct<(f32, f32)>, f32) -> !llvm.struct<(f32, f32)>
+    %3 = "llvm.insertvalue"(%2, %0) <{position = array<i64: 1>}> : (!llvm.struct<(f32, f32)>, f32) -> !llvm.struct<(f32, f32)>
+    "omp.atomic.capture"() ({
+      "omp.atomic.read"(%arg0, %arg1) <{element_type = !llvm.struct<(f32, f32)>}> : (!llvm.ptr, !llvm.ptr) -> ()
+      "omp.atomic.write"(%arg0, %3) : (!llvm.ptr, !llvm.struct<(f32, f32)>) -> ()
+      "omp.terminator"() : () -> ()
+    }) : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_capture_complex8_swap", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
+    %0 = "llvm.mlir.constant"() <{value = 1.000000e+00 : f64}> : () -> f64
+    %1 = "llvm.mlir.undef"() : () -> !llvm.struct<(f64, f64)>
+    %2 = "llvm.insertvalue"(%1, %0) <{position = array<i64: 0>}> : (!llvm.struct<(f64, f64)>, f64) -> !llvm.struct<(f64, f64)>
+    %3 = "llvm.insertvalue"(%2, %0) <{position = array<i64: 1>}> : (!llvm.struct<(f64, f64)>, f64) -> !llvm.struct<(f64, f64)>
+    "omp.atomic.capture"() ({
+      "omp.atomic.read"(%arg0, %arg1) <{element_type = !llvm.struct<(f64, f64)>}> : (!llvm.ptr, !llvm.ptr) -> ()
+      "omp.atomic.write"(%arg0, %3) : (!llvm.ptr, !llvm.struct<(f64, f64)>) -> ()
+      "omp.terminator"() : () -> ()
+    }) : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_capture_complex_swap_seq_cst", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
+    %0 = "llvm.mlir.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %1 = "llvm.mlir.undef"() : () -> !llvm.struct<(f32, f32)>
+    %2 = "llvm.insertvalue"(%1, %0) <{position = array<i64: 0>}> : (!llvm.struct<(f32, f32)>, f32) -> !llvm.struct<(f32, f32)>
+    %3 = "llvm.insertvalue"(%2, %0) <{position = array<i64: 1>}> : (!llvm.struct<(f32, f32)>, f32) -> !llvm.struct<(f32, f32)>
+    "omp.atomic.capture"() <{memory_order = #omp<memoryorderkind seq_cst>}> ({
+      "omp.atomic.read"(%arg0, %arg1) <{element_type = !llvm.struct<(f32, f32)>}> : (!llvm.ptr, !llvm.ptr) -> ()
+      "omp.atomic.write"(%arg0, %3) : (!llvm.ptr, !llvm.struct<(f32, f32)>) -> ()
+      "omp.terminator"() : () -> ()
+    }) : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_read_complex", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %1 = "llvm.alloca"(%0) <{elem_type = !llvm.struct<(f32, f32)>}> {bindc_name = "ib"} : (i64) -> !llvm.ptr
@@ -1605,6 +1683,122 @@
 
 // -----
 "builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, i32, i32, ptr, f32, f32, ptr, struct<(f32, f32)>, struct<(f32, f32)>, ptr, ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_compare", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: i32, %arg2: i32, %arg3: !llvm.ptr, %arg4: f32, %arg5: f32, %arg6: !llvm.ptr, %arg7: !llvm.struct<(f32, f32)>, %arg8: !llvm.struct<(f32, f32)>, %arg9: !llvm.ptr, %arg10: !llvm.ptr, %arg11: !llvm.ptr):
+    "omp.atomic.compare"(%arg0) ({
+    ^bb0(%arg21: i32):
+      %32 = "llvm.icmp"(%arg21, %arg1) <{predicate = 0 : i64}> : (i32, i32) -> i1
+      %33 = "llvm.select"(%32, %arg2, %arg21) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%33) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg3) ({
+    ^bb0(%arg20: f32):
+      %30 = "llvm.fcmp"(%arg20, %arg4) <{fastmathFlags = #llvm.fastmath<none>, predicate = 1 : i64}> : (f32, f32) -> i1
+      %31 = "llvm.select"(%30, %arg5, %arg20) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, f32, f32) -> f32
+      "omp.yield"(%31) : (f32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg6) ({
+    ^bb0(%arg19: !llvm.struct<(f32, f32)>):
+      %22 = "llvm.extractvalue"(%arg19) <{position = array<i64: 0>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %23 = "llvm.extractvalue"(%arg7) <{position = array<i64: 0>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %24 = "llvm.fcmp"(%22, %23) <{fastmathFlags = #llvm.fastmath<none>, predicate = 1 : i64}> : (f32, f32) -> i1
+      %25 = "llvm.extractvalue"(%arg19) <{position = array<i64: 1>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %26 = "llvm.extractvalue"(%arg7) <{position = array<i64: 1>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %27 = "llvm.fcmp"(%25, %26) <{fastmathFlags = #llvm.fastmath<none>, predicate = 1 : i64}> : (f32, f32) -> i1
+      %28 = "llvm.and"(%24, %27) : (i1, i1) -> i1
+      %29 = "llvm.select"(%28, %arg8, %arg19) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, !llvm.struct<(f32, f32)>, !llvm.struct<(f32, f32)>) -> !llvm.struct<(f32, f32)>
+      "omp.yield"(%29) : (!llvm.struct<(f32, f32)>) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg0) ({
+    ^bb0(%arg18: i32):
+      %20 = "llvm.icmp"(%arg18, %arg1) <{predicate = 2 : i64}> : (i32, i32) -> i1
+      %21 = "llvm.select"(%20, %arg1, %arg18) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%21) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg0) ({
+    ^bb0(%arg17: i32):
+      %18 = "llvm.icmp"(%arg17, %arg1) <{predicate = 4 : i64}> : (i32, i32) -> i1
+      %19 = "llvm.select"(%18, %arg1, %arg17) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%19) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg3) ({
+    ^bb0(%arg16: f32):
+      %16 = "llvm.fcmp"(%arg16, %arg4) <{fastmathFlags = #llvm.fastmath<none>, predicate = 4 : i64}> : (f32, f32) -> i1
+      %17 = "llvm.select"(%16, %arg4, %arg16) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, f32, f32) -> f32
+      "omp.yield"(%17) : (f32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg3) ({
+    ^bb0(%arg15: f32):
+      %14 = "llvm.fcmp"(%arg15, %arg4) <{fastmathFlags = #llvm.fastmath<none>, predicate = 2 : i64}> : (f32, f32) -> i1
+      %15 = "llvm.select"(%14, %arg4, %arg15) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, f32, f32) -> f32
+      "omp.yield"(%15) : (f32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg0) <{memory_order = #omp<memoryorderkind seq_cst>}> ({
+    ^bb0(%arg14: i32):
+      %12 = "llvm.icmp"(%arg14, %arg1) <{predicate = 0 : i64}> : (i32, i32) -> i1
+      %13 = "llvm.select"(%12, %arg2, %arg14) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%13) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg6) <{memory_order = #omp<memoryorderkind seq_cst>}> ({
+    ^bb0(%arg13: !llvm.struct<(f32, f32)>):
+      %4 = "llvm.extractvalue"(%arg13) <{position = array<i64: 0>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %5 = "llvm.extractvalue"(%arg7) <{position = array<i64: 0>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %6 = "llvm.fcmp"(%4, %5) <{fastmathFlags = #llvm.fastmath<none>, predicate = 1 : i64}> : (f32, f32) -> i1
+      %7 = "llvm.extractvalue"(%arg13) <{position = array<i64: 1>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %8 = "llvm.extractvalue"(%arg7) <{position = array<i64: 1>}> : (!llvm.struct<(f32, f32)>) -> f32
+      %9 = "llvm.fcmp"(%7, %8) <{fastmathFlags = #llvm.fastmath<none>, predicate = 1 : i64}> : (f32, f32) -> i1
+      %10 = "llvm.and"(%6, %9) : (i1, i1) -> i1
+      %11 = "llvm.select"(%10, %arg8, %arg13) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, !llvm.struct<(f32, f32)>, !llvm.struct<(f32, f32)>) -> !llvm.struct<(f32, f32)>
+      "omp.yield"(%11) : (!llvm.struct<(f32, f32)>) -> ()
+    }) : (!llvm.ptr) -> ()
+    %0 = "llvm.load"(%arg10) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
+    %1 = "llvm.load"(%arg11) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
+    "omp.atomic.compare"(%arg9) ({
+    ^bb0(%arg12: i32):
+      %2 = "llvm.icmp"(%arg12, %0) <{predicate = 0 : i64}> : (i32, i32) -> i1
+      %3 = "llvm.select"(%2, %1, %arg12) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%3) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, i32, i32)>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_compare_weak", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: i32, %arg2: i32):
+    "omp.atomic.compare"(%arg0) <{weak}> ({
+    ^bb0(%arg4: i32):
+      %2 = "llvm.icmp"(%arg4, %arg1) <{predicate = 0 : i64}> : (i32, i32) -> i1
+      %3 = "llvm.select"(%2, %arg2, %arg4) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%3) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "omp.atomic.compare"(%arg0) <{memory_order = #omp<memoryorderkind seq_cst>, weak}> ({
+    ^bb0(%arg3: i32):
+      %0 = "llvm.icmp"(%arg3, %arg1) <{predicate = 0 : i64}> : (i32, i32) -> i1
+      %1 = "llvm.select"(%0, %arg2, %arg3) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, i32, i32) -> i32
+      "omp.yield"(%1) : (i32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, f32, f32)>, linkage = #llvm.linkage<external>, sym_name = "omp_atomic_compare_float_neg_zero", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr, %arg1: f32, %arg2: f32):
+    "omp.atomic.compare"(%arg0) ({
+    ^bb0(%arg3: f32):
+      %0 = "llvm.fcmp"(%arg3, %arg1) <{fastmathFlags = #llvm.fastmath<none>, predicate = 1 : i64}> : (f32, f32) -> i1
+      %1 = "llvm.select"(%0, %arg2, %arg3) <{fastmathFlags = #llvm.fastmath<none>}> : (i1, f32, f32) -> f32
+      "omp.yield"(%1) : (f32) -> ()
+    }) : (!llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_sections_empty", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "omp.sections"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
@@ -1773,7 +1967,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_task_detach", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr):
-    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 1>}> ({
+    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>}> ({
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
     "llvm.return"() : () -> ()
@@ -1784,7 +1978,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i32, ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_task", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i32, %arg1: i32, %arg2: !llvm.ptr):
-    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
       %1 = "llvm.alloca"(%0) <{elem_type = i32}> : (i64) -> !llvm.ptr
       %2 = "llvm.load"(%1) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
@@ -1799,7 +1993,7 @@
 // -----
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_task_attrs", target_cpu = "x86-64", target_features = #llvm.target_features<["+mmx", "+sse"]>, unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : () -> ()
     "llvm.return"() : () -> ()
@@ -1830,7 +2024,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "omp_task_with_deps", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr):
-    "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependin)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependin)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
       %1 = "llvm.alloca"(%0) <{elem_type = i32}> : (i64) -> !llvm.ptr
       %2 = "llvm.load"(%1) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
@@ -1838,16 +2032,16 @@
       "llvm.store"(%3, %1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
-    "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependout)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependout)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
-    "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependinout)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependinout)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
-    "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependmutexinoutset)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependmutexinoutset)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
-    "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependinoutset)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependinoutset)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
     "llvm.return"() : () -> ()
@@ -1860,7 +2054,7 @@
   ^bb0(%arg0: i32, %arg1: i32, %arg2: !llvm.ptr):
     %0 = "llvm.sub"(%arg0, %arg1) <{overflowFlags = 0 : i32}> : (i32, i32) -> i32
     "llvm.store"(%0, %arg2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       %2 = "llvm.add"(%arg0, %arg1) <{overflowFlags = 0 : i32}> : (i32, i32) -> i32
       "llvm.store"(%2, %arg2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
@@ -1876,7 +2070,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{fir.bindc_name = "a"}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "par_task_", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr):
     %0 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "llvm.store"(%0, %arg0) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
         "omp.terminator"() : () -> ()
@@ -1906,7 +2100,7 @@
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "task", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr):
-    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 1, 0>, private_syms = [@privatizer]}> ({
+    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0>, private_syms = [@privatizer]}> ({
     ^bb0(%arg1: !llvm.ptr):
       "llvm.call"(%arg1) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
@@ -1940,11 +2134,11 @@
     "omp.taskgroup"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> ({
       %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i32
       %1 = "llvm.alloca"(%0) <{elem_type = i8}> : (i32) -> !llvm.ptr
-      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
         "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
         "omp.terminator"() : () -> ()
       }) : () -> ()
-      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
         "llvm.call"(%arg0, %arg1, %arg2) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @bar, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 3, 0>}> : (i32, i32, !llvm.ptr) -> ()
         "omp.terminator"() : () -> ()
       }) : () -> ()
@@ -1969,11 +2163,11 @@
     %2 = "llvm.mlir.constant"() <{value = 4 : i32}> : () -> i32
     %3 = "llvm.mlir.constant"() <{value = true}> : () -> i1
     %4 = "llvm.load"(%1) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
-    "omp.task"(%4) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0, 0>}> ({
+    "omp.task"(%4) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0>}> ({
       "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @test_01, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
       "omp.terminator"() : () -> ()
     }) : (i32) -> ()
-    "omp.task"(%3, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 1, 0, 0, 1, 0, 0>}> ({
+    "omp.task"(%3, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0>}> ({
       "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @test_02, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
       "omp.terminator"() : () -> ()
     }) : (i1, i32) -> ()
@@ -2002,42 +2196,42 @@
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<debug_kind = 1, assume_teams_oversubscription = true, assume_threads_oversubscription = true, assume_no_thread_state = true, assume_no_nested_parallelism = true>} : () -> ()
+}) {omp.flags = #omp.flags<debug_kind = 1, assume_teams_oversubscription = true, assume_threads_oversubscription = true, assume_no_thread_state = true, assume_no_nested_parallelism = true>, omp.is_gpu = true} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<>} : () -> ()
+}) {omp.flags = #omp.flags<>, omp.is_gpu = true, omp.is_target_device = true} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<openmp_device_version = 51>} : () -> ()
+}) {omp.flags = #omp.flags<openmp_device_version = 51>, omp.is_gpu = true, omp.is_target_device = true} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<>, omp.version = #omp.version<version = 50>} : () -> ()
+}) {omp.flags = #omp.flags<>, omp.is_gpu = true, omp.is_target_device = true, omp.version = #omp.version<version = 50>} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.version = #omp.version<version = 51>} : () -> ()
+}) {omp.is_target_device = true, omp.version = #omp.version<version = 51>} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<>} : () -> ()
+}) {omp.flags = #omp.flags<>, omp.is_gpu = true} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true>} : () -> ()
+}) {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true>, omp.is_gpu = true} : () -> ()
 
 // -----
 "builtin.module"() ({
 ^bb0:
-}) {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true, no_gpu_lib = true>} : () -> ()
+}) {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true, no_gpu_lib = true>, omp.is_gpu = true} : () -> ()
 
 // -----
 "builtin.module"() ({
@@ -2082,7 +2276,7 @@
 // -----
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_task_untied", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>, untied}> ({
+    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>, untied}> ({
       "omp.terminator"() : () -> ()
     }) : () -> ()
     "llvm.return"() : () -> ()
@@ -2092,7 +2286,7 @@
 // -----
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_task_mergeable", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-    "omp.task"() <{mergeable, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"() <{mergeable, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : () -> ()
     "llvm.return"() : () -> ()
@@ -2110,7 +2304,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i1)>, linkage = #llvm.linkage<external>, sym_name = "omp_task_final", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i1):
     "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo_before, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
-    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 1, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0>}> ({
       "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
       "omp.terminator"() : () -> ()
     }) : (i1) -> ()
@@ -2130,7 +2324,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i1)>, linkage = #llvm.linkage<external>, sym_name = "omp_task_if", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i1):
     "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo_before, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
-    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0>}> ({
       "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
       "omp.terminator"() : () -> ()
     }) : (i1) -> ()
@@ -2186,17 +2380,77 @@
   }, {
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "nested_task_with_deps", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-    %0 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
-    %1 = "llvm.alloca"(%0) <{elem_type = i32}> {bindc_name = "x"} : (i64) -> !llvm.ptr
     %2 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
-    "omp.parallel"(%1) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0>, private_syms = [@_QFEx_private_i32]}> ({
-    ^bb0(%arg0: !llvm.ptr):
-      "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependout)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    %3 = "llvm.alloca"(%2) <{elem_type = i32}> {bindc_name = "x"} : (i64) -> !llvm.ptr
+    %4 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
+    "omp.parallel"(%3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0>, private_syms = [@_QFEx_private_i32]}> ({
+    ^bb0(%arg1: !llvm.ptr):
+      "omp.task"(%arg1) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependout)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
         "omp.terminator"() : () -> ()
       }) : (!llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.nocapture}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "task_affinity_plain", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr):
+    %0 = "llvm.mlir.constant"() <{value = 4 : i64}> : () -> i64
+    "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
+      "omp.single"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
+        %1 = "omp.affinity_entry"(%arg0, %0) : (!llvm.ptr, i64) -> !omp.affinity_entry_ty<!llvm.ptr, i64>
+        "omp.task"(%1) <{operandSegmentSizes = array<i32: 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+          "omp.terminator"() : () -> ()
+        }) : (!omp.affinity_entry_ty<!llvm.ptr, i64>) -> ()
+        "omp.terminator"() : () -> ()
+      }) : () -> ()
+      "omp.terminator"() : () -> ()
+    }) : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<internal>, sym_name = "any", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<internal>, sym_name = "host", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<internal>, sym_name = "nohost", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_groupprivate_device", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
+    %1 = "omp.groupprivate"() <{device_type = #omp<device_type(any)>, sym_name = @any}> : () -> !llvm.ptr
+    "llvm.store"(%0, %1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+    %2 = "omp.groupprivate"() <{device_type = #omp<device_type(host)>, sym_name = @host}> : () -> !llvm.ptr
+    "llvm.store"(%0, %2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+    %3 = "omp.groupprivate"() <{device_type = #omp<device_type(nohost)>, sym_name = @nohost}> : () -> !llvm.ptr
+    "llvm.store"(%0, %3) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) {omp.declare_target = #omp.declaretarget<device_type = (any), capture_clause = (to)>} : () -> ()
+}) {llvm.target_triple = "nvptx64-nvidia-cuda", omp.is_target_device = true} : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<internal>, sym_name = "any1", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<internal>, sym_name = "host1", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<internal>, sym_name = "nohost1", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "omp_groupprivate_host", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
+    %1 = "omp.groupprivate"() <{device_type = #omp<device_type(any)>, sym_name = @any1}> : () -> !llvm.ptr
+    "llvm.store"(%0, %1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+    %2 = "omp.groupprivate"() <{device_type = #omp<device_type(host)>, sym_name = @host1}> : () -> !llvm.ptr
+    "llvm.store"(%0, %2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+    %3 = "omp.groupprivate"() <{device_type = #omp<device_type(nohost)>, sym_name = @nohost1}> : () -> !llvm.ptr
+    "llvm.store"(%0, %3) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) {omp.is_target_device = false} : () -> ()
+
+// -----
+"builtin.module"() ({
+^bb0:
 }) : () -> ()
 

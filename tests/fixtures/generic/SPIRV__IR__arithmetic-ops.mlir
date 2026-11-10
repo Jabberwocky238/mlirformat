@@ -160,6 +160,7 @@
 // -----
 // -----
 // -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (i32) -> !spirv.struct<(i32, i32)>, sym_name = "smul_extended_scalar"}> ({
   ^bb0(%arg1: i32):

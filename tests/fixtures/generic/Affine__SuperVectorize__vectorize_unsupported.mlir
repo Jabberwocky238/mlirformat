@@ -36,3 +36,45 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0) -> (d0, d0)>
+#map1 = affine_map<(d0) -> (d0)>
+#map2 = affine_map<(d0) -> (d0 + 1)>
+#map3 = affine_map<() -> (0)>
+#map4 = affine_map<() -> (4)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x4xf32>, memref<4xf32>) -> (), sym_name = "store_broadcast_perm_map_unsupported"}> ({
+  ^bb0(%arg0: memref<4x4xf32>, %arg1: memref<4xf32>):
+    "affine.for"() <{lowerBoundMap = #map3, operandSegmentSizes = array<i32: 0, 0, 0>, step = 1 : index, upperBoundMap = #map4}> ({
+    ^bb0(%arg2: index):
+      "affine.for"(%arg2, %arg2) <{lowerBoundMap = #map1, operandSegmentSizes = array<i32: 1, 1, 0>, step = 1 : index, upperBoundMap = #map2}> ({
+      ^bb0(%arg3: index):
+        %0 = "affine.load"(%arg0, %arg3) <{map = #map}> : (memref<4x4xf32>, index) -> f32
+        "affine.store"(%0, %arg1, %arg3) <{map = #map1}> : (f32, memref<4xf32>, index) -> ()
+        "affine.yield"() : () -> ()
+      }) : (index, index) -> ()
+      "affine.yield"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+#map1 = affine_map<() -> (0)>
+#map2 = affine_map<()[s0] -> (s0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1024xf32>) -> (), sym_name = "reduction_loop_dynamic_bound_vectorized"}> ({
+  ^bb0(%arg0: memref<1024xf32>):
+    %0 = "arith.constant"() <{value = 10 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %2 = "affine.for"(%0, %1) <{lowerBoundMap = #map1, operandSegmentSizes = array<i32: 0, 1, 1>, step = 1 : index, upperBoundMap = #map2}> ({
+    ^bb0(%arg1: index, %arg2: f32):
+      %3 = "affine.load"(%arg0, %arg1) <{map = #map}> : (memref<1024xf32>, index) -> f32
+      %4 = "arith.addf"(%arg2, %3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "affine.yield"(%4) : (f32) -> ()
+    }) : (index, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

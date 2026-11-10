@@ -162,20 +162,22 @@
   %25:3 = "test.format_types_match_variadic"(%0, %0, %0) : (i64, i64, i64) -> (i64, i64, i64)
   %26 = "test.format_types_match_attr"() <{value = 1 : i64}> : () -> i64
   %27 = "test.format_types_match_context"(%0) : (i64) -> tuple<i64>
-  %28 = "test.format_infer_type"() : () -> i16
-  %29 = "test.format_infer_type2"() : () -> i16
-  %30:2 = "test.format_infer_type_all_operands_and_types"(%0, %1) : (i64, i32) -> (i64, i32)
-  %31:2 = "test.format_infer_type_all_types_one_operand"(%0, %1) : (i64, i32) -> (i64, i32)
-  %32:4 = "test.format_infer_type_all_types_two_operands"(%0, %1, %0, %1) : (i64, i32, i64, i32) -> (i64, i32, i64, i32)
-  %33:2 = "test.format_infer_type_all_types"(%0, %1) : (i64, i32) -> (i64, i32)
-  %34:2 = "test.format_infer_type_regions"() ({
+  %28 = "test.format_types_match_optional"(%0) : (i64) -> i64
+  "test.format_types_match_optional"() : () -> ()
+  %29 = "test.format_infer_type"() : () -> i16
+  %30 = "test.format_infer_type2"() : () -> i16
+  %31:2 = "test.format_infer_type_all_operands_and_types"(%0, %1) : (i64, i32) -> (i64, i32)
+  %32:2 = "test.format_infer_type_all_types_one_operand"(%0, %1) : (i64, i32) -> (i64, i32)
+  %33:4 = "test.format_infer_type_all_types_two_operands"(%0, %1, %0, %1) : (i64, i32, i64, i32) -> (i64, i32, i64, i32)
+  %34:2 = "test.format_infer_type_all_types"(%0, %1) : (i64, i32) -> (i64, i32)
+  %35:2 = "test.format_infer_type_regions"() ({
   ^bb0(%arg2: i32, %arg3: f32):
     "test.terminator"() : () -> ()
   }) : () -> (i32, f32)
-  %35:4 = "test.format_infer_type_variadic_operands"(%1, %1, %0, %0) <{operandSegmentSizes = array<i32: 2, 2>}> : (i32, i32, i64, i64) -> (i32, i32, i64, i64)
+  %36:4 = "test.format_infer_type_variadic_operands"(%1, %1, %0, %0) <{operandSegmentSizes = array<i32: 2, 2>}> : (i32, i32, i64, i64) -> (i32, i32, i64, i64)
   "test.with_properties_and_attr"() <{lhs = 16 : i32, rhs = 16 : i64}> : () -> ()
-  %36 = "test.with_properties_and_inferred_type"() <{lhs = 16 : i32, packed, rhs = 16 : i64}> : () -> i32
-  %37 = "test.format_all_types_match_var"(%36, %1) : (i32, i32) -> i32
+  %37 = "test.with_properties_and_inferred_type"() <{lhs = 16 : i32, packed, rhs = 16 : i64}> : () -> i32
+  %38 = "test.format_all_types_match_var"(%37, %1) : (i32, i32) -> i32
   "test.using_property_in_custom_and_other"() <{other = 16 : i64, prop = array<i64: 1, 4, 20>}> : () -> ()
   "test.has_str_value"() <{value = ""}> : () -> ()
   "func.func"() <{function_type = (!test.else_anchor<?>, !test.else_anchor<5>) -> (), sym_name = "else_anchor_op"}> ({

@@ -3,7 +3,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
     %0 = llvm.mlir.constant(1 : i64) : i64
     %1 = llvm.alloca %0 x !llvm.struct<(ptr)> : (i64) -> !llvm.ptr
     %2 = omp.map.info var_ptr(%1 : !llvm.ptr, !llvm.struct<(ptr)>) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr
-    omp.target map_entries(%2 -> %arg0 : !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%2 -> %arg0 : !llvm.ptr) {
       %3 = llvm.mlir.constant(1 : i32) : i32
       %4 = llvm.alloca %3 x !llvm.struct<(ptr)> {alignment = 8 : i64} : (i32) -> !llvm.ptr<5>
       %5 = llvm.addrspacecast %4 : !llvm.ptr<5> to !llvm.ptr

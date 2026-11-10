@@ -64,5 +64,21 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader
     }
     return
   }
+  func.func @selection_flatten(%arg0: memref<10xf32, #spirv.storage_class<StorageBuffer>>, %arg1: i1) {
+    %cst = arith.constant 0.000000e+00 : f32
+    %c0 = arith.constant 0 : index
+    scf.if %arg1 {
+      memref.store %cst, %arg0[%c0] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
+    } {spirv.selection_control = #spirv.selection_control<Flatten>}
+    return
+  }
+  func.func @selection_dont_flatten(%arg0: memref<10xf32, #spirv.storage_class<StorageBuffer>>, %arg1: i1) {
+    %cst = arith.constant 0.000000e+00 : f32
+    %c0 = arith.constant 0 : index
+    scf.if %arg1 {
+      memref.store %cst, %arg0[%c0] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
+    } {spirv.selection_control = #spirv.selection_control<DontFlatten>}
+    return
+  }
 }
 

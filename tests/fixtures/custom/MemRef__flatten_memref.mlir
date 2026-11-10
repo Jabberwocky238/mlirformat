@@ -161,6 +161,24 @@ module {
 
 // -----
 module {
+  func.func @negative_transfer_read_strided_memref(%arg0: memref<4x8xf32, strided<[18, 2]>>, %arg1: index, %arg2: index) -> vector<4xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%arg1, %arg2], %cst {in_bounds = [true]} : memref<4x8xf32, strided<[18, 2]>>, vector<4xf32>
+    return %0 : vector<4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @negative_transfer_read_memref_2d_transfer(%arg0: memref<4x8xf32>, %arg1: index, %arg2: index) -> vector<2x4xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%arg1, %arg2], %cst {in_bounds = [true, true]} : memref<4x8xf32>, vector<2x4xf32>
+    return %0 : vector<2x4xf32>
+  }
+}
+
+// -----
+module {
   func.func @alloc() -> memref<4x8xf32> {
     %alloc = memref.alloc() : memref<4x8xf32>
     return %alloc : memref<4x8xf32>
@@ -172,6 +190,54 @@ module {
   func.func @alloca() -> memref<4x8xf32> {
     %alloca = memref.alloca() : memref<4x8xf32>
     return %alloca : memref<4x8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @alloc_dynamic(%arg0: index) -> memref<?x4xf32> {
+    %alloc = memref.alloc(%arg0) : memref<?x4xf32>
+    return %alloc : memref<?x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @alloca_dynamic(%arg0: index) -> memref<?x4xf32> {
+    %alloca = memref.alloca(%arg0) : memref<?x4xf32>
+    return %alloca : memref<?x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @flatten_alloc_strided_row_major() -> memref<4x8xf32, strided<[8, 1]>> {
+    %alloc = memref.alloc() : memref<4x8xf32, strided<[8, 1]>>
+    return %alloc : memref<4x8xf32, strided<[8, 1]>>
+  }
+}
+
+// -----
+module {
+  func.func @flatten_alloc_strided_offset() -> memref<4x8xf32, strided<[8, 1], offset: 50>> {
+    %alloc = memref.alloc() : memref<4x8xf32, strided<[8, 1], offset: 50>>
+    return %alloc : memref<4x8xf32, strided<[8, 1], offset: 50>>
+  }
+}
+
+// -----
+module {
+  func.func @flatten_alloc_strided_padded() -> memref<4x8xf32, strided<[18, 2]>> {
+    %alloc = memref.alloc() : memref<4x8xf32, strided<[18, 2]>>
+    return %alloc : memref<4x8xf32, strided<[18, 2]>>
+  }
+}
+
+// -----
+module {
+  func.func @alloc_multi_dynamic(%arg0: index, %arg1: index) -> memref<?x?xf32> {
+    %alloc = memref.alloc(%arg0, %arg1) : memref<?x?xf32>
+    return %alloc : memref<?x?xf32>
   }
 }
 
@@ -191,6 +257,23 @@ module {
   func.func @load_scalar_from_memref_static_dim_col_major(%arg0: memref<4x8xf32, strided<[1, 4], offset: 100>>, %arg1: index, %arg2: index) -> f32 {
     %0 = memref.load %arg0[%arg2, %arg1] : memref<4x8xf32, strided<[1, 4], offset: 100>>
     return %0 : f32
+  }
+}
+
+// -----
+module {
+  func.func @prefetch_from_memref(%arg0: memref<4x8xf32>, %arg1: index, %arg2: index) {
+    memref.prefetch %arg0[%arg1, %arg2], read, locality<3>, data : memref<4x8xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @dma_start_flatten_src_and_dst(%arg0: memref<4x8xf32>, %arg1: memref<2x16xf32, 1>, %arg2: memref<1xi32>, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index) {
+    %c0 = arith.constant 0 : index
+    memref.dma_start %arg0[%arg4, %arg5], %arg1[%arg6, %arg7], %arg3, %arg2[%c0] : memref<4x8xf32>, memref<2x16xf32, 1>, memref<1xi32>
+    return
   }
 }
 

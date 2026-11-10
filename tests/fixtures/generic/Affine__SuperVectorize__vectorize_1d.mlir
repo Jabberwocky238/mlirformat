@@ -654,3 +654,21 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+#map1 = affine_map<() -> (0)>
+#map2 = affine_map<() -> (8)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x8xi32>) -> (), sym_name = "index_const_inside_loop"}> ({
+  ^bb0(%arg0: memref<1x8xi32>):
+    "affine.for"() <{lowerBoundMap = #map1, operandSegmentSizes = array<i32: 0, 0, 0>, step = 1 : index, upperBoundMap = #map2}> ({
+    ^bb0(%arg1: index):
+      %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+      %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+      "affine.store"(%0, %arg0, %1, %arg1) <{map = #map}> : (i32, memref<1x8xi32>, index, index) -> ()
+      "affine.yield"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

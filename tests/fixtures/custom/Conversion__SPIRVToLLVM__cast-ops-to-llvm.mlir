@@ -85,5 +85,25 @@ module {
     %1 = spirv.UConvert %arg1 : vector<3xi64> to vector<3xi32>
     spirv.Return
   }
+  spirv.func @convert_ptr_to_u(%arg0: !spirv.ptr<i32, Generic>) "None" {
+    %0 = spirv.ConvertPtrToU %arg0 : !spirv.ptr<i32, Generic> to i32
+    spirv.Return
+  }
+  spirv.func @convert_u_to_ptr(%arg0: i32) "None" {
+    %0 = spirv.ConvertUToPtr %arg0 : i32 to !spirv.ptr<i32, Generic>
+    spirv.Return
+  }
+  spirv.func @ptr_cast_to_generic(%arg0: !spirv.ptr<f32, CrossWorkgroup>) "None" {
+    %0 = spirv.PtrCastToGeneric %arg0 : !spirv.ptr<f32, CrossWorkgroup> to !spirv.ptr<f32, Generic>
+    spirv.Return
+  }
+  spirv.func @generic_cast_to_ptr(%arg0: !spirv.ptr<vector<2xi32>, Generic>) "None" {
+    %0 = spirv.GenericCastToPtr %arg0 : !spirv.ptr<vector<2xi32>, Generic> to !spirv.ptr<vector<2xi32>, CrossWorkgroup>
+    spirv.Return
+  }
+  spirv.func @generic_cast_to_ptr_explicit(%arg0: !spirv.ptr<vector<2xi32>, Generic>) "None" {
+    %0 = spirv.GenericCastToPtrExplicit %arg0 : !spirv.ptr<vector<2xi32>, Generic> to !spirv.ptr<vector<2xi32>, CrossWorkgroup>
+    spirv.Return
+  }
 }
 

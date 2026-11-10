@@ -91,18 +91,18 @@ module {
       %cst = arith.constant dense<0.000000e+00> : vector<8x8xf16>
       %cst_0 = arith.constant dense<0.000000e+00> : vector<8x8xf16>
       %cst_1 = arith.constant dense<5.000000e+00> : vector<8x8xf32>
-      %0 = xegpu.create_nd_tdesc %arg0[%c0, %c0] : memref<8x16xf16> -> !xegpu.tensor_desc<8x16xf16>
-      %1 = xegpu.load_nd %0  : !xegpu.tensor_desc<8x16xf16> -> vector<8x16xf16>
+      %0 = xegpu.create_nd_tdesc %arg0 : memref<8x16xf16> -> !xegpu.tensor_desc<8x16xf16>
+      %1 = xegpu.load_nd %0[0, 0]  : !xegpu.tensor_desc<8x16xf16> -> vector<8x16xf16>
       %2 = vector.insert_strided_slice %cst, %1 {offsets = [0, 0], sizes = [8, 8], strides = [1, 1]} : vector<8x8xf16> into vector<8x16xf16>
-      %3 = xegpu.create_nd_tdesc %arg1[%c0, %c0] : memref<16x16xf16> -> !xegpu.tensor_desc<16x16xf16>
-      %4 = xegpu.load_nd %3  : !xegpu.tensor_desc<16x16xf16> -> vector<16x16xf16>
+      %3 = xegpu.create_nd_tdesc %arg1 : memref<16x16xf16> -> !xegpu.tensor_desc<16x16xf16>
+      %4 = xegpu.load_nd %3[0, 0]  : !xegpu.tensor_desc<16x16xf16> -> vector<16x16xf16>
       %5 = vector.insert_strided_slice %cst_0, %4 {offsets = [0, 0], sizes = [8, 8], strides = [1, 1]} : vector<8x8xf16> into vector<16x16xf16>
       %6 = xegpu.dpas %2, %5 : vector<8x16xf16>, vector<16x16xf16> -> vector<8x16xf32>
       %7 = vector.extract_strided_slice %6 {offsets = [0, 0], sizes = [8, 8], strides = [1, 1]} : vector<8x16xf32> to vector<8x8xf32>
       %8 = arith.addf %7, %cst_1 : vector<8x8xf32>
       %9 = vector.insert_strided_slice %8, %6 {offsets = [0, 0], sizes = [8, 8], strides = [1, 1]} : vector<8x8xf32> into vector<8x16xf32>
-      %10 = xegpu.create_nd_tdesc %arg2[%c0, %c0] : memref<8x16xf32> -> !xegpu.tensor_desc<8x16xf32>
-      xegpu.store_nd %9, %10  : vector<8x16xf32>, !xegpu.tensor_desc<8x16xf32>
+      %10 = xegpu.create_nd_tdesc %arg2 : memref<8x16xf32> -> !xegpu.tensor_desc<8x16xf32>
+      xegpu.store_nd %9, %10[0, 0]  : vector<8x16xf32>, !xegpu.tensor_desc<8x16xf32>
       gpu.return
     }
   }

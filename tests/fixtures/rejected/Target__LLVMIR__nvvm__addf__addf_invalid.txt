@@ -1,0 +1,8 @@
+1	parse	custom op 'nvvm.addf' 'nvvm.addf' op attribute 'sat' failed to satisfy constraint: Describes the saturation mode whose value is one of {none, sat}
+2	verify	'nvvm.addf' op FTZ and saturation are not supported for additions/subtractions involving f64 type
+3	verify	'nvvm.addf' op only RN rounding mode is supported for f16 and vector<2xf16> additions/subtractions
+4	verify	'nvvm.addf' op only RN rounding mode is supported for f16 and vector<2xf16> additions/subtractions
+5	verify	'nvvm.addf' op only RN rounding mode is supported for bf16 and vector<2xbf16> additions/subtractions
+6	verify	'nvvm.addf' op only RN rounding mode is supported for bf16 and vector<2xbf16> additions/subtractions
+7	verify	'nvvm.addf' op FTZ and saturation are not supported for bf16 and vector<2xbf16> additions/subtractions
+8	verify	'nvvm.addf' op FTZ with no saturation is not supported for f16 and vector<2xf16> additions/subtractions

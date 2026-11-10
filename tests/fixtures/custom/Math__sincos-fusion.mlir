@@ -31,6 +31,16 @@ module {
     }
     return %0 : f32
   }
+  func.func @sincos_no_fusion_nested_region(%arg0: f32, %arg1: i1) -> (f32, f32) {
+    %0 = math.sin %arg0 : f32
+    %1 = scf.if %arg1 -> (f32) {
+      %2 = math.cos %arg0 : f32
+      scf.yield %2 : f32
+    } else {
+      scf.yield %0 : f32
+    }
+    return %0, %1 : f32, f32
+  }
   func.func @sincos_fusion_preserve_fastmath(%arg0: f32) -> (f32, f32) {
     %0 = math.sin %arg0 fastmath<contract> : f32
     %1 = math.cos %arg0 fastmath<contract> : f32

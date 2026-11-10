@@ -4,8 +4,8 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i64 (i64, i64)>, linkage = #llvm.linkage<external>, sym_name = "bar", visibility_ = 0 : i64}> ({
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i64 (i64)>, linkage = #llvm.linkage<external>, sym_name = "baz", visibility_ = 0 : i64}> ({
-  ^bb0(%arg9: i64):
-    "llvm.return"(%arg9) : (i64) -> ()
+  ^bb0(%arg18: i64):
+    "llvm.return"(%arg18) : (i64) -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.noalias}, {}], function_type = !llvm.func<void (ptr, i64)>, linkage = #llvm.linkage<external>, sym_name = "qux", visibility_ = 0 : i64}> ({
   }) {xxx = {yyy = 42 : i64}} : () -> ()
@@ -16,7 +16,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i1)>, linkage = #llvm.linkage<external>, sym_name = "roundtrip3", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32, i1)>, linkage = #llvm.linkage<external>, sym_name = "roundtrip4", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg7: i32, %arg8: i1):
+  ^bb0(%arg16: i32, %arg17: i1):
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "roundtrip5", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
@@ -34,23 +34,23 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.noalias}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "roundtrip10", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.noalias}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "roundtrip11", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg6: !llvm.ptr):
+  ^bb0(%arg15: !llvm.ptr):
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.noalias}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "roundtrip12", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg5: !llvm.ptr):
+  ^bb0(%arg14: !llvm.ptr):
     "llvm.return"() : () -> ()
   }) {foo = 42 : i32} : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.byval = i32}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "byvalattr", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg4: !llvm.ptr):
+  ^bb0(%arg13: !llvm.ptr):
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.sret = i32}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "sretattr", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg3: !llvm.ptr):
+  ^bb0(%arg12: !llvm.ptr):
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.nest}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "nestattr", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg2: !llvm.ptr):
+  ^bb0(%arg11: !llvm.ptr):
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.noalias}], function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "llvm_noalias_decl", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
@@ -85,12 +85,12 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "external_func", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, arg_attrs = [{llvm.struct_attrs = [{llvm.noalias}]}], function_type = !llvm.func<void (struct<(i32)>)>, linkage = #llvm.linkage<external>, sym_name = "arg_struct_attr", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg1: !llvm.struct<(i32)>):
+  ^bb0(%arg10: !llvm.struct<(i32)>):
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<struct<(i32)> (struct<(i32)>)>, linkage = #llvm.linkage<external>, res_attrs = [{llvm.struct_attrs = [{llvm.noalias}]}], sym_name = "res_struct_attr", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-  ^bb0(%arg0: !llvm.struct<(i32)>):
-    "llvm.return"(%arg0) : (!llvm.struct<(i32)>) -> ()
+  ^bb0(%arg9: !llvm.struct<(i32)>):
+    "llvm.return"(%arg9) : (!llvm.struct<(i32)>) -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "cconv1", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
@@ -142,24 +142,24 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, frame_pointer = #llvm.framePointerKind<"non-leaf">, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "frame_pointer_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
   }) : () -> ()
-  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, no_infs_fp_math = true, sym_name = "no_infs_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "no_infs_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
-  }) : () -> ()
-  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, no_nans_fp_math = true, sym_name = "no_nans_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) {no_infs_fp_math = true} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "no_nans_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
-  }) : () -> ()
+  }) {no_nans_fp_math = true} : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, no_signed_zeros_fp_math = true, sym_name = "no_signed_zeros_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, convergent, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "convergent_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
   }) : () -> ()
-  "llvm.func"() <{CConv = #llvm.cconv<ccc>, denormal_fp_math = "preserve-sign", function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "denormal_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "denormal_fp_math_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
-  }) : () -> ()
-  "llvm.func"() <{CConv = #llvm.cconv<ccc>, denormal_fp_math_f32 = "preserve-sign", function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "denormal_fp_math_f32_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) {denormal_fp_math = "preserve-sign"} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "denormal_fp_math_f32_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
-  }) : () -> ()
+  }) {denormal_fp_math_f32 = "preserve-sign"} : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, fp_contract = "fast", function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "fp_contract_roundtrip", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
   }) : () -> ()
@@ -173,6 +173,57 @@
     "llvm.return"() : () -> ()
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "willreturn_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64, will_return}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, noreturn, sym_name = "noreturn_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "returnstwice_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) {returnstwice} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, hot, linkage = #llvm.linkage<external>, sym_name = "hot_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, cold, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "cold_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, noduplicate, sym_name = "noduplicate_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, no_caller_saved_registers, sym_name = "no_caller_saved_registers_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, nocallback, sym_name = "nocallback_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i32)>, linkage = #llvm.linkage<external>, modular_format = "ident,1,1,foo,bar", sym_name = "modular_format_function", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg8: i32):
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, nobuiltins = [], sym_name = "no_builtins_all", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, nobuiltins = ["foo", "bar"], sym_name = "no_builtins_2", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, allocsize = array<i32: 3>, function_type = !llvm.func<void (i32, i32, i32, i32)>, linkage = #llvm.linkage<external>, sym_name = "alloc_size_one", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg4: i32, %arg5: i32, %arg6: i32, %arg7: i32):
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, allocsize = array<i32: 3, 1>, function_type = !llvm.func<void (i32, i32, i32, i32)>, linkage = #llvm.linkage<external>, sym_name = "alloc_size_two", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32):
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, minsize, optsize, sym_name = "minsize_optsize", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, save_reg_params, sym_name = "save_reg_params", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "zero_call_used_regs", unnamed_addr = 0 : i64, visibility_ = 0 : i64, zero_call_used_regs = "used-gpr-arg"}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, default_func_attrs = {justKey, key = "value"}, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "default_func_attrs", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

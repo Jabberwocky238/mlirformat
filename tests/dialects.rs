@@ -1,5 +1,5 @@
 //! ⭐ The built-in dialects that `mlirformat tblgen` generates from ODS (`src/dialects/*.gen.rs`),
-//! each against the `mlir-opt` 22.1.8 fixtures: every custom form they print must be one
+//! each against the `mlir-opt` 23.1.5 fixtures: every custom form they print must be one
 //! `mlir-opt` prints too, and must parse back to the same op. Ops the generated typed op cannot
 //! express stay generic (counted, not a failure); `tests/coverage.rs` watches how many.
 //!
@@ -41,7 +41,6 @@ macro_rules! dialects {
 dialects! {
     affine: "affine" => mlirformat::affine::AffineDialect,
     amdgpu: "amdgpu" => mlirformat::amdgpu::AmdgpuDialect,
-    amx: "amx" => mlirformat::amx::AmxDialect,
     arm_neon: "arm_neon" => mlirformat::arm_neon::ArmNeonDialect,
     arm_sme: "arm_sme" => mlirformat::arm_sme::ArmSmeDialect,
     arm_sve: "arm_sve" => mlirformat::arm_sve::ArmSveDialect,
@@ -62,7 +61,7 @@ dialects! {
     tensor: "tensor" => mlirformat::tensor::TensorDialect,
     tosa: "tosa" => mlirformat::tosa::TosaDialect,
     vector: "vector" => mlirformat::vector::VectorDialect,
-    x86vector: "x86vector" => mlirformat::x86vector::X86vectorDialect,
+    x86: "x86" => mlirformat::x86::X86Dialect,
     xegpu: "xegpu" => mlirformat::xegpu::XegpuDialect,
     xevm: "xevm" => mlirformat::xevm::XevmDialect,
 }

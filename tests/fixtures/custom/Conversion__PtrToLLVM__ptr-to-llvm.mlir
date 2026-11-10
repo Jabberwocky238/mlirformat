@@ -65,5 +65,10 @@ module {
     %3 = ptr.ptr_add %0, %2 : !ptr.ptr<#ptr.generic_space>, index
     return %3 : !ptr.ptr<#ptr.generic_space>
   }
+  func.func @test_constant_address_ops() -> (!ptr.ptr<#ptr.generic_space>, !ptr.ptr<#ptr.generic_space>) {
+    %0 = ptr.constant #ptr.address<0> : !ptr.ptr<#ptr.generic_space>
+    %1 = ptr.constant #ptr.null : !ptr.ptr<#ptr.generic_space>
+    return %0, %1 : !ptr.ptr<#ptr.generic_space>, !ptr.ptr<#ptr.generic_space>
+  }
 }
 

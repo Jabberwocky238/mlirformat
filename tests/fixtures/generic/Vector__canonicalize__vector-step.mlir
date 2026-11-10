@@ -217,3 +217,33 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> vector<4xi1>, sym_name = "ult_i32_constant_4_rhs"}> ({
+    %0 = "arith.constant"() <{value = dense<4> : vector<4xi32>}> : () -> vector<4xi32>
+    %1 = "vector.step"() : () -> vector<4xi32>
+    %2 = "arith.cmpi"(%1, %0) <{predicate = 6 : i64}> : (vector<4xi32>, vector<4xi32>) -> vector<4xi1>
+    "func.return"(%2) : (vector<4xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> vector<4xi1>, sym_name = "negative_ult_i32_constant_2_rhs"}> ({
+    %0 = "arith.constant"() <{value = dense<2> : vector<4xi32>}> : () -> vector<4xi32>
+    %1 = "vector.step"() : () -> vector<4xi32>
+    %2 = "arith.cmpi"(%1, %0) <{predicate = 6 : i64}> : (vector<4xi32>, vector<4xi32>) -> vector<4xi1>
+    "func.return"(%2) : (vector<4xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> vector<300xi1>, sym_name = "negative_ult_i8_wrap"}> ({
+    %0 = "arith.constant"() <{value = dense<100> : vector<300xi8>}> : () -> vector<300xi8>
+    %1 = "vector.step"() : () -> vector<300xi8>
+    %2 = "arith.cmpi"(%1, %0) <{predicate = 6 : i64}> : (vector<300xi8>, vector<300xi8>) -> vector<300xi1>
+    "func.return"(%2) : (vector<300xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

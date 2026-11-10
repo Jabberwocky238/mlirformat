@@ -10,8 +10,8 @@
 20	verify	'test.rank_less_than_2_I8_F32_memref' op result #0 must be 0D/1D memref of 8-bit signless integer or 32-bit float values, but got 'memref<1x2xi8>'
 22	verify	'test.nd_tensor_of' op operand #0 must be 0D tensor of 32-bit float values, but got 'tensor<10xf32>'
 23	verify	'test.nd_tensor_of' op operand #4 must be 4D tensor of 16-bit signless integer values, but got 'tensor<40x50x60xi16>'
-25	verify	'test.ranked_tensor_op' op operand #0 must be ranked tensor of any type values, but got 'tensor<*xf32>'
-26	verify	'test.ranked_tensor_op' op operand #0 must be ranked tensor of any type values, but got 'vector<2xf32>'
+25	verify	'test.ranked_tensor_op' op operand #0 must be ranked tensor of any non-token type values, but got 'tensor<*xf32>'
+26	verify	'test.ranked_tensor_op' op operand #0 must be ranked tensor of any non-token type values, but got 'vector<2xf32>'
 28	verify	'test.multi_tensor_rank_of' op operand #0 must be 0D/1D tensor of 8-bit signless integer or 32-bit signless integer or 32-bit float values, but got 'tensor<2x2xi8>'
 29	verify	'test.multi_tensor_rank_of' op operand #0 must be 0D/1D tensor of 8-bit signless integer or 32-bit signless integer or 32-bit float values, but got 'tensor<2xi16>'
 31	verify	'test.arg_and_res_have_fixed_element_types' op failed to verify that 'res' is 16-bit signless integer
@@ -28,13 +28,15 @@
 47	verify	'test.operands_and_result_have_same_rank' op result type has different rank than operands
 49	verify	'test.operand0_and_result_have_same_shape' op failed to verify that all of {x, res} have same shape
 51	verify	'test.operand0_and_result_have_same_element_count' op failed to verify that all of {x, res} have same element count
-52	verify	'test.four_equals_five' op failed to verify that 4 equals 5
-54	verify	'test.operand_rank_equals_result_size' op failed to verify that operand rank equals result size
-55	verify	'test.operand0_and_result_have_same_type' op failed to verify that all of {x, res} have same type
-56	verify	'test.operand0_and_result_have_same_type' op failed to verify that all of {x, res} have same type
-57	verify	'test.if_first_operand_is_none_then_so_is_second' op failed to verify that has either both none type operands or first is not none
-58	verify	'test.takes_static_memref' op operand #0 must be statically shaped memref of any type values, but got 'memref<?xi32>'
-59	parse	'test.i32ElementsAttr' op attribute 'attr' failed to satisfy constraint: 32-bit signless integer elements attribute
-60	parse	'test.i32ElementsAttr' op attribute 'attr' failed to satisfy constraint: 32-bit signless integer elements attribute
-63	parse	'test.indexElementsAttr' op attribute 'attr' failed to satisfy constraint: index elements attribute
-66	parse	expected valid keyword
+52	verify	'test.operand_and_result_have_same_element_count_any_type' op failed to verify that all of {x, res} have same element count
+53	verify	'test.operand0_and_result_have_same_element_count' op failed to verify that all of {x, res} have same element count
+54	verify	'test.four_equals_five' op failed to verify that 4 equals 5
+56	verify	'test.operand_rank_equals_result_size' op failed to verify that operand rank equals result size
+57	verify	'test.operand0_and_result_have_same_type' op failed to verify that all of {x, res} have same type
+58	verify	'test.operand0_and_result_have_same_type' op failed to verify that all of {x, res} have same type
+59	verify	'test.if_first_operand_is_none_then_so_is_second' op failed to verify that has either both none type operands or first is not none
+60	verify	'test.takes_static_memref' op operand #0 must be statically shaped memref of any non-token type values, but got 'memref<?xi32>'
+61	parse	'test.i32ElementsAttr' op attribute 'attr' failed to satisfy constraint: 32-bit signless integer elements attribute
+62	parse	'test.i32ElementsAttr' op attribute 'attr' failed to satisfy constraint: 32-bit signless integer elements attribute
+65	parse	'test.indexElementsAttr' op attribute 'attr' failed to satisfy constraint: index elements attribute
+68	parse	expected valid keyword

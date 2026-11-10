@@ -744,6 +744,78 @@
 "builtin.module"() ({
   "builtin.module"() <{sym_name = "patterns"}> ({
     "pdl_interp.func"() <{function_type = (!pdl.operation) -> (), sym_name = "matcher"}> ({
+    ^bb0(%arg2: !pdl.operation):
+      "pdl_interp.check_operation_name"(%arg2)[^bb1, ^bb2] <{name = "test.success_op"}> : (!pdl.operation) -> ()
+    ^bb1:  // pred: ^bb0
+      %2 = "pdl_interp.get_results"(%arg2) : (!pdl.operation) -> !pdl.range<value>
+      %3 = "pdl_interp.get_value_type"(%2) : (!pdl.range<value>) -> !pdl.range<type>
+      "pdl_interp.foreach"(%3)[^bb2] ({
+      ^bb0(%arg3: !pdl.type):
+        "pdl_interp.check_type"(%arg3)[^bb1, ^bb2] <{type = i64}> : (!pdl.type) -> ()
+      ^bb1:  // pred: ^bb0
+        "pdl_interp.record_match"(%arg2, %arg3, %arg2)[^bb2] <{benefit = 1 : i16, operandSegmentSizes = array<i32: 2, 1>, rewriter = @rewriters::@success}> : (!pdl.operation, !pdl.type, !pdl.operation) -> ()
+      ^bb2:  // 2 preds: ^bb0, ^bb1
+        "pdl_interp.continue"() : () -> ()
+      }) : (!pdl.range<type>) -> ()
+    ^bb2:  // 2 preds: ^bb0, ^bb1
+      "pdl_interp.finalize"() : () -> ()
+    }) : () -> ()
+    "builtin.module"() <{sym_name = "rewriters"}> ({
+      "pdl_interp.func"() <{function_type = (!pdl.operation, !pdl.type) -> (), sym_name = "success"}> ({
+      ^bb0(%arg0: !pdl.operation, %arg1: !pdl.type):
+        %1 = "pdl_interp.create_operation"(%arg1) <{inputAttributeNames = [], name = "test.type_found", operandSegmentSizes = array<i32: 0, 0, 1>}> : (!pdl.type) -> !pdl.operation
+        "pdl_interp.erase"(%arg0) : (!pdl.operation) -> ()
+        "pdl_interp.finalize"() : () -> ()
+      }) : () -> ()
+    }) : () -> ()
+  }) : () -> ()
+  "builtin.module"() <{sym_name = "ir"}> ({
+    %0:2 = "test.success_op"() : () -> (i32, i64)
+  }) {test.foreach_type} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "builtin.module"() <{sym_name = "patterns"}> ({
+    "pdl_interp.func"() <{function_type = (!pdl.operation) -> (), sym_name = "matcher"}> ({
+    ^bb0(%arg2: !pdl.operation):
+      "pdl_interp.check_operation_name"(%arg2)[^bb1, ^bb3] <{name = "test.success_op"}> : (!pdl.operation) -> ()
+    ^bb1:  // pred: ^bb0
+      %4 = "pdl_interp.apply_constraint"(%arg2)[^bb2, ^bb3] <{isNegated = false, name = "op_constr_return_value_range"}> : (!pdl.operation) -> !pdl.range<value>
+    ^bb2:  // pred: ^bb1
+      "pdl_interp.foreach"(%4)[^bb3] ({
+      ^bb0(%arg3: !pdl.value):
+        %5 = "pdl_interp.get_value_type"(%arg3) : (!pdl.value) -> !pdl.type
+        "pdl_interp.check_type"(%5)[^bb1, ^bb2] <{type = f16}> : (!pdl.type) -> ()
+      ^bb1:  // pred: ^bb0
+        "pdl_interp.record_match"(%arg2, %arg3, %arg2)[^bb2] <{benefit = 1 : i16, operandSegmentSizes = array<i32: 2, 1>, rewriter = @rewriters::@success}> : (!pdl.operation, !pdl.value, !pdl.operation) -> ()
+      ^bb2:  // 2 preds: ^bb0, ^bb1
+        "pdl_interp.continue"() : () -> ()
+      }) : (!pdl.range<value>) -> ()
+    ^bb3:  // 3 preds: ^bb0, ^bb1, ^bb2
+      "pdl_interp.finalize"() : () -> ()
+    }) : () -> ()
+    "builtin.module"() <{sym_name = "rewriters"}> ({
+      "pdl_interp.func"() <{function_type = (!pdl.operation, !pdl.value) -> (), sym_name = "success"}> ({
+      ^bb0(%arg0: !pdl.operation, %arg1: !pdl.value):
+        %2 = "pdl_interp.get_value_type"(%arg1) : (!pdl.value) -> !pdl.type
+        %3 = "pdl_interp.create_operation"(%arg1, %2) <{inputAttributeNames = [], name = "test.value_found", operandSegmentSizes = array<i32: 1, 0, 1>}> : (!pdl.value, !pdl.type) -> !pdl.operation
+        "pdl_interp.erase"(%arg0) : (!pdl.operation) -> ()
+        "pdl_interp.finalize"() : () -> ()
+      }) : () -> ()
+    }) : () -> ()
+  }) : () -> ()
+  "builtin.module"() <{sym_name = "ir"}> ({
+    %0 = "test.input0"() : () -> f32
+    %1 = "test.input1"() : () -> f16
+    "test.success_op"(%0, %1) : (f32, f16) -> ()
+  }) {test.foreach_value} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "builtin.module"() <{sym_name = "patterns"}> ({
+    "pdl_interp.func"() <{function_type = (!pdl.operation) -> (), sym_name = "matcher"}> ({
     ^bb0(%arg1: !pdl.operation):
       %4 = "pdl_interp.get_result"(%arg1) <{index = 0 : i32}> : (!pdl.operation) -> !pdl.value
       %5 = "pdl_interp.get_users"(%4) : (!pdl.value) -> !pdl.range<operation>

@@ -23,9 +23,9 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels1 {
     gpu.func @printf_args(%arg0: i32, %arg1: f32) kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<>} {
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
-      %thread_id_x = gpu.thread_id  x
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
+      %thread_id_x = gpu.thread_id x
       gpu.printf "\0AHello, world : %d %f \0A Thread id: %d\0A", %arg0, %arg1, %thread_id_x : i32, f32, index
       gpu.return
     }

@@ -4,7 +4,7 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use super::{DialectRules, Invalid, Verifier};
-use crate::{Attribute, MlirOpt, Parser, R, ShapedKind, Type};
+use crate::{Attribute, FloatKind, MlirOpt, Parser, R, ShapedKind, Type};
 
 keywords! {
     /// The SPIR-V types.
@@ -18,6 +18,8 @@ keywords! {
         Struct = "struct",
         Matrix = "matrix",
         TensorArm = "arm.tensor",
+        Sampler = "sampler",
+        NamedBarrier = "named_barrier",
     }
 }
 
@@ -120,7 +122,8 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
             Type::Extended(e) if e.name.starts_with("spirv.") => {}
             // An alias (`!f32_binding`): what it names is checked where it is defined.
             Type::Extended(e) if !e.name.contains('.') && e.body.is_none() => {}
-            Type::Float(_) => {}
+            Type::Float(_) if Self::scalar(&t) => {}
+            Type::Float(_) => return self.p.err(alloc::format!("only 8/16/32/64-bit float type allowed but found '{t}'")),
             Type::Integer { width, .. } if [1, 8, 16, 32, 64].contains(width) => {}
             Type::Integer { .. } => return self.p.err(alloc::format!("only 1/8/16/32/64-bit integer type allowed but found '{t}'")),
             Type::Shaped(s) if s.kind == ShapedKind::Vector => match s.shape.as_deref() {
@@ -133,6 +136,29 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
             _ => return self.p.err(alloc::format!("cannot use '{t}' to compose SPIR-V types")),
         }
         Ok(t)
+    }
+
+    /// `ScalarType::classof`: an integer of 1, 8, 16, 32 or 64 bits, a float of 16, 32 or 64
+    /// bits or `f8E4M3FN` / `f8E5M2`.
+    fn scalar(t: &Type<'_>) -> bool {
+        match t {
+            Type::Float(FloatKind::F8E4M3FN | FloatKind::F8E5M2) => true,
+            Type::Float(_) => matches!(t.bit_width(), Some(16 | 32 | 64)),
+            Type::Integer { width, .. } => [1, 8, 16, 32, 64].contains(width),
+            _ => false,
+        }
+    }
+
+    /// `SPIRVType::classof`: a SPIR-V dialect type (or an alias), a scalar, or a 1-D vector of
+    /// 2, 3, 4, 8 or 16 scalars (or pointers).
+    fn spirv_type(t: &Type<'_>) -> bool {
+        match t {
+            Type::Extended(e) => e.name.starts_with("spirv.") || (!e.name.contains('.') && e.body.is_none()),
+            Type::Shaped(s) if s.kind == ShapedKind::Vector => {
+                matches!(s.shape.as_deref(), Some([_])) && t.element_count().is_some_and(|n| [2, 3, 4, 8, 16].contains(&n)) && (Self::scalar(&s.elem) || matches!(&*s.elem, Type::Extended(e) if e.name == "spirv.ptr"))
+            }
+            t => Self::scalar(t),
+        }
     }
 
     /// `, stride=N`, N > 0, before the closing `>`.
@@ -202,7 +228,9 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         }
         let (mut members, mut offsets) = (0usize, 0usize);
         loop {
-            self.ty()?;
+            if !Self::spirv_type(&self.ty()?) {
+                return self.p.err("member type must be a valid SPIR-V type");
+            }
             members += 1;
             if self.p.eat("[") {
                 self.p.ws();
@@ -309,6 +337,8 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
                     _ => return self.p.err(alloc::format!("matrix must be composed using vector type, got '{t}'")),
                 }
             }
+            // Settled in `Spirv::why`: no body.
+            Kind::Sampler | Kind::NamedBarrier => {}
             Kind::TensorArm => {
                 let dims = if self.p.eat("*") {
                     self.p.ws();
@@ -349,6 +379,7 @@ keywords! {
         CompositeExtract = "spirv.CompositeExtract",
         EntryPoint = "spirv.EntryPoint",
         ExecutionMode = "spirv.ExecutionMode",
+        ExecutionModeId = "spirv.ExecutionModeId",
         Func = "spirv.func",
         Module = "spirv.module",
         IAddCarry = "spirv.IAddCarry",
@@ -611,6 +642,19 @@ impl<'a> OpText<'a, '_, '_, '_> {
                     self.p.bare_attr()?;
                 }
             }
+            // `@fn "Mode" @a, @b`: symbols only (`ExecutionModeIdOp::parse`).
+            CxxOp::ExecutionModeId => {
+                self.p.attr()?;
+                self.enum_str("ExecutionMode")?;
+                loop {
+                    if !matches!(self.p.attr()?, Attribute::SymbolRef(_)) {
+                        return self.p.err("invalid kind of attribute specified");
+                    }
+                    if !self.p.eat(",") {
+                        break;
+                    }
+                }
+            }
             CxxOp::Func => {
                 self.p.symbol()?;
                 self.signature()?;
@@ -701,6 +745,10 @@ impl Spirv {
     /// `!spirv.<mnemonic><body>`: why `mlir-opt` would not read it.
     fn why(opt: &MlirOpt, mnemonic: &str, body: Option<&str>, enclosing: &mut Vec<String>) -> Result<(), String> {
         let kind = Kind::try_from(mnemonic).map_err(|()| alloc::format!("unknown SPIR-V type: {mnemonic}"))?;
+        // A type with no parameters: nothing may follow its keyword.
+        if matches!(kind, Kind::Sampler | Kind::NamedBarrier) {
+            return body.map_or(Ok(()), |b| Err(alloc::format!("unexpected `{b}` after `spirv.{mnemonic}`")));
+        }
         let body = body.ok_or_else(|| alloc::format!("`spirv.{mnemonic}` needs `<...>`"))?;
         let mut s = SpirvText { p: Parser::new(body, opt), enclosing };
         s.read(kind)

@@ -1021,6 +1021,54 @@
 // -----
 #map = affine_map<(d0) -> (d0)>
 "builtin.module"() ({
+  "func.func"() <{function_type = (index, memref<4096xf32>) -> vector<1x1x4xf32>, sym_name = "warp_propagate_shape_cast_rank_extending"}> ({
+  ^bb0(%arg0: index, %arg1: memref<4096xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %2 = "gpu.warp_execute_on_lane_0"(%arg0) <{warp_size = 1024 : i64}> ({
+      %3 = "vector.transfer_read"(%arg1, %0, %1) <{in_bounds = [false], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map}> : (memref<4096xf32>, index, f32) -> vector<4096xf32>
+      %4 = "vector.shape_cast"(%3) : (vector<4096xf32>) -> vector<32x4x32xf32>
+      "gpu.yield"(%4) : (vector<32x4x32xf32>) -> ()
+    }) : (index) -> vector<1x1x4xf32>
+    "func.return"(%2) : (vector<1x1x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (index, memref<128xf32>) -> vector<1x2x4xf32>, sym_name = "warp_propagate_shape_cast_rank_extending_flat"}> ({
+  ^bb0(%arg0: index, %arg1: memref<128xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %2 = "gpu.warp_execute_on_lane_0"(%arg0) <{warp_size = 16 : i64}> ({
+      %3 = "vector.transfer_read"(%arg1, %0, %1) <{in_bounds = [false], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map}> : (memref<128xf32>, index, f32) -> vector<128xf32>
+      %4 = "vector.shape_cast"(%3) : (vector<128xf32>) -> vector<4x4x8xf32>
+      "gpu.yield"(%4) : (vector<4x4x8xf32>) -> ()
+    }) : (index) -> vector<1x2x4xf32>
+    "func.return"(%2) : (vector<1x2x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (index, memref<32x4xf32>) -> vector<2x4x8xf32>, sym_name = "warp_do_not_propagate_shape_cast_rank_extending_ambiguous"}> ({
+  ^bb0(%arg0: index, %arg1: memref<32x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %2 = "gpu.warp_execute_on_lane_0"(%arg0) <{warp_size = 2 : i64}> ({
+      %3 = "vector.transfer_read"(%arg1, %0, %0, %1) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<32x4xf32>, index, index, f32) -> vector<32x4xf32>
+      %4 = "vector.shape_cast"(%3) : (vector<32x4xf32>) -> vector<4x4x8xf32>
+      "gpu.yield"(%4) : (vector<4x4x8xf32>) -> ()
+    }) : (index) -> vector<2x4x8xf32>
+    "func.return"(%2) : (vector<2x4x8xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+"builtin.module"() ({
   "func.func"() <{function_type = (index, memref<4096xf32>, index) -> vector<1xf32>, sym_name = "warp_propagate_uniform_transfer_read"}> ({
   ^bb0(%arg0: index, %arg1: memref<4096xf32>, %arg2: index):
     %0 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32

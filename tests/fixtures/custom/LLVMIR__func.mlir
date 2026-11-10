@@ -145,6 +145,54 @@ module {
   llvm.func @willreturn_function() attributes {will_return} {
     llvm.return
   }
+  llvm.func @noreturn_function() attributes {noreturn} {
+    llvm.return
+  }
+  llvm.func @returnstwice_function() attributes {returnstwice} {
+    llvm.return
+  }
+  llvm.func @hot_function() attributes {hot} {
+    llvm.return
+  }
+  llvm.func @cold_function() attributes {cold} {
+    llvm.return
+  }
+  llvm.func @noduplicate_function() attributes {noduplicate} {
+    llvm.return
+  }
+  llvm.func @no_caller_saved_registers_function() attributes {no_caller_saved_registers} {
+    llvm.return
+  }
+  llvm.func @nocallback_function() attributes {nocallback} {
+    llvm.return
+  }
+  llvm.func @modular_format_function(%arg0: i32) attributes {modular_format = "ident,1,1,foo,bar"} {
+    llvm.return
+  }
+  llvm.func @no_builtins_all() attributes {nobuiltins = []} {
+    llvm.return
+  }
+  llvm.func @no_builtins_2() attributes {nobuiltins = ["foo", "bar"]} {
+    llvm.return
+  }
+  llvm.func @alloc_size_one(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) attributes {allocsize = array<i32: 3>} {
+    llvm.return
+  }
+  llvm.func @alloc_size_two(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) attributes {allocsize = array<i32: 3, 1>} {
+    llvm.return
+  }
+  llvm.func @minsize_optsize() attributes {minsize, optsize} {
+    llvm.return
+  }
+  llvm.func @save_reg_params() attributes {save_reg_params} {
+    llvm.return
+  }
+  llvm.func @zero_call_used_regs() attributes {zero_call_used_regs = "used-gpr-arg"} {
+    llvm.return
+  }
+  llvm.func @default_func_attrs() attributes {default_func_attrs = {justKey, key = "value"}} {
+    llvm.return
+  }
 }
 
 // -----

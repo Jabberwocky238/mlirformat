@@ -132,3 +132,14 @@ module {
   }
 }
 
+// -----
+module {
+  spirv.module Logical GLSL450 {
+    spirv.func @unreachable() "None" {
+      spirv.Branch ^bb1
+    ^bb1:  // pred: ^bb0
+      spirv.Unreachable
+    }
+  }
+}
+

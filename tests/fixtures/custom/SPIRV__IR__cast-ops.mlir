@@ -23,8 +23,17 @@ module {
     %0 = spirv.Bitcast %arg0 : vector<4xf32> to vector<2xi64>
     return
   }
+  func.func @cast_coop_matrix(%arg0: !spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>) {
+    %0 = spirv.Bitcast %arg0 : !spirv.coopmatrix<4x4xf32, Subgroup, MatrixA> to !spirv.coopmatrix<4x4xi32, Subgroup, MatrixA>
+    return
+  }
 }
 
+// -----
+// -----
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -322,5 +331,6 @@ module {
   }
 }
 
+// -----
 // -----
 // -----

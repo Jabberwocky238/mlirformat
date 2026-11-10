@@ -102,32 +102,32 @@ module {
     llvm.return
   }
   llvm.func @nvvm_shfl(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: f32) -> i32 {
-    %0 = nvvm.shfl.sync  bfly %arg0, %arg3, %arg1, %arg2 : i32 -> i32
-    %1 = nvvm.shfl.sync  bfly %arg0, %arg4, %arg1, %arg2 : f32 -> f32
-    %2 = nvvm.shfl.sync  up %arg0, %arg3, %arg1, %arg2 : i32 -> i32
-    %3 = nvvm.shfl.sync  up %arg0, %arg4, %arg1, %arg2 : f32 -> f32
-    %4 = nvvm.shfl.sync  down %arg0, %arg3, %arg1, %arg2 : i32 -> i32
-    %5 = nvvm.shfl.sync  down %arg0, %arg4, %arg1, %arg2 : f32 -> f32
-    %6 = nvvm.shfl.sync  idx %arg0, %arg3, %arg1, %arg2 : i32 -> i32
-    %7 = nvvm.shfl.sync  idx %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %0 = nvvm.shfl.sync bfly %arg0, %arg3, %arg1, %arg2 : i32 -> i32
+    %1 = nvvm.shfl.sync bfly %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %2 = nvvm.shfl.sync up %arg0, %arg3, %arg1, %arg2 : i32 -> i32
+    %3 = nvvm.shfl.sync up %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %4 = nvvm.shfl.sync down %arg0, %arg3, %arg1, %arg2 : i32 -> i32
+    %5 = nvvm.shfl.sync down %arg0, %arg4, %arg1, %arg2 : f32 -> f32
+    %6 = nvvm.shfl.sync idx %arg0, %arg3, %arg1, %arg2 : i32 -> i32
+    %7 = nvvm.shfl.sync idx %arg0, %arg4, %arg1, %arg2 : f32 -> f32
     llvm.return %0 : i32
   }
   llvm.func @nvvm_shfl_pred(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: f32) -> !llvm.struct<(i32, i1)> {
-    %0 = nvvm.shfl.sync  bfly %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
-    %1 = nvvm.shfl.sync  bfly %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
-    %2 = nvvm.shfl.sync  up %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
-    %3 = nvvm.shfl.sync  up %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
-    %4 = nvvm.shfl.sync  down %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
-    %5 = nvvm.shfl.sync  down %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
-    %6 = nvvm.shfl.sync  idx %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
-    %7 = nvvm.shfl.sync  idx %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
+    %0 = nvvm.shfl.sync bfly %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
+    %1 = nvvm.shfl.sync bfly %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
+    %2 = nvvm.shfl.sync up %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
+    %3 = nvvm.shfl.sync up %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
+    %4 = nvvm.shfl.sync down %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
+    %5 = nvvm.shfl.sync down %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
+    %6 = nvvm.shfl.sync idx %arg0, %arg3, %arg1, %arg2 {return_value_and_is_valid} : i32 -> !llvm.struct<(i32, i1)>
+    %7 = nvvm.shfl.sync idx %arg0, %arg4, %arg1, %arg2 {return_value_and_is_valid} : f32 -> !llvm.struct<(f32, i1)>
     llvm.return %0 : !llvm.struct<(i32, i1)>
   }
   llvm.func @nvvm_vote(%arg0: i32, %arg1: i1) -> i32 {
-    %0 = nvvm.vote.sync  ballot %arg0, %arg1 -> i32
-    %1 = nvvm.vote.sync  all %arg0, %arg1 -> i1
-    %2 = nvvm.vote.sync  any %arg0, %arg1 -> i1
-    %3 = nvvm.vote.sync  uni %arg0, %arg1 -> i1
+    %0 = nvvm.vote.sync ballot %arg0, %arg1 -> i32
+    %1 = nvvm.vote.sync all %arg0, %arg1 -> i1
+    %2 = nvvm.vote.sync any %arg0, %arg1 -> i1
+    %3 = nvvm.vote.sync uni %arg0, %arg1 -> i1
     llvm.return %0 : i32
   }
   llvm.func @nvvm_mma_mn8n8k4_row_col_f32_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: f32, %arg5: f32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32, %arg10: f32, %arg11: f32) -> !llvm.struct<(f32, f32, f32, f32, f32, f32, f32, f32)> {
@@ -141,6 +141,22 @@ module {
   llvm.func @nvvm_mma_m16n8k16_bf16_bf16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<bf16>, multiplicandBPtxType = #nvvm.mma_type<bf16>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
     llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
+  }
+  llvm.func @nvvm_mma_m16n8k16_e4m3_e4m3(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32, %arg4: f32, %arg5: f32, %arg6: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4, %arg5, %arg6]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e4m3>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
+    llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
+  }
+  llvm.func @nvvm_mma_m16n8k32_e4m3_e5m2(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e5m2>, shape = #nvvm.shape<m = 16, n = 8, k = 32>} : (i32, i32, f32) -> !llvm.struct<(f32, f32, f32, f32)>
+    llvm.return %0 : !llvm.struct<(f32, f32, f32, f32)>
+  }
+  llvm.func @nvvm_mma_m16n8k16_e4m3_e4m3_f16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: vector<2xf16>, %arg4: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1]  B[%arg2]  C[%arg3, %arg4]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e4m3>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (i32, i32, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+    llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+  }
+  llvm.func @nvvm_mma_m16n8k32_e4m3_e5m2_f16(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: vector<2xf16>, %arg7: vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)> {
+    %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, multiplicandAPtxType = #nvvm.mma_type<e4m3>, multiplicandBPtxType = #nvvm.mma_type<e5m2>, shape = #nvvm.shape<m = 16, n = 8, k = 32>} : (i32, i32, vector<2xf16>) -> !llvm.struct<(vector<2xf16>, vector<2xf16>)>
+    llvm.return %0 : !llvm.struct<(vector<2xf16>, vector<2xf16>)>
   }
   llvm.func @nvvm_mma_m16n8k16_f32_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: vector<2xf16>, %arg3: vector<2xf16>, %arg4: vector<2xf16>, %arg5: vector<2xf16>, %arg6: f32, %arg7: f32, %arg8: f32, %arg9: f32) -> !llvm.struct<(f32, f32, f32, f32)> {
     %0 = nvvm.mma.sync A[%arg0, %arg1, %arg2, %arg3]  B[%arg4, %arg5]  C[%arg6, %arg7, %arg8, %arg9]  {layoutA = #nvvm.mma_layout<row>, layoutB = #nvvm.mma_layout<col>, shape = #nvvm.shape<m = 16, n = 8, k = 16>} : (vector<2xf16>, vector<2xf16>, f32) -> !llvm.struct<(f32, f32, f32, f32)>
@@ -207,24 +223,24 @@ module {
     llvm.return
   }
   llvm.func @cp_async(%arg0: !llvm.ptr<3>, %arg1: !llvm.ptr<1>) {
-    nvvm.cp.async.shared.global %arg0, %arg1, 4, cache =  ca : !llvm.ptr<3>, !llvm.ptr<1>
-    nvvm.cp.async.shared.global %arg0, %arg1, 8, cache =  ca : !llvm.ptr<3>, !llvm.ptr<1>
-    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache =  ca : !llvm.ptr<3>, !llvm.ptr<1>
-    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache =  cg : !llvm.ptr<3>, !llvm.ptr<1>
+    nvvm.cp.async.shared.global %arg0, %arg1, 4, cache = ca : !llvm.ptr<3>, !llvm.ptr<1>
+    nvvm.cp.async.shared.global %arg0, %arg1, 8, cache = ca : !llvm.ptr<3>, !llvm.ptr<1>
+    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache = ca : !llvm.ptr<3>, !llvm.ptr<1>
+    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache = cg : !llvm.ptr<3>, !llvm.ptr<1>
     nvvm.cp.async.commit.group
     nvvm.cp.async.wait.group 0
     llvm.return
   }
   llvm.func @async_cp_zfill(%arg0: !llvm.ptr<3>, %arg1: !llvm.ptr<1>, %arg2: i32) {
-    nvvm.cp.async.shared.global %arg0, %arg1, 4, cache =  ca, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
-    nvvm.cp.async.shared.global %arg0, %arg1, 8, cache =  ca, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
-    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache =  ca, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
-    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache =  cg, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
+    nvvm.cp.async.shared.global %arg0, %arg1, 4, cache = ca, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
+    nvvm.cp.async.shared.global %arg0, %arg1, 8, cache = ca, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
+    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache = ca, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
+    nvvm.cp.async.shared.global %arg0, %arg1, 16, cache = cg, %arg2 : !llvm.ptr<3>, !llvm.ptr<1>, i32
     llvm.return
   }
   llvm.func @llvm_nvvm_setmaxregister() {
-    nvvm.setmaxregister  increase 256
-    nvvm.setmaxregister  decrease 24
+    nvvm.setmaxregister increase 256
+    nvvm.setmaxregister decrease 24
     llvm.return
   }
   llvm.func @llvm_nvvm_cp_async_bulk_commit_group() {
@@ -270,6 +286,10 @@ module {
     nvvm.stmatrix %arg0, %arg1, %arg2, %arg3, %arg4 {eltType = #nvvm.ld_st_matrix_elt_type<b16>, layout = #nvvm.mma_layout<col>, shape = #nvvm.ld_st_matrix_shape<m = 8, n = 8>} : !llvm.ptr<3>, i32, i32, i32, i32
     nvvm.stmatrix %arg0, %arg1, %arg2, %arg3, %arg4 {eltType = #nvvm.ld_st_matrix_elt_type<b8>, layout = #nvvm.mma_layout<col>, shape = #nvvm.ld_st_matrix_shape<m = 16, n = 8>} : !llvm.ptr<3>, i32, i32, i32, i32
     llvm.return
+  }
+  llvm.func @nvvm_movmatrix(%arg0: i32) -> i32 {
+    %0 = nvvm.movmatrix %arg0 {eltType = #nvvm.ld_st_matrix_elt_type<b16>, shape = #nvvm.ld_st_matrix_shape<m = 8, n = 8>} : i32
+    llvm.return %0 : i32
   }
   llvm.func @kernel_func() attributes {nvvm.kernel} {
     llvm.return
@@ -390,7 +410,7 @@ module {
 // -----
 module {
   llvm.func @nvvm_griddepcontrol_wait() {
-    nvvm.griddepcontrol  wait
+    nvvm.griddepcontrol wait
     llvm.return
   }
 }
@@ -398,7 +418,7 @@ module {
 // -----
 module {
   llvm.func @nvvm_griddepcontrol_launch_dependents() {
-    nvvm.griddepcontrol  launch_dependents
+    nvvm.griddepcontrol launch_dependents
     llvm.return
   }
 }
@@ -415,25 +435,25 @@ module {
 // -----
 module {
   llvm.func @nvvm_redux_sync(%arg0: i32, %arg1: i32) {
-    %0 = nvvm.redux.sync  add %arg0, %arg1 : i32 -> i32
-    %1 = nvvm.redux.sync  umax %arg0, %arg1 : i32 -> i32
-    %2 = nvvm.redux.sync  umin %arg0, %arg1 : i32 -> i32
-    %3 = nvvm.redux.sync  and %arg0, %arg1 : i32 -> i32
-    %4 = nvvm.redux.sync  or %arg0, %arg1 : i32 -> i32
-    %5 = nvvm.redux.sync  xor %arg0, %arg1 : i32 -> i32
-    %6 = nvvm.redux.sync  max %arg0, %arg1 : i32 -> i32
-    %7 = nvvm.redux.sync  min %arg0, %arg1 : i32 -> i32
+    %0 = nvvm.redux.sync add %arg0, %arg1 : i32 -> i32
+    %1 = nvvm.redux.sync umax %arg0, %arg1 : i32 -> i32
+    %2 = nvvm.redux.sync umin %arg0, %arg1 : i32 -> i32
+    %3 = nvvm.redux.sync and %arg0, %arg1 : i32 -> i32
+    %4 = nvvm.redux.sync or %arg0, %arg1 : i32 -> i32
+    %5 = nvvm.redux.sync xor %arg0, %arg1 : i32 -> i32
+    %6 = nvvm.redux.sync max %arg0, %arg1 : i32 -> i32
+    %7 = nvvm.redux.sync min %arg0, %arg1 : i32 -> i32
     llvm.return
   }
   llvm.func @nvvm_redux_sync_f32(%arg0: f32, %arg1: i32) {
-    %0 = nvvm.redux.sync  fmin %arg0, %arg1 : f32 -> f32
-    %1 = nvvm.redux.sync  fmin %arg0, %arg1 {abs = true} : f32 -> f32
-    %2 = nvvm.redux.sync  fmin %arg0, %arg1 {nan = true} : f32 -> f32
-    %3 = nvvm.redux.sync  fmin %arg0, %arg1 {abs = true, nan = true} : f32 -> f32
-    %4 = nvvm.redux.sync  fmax %arg0, %arg1 : f32 -> f32
-    %5 = nvvm.redux.sync  fmax %arg0, %arg1 {abs = true} : f32 -> f32
-    %6 = nvvm.redux.sync  fmax %arg0, %arg1 {nan = true} : f32 -> f32
-    %7 = nvvm.redux.sync  fmax %arg0, %arg1 {abs = true, nan = true} : f32 -> f32
+    %0 = nvvm.redux.sync fmin %arg0, %arg1 : f32 -> f32
+    %1 = nvvm.redux.sync fmin %arg0, %arg1 {abs = true} : f32 -> f32
+    %2 = nvvm.redux.sync fmin %arg0, %arg1 {nan = true} : f32 -> f32
+    %3 = nvvm.redux.sync fmin %arg0, %arg1 {abs = true, nan = true} : f32 -> f32
+    %4 = nvvm.redux.sync fmax %arg0, %arg1 : f32 -> f32
+    %5 = nvvm.redux.sync fmax %arg0, %arg1 {abs = true} : f32 -> f32
+    %6 = nvvm.redux.sync fmax %arg0, %arg1 {nan = true} : f32 -> f32
+    %7 = nvvm.redux.sync fmax %arg0, %arg1 {abs = true, nan = true} : f32 -> f32
     llvm.return
   }
 }
@@ -441,10 +461,10 @@ module {
 // -----
 module {
   llvm.func @nvvm_match_sync(%arg0: i32, %arg1: i32, %arg2: i64) {
-    %0 = nvvm.match.sync  any %arg0, %arg1 : i32 -> i32
-    %1 = nvvm.match.sync  all %arg0, %arg1 : i32 -> !llvm.struct<(i32, i1)>
-    %2 = nvvm.match.sync  any %arg0, %arg2 : i64 -> i32
-    %3 = nvvm.match.sync  all %arg0, %arg2 : i64 -> !llvm.struct<(i32, i1)>
+    %0 = nvvm.match.sync any %arg0, %arg1 : i32 -> i32
+    %1 = nvvm.match.sync all %arg0, %arg1 : i32 -> !llvm.struct<(i32, i1)>
+    %2 = nvvm.match.sync any %arg0, %arg2 : i64 -> i32
+    %3 = nvvm.match.sync all %arg0, %arg2 : i64 -> !llvm.struct<(i32, i1)>
     llvm.return
   }
 }
@@ -492,5 +512,11 @@ module {
     nvvm.nanosleep %arg0
     llvm.return
   }
+}
+
+// -----
+module {
+  llvm.mlir.global external @managed_g(0 : i32) {addr_space = 1 : i32, nvvm.managed} : i32
+  llvm.mlir.global external @managed_decl() {addr_space = 1 : i32, nvvm.managed} : i32
 }
 

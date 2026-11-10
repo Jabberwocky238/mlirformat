@@ -755,10 +755,10 @@
       %5 = "affine.apply"(%arg3) <{map = #map}> : (index) -> index
       %6 = "memref.alloc"() <{alignment = 16 : i64, operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<0xi32, 2>
       %7 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<320xi32, 2>
-      "affine.dma_start"(%arg0, %5, %7, %1, %6, %1, %0) {dst_map = #map1, src_map = #map1, tag_map = #map1} : (memref<10485760xi32>, index, memref<320xi32, 2>, index, memref<0xi32, 2>, index, index) -> ()
-      "affine.dma_start"(%arg1, %1, %4, %1, %3, %1, %2) {dst_map = #map1, src_map = #map1, tag_map = #map1} : (memref<1xi32>, index, memref<1xi32, 2>, index, memref<0xi32, 2>, index, index) -> ()
-      "affine.dma_wait"(%6, %1, %0) {tag_map = #map1} : (memref<0xi32, 2>, index, index) -> ()
-      "affine.dma_wait"(%3, %1, %2) {tag_map = #map1} : (memref<0xi32, 2>, index, index) -> ()
+      "affine.dma_start"(%arg0, %5, %7, %1, %6, %1, %0) <{dst_map = #map1, src_map = #map1, tag_map = #map1}> : (memref<10485760xi32>, index, memref<320xi32, 2>, index, memref<0xi32, 2>, index, index) -> ()
+      "affine.dma_start"(%arg1, %1, %4, %1, %3, %1, %2) <{dst_map = #map1, src_map = #map1, tag_map = #map1}> : (memref<1xi32>, index, memref<1xi32, 2>, index, memref<0xi32, 2>, index, index) -> ()
+      "affine.dma_wait"(%6, %1, %0) <{tag_map = #map1}> : (memref<0xi32, 2>, index, index) -> ()
+      "affine.dma_wait"(%3, %1, %2) <{tag_map = #map1}> : (memref<0xi32, 2>, index, index) -> ()
       %8 = "affine.apply"(%arg3) <{map = #map}> : (index) -> index
       %9 = "memref.alloc"() <{alignment = 16 : i64, operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<0xi32, 2>
       %10 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<320xi32, 2>
@@ -771,8 +771,8 @@
         "affine.store"(%14, %10, %arg4) <{map = #map1}> : (i32, memref<320xi32, 2>, index) -> ()
         "affine.yield"() : () -> ()
       }) : () -> ()
-      "affine.dma_start"(%10, %1, %arg2, %8, %9, %1, %0) {dst_map = #map1, src_map = #map1, tag_map = #map1} : (memref<320xi32, 2>, index, memref<10485760xi32>, index, memref<0xi32, 2>, index, index) -> ()
-      "affine.dma_wait"(%9, %1, %0) {tag_map = #map1} : (memref<0xi32, 2>, index, index) -> ()
+      "affine.dma_start"(%10, %1, %arg2, %8, %9, %1, %0) <{dst_map = #map1, src_map = #map1, tag_map = #map1}> : (memref<320xi32, 2>, index, memref<10485760xi32>, index, memref<0xi32, 2>, index, index) -> ()
+      "affine.dma_wait"(%9, %1, %0) <{tag_map = #map1}> : (memref<0xi32, 2>, index, index) -> ()
       "affine.yield"() : () -> ()
     }) : () -> ()
     "func.return"() : () -> ()
@@ -852,6 +852,60 @@
       "affine.yield"() : () -> ()
     }) : () -> ()
     "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<() -> (0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "hoist_pure_from_zero_trip_count_loop"}> ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<1xi32>
+    "affine.for"() <{lowerBoundMap = #map, operandSegmentSizes = array<i32: 0, 0, 0>, step = 1 : index, upperBoundMap = #map}> ({
+    ^bb0(%arg2: index):
+      %2 = "arith.addi"(%arg0, %arg1) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "affine.store"(%2, %0) <{map = #map}> : (i32, memref<1xi32>) -> ()
+      "affine.yield"() : () -> ()
+    }) : () -> ()
+    %1 = "affine.load"(%0) <{map = #map}> : (memref<1xi32>) -> i32
+    "func.return"(%1) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<() -> (0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32) -> i32, sym_name = "no_hoist_from_zero_trip_count_loop"}> ({
+  ^bb0(%arg0: i32):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<1xi32>
+    %1 = "arith.constant"() <{value = 42 : i32}> : () -> i32
+    "affine.store"(%1, %0) <{map = #map}> : (i32, memref<1xi32>) -> ()
+    "affine.for"() <{lowerBoundMap = #map, operandSegmentSizes = array<i32: 0, 0, 0>, step = 1 : index, upperBoundMap = #map}> ({
+    ^bb0(%arg1: index):
+      "affine.store"(%arg0, %0) <{map = #map}> : (i32, memref<1xi32>) -> ()
+      "affine.yield"() : () -> ()
+    }) : () -> ()
+    %2 = "affine.load"(%0) <{map = #map}> : (memref<1xi32>) -> i32
+    "func.return"(%2) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<() -> (0)>
+#map1 = affine_map<()[s0] -> (s0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32, index) -> i32, sym_name = "unknown_trip_count_store_not_hoisted"}> ({
+  ^bb0(%arg0: i32, %arg1: index):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<1xi32>
+    %1 = "arith.constant"() <{value = 42 : i32}> : () -> i32
+    "affine.store"(%1, %0) <{map = #map}> : (i32, memref<1xi32>) -> ()
+    "affine.for"(%arg1) <{lowerBoundMap = #map, operandSegmentSizes = array<i32: 0, 1, 0>, step = 1 : index, upperBoundMap = #map1}> ({
+    ^bb0(%arg2: index):
+      "affine.store"(%arg0, %0) <{map = #map}> : (i32, memref<1xi32>) -> ()
+      "affine.yield"() : () -> ()
+    }) : (index) -> ()
+    %2 = "affine.load"(%0) <{map = #map}> : (memref<1xi32>) -> i32
+    "func.return"(%2) : (i32) -> ()
   }) : () -> ()
 }) : () -> ()
 

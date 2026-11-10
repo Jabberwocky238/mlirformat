@@ -21,18 +21,21 @@
     %5 = "llvm.mlir.constant"() <{value = 5 : i32}> : () -> i32
     %6 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
     %7 = "llvm.mlir.constant"() <{value = 2 : i32}> : () -> i32
-    "omp.taskloop"(%7, %2, %1) <{operandSegmentSizes = array<i32: 0, 0, 0, 1, 0, 0, 0, 0, 2, 0>, private_syms = [@_QFtestEa_firstprivate_i32, @_QFtestEi_private_i32]}> ({
+    "omp.taskloop.context"(%7, %2, %1) <{operandSegmentSizes = array<i32: 0, 0, 0, 1, 0, 0, 0, 0, 2, 0>, private_syms = [@_QFtestEa_firstprivate_i32, @_QFtestEi_private_i32]}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
-      "omp.loop_nest"(%4, %5, %6) <{loop_inclusive}> ({
-      ^bb0(%arg2: i32):
-        "llvm.store"(%arg2, %arg1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-        %8 = "llvm.load"(%arg0) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
-        %9 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-        %10 = "llvm.add"(%8, %9) <{overflowFlags = 0 : i32}> : (i32, i32) -> i32
-        "llvm.store"(%10, %arg0) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-        "omp.yield"() : () -> ()
-      }) : (i32, i32, i32) -> ()
-    }) : (i32, !llvm.ptr, !llvm.ptr) -> ()
+      "omp.taskloop.wrapper"() ({
+        "omp.loop_nest"(%4, %5, %6) <{loop_inclusive}> ({
+        ^bb0(%arg2: i32):
+          "llvm.store"(%arg2, %arg1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+          %8 = "llvm.load"(%arg0) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
+          %9 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
+          %10 = "llvm.add"(%8, %9) <{overflowFlags = 0 : i32}> : (i32, i32) -> i32
+          "llvm.store"(%10, %arg0) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
+          "omp.yield"() : () -> ()
+        }) : (i32, i32, i32) -> ()
+      }) : () -> ()
+      "omp.terminator"() : () -> ()
+    }) {omp.combined} : (i32, !llvm.ptr, !llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

@@ -14,18 +14,18 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @load_store_kernel(%arg0: memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, %arg1: memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, %arg2: memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, %arg3: index, %arg4: index, %arg5: index, %arg6: index) kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
-      %block_id_z = gpu.block_id  z
-      %thread_id_x = gpu.thread_id  x
-      %thread_id_y = gpu.thread_id  y
-      %thread_id_z = gpu.thread_id  z
-      %grid_dim_x = gpu.grid_dim  x
-      %grid_dim_y = gpu.grid_dim  y
-      %grid_dim_z = gpu.grid_dim  z
-      %block_dim_x = gpu.block_dim  x
-      %block_dim_y = gpu.block_dim  y
-      %block_dim_z = gpu.block_dim  z
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
+      %block_id_z = gpu.block_id z
+      %thread_id_x = gpu.thread_id x
+      %thread_id_y = gpu.thread_id y
+      %thread_id_z = gpu.thread_id z
+      %grid_dim_x = gpu.grid_dim x
+      %grid_dim_y = gpu.grid_dim y
+      %grid_dim_z = gpu.grid_dim z
+      %block_dim_x = gpu.block_dim x
+      %block_dim_y = gpu.block_dim y
+      %block_dim_z = gpu.block_dim z
       %0 = arith.addi %arg3, %block_id_x : index
       %1 = arith.addi %arg4, %thread_id_x : index
       %2 = memref.load %arg0[%0, %1] : memref<12x4xf32, #spirv.storage_class<StorageBuffer>>

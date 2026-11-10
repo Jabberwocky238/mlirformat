@@ -9,7 +9,7 @@
     %12 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %13 = "llvm.alloca"(%12) <{elem_type = i32}> {bindc_name = "i"} : (i64) -> !llvm.ptr
     %14 = "llvm.mlir.addressof"() <{global_name = @_QFEn}> : () -> !llvm.ptr
-    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       %53 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
       %54 = "llvm.alloca"(%53) <{elem_type = i32}> {bindc_name = "i", pinned} : (i64) -> !llvm.ptr
       %55 = "llvm.load"(%14) <{ordering = 0 : i64}> : (!llvm.ptr) -> i32
@@ -41,11 +41,11 @@
       "omp.terminator"() : () -> ()
     }) : () -> ()
     %15 = "omp.map.bounds"(%7, %6, %9, %8, %8) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %16 = "omp.map.info"(%10, %15) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<40 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    %17 = "omp.map.info"(%11, %15) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "b", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<40 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    %18 = "omp.map.info"(%13) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "i", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %19 = "omp.map.info"(%14) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "n", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%10, %16, %17, %18, %19) <{depend_kinds = [#omp<clause_task_depend(taskdependin)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 0, 0>}> ({
+    %16 = "omp.map.info"(%10, %15) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<40 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    %17 = "omp.map.info"(%11, %15) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "b", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<40 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    %18 = "omp.map.info"(%13) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "i", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %19 = "omp.map.info"(%14) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "n", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%10, %16, %17, %18, %19) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependin)>], kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0>}> ({
     ^bb0(%arg3: !llvm.ptr, %arg4: !llvm.ptr, %arg5: !llvm.ptr, %arg6: !llvm.ptr):
       %20 = "llvm.mlir.constant"() <{value = 0 : index}> : () -> i64
       %21 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32

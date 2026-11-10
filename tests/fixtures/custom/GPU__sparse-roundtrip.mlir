@@ -35,8 +35,8 @@ module attributes {gpu.container_module} {
     %desc, %asyncToken_7 = gpu.spgemm_create_descr async [%asyncToken_6]
     %alloc = memref.alloc() : memref<0xi8>
     %c0 = arith.constant 0 : index
-    %bufferSzNew, %asyncToken_8 = gpu.spgemm_work_estimation_or_compute async [%asyncToken_7]{ WORK_ESTIMATION} %spmat, %spmat_3, %spmat_5, %desc, %c0, %alloc : f32 into memref<0xi8>
-    %bufferSzNew_9, %asyncToken_10 = gpu.spgemm_work_estimation_or_compute async [%asyncToken_8]{ COMPUTE} %spmat, %spmat_3, %spmat_5, %desc, %c0, %alloc : f32 into memref<0xi8>
+    %bufferSzNew, %asyncToken_8 = gpu.spgemm_work_estimation_or_compute async [%asyncToken_7]{WORK_ESTIMATION} %spmat, %spmat_3, %spmat_5, %desc, %c0, %alloc : f32 into memref<0xi8>
+    %bufferSzNew_9, %asyncToken_10 = gpu.spgemm_work_estimation_or_compute async [%asyncToken_8]{COMPUTE} %spmat, %spmat_3, %spmat_5, %desc, %c0, %alloc : f32 into memref<0xi8>
     %rows, %cols, %nnz, %asyncToken_11 = gpu.spmat_get_size async [%asyncToken_10] %spmat_5
     %1 = gpu.set_csr_pointers async [%asyncToken_10] %spmat_5, %memref, %memref, %memref_0 : memref<?xindex>, memref<?xindex>, memref<?xf32>
     %2 = gpu.spgemm_copy async [%1] %spmat, %spmat_3, %spmat_5, %desc : f32

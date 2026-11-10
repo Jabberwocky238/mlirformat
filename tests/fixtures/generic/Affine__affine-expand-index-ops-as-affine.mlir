@@ -38,3 +38,30 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<2xindex>) -> (vector<2xindex>, vector<2xindex>), sym_name = "delinearize_vector_unroll"}> ({
+  ^bb0(%arg0: vector<2xindex>):
+    %0:2 = "affine.delinearize_index"(%arg0) <{static_basis = array<i64: 4, 8>}> : (vector<2xindex>) -> (vector<2xindex>, vector<2xindex>)
+    "func.return"(%0#0, %0#1) : (vector<2xindex>, vector<2xindex>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<2xindex>, vector<2xindex>) -> vector<2xindex>, sym_name = "linearize_vector_unroll"}> ({
+  ^bb0(%arg0: vector<2xindex>, %arg1: vector<2xindex>):
+    %0 = "affine.linearize_index"(%arg0, %arg1) <{disjoint = false, operandSegmentSizes = array<i32: 2, 0>, static_basis = array<i64: 4, 8>}> : (vector<2xindex>, vector<2xindex>) -> vector<2xindex>
+    "func.return"(%0) : (vector<2xindex>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<2x2xindex>) -> (vector<2x2xindex>, vector<2x2xindex>), sym_name = "delinearize_2d_vector_unroll"}> ({
+  ^bb0(%arg0: vector<2x2xindex>):
+    %0:2 = "affine.delinearize_index"(%arg0) <{static_basis = array<i64: 4, 8>}> : (vector<2x2xindex>) -> (vector<2x2xindex>, vector<2x2xindex>)
+    "func.return"(%0#0, %0#1) : (vector<2x2xindex>, vector<2x2xindex>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

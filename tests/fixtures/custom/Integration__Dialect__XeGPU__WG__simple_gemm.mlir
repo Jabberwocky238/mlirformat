@@ -31,8 +31,8 @@ module @gemm attributes {gpu.container_module} {
       %c96 = arith.constant 96 : index
       %c256 = arith.constant 256 : index
       %c4096 = arith.constant 4096 : index
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
       %0 = arith.muli %block_id_x, %c256 : index
       %1 = arith.muli %block_id_y, %c256 : index
       %2 = xegpu.create_nd_tdesc %arg2 : memref<256x256xf32> -> !xegpu.tensor_desc<256x256xf32, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>>

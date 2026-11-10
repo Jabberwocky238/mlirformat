@@ -378,53 +378,6 @@
 #map2 = affine_map<(d0)[s0] -> (d0 * s0)>
 #map3 = affine_map<(d0)[s0, s1] -> (-(d0 * s1) + s0, s1)>
 "builtin.module"() ({
-  "func.func"() <{function_type = (index, tensor<?xf32>, tensor<?xf32>, tensor<?xf32>, tensor<?xf32>) -> (tensor<?xf32>, tensor<?xf32>, tensor<?xf32>), sym_name = "fuse_tileable_multi_output_op_multi_use"}> ({
-  ^bb0(%arg1: index, %arg2: tensor<?xf32>, %arg3: tensor<?xf32>, %arg4: tensor<?xf32>, %arg5: tensor<?xf32>):
-    %3 = "arith.constant"() <{value = 4.200000e+01 : f32}> : () -> f32
-    %4 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %5:2 = "linalg.generic"(%arg2, %arg3, %arg5) <{indexing_maps = [#map, #map, #map], iterator_types = [#linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 2>}> ({
-    ^bb0(%arg10: f32, %arg11: f32, %arg12: f32):
-      %15 = "arith.addf"(%arg10, %arg11) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %16 = "arith.addf"(%15, %arg12) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%15, %16) : (f32, f32) -> ()
-    }) : (tensor<?xf32>, tensor<?xf32>, tensor<?xf32>) -> (tensor<?xf32>, tensor<?xf32>)
-    %6 = "tensor.dim"(%arg3, %4) : (tensor<?xf32>, index) -> index
-    %7 = "affine.apply"(%6, %arg1) <{map = #map1}> : (index, index) -> index
-    %8 = "scf.forall"(%7, %arg4) <{operandSegmentSizes = array<i32: 0, 1, 0, 1>, staticLowerBound = array<i64: 0>, staticStep = array<i64: 1>, staticUpperBound = array<i64: -9223372036854775808>}> ({
-    ^bb0(%arg6: index, %arg7: tensor<?xf32>):
-      %9 = "affine.apply"(%arg6, %arg1) <{map = #map2}> : (index, index) -> index
-      %10 = "affine.min"(%arg6, %6, %arg1) <{map = #map3}> : (index, index, index) -> index
-      %11 = "tensor.extract_slice"(%arg7, %9, %10) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: -9223372036854775808>, static_strides = array<i64: 1>}> : (tensor<?xf32>, index, index) -> tensor<?xf32>
-      %12 = "tensor.extract_slice"(%5#0, %9, %10) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: -9223372036854775808>, static_strides = array<i64: 1>}> : (tensor<?xf32>, index, index) -> tensor<?xf32>
-      %13 = "linalg.exp"(%12, %11) <{operandSegmentSizes = array<i32: 1, 1>}> ({
-      ^bb0(%arg8: f32, %arg9: f32):
-        %14 = "math.exp"(%arg8) <{fastmath = #arith.fastmath<none>}> : (f32) -> f32
-        "linalg.yield"(%14) : (f32) -> ()
-      }) : (tensor<?xf32>, tensor<?xf32>) -> tensor<?xf32>
-      "scf.forall.in_parallel"() ({
-        "tensor.parallel_insert_slice"(%13, %arg7, %9, %10) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: -9223372036854775808>, static_strides = array<i64: 1>}> : (tensor<?xf32>, tensor<?xf32>, index, index) -> ()
-      }) : () -> ()
-    }) : (index, tensor<?xf32>) -> tensor<?xf32>
-    "func.return"(%8, %5#0, %5#1) : (tensor<?xf32>, tensor<?xf32>, tensor<?xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.op<"linalg.generic">
-      %1 = "transform.structured.match"(%arg0) <{ops = ["scf.forall"]}> : (!transform.any_op) -> !transform.op<"scf.forall">
-      %2:2 = "transform.structured.fuse_into_containing_op"(%0, %1) : (!transform.op<"linalg.generic">, !transform.op<"scf.forall">) -> (!transform.any_op, !transform.any_op)
-      "transform.debug.emit_remark_at"(%2#1) <{message = "new containing op"}> : (!transform.any_op) -> ()
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0) -> (d0)>
-#map1 = affine_map<()[s0, s1] -> (s0 ceildiv s1)>
-#map2 = affine_map<(d0)[s0] -> (d0 * s0)>
-#map3 = affine_map<(d0)[s0, s1] -> (-(d0 * s1) + s0, s1)>
-"builtin.module"() ({
   "func.func"() <{function_type = (index, tensor<?xf32>, tensor<?xf32>, tensor<?xf32>, tensor<?xf32>) -> (tensor<?xf32>, tensor<?xf32>), sym_name = "fuse_tileable_mixed_dominating_uses"}> ({
   ^bb0(%arg1: index, %arg2: tensor<?xf32>, %arg3: tensor<?xf32>, %arg4: tensor<?xf32>, %arg5: tensor<?xf32>):
     %3 = "arith.constant"() <{value = 4.200000e+01 : f32}> : () -> f32
@@ -629,38 +582,6 @@
       %0 = "transform.structured.match"(%arg0) <{op_attrs = {producer}}> : (!transform.any_op) -> !transform.op<"linalg.generic">
       %1 = "transform.structured.match"(%arg0) <{ops = ["scf.forall"]}> : (!transform.any_op) -> !transform.op<"scf.forall">
       %2:2 = "transform.structured.fuse_into_containing_op"(%0, %1) : (!transform.op<"linalg.generic">, !transform.op<"scf.forall">) -> (!transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1, d2) -> (d0, d2)>
-#map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
-#map2 = affine_map<(d0, d1, d2) -> (d0, d1)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<123x456xf32>, tensor<456x789xf32>, tensor<123x789xf32>) -> tensor<123x789xf32>, sym_name = "copy_1d_1024xf16"}> ({
-  ^bb0(%arg1: tensor<123x456xf32>, %arg2: tensor<456x789xf32>, %arg3: tensor<123x789xf32>):
-    %4 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
-    %5 = "linalg.fill"(%4, %arg3) <{operandSegmentSizes = array<i32: 1, 1>}> ({
-    ^bb0(%arg7: f32, %arg8: f32):
-      "linalg.yield"(%arg7) : (f32) -> ()
-    }) : (f32, tensor<123x789xf32>) -> tensor<123x789xf32>
-    %6 = "linalg.matmul"(%arg1, %arg2, %5) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({
-    ^bb0(%arg4: f32, %arg5: f32, %arg6: f32):
-      %7 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %8 = "arith.addf"(%arg6, %7) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%8) : (f32) -> ()
-    }) : (tensor<123x456xf32>, tensor<456x789xf32>, tensor<123x789xf32>) -> tensor<123x789xf32>
-    "func.return"(%6) : (tensor<123x789xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.fill"]}> : (!transform.any_op) -> !transform.any_op
-      %1 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
-      %2:2 = "transform.structured.tile_using_forall"(%1) <{operandSegmentSizes = array<i32: 1, 0, 0, 0, 0>, static_num_threads = array<i64>, static_tile_sizes = array<i64: 50, 16>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
-      %3:2 = "transform.structured.fuse_into_containing_op"(%0, %2#0) : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()

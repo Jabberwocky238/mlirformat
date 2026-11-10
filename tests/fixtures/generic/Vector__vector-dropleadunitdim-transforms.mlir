@@ -4,7 +4,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>, sym_name = "cast_away_contraction_leading_one_dims"}> ({
   ^bb0(%arg0: vector<1x16x8xf32>, %arg1: vector<1x8x16xf32>, %arg2: vector<1x16x16xf32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>
     "func.return"(%0) : (vector<1x16x16xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -18,7 +18,7 @@
   ^bb0(%arg0: vector<1x16x8xf32>, %arg1: vector<1x8x16xf32>, %arg2: vector<1x16x16xf32>):
     %0 = "vector.constant_mask"() <{mask_dim_sizes = array<i64: 1, 15, 15, 8>}> : () -> vector<1x16x16x8xi1>
     %1 = "vector.mask"(%0) ({
-      %2 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>
+      %2 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>
       "vector.yield"(%2) : (vector<1x16x16xf32>) -> ()
     }) : (vector<1x16x16x8xi1>) -> vector<1x16x16xf32>
     "func.return"(%1) : (vector<1x16x16xf32>) -> ()
@@ -33,7 +33,7 @@
   "func.func"() <{function_type = (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>, vector<1x16x16x8xi1>) -> vector<1x16x16xf32>, sym_name = "cast_away_contraction_leading_one_dim_under_mask"}> ({
   ^bb0(%arg0: vector<1x16x8xf32>, %arg1: vector<1x8x16xf32>, %arg2: vector<1x16x16xf32>, %arg3: vector<1x16x16x8xi1>):
     %0 = "vector.mask"(%arg3) ({
-      %1 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>
+      %1 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x16x8xf32>, vector<1x8x16xf32>, vector<1x16x16xf32>) -> vector<1x16x16xf32>
       "vector.yield"(%1) : (vector<1x16x16xf32>) -> ()
     }) : (vector<1x16x16x8xi1>) -> vector<1x16x16xf32>
     "func.return"(%0) : (vector<1x16x16xf32>) -> ()
@@ -47,7 +47,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<1x1x8xf32>, vector<1x8x16xf32>, vector<1x1x16xf32>) -> vector<1x1x16xf32>, sym_name = "cast_away_contraction_leading_one_dims_transposeneeded"}> ({
   ^bb0(%arg0: vector<1x1x8xf32>, %arg1: vector<1x8x16xf32>, %arg2: vector<1x1x16xf32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<mul>}> : (vector<1x1x8xf32>, vector<1x8x16xf32>, vector<1x1x16xf32>) -> vector<1x1x16xf32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<mul>}> : (vector<1x1x8xf32>, vector<1x8x16xf32>, vector<1x1x16xf32>) -> vector<1x1x16xf32>
     "func.return"(%0) : (vector<1x1x16xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -59,7 +59,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<8x1x16xf32>, vector<2x8x1xf32>, vector<1x2x16xf32>) -> vector<1x2x16xf32>, sym_name = "cast_away_contraction_leading_one_dims_transposeneeded2"}> ({
   ^bb0(%arg0: vector<8x1x16xf32>, %arg1: vector<2x8x1xf32>, %arg2: vector<1x2x16xf32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8x1x16xf32>, vector<2x8x1xf32>, vector<1x2x16xf32>) -> vector<1x2x16xf32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<8x1x16xf32>, vector<2x8x1xf32>, vector<1x2x16xf32>) -> vector<1x2x16xf32>
     "func.return"(%0) : (vector<1x2x16xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -71,7 +71,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<1x8x1x16xf32>, vector<1x2x8x1xf32>, vector<1x1x2x16xf32>) -> vector<1x1x2x16xf32>, sym_name = "cast_away_contraction_leading_one_dims_nonleadingunitdim_rank4"}> ({
   ^bb0(%arg0: vector<1x8x1x16xf32>, %arg1: vector<1x2x8x1xf32>, %arg2: vector<1x1x2x16xf32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x8x1x16xf32>, vector<1x2x8x1xf32>, vector<1x1x2x16xf32>) -> vector<1x1x2x16xf32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x8x1x16xf32>, vector<1x2x8x1xf32>, vector<1x1x2x16xf32>) -> vector<1x1x2x16xf32>
     "func.return"(%0) : (vector<1x1x2x16xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -83,7 +83,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<1x8x1x16xf32>, vector<1x2x8x1xf32>, vector<1x1x2x16xf32>) -> vector<1x1x2x16xf32>, sym_name = "cast_away_contraction_leading_one_dims_nonleadingunitdim_rank4_acctranspose"}> ({
   ^bb0(%arg0: vector<1x8x1x16xf32>, %arg1: vector<1x2x8x1xf32>, %arg2: vector<1x1x2x16xf32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x8x1x16xf32>, vector<1x2x8x1xf32>, vector<1x1x2x16xf32>) -> vector<1x1x2x16xf32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x8x1x16xf32>, vector<1x2x8x1xf32>, vector<1x1x2x16xf32>) -> vector<1x1x2x16xf32>
     "func.return"(%0) : (vector<1x1x2x16xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -95,8 +95,20 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<1x1x8xi32>, vector<1x8x8xi32>, vector<1x8xi32>) -> vector<1x8xi32>, sym_name = "cast_away_contraction_does_not_transpose_leading_unit_dims"}> ({
   ^bb0(%arg0: vector<1x1x8xi32>, %arg1: vector<1x8x8xi32>, %arg2: vector<1x8xi32>):
-    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x1x8xi32>, vector<1x8x8xi32>, vector<1x8xi32>) -> vector<1x8xi32>
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<1x1x8xi32>, vector<1x8x8xi32>, vector<1x8xi32>) -> vector<1x8xi32>
     "func.return"(%0) : (vector<1x8xi32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0)>
+#map1 = affine_map<(d0, d1) -> (d1, d0)>
+#map2 = affine_map<(d0, d1) -> (d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<64xf32>, vector<1x64xf32>, vector<1xf32>) -> vector<1xf32>, sym_name = "cast_away_contraction_leading_one_dims_to_dot_product"}> ({
+  ^bb0(%arg0: vector<64xf32>, %arg1: vector<1x64xf32>, %arg2: vector<1xf32>):
+    %0 = "vector.contract"(%arg0, %arg1, %arg2) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<reduction>, #vector.iterator_type<parallel>], kind = #vector.kind<add>}> : (vector<64xf32>, vector<1x64xf32>, vector<1xf32>) -> vector<1xf32>
+    "func.return"(%0) : (vector<1xf32>) -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -376,6 +388,78 @@
   ^bb0(%arg0: i1, %arg1: vector<1x16xi1>, %arg2: vector<1x16xi1>):
     %0 = "arith.select"(%arg0, %arg1, %arg2) : (i1, vector<1x16xi1>, vector<1x16xi1>) -> vector<1x16xi1>
     "func.return"(%0) : (vector<1x16xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<8x16xf32>, index, index) -> vector<1x4xf32>, sym_name = "cast_away_load_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<8x16xf32>, %arg1: index, %arg2: index):
+    %0 = "vector.load"(%arg0, %arg1, %arg2) : (memref<8x16xf32>, index, index) -> vector<1x4xf32>
+    "func.return"(%0) : (vector<1x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> vector<1x4xf32>, sym_name = "cast_away_maskedload_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>):
+    %0 = "vector.maskedload"(%arg0, %arg1, %arg2, %arg3) : (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> vector<1x4xf32>
+    "func.return"(%0) : (vector<1x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> vector<1x4xf32>, sym_name = "cast_away_expandload_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>):
+    %0 = "vector.expandload"(%arg0, %arg1, %arg2, %arg3) : (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> vector<1x4xf32>
+    "func.return"(%0) : (vector<1x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16xf32>, index, vector<1x4xi32>, vector<1x4xi1>, vector<1x4xf32>) -> vector<1x4xf32>, sym_name = "cast_away_gather_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi32>, %arg3: vector<1x4xi1>, %arg4: vector<1x4xf32>):
+    %0 = "vector.gather"(%arg0, %arg1, %arg2, %arg3, %arg4) : (memref<16xf32>, index, vector<1x4xi32>, vector<1x4xi1>, vector<1x4xf32>) -> vector<1x4xf32>
+    "func.return"(%0) : (vector<1x4xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<1x4xf32>, memref<8x16xf32>, index, index) -> (), sym_name = "cast_away_store_leading_one_dims"}> ({
+  ^bb0(%arg0: vector<1x4xf32>, %arg1: memref<8x16xf32>, %arg2: index, %arg3: index):
+    "vector.store"(%arg0, %arg1, %arg2, %arg3) : (vector<1x4xf32>, memref<8x16xf32>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> (), sym_name = "cast_away_maskedstore_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>):
+    "vector.maskedstore"(%arg0, %arg1, %arg2, %arg3) : (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> (), sym_name = "cast_away_compressstore_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi1>, %arg3: vector<1x4xf32>):
+    "vector.compressstore"(%arg0, %arg1, %arg2, %arg3) : (memref<16xf32>, index, vector<1x4xi1>, vector<1x4xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16xf32>, index, vector<1x4xi32>, vector<1x4xi1>, vector<1x4xf32>) -> (), sym_name = "cast_away_scatter_leading_one_dims"}> ({
+  ^bb0(%arg0: memref<16xf32>, %arg1: index, %arg2: vector<1x4xi32>, %arg3: vector<1x4xi1>, %arg4: vector<1x4xf32>):
+    "vector.scatter"(%arg0, %arg1, %arg2, %arg3, %arg4) : (memref<16xf32>, index, vector<1x4xi32>, vector<1x4xi1>, vector<1x4xf32>) -> ()
+    "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 

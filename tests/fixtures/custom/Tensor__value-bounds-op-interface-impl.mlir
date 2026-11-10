@@ -1,24 +1,6 @@
 module {
-  func.func @unknown_op() -> index {
-    %0 = "test.foo"() : () -> tensor<?x?xf32>
-    %1 = "test.reify_bound"(%0) <{dim = 0 : i64, type = "EQ"}> : (tensor<?x?xf32>) -> index
-    return %1 : index
-  }
-}
-
-// -----
-module {
   func.func @cast(%arg0: tensor<10xf32>) -> index {
     %cast = tensor.cast %arg0 : tensor<10xf32> to tensor<?xf32>
-    %0 = "test.reify_bound"(%cast) <{dim = 0 : i64, type = "EQ"}> : (tensor<?xf32>) -> index
-    return %0 : index
-  }
-}
-
-// -----
-module {
-  func.func @cast_unranked(%arg0: tensor<*xf32>) -> index {
-    %cast = tensor.cast %arg0 : tensor<*xf32> to tensor<?xf32>
     %0 = "test.reify_bound"(%cast) <{dim = 0 : i64, type = "EQ"}> : (tensor<?xf32>) -> index
     return %0 : index
   }
@@ -31,16 +13,6 @@ module {
     %dim = tensor.dim %arg0, %c0 : tensor<?xf32>
     %0 = "test.reify_bound"(%dim) <{type = "EQ"}> : (index) -> index
     return %0 : index
-  }
-}
-
-// -----
-module {
-  func.func @dim_all_positive(%arg0: tensor<?xf32>, %arg1: index) {
-    %c0 = arith.constant 0 : index
-    %dim = tensor.dim %arg0, %arg1 : tensor<?xf32>
-    "test.compare"(%dim, %c0) <{cmp = "GE"}> : (index, index) -> ()
-    return
   }
 }
 
@@ -68,15 +40,6 @@ module {
   func.func @extract_slice_static(%arg0: tensor<?xf32>) -> index {
     %extracted_slice = tensor.extract_slice %arg0[2] [5] [1] : tensor<?xf32> to tensor<5xf32>
     %0 = "test.reify_bound"(%extracted_slice) <{dim = 0 : i64, type = "EQ"}> : (tensor<5xf32>) -> index
-    return %0 : index
-  }
-}
-
-// -----
-module {
-  func.func @extract_slice_dynamic_constant(%arg0: tensor<?xf32>, %arg1: index) -> index {
-    %extracted_slice = tensor.extract_slice %arg0[2] [%arg1] [1] : tensor<?xf32> to tensor<?xf32>
-    %0 = "test.reify_bound"(%extracted_slice) <{constant, dim = 0 : i64, type = "EQ"}> : (tensor<?xf32>) -> index
     return %0 : index
   }
 }
@@ -128,52 +91,6 @@ module {
     %rank = tensor.rank %arg0 : tensor<5xf32>
     %0 = "test.reify_bound"(%rank) <{type = "EQ"}> : (index) -> index
     return %0 : index
-  }
-}
-
-// -----
-module {
-  func.func @dynamic_dims_are_equal(%arg0: tensor<?xf32>) {
-    %c0 = arith.constant 0 : index
-    %dim = tensor.dim %arg0, %c0 : tensor<?xf32>
-    %dim_0 = tensor.dim %arg0, %c0 : tensor<?xf32>
-    "test.compare"(%dim, %dim_0) <{cmp = "EQ"}> : (index, index) -> ()
-    return
-  }
-}
-
-// -----
-module {
-  func.func @dynamic_dims_are_different(%arg0: tensor<?xf32>) {
-    %c0 = arith.constant 0 : index
-    %c1 = arith.constant 1 : index
-    %dim = tensor.dim %arg0, %c0 : tensor<?xf32>
-    %0 = arith.addi %dim, %c1 : index
-    "test.compare"(%dim, %0) <{cmp = "EQ"}> : (index, index) -> ()
-    return
-  }
-}
-
-// -----
-module {
-  func.func @dynamic_dims_are_maybe_equal_1(%arg0: tensor<?xf32>) {
-    %c0 = arith.constant 0 : index
-    %c5 = arith.constant 5 : index
-    %dim = tensor.dim %arg0, %c0 : tensor<?xf32>
-    "test.compare"(%dim, %c5) <{cmp = "EQ"}> : (index, index) -> ()
-    return
-  }
-}
-
-// -----
-module {
-  func.func @dynamic_dims_are_maybe_equal_2(%arg0: tensor<?x?xf32>) {
-    %c0 = arith.constant 0 : index
-    %c1 = arith.constant 1 : index
-    %dim = tensor.dim %arg0, %c0 : tensor<?x?xf32>
-    %dim_0 = tensor.dim %arg0, %c1 : tensor<?x?xf32>
-    "test.compare"(%dim, %dim_0) <{cmp = "EQ"}> : (index, index) -> ()
-    return
   }
 }
 

@@ -209,3 +209,15 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xi2>) -> (), sym_name = "vector_store_i2_2d_const_nonzero_col"}> ({
+  ^bb0(%arg0: vector<4xi2>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<3x4xi2>
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    "vector.store"(%arg0, %0, %1, %2) : (vector<4xi2>, memref<3x4xi2>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

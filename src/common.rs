@@ -152,6 +152,8 @@ ast! {
         Float(FloatKind),
         Index,
         NoneType,
+        /// `token` (MLIR 23): a value that only orders ops, no data.
+        Token,
         Complex(Box<Type<'a>>),
         Tuple(Vec<Type<'a>>),
         Function(FunctionType<'a>),
@@ -560,7 +562,7 @@ pub enum Infer {
     /// The element type of type variable `.0`: `complex<T>`, a tensor / vector / memref of `T` (`complex.re`'s result).
     ElemOf(&'static str),
     /// The signless integer as wide as type variable `.0`'s leading dimension
-    /// (`x86vector.avx512.mask.scalef`'s mask: `vector<16xf32>` ⇒ `i16`).
+    /// (`x86.avx512.mask.scalef`'s mask: `vector<16xf32>` ⇒ `i16`).
     Width(&'static str),
     /// Type variable `.0`'s vector with its trailing dim widened to 16 (`arm_sve.convert_from_svbool`'s
     /// source: `vector<2x[4]xi1>` ⇒ `vector<2x[16]xi1>`).
@@ -582,7 +584,9 @@ pub enum Role {
     Operand { ty: &'static str },
     /// `strip`: a dialect type `type($x)` prints without its `!ns.name` (`<f32>`), unless `qualified`.
     Type { result: Option<usize>, infer: Option<Infer>, strip: Option<&'static str> },
-    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool, bits: Option<&'static str> },
+    /// `optional`: the `default` is ODS's `DefaultValuedOptionalAttr`'s, which only elides it in
+    /// print; parsing and building leave it absent.
+    Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool, bits: Option<&'static str>, optional: bool },
     Region,
     Successor,
     Attrs,
@@ -657,7 +661,7 @@ impl Schema {
     /// The properties declaring a default, with it (what an ODS builder sets).
     #[inline]
     pub fn defaults(&self) -> Vec<NamedAttr<'static>> {
-        self.of_role(|r| matches!(r, Role::Prop { .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
+        self.of_role(|r| matches!(r, Role::Prop { optional: false, .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
     }
 }
 
@@ -697,6 +701,8 @@ impl Field {
     /// A property's default value (`#dialect.attr<default>`, or an integer `0 : i64`).
     pub fn default_attr(&self) -> Option<Attribute<'static>> {
         match self.role {
+            // An `I1Attr` is a bool (`DefaultValuedAttr<I1Attr, "0">` is `false`).
+            Role::Prop { int: Some("i1"), default: Some(v), dialect: None, .. } => return Some(Attribute::Bool(!matches!(v, "0" | "false"))),
             Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } => return Some(Attribute::Int { lit: Cow::Borrowed(v), ty: Type::try_from(t).ok() }),
             Role::Prop { int: None, default: Some(v @ ("true" | "false")), dialect: None, .. } => return Some(Attribute::Bool(v == "true")),
             _ => {}
@@ -770,7 +776,8 @@ impl Module<'_> {
 /// `lit`                     literal (keyword or punctuation; `` `` `` suppresses the next space, `` ` ` `` writes one)
 /// $x                        a field: operand(s), type variable, property, successor, region
 /// type($x)                  the type(s) of operand group `x` (or type variable `x`)
-/// functional-type($a, $b)   `(types of a) -> types of b`
+/// functional-type($a, $b)   `(types of a) -> types of b`; each side may list several,
+///                           space-separated (`functional-type($x $y, $r)`: ODS's `operands`)
 /// attr-dict                 discardable attributes and the properties the format does not spell
 /// ( ... $x^ ... )?          optional group, present when anchor `x` is (non-empty / true / not default)
 /// custom<X>($a, $b)         a directive declared in [`crate::syntax`], expanded here and now
@@ -781,9 +788,12 @@ impl Module<'_> {
 pub enum Elem<'f> {
     Lit(&'f str),
     Var(&'f str),
+    /// `qualified($x)`: an attribute variable printed with its dialect prefix.
+    QVar(&'f str),
     /// `type($x)`; `true` inside `qualified(...)`.
     TypeOf(&'f str, bool),
-    FnType(&'f str, &'f str),
+    /// `functional-type(..)`: the inputs' and the results' variables, in order.
+    FnType(Vec<&'f str>, Vec<&'f str>),
     /// `attr-dict`; `true` for `attr-dict-with-keyword` (`attributes {...}`).
     AttrDict(bool),
     Group { anchor: &'f str, elems: Vec<Elem<'f>> },
@@ -849,8 +859,15 @@ impl<'f> Format<'f> {
     pub fn before_colon(&self, name: &str) -> bool {
         let mut flat = Vec::new();
         Elem::flatten(&self.elems, &mut flat);
-        let mut after = flat.into_iter().skip_while(|e| **e != Elem::Var(name)).skip(1);
-        after.find(|e| !matches!(e, Elem::AttrDict(_))) == Some(&Elem::Lit(":"))
+        let mut after = flat.into_iter().skip_while(|e| **e != Elem::Var(name) && **e != Elem::QVar(name)).skip(1);
+        // Past `attr-dict` and variadic operands, which may both be empty (`llvm.inline_asm`'s
+        // `$constraints $operands `:``).
+        let maybe_empty = |e: &&Elem<'_>| match e {
+            Elem::AttrDict(_) => true,
+            Elem::Var(n) => self.schema.field(n).is_some_and(|f| f.variadic && matches!(f.role, Role::Operand { .. })),
+            _ => false,
+        };
+        after.find(|e| !maybe_empty(e)) == Some(&Elem::Lit(":"))
     }
 
     /// Does the format have `attr-dict-with-keyword`? Its `attributes` then starts the dictionary
@@ -925,7 +942,11 @@ impl<'f> Elem<'f> {
                 _ if rest.starts_with("qualified(") => {
                     let (mut inner, tail) = Self::list(&rest["qualified(".len()..], op)?;
                     let (Some(elem), true) = (inner.pop(), inner.is_empty()) else { return Err(bad("`qualified(...)` takes one element".into())) };
-                    let elem = if let Self::TypeOf(n, _) = elem { Self::TypeOf(n, true) } else { elem };
+                    let elem = match elem {
+                        Self::TypeOf(n, _) => Self::TypeOf(n, true),
+                        Self::Var(n) => Self::QVar(n),
+                        e => e,
+                    };
                     (elem, close(tail, ')')?)
                 }
                 _ if rest.starts_with("type(") => {
@@ -934,8 +955,20 @@ impl<'f> Elem<'f> {
                     (Self::TypeOf(name, false), tail.strip_prefix('^').unwrap_or(tail))
                 }
                 _ if rest.starts_with("functional-type(") => {
-                    let (a, tail) = var(&rest["functional-type(".len()..])?;
-                    let (b, tail) = var(close(tail, ',')?)?;
+                    // One side: `$a`, or `$a $b ..`.
+                    let side = |mut s: &'f str, end: char| -> Result<(Vec<&'f str>, &'f str), Error> {
+                        let mut names = Vec::new();
+                        loop {
+                            let (n, tail) = var(s)?;
+                            names.push(n);
+                            s = tail.trim_start();
+                            if s.starts_with(end) {
+                                return Ok((names, s));
+                            }
+                        }
+                    };
+                    let (a, tail) = side(&rest["functional-type(".len()..], ',')?;
+                    let (b, tail) = side(close(tail, ',')?, ')')?;
                     (Self::FnType(a, b), close(tail, ')')?)
                 }
                 _ => return Err(bad(format!("unexpected `{rest}`"))),
@@ -997,7 +1030,7 @@ impl<'f> Elem<'f> {
     fn names(elems: &[Self], out: &mut Vec<&'f str>) {
         for e in elems {
             match e {
-                Self::Var(n) => out.push(n),
+                Self::Var(n) | Self::QVar(n) => out.push(n),
                 // Both halves are spelled by the list, so neither goes through `attr-dict`.
                 Self::Zip { integers, values } => out.extend([integers, values]),
                 Self::Group { elems, .. } | Self::Custom { parts: elems, .. } | Self::OiList(elems) => Self::names(elems, out),

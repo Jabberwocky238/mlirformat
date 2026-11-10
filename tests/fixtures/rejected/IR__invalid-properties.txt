@@ -1,0 +1,5 @@
+1	parse	invalid properties {b = "foo", c = 32 : i64} for op test.with_properties: for `c`: expected StringAttr
+2	parse	invalid properties {b = "foo", flag = "bar"} for op test.with_properties: for `flag`: expected BoolAttr
+3	parse	invalid properties {a = "bar", b = "foo"} for op test.with_properties: for `a`: expected IntegerAttr
+4	parse	invalid properties {array = array<i32: 1, 2, 3, 4>, b = "foo"} for op test.with_properties: for `array`: expected DenseI64ArrayAttr
+5	parse	invalid properties {array32 = array<i64: 5, 6>, b = "foo"} for op test.with_properties: for `array32`: expected DenseI32ArrayAttr

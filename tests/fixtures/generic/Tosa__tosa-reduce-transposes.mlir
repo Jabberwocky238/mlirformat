@@ -143,6 +143,19 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4x1xi32>, tensor<4x3x2xi32>) -> tensor<4x3x2xi32>, sym_name = "test_multi_dim_reshape_for_broadcast"}> ({
+  ^bb0(%arg0: tensor<1x4x1xi32>, %arg1: tensor<4x3x2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<[1, 1, 4]> : tensor<3xindex>}> : () -> !tosa.shape<3>
+    %1 = "tosa.reshape"(%arg0, %0) : (tensor<1x4x1xi32>, !tosa.shape<3>) -> tensor<1x1x4xi32>
+    %2 = "tosa.transpose"(%arg1) <{perms = array<i32: 2, 1, 0>}> : (tensor<4x3x2xi32>) -> tensor<2x3x4xi32>
+    %3 = "tosa.add"(%2, %1) : (tensor<2x3x4xi32>, tensor<1x1x4xi32>) -> tensor<2x3x4xi32>
+    %4 = "tosa.transpose"(%3) <{perms = array<i32: 2, 1, 0>}> : (tensor<2x3x4xi32>) -> tensor<4x3x2xi32>
+    "func.return"(%4) : (tensor<4x3x2xi32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (tensor<64xf32>, tensor<64xf32>, tensor<1x112x112x64xf32>) -> tensor<1x112x112x64xf32>, sym_name = "test_resnet18_common_case"}> ({
   ^bb0(%arg0: tensor<64xf32>, %arg1: tensor<64xf32>, %arg2: tensor<1x112x112x64xf32>):
     %0 = "tosa.const"() <{values = dense<0> : tensor<1xi8>}> : () -> tensor<1xi8>
@@ -440,13 +453,23 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x2x3x4xi32>, tensor<1x2x4x3xi32>) -> tensor<1x2x3x4xi32>, sym_name = "test_unimplemented_static_diverges_to_one_nullifying_one_non_nullifying"}> ({
   ^bb0(%arg0: tensor<1x2x3x4xi32>, %arg1: tensor<1x2x4x3xi32>):
-    %0 = "tosa.transpose"(%arg0) <{perms = array<i32: 0, 2, 3, 1>}> : (tensor<1x2x3x4xi32>) -> tensor<1x3x4x2xi32>
-    %1 = "tosa.transpose"(%arg1) <{perms = array<i32: 0, 3, 2, 1>}> : (tensor<1x2x4x3xi32>) -> tensor<1x3x4x2xi32>
-    %2 = "tosa.clamp"(%0) <{max_val = 1 : i32, min_val = 0 : i32, nan_mode = #tosa.nan_mode<PROPAGATE>}> : (tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
-    %3 = "tosa.abs"(%1) : (tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
-    %4 = "tosa.add"(%2, %3) : (tensor<1x3x4x2xi32>, tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
-    %5 = "tosa.transpose"(%4) <{perms = array<i32: 0, 3, 1, 2>}> : (tensor<1x3x4x2xi32>) -> tensor<1x2x3x4xi32>
-    "func.return"(%5) : (tensor<1x2x3x4xi32>) -> ()
+    %4 = "tosa.transpose"(%arg0) <{perms = array<i32: 0, 2, 3, 1>}> : (tensor<1x2x3x4xi32>) -> tensor<1x3x4x2xi32>
+    %5 = "tosa.transpose"(%arg1) <{perms = array<i32: 0, 3, 2, 1>}> : (tensor<1x2x4x3xi32>) -> tensor<1x3x4x2xi32>
+    %6 = "tosa.clamp"(%4) <{max_val = 1 : i32, min_val = 0 : i32, nan_mode = #tosa.nan_mode<PROPAGATE>}> : (tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
+    %7 = "tosa.abs"(%5) : (tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
+    %8 = "tosa.add"(%6, %7) : (tensor<1x3x4x2xi32>, tensor<1x3x4x2xi32>) -> tensor<1x3x4x2xi32>
+    %9 = "tosa.transpose"(%8) <{perms = array<i32: 0, 3, 1, 2>}> : (tensor<1x3x4x2xi32>) -> tensor<1x2x3x4xi32>
+    "func.return"(%9) : (tensor<1x2x3x4xi32>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = () -> tensor<3x2xi1>, sym_name = "test_transpose_bool"}> ({
+    %2 = "tosa.const"() <{values = dense<[[true, false, false], [false, false, true]]> : tensor<2x3xi1>}> : () -> tensor<2x3xi1>
+    %3 = "tosa.transpose"(%2) <{perms = array<i32: 1, 0>}> : (tensor<2x3xi1>) -> tensor<3x2xi1>
+    "func.return"(%3) : (tensor<3x2xi1>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = () -> tensor<3x2xi4>, sym_name = "test_transpose_i4"}> ({
+    %0 = "tosa.const"() <{values = dense<[[1, 2, 3], [4, 5, 6]]> : tensor<2x3xi4>}> : () -> tensor<2x3xi4>
+    %1 = "tosa.transpose"(%0) <{perms = array<i32: 1, 0>}> : (tensor<2x3xi4>) -> tensor<3x2xi4>
+    "func.return"(%1) : (tensor<3x2xi4>) -> ()
   }) : () -> ()
 }) : () -> ()
 

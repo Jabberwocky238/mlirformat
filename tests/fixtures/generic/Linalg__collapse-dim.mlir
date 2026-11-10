@@ -128,3 +128,21 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1, d2, d3, d4, d5) -> (d0, d1 + d4, d2 + d5, d3)>
+#map1 = affine_map<(d0, d1, d2, d3, d4, d5) -> (d4, d5, d3, 0)>
+#map2 = affine_map<(d0, d1, d2, d3, d4, d5) -> (d0, d1, d2, d3)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x5x5x1xf32>, tensor<2x2x1x1xf32>) -> tensor<1x4x4x1xf32>, sym_name = "non_projected_permutation_no_crash"}> ({
+  ^bb0(%arg0: tensor<1x5x5x1xf32>, %arg1: tensor<2x2x1x1xf32>):
+    %0 = "arith.constant"() <{value = dense<0.000000e+00> : tensor<1x4x4x1xf32>}> : () -> tensor<1x4x4x1xf32>
+    %1 = "linalg.generic"(%arg0, %arg1, %0) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 2, 1>}> ({
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
+      %2 = "arith.mulf"(%arg2, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      %3 = "arith.addf"(%arg4, %2) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<1x5x5x1xf32>, tensor<2x2x1x1xf32>, tensor<1x4x4x1xf32>) -> tensor<1x4x4x1xf32>
+    "func.return"(%1) : (tensor<1x4x4x1xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

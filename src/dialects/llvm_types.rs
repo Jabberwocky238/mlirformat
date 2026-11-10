@@ -20,7 +20,6 @@ use crate::parser::Parser;
 pub enum LlvmType<'a> {
     Ptr(u32),
     Void,
-    Token,
     Label,
     Metadata,
     /// `x86_amx`: an AMX tile.
@@ -63,7 +62,6 @@ impl<'a> LlvmType<'a> {
             LlvmType::Ptr(0) => ("ptr", None),
             LlvmType::Ptr(n) => ("ptr", Some(format!("<{n}>"))),
             LlvmType::Void => ("void", None),
-            LlvmType::Token => ("token", None),
             LlvmType::Label => ("label", None),
             LlvmType::Metadata => ("metadata", None),
             LlvmType::X86Amx => ("x86_amx", None),
@@ -131,7 +129,7 @@ impl<'a> LlvmType<'a> {
         let word_end = s.find(|c: char| !c.is_ascii_alphanumeric() && c != '_').unwrap_or(s.len());
         let (word, rest) = s.split_at(word_end);
         let llvm = match word {
-            "ptr" | "void" | "token" | "label" | "metadata" | "x86_amx" | "ppc_fp128" | "array" | "struct" | "func" => true,
+            "ptr" | "void" | "label" | "metadata" | "x86_amx" | "ppc_fp128" | "array" | "struct" | "func" => true,
             _ => false,
         };
         if llvm {
@@ -185,7 +183,6 @@ impl<'a> LlvmType<'a> {
         Some(match mnemonic {
             "ptr" => LlvmType::Ptr(inner.map_or(Some(0), |n| n.trim().parse().ok())?),
             "void" => LlvmType::Void,
-            "token" => LlvmType::Token,
             "label" => LlvmType::Label,
             "metadata" => LlvmType::Metadata,
             "x86_amx" => LlvmType::X86Amx,

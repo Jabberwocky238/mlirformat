@@ -24,7 +24,7 @@ module {
     %4 = omp.map.info var_ptr(%1 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "mapped_var"}
     %5 = omp.map.info var_ptr(%2 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(to) capture(ByRef) -> !llvm.ptr
     %6 = omp.map.info var_ptr(%3 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(to) capture(ByRef) -> !llvm.ptr
-    omp.target map_entries(%4 -> %arg3, %5 -> %arg4, %6 -> %arg5 : !llvm.ptr, !llvm.ptr, !llvm.ptr) private(@box.heap_privatizer0 %2 -> %arg6 [map_idx=1], @box.heap_privatizer1 %3 -> %arg7 [map_idx=2] : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%4 -> %arg3, %5 -> %arg4, %6 -> %arg5 : !llvm.ptr, !llvm.ptr, !llvm.ptr) private(@box.heap_privatizer0 %2 -> %arg6 [map_idx=1], @box.heap_privatizer1 %3 -> %arg7 [map_idx=2] : !llvm.ptr, !llvm.ptr) {
       llvm.call @use_private_var0(%arg6) : (!llvm.ptr) -> ()
       llvm.call @use_private_var1(%arg7) : (!llvm.ptr) -> ()
       omp.terminator

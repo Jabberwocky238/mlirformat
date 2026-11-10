@@ -18,24 +18,8 @@ module {
     %1 = llvm.mlir.constant(100 : i32) : i32
     %2 = llvm.mlir.constant(1 : i64) : i64
     %3 = llvm.alloca %2 x i32 {bindc_name = "i"} : (i64) -> !llvm.ptr
-    omp.taskloop private(@_QFtestEarg_firstprivate_i32 %arg0 -> %arg1, @_QFtestEi_private_i32 %3 -> %arg2 : !llvm.ptr, !llvm.ptr) {
-      omp.loop_nest (%arg3) : i32 = (%0) to (%1) inclusive step (%0) {
-        llvm.store %arg3, %arg2 : i32, !llvm.ptr
-        llvm.call @_QPbefore(%arg1) : (!llvm.ptr) -> ()
-        omp.cancel cancellation_construct_type(taskgroup)
-        llvm.call @_QPafter(%arg1) : (!llvm.ptr) -> ()
-        omp.yield
-      }
-    }
-    llvm.return
-  }
-  llvm.func @_QPtest2(%arg0: !llvm.ptr {fir.bindc_name = "arg", llvm.noalias, llvm.nocapture}) {
-    %0 = llvm.mlir.constant(1 : i32) : i32
-    %1 = llvm.mlir.constant(100 : i32) : i32
-    %2 = llvm.mlir.constant(1 : i64) : i64
-    %3 = llvm.alloca %2 x i32 {bindc_name = "i"} : (i64) -> !llvm.ptr
-    omp.taskgroup {
-      omp.taskloop nogroup private(@_QFtestEarg_firstprivate_i32 %arg0 -> %arg1, @_QFtestEi_private_i32 %3 -> %arg2 : !llvm.ptr, !llvm.ptr) {
+    omp.taskloop.context private(@_QFtestEarg_firstprivate_i32 %arg0 -> %arg1, @_QFtestEi_private_i32 %3 -> %arg2 : !llvm.ptr, !llvm.ptr) {
+      omp.taskloop.wrapper {
         omp.loop_nest (%arg3) : i32 = (%0) to (%1) inclusive step (%0) {
           llvm.store %arg3, %arg2 : i32, !llvm.ptr
           llvm.call @_QPbefore(%arg1) : (!llvm.ptr) -> ()
@@ -45,6 +29,28 @@ module {
         }
       }
       omp.terminator
+    } {omp.combined}
+    llvm.return
+  }
+  llvm.func @_QPtest2(%arg0: !llvm.ptr {fir.bindc_name = "arg", llvm.noalias, llvm.nocapture}) {
+    %0 = llvm.mlir.constant(1 : i32) : i32
+    %1 = llvm.mlir.constant(100 : i32) : i32
+    %2 = llvm.mlir.constant(1 : i64) : i64
+    %3 = llvm.alloca %2 x i32 {bindc_name = "i"} : (i64) -> !llvm.ptr
+    omp.taskgroup {
+      omp.taskloop.context nogroup private(@_QFtestEarg_firstprivate_i32 %arg0 -> %arg1, @_QFtestEi_private_i32 %3 -> %arg2 : !llvm.ptr, !llvm.ptr) {
+        omp.taskloop.wrapper {
+          omp.loop_nest (%arg3) : i32 = (%0) to (%1) inclusive step (%0) {
+            llvm.store %arg3, %arg2 : i32, !llvm.ptr
+            llvm.call @_QPbefore(%arg1) : (!llvm.ptr) -> ()
+            omp.cancel cancellation_construct_type(taskgroup)
+            llvm.call @_QPafter(%arg1) : (!llvm.ptr) -> ()
+            omp.yield
+          }
+        }
+        omp.terminator
+      } {omp.combined}
+      omp.terminator
     }
     llvm.return
   }
@@ -53,16 +59,19 @@ module {
     %1 = llvm.mlir.constant(100 : i32) : i32
     %2 = llvm.mlir.constant(1 : i64) : i64
     %3 = llvm.alloca %2 x i32 {bindc_name = "i"} : (i64) -> !llvm.ptr
-    omp.taskloop private(@_QFtestEarg_firstprivate_i32 %arg0 -> %arg1, @_QFtestEi_private_i32 %3 -> %arg2 : !llvm.ptr, !llvm.ptr) {
-      omp.loop_nest (%arg3) : i32 = (%0) to (%1) inclusive step (%0) {
-        llvm.store %arg3, %arg2 : i32, !llvm.ptr
-        llvm.call @_QPbefore(%arg1) : (!llvm.ptr) -> ()
-        %4 = llvm.mlir.constant(true) : i1
-        omp.cancel cancellation_construct_type(taskgroup) if(%4)
-        llvm.call @_QPafter(%arg1) : (!llvm.ptr) -> ()
-        omp.yield
+    omp.taskloop.context private(@_QFtestEarg_firstprivate_i32 %arg0 -> %arg1, @_QFtestEi_private_i32 %3 -> %arg2 : !llvm.ptr, !llvm.ptr) {
+      omp.taskloop.wrapper {
+        omp.loop_nest (%arg3) : i32 = (%0) to (%1) inclusive step (%0) {
+          llvm.store %arg3, %arg2 : i32, !llvm.ptr
+          llvm.call @_QPbefore(%arg1) : (!llvm.ptr) -> ()
+          %4 = llvm.mlir.constant(true) : i1
+          omp.cancel cancellation_construct_type(taskgroup) if(%4)
+          llvm.call @_QPafter(%arg1) : (!llvm.ptr) -> ()
+          omp.yield
+        }
       }
-    }
+      omp.terminator
+    } {omp.combined}
     llvm.return
   }
   llvm.func @_QPbefore(!llvm.ptr) attributes {sym_visibility = "private"}

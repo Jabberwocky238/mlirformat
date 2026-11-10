@@ -53,6 +53,51 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (vector<8xf32>, vector<8xi16>, vector<8xi32>, vector<2xi8>, vector<2xi8>) -> vector<8xf32>, sym_name = "mma_mx"}> ({
+  ^bb0(%arg0: vector<8xf32>, %arg1: vector<8xi16>, %arg2: vector<8xi32>, %arg3: vector<2xi8>, %arg4: vector<2xi8>):
+    %0 = "xevm.mma_mx"(%arg1, %arg2, %arg3, %arg4, %arg0) <{shape = #xevm.mma_shape<m = 8, n = 16, k = 64>, types = #xevm.mma_types<d = f32, a = e2m1, b = e2m1, c = f32>}> : (vector<8xi16>, vector<8xi32>, vector<2xi8>, vector<2xi8>, vector<8xf32>) -> vector<8xf32>
+    "func.return"(%0) : (vector<8xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> i8, sym_name = "truncf_scalar"}> ({
+    %0 = "arith.constant"() <{value = 1.000000e+00 : bf16}> : () -> bf16
+    %1 = "xevm.truncf"(%0) <{dst_etype = #xevm<dst_etype dst_etype = f8>, src_etype = #xevm<src_etype src_etype = bf16>}> : (bf16) -> i8
+    "func.return"(%1) : (i8) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> vector<8xi4>, sym_name = "truncf_vector"}> ({
+    %0 = "arith.constant"() <{value = dense<1.000000e+00> : vector<8xbf16>}> : () -> vector<8xbf16>
+    %1 = "xevm.truncf"(%0) <{dst_etype = #xevm<dst_etype dst_etype = e2m1>, src_etype = #xevm<src_etype src_etype = bf16>}> : (vector<8xbf16>) -> vector<8xi4>
+    "func.return"(%1) : (vector<8xi4>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> f16, sym_name = "extf_scalar"}> ({
+    %0 = "arith.constant"() <{value = 1 : i8}> : () -> i8
+    %1 = "xevm.extf"(%0) <{dst_etype = #xevm<ext_dst_etype dst_etype = f16>, src_etype = #xevm<ext_src_etype src_etype = bf8>}> : (i8) -> f16
+    "func.return"(%1) : (f16) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> vector<8xbf16>, sym_name = "extf_vector"}> ({
+    %0 = "arith.constant"() <{value = dense<1> : vector<8xi4>}> : () -> vector<8xi4>
+    %1 = "xevm.extf"(%0) <{dst_etype = #xevm<ext_dst_etype dst_etype = bf16>, src_etype = #xevm<ext_src_etype src_etype = e2m1>}> : (vector<8xi4>) -> vector<8xbf16>
+    "func.return"(%1) : (vector<8xbf16>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = () -> (), sym_name = "memfence"}> ({
     "xevm.memfence"() <{addrspace = #xevm.addr_space<global>, scope = #xevm.mem_scope<workgroup>}> : () -> ()
     "func.return"() : () -> ()

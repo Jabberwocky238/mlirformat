@@ -113,3 +113,20 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0, d1, d2, d3, d4, d5) -> (d0, d1 + d4, d2 + d5, d3)>
+#map1 = affine_map<(d0, d1, d2, d3, d4, d5) -> (d4, d5, d3, 0)>
+#map2 = affine_map<(d0, d1, d2, d3, d4, d5) -> (d0, d1, d2, d3)>
+module {
+  func.func @non_projected_permutation_no_crash(%arg0: tensor<1x5x5x1xf32>, %arg1: tensor<2x2x1x1xf32>) -> tensor<1x4x4x1xf32> {
+    %cst = arith.constant dense<0.000000e+00> : tensor<1x4x4x1xf32>
+    %0 = linalg.generic {indexing_maps = [#map, #map1, #map2], iterator_types = ["parallel", "parallel", "parallel", "parallel", "reduction", "reduction"]} ins(%arg0, %arg1 : tensor<1x5x5x1xf32>, tensor<2x2x1x1xf32>) outs(%cst : tensor<1x4x4x1xf32>) {
+    ^bb0(%in: f32, %in_0: f32, %out: f32):
+      %1 = arith.mulf %in, %in_0 : f32
+      %2 = arith.addf %out, %1 : f32
+      linalg.yield %2 : f32
+    } -> tensor<1x4x4x1xf32>
+    return %0 : tensor<1x4x4x1xf32>
+  }
+}
+

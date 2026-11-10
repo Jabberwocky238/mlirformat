@@ -55,9 +55,21 @@ module {
     %3 = nvvm.convert.bf16x2.to.f8x2 %arg0 {rnd = #nvvm.fp_rnd_mode<rp>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> i16(f8E8M0FNU)
     llvm.return
   }
+  llvm.func @convert_bf16x2_to_f8x2_e4m3(%arg0: vector<2xbf16>) {
+    %0 = nvvm.convert.bf16x2.to.f8x2 %arg0 {rnd = #nvvm.fp_rnd_mode<rn>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> i16(f8E4M3FN)
+    %1 = nvvm.convert.bf16x2.to.f8x2 %arg0 {relu = true, rnd = #nvvm.fp_rnd_mode<rn>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> i16(f8E4M3FN)
+    llvm.return
+  }
+  llvm.func @convert_bf16x2_to_f8x2_e5m2(%arg0: vector<2xbf16>) {
+    %0 = nvvm.convert.bf16x2.to.f8x2 %arg0 {rnd = #nvvm.fp_rnd_mode<rn>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> vector<2xi8>(f8E5M2)
+    %1 = nvvm.convert.bf16x2.to.f8x2 %arg0 {relu = true, rnd = #nvvm.fp_rnd_mode<rn>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> vector<2xi8>(f8E5M2)
+    llvm.return
+  }
   llvm.func @convert_bf16x2_to_f8x2_vector_return(%arg0: vector<2xbf16>) {
     %0 = nvvm.convert.bf16x2.to.f8x2 %arg0 {rnd = #nvvm.fp_rnd_mode<rz>} : vector<2xbf16> -> vector<2xi8>(f8E8M0FNU)
     %1 = nvvm.convert.bf16x2.to.f8x2 %arg0 {rnd = #nvvm.fp_rnd_mode<rp>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> vector<2xi8>(f8E8M0FNU)
+    %2 = nvvm.convert.bf16x2.to.f8x2 %arg0 {rnd = #nvvm.fp_rnd_mode<rn>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> vector<2xi8>(f8E4M3FN)
+    %3 = nvvm.convert.bf16x2.to.f8x2 %arg0 {relu = true, rnd = #nvvm.fp_rnd_mode<rn>, sat = #nvvm.sat_mode<satfinite>} : vector<2xbf16> -> vector<2xi8>(f8E5M2)
     llvm.return
   }
 }
@@ -80,6 +92,22 @@ module {
 module {
   llvm.func @convert_f8x2_to_bf16x2_ue8m0(%arg0: vector<2xi8>) {
     %0 = nvvm.convert.f8x2.to.bf16x2 %arg0 : vector<2xi8>(f8E8M0FNU) -> vector<2xbf16>
+    llvm.return
+  }
+  llvm.func @convert_f8x2_to_bf16x2_e4m3(%arg0: vector<2xi8>, %arg1: i16) {
+    %0 = nvvm.convert.f8x2.to.bf16x2 %arg0 : vector<2xi8>(f8E4M3FN) -> vector<2xbf16>
+    %1 = nvvm.convert.f8x2.to.bf16x2 %arg0 {relu = true} : vector<2xi8>(f8E4M3FN) -> vector<2xbf16>
+    %2 = nvvm.convert.f8x2.to.bf16x2 %arg0 {sat = #nvvm.sat_mode<satfinite>} : vector<2xi8>(f8E4M3FN) -> vector<2xbf16>
+    %3 = nvvm.convert.f8x2.to.bf16x2 %arg0 {relu = true, sat = #nvvm.sat_mode<satfinite>} : vector<2xi8>(f8E4M3FN) -> vector<2xbf16>
+    %4 = nvvm.convert.f8x2.to.bf16x2 %arg0, %arg1 : vector<2xi8>(f8E4M3FN) -> vector<2xbf16>
+    llvm.return
+  }
+  llvm.func @convert_f8x2_to_bf16x2_e5m2(%arg0: vector<2xi8>, %arg1: i16) {
+    %0 = nvvm.convert.f8x2.to.bf16x2 %arg0 : vector<2xi8>(f8E5M2) -> vector<2xbf16>
+    %1 = nvvm.convert.f8x2.to.bf16x2 %arg0 {relu = true} : vector<2xi8>(f8E5M2) -> vector<2xbf16>
+    %2 = nvvm.convert.f8x2.to.bf16x2 %arg0 {sat = #nvvm.sat_mode<satfinite>} : vector<2xi8>(f8E5M2) -> vector<2xbf16>
+    %3 = nvvm.convert.f8x2.to.bf16x2 %arg0 {relu = true, sat = #nvvm.sat_mode<satfinite>} : vector<2xi8>(f8E5M2) -> vector<2xbf16>
+    %4 = nvvm.convert.f8x2.to.bf16x2 %arg0, %arg1 : vector<2xi8>(f8E5M2) -> vector<2xbf16>
     llvm.return
   }
 }

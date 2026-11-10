@@ -8,6 +8,11 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.cos %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.cos", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLCos<'a> {
     #[slot(arg_ty)]
@@ -21,6 +26,11 @@ pub struct ROCDLCos<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.exp %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.exp", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLExp<'a> {
     #[slot(arg_ty)]
@@ -34,6 +44,11 @@ pub struct ROCDLExp<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.exp2 %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.exp2", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLExp2<'a> {
     #[slot(arg_ty)]
@@ -47,6 +62,11 @@ pub struct ROCDLExp2<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.log %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.log", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLLog<'a> {
     #[slot(arg_ty)]
@@ -60,6 +80,11 @@ pub struct ROCDLLog<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.rcp %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.rcp", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLRcp<'a> {
     #[slot(arg_ty)]
@@ -73,6 +98,29 @@ pub struct ROCDLRcp<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.rsq %a f32 -> f32
+/// ```
+#[mlir::op("rocdl.rsq", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
+pub struct ROCDLRsq<'a> {
+    #[slot(arg_ty)]
+    pub arg: Value<'a>,
+    pub arg_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+///
+/// Note: In the general case, prefer the conventional `arith`, `math`, or `llvm` ops over this.
+/// Use this ROCDL-specific operation only when you fully understand its implication and
+/// when it is strictly necessary. This op is usually chosen when a small loss in precision is
+/// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.sin %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.sin", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLSin<'a> {
     #[slot(arg_ty)]
@@ -86,6 +134,11 @@ pub struct ROCDLSin<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.sqrt %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.sqrt", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLSqrt<'a> {
     #[slot(arg_ty)]
@@ -99,6 +152,11 @@ pub struct ROCDLSqrt<'a> {
 /// Use this ROCDL-specific operation only when you fully understand its implication and
 /// when it is strictly necessary. This op is usually chosen when a small loss in precision is
 /// acceptable in exchange for higher execution speed.
+///
+/// Example:
+/// ```mlir
+/// %0 = rocdl.tanh %a f32 -> f32
+/// ```
 #[mlir::op("rocdl.tanh", format = "$arg qualified(type($arg)) attr-dict `->` qualified(type($res))", results(res))]
 pub struct ROCDLTanh<'a> {
     #[slot(arg_ty)]
@@ -107,10 +165,39 @@ pub struct ROCDLTanh<'a> {
     pub res: Type<'a>,
 }
 
+/// `rocdl.asyncmark`: Mark the end of a group of asynchronous operations
+///
+/// This operation, in conjunction with `rocdl.wait.asyncmark`, forms the
+/// compiler-provided framework for tracking explicitly asynchronous
+/// memory operations, such as copies to LDS that use async intrinsics
+/// and gfx1250's tensor loads.
+///
+/// Details of its behavior can be found in
+/// [the LLVM documentation on async tracking](/llvm/docs/AMDGPUAsyncOperations.rst).
+///
+/// See `rocdl.wait.asyncmark`'s documentation for a usage example.
+///
+/// Example:
+/// ```mlir
+/// // Mark the end of an async operation group.
+/// rocdl.asyncmark
+/// ```
+///
+/// Available on gfx9 and later.
+#[mlir::op("rocdl.asyncmark", format = "attr-dict")]
+pub struct AsyncmarkOp<'a> {
+}
+
 /// `rocdl.ballot`: Vote across thread group
 ///
 /// Ballot provides a bit mask containing the 1-bit predicate value from each lane.
 /// The nth bit of the result contains the 1 bit contributed by the nth warp lane.
+///
+/// Example:
+/// ```mlir
+/// // Ballot across thread group.
+/// %0 = rocdl.ballot %pred : i64
+/// ```
 #[mlir::op("rocdl.ballot", format = "$pred attr-dict `:` type($res)", results(res))]
 pub struct BallotOp<'a> {
     #[slot(pred_ty)]
@@ -122,6 +209,12 @@ pub struct BallotOp<'a> {
 
 ///
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Initialize a named barrier with member count.
+/// rocdl.s.barrier.init %ptr member_cnt = 1 : !llvm.ptr<3>
+/// ```
 #[mlir::op("rocdl.s.barrier.init", format = "$ptr `member_cnt` `=` $memberCnt attr-dict `:` qualified(type($ptr))")]
 pub struct BarrierInitOp<'a> {
     #[slot(ptr_ty)]
@@ -134,6 +227,12 @@ pub struct BarrierInitOp<'a> {
 
 ///
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Join a named barrier.
+/// rocdl.s.barrier.join %ptr : !llvm.ptr<3>
+/// ```
 #[mlir::op("rocdl.s.barrier.join", format = "$ptr attr-dict `:` qualified(type($ptr))")]
 pub struct BarrierJoinOp<'a> {
     #[slot(ptr_ty)]
@@ -144,6 +243,12 @@ pub struct BarrierJoinOp<'a> {
 
 ///
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Leave a named barrier by id.
+/// rocdl.s.barrier.leave id = 1
+/// ```
 #[mlir::op("rocdl.s.barrier.leave", format = "`id` `=` $id attr-dict")]
 pub struct BarrierLeaveOp<'a> {
     #[attr(int = "i16")]
@@ -155,12 +260,24 @@ pub struct BarrierLeaveOp<'a> {
 ///
 /// **DEPRECATION NOTICE**: Use `gpu.barrier`, which will expand to these
 /// operations, instead.
+///
+/// Example:
+/// ```mlir
+/// // Workgroup barrier with acquire/release fences.
+/// rocdl.barrier
+/// ```
 #[mlir::op("rocdl.barrier", format = "attr-dict")]
 pub struct BarrierOp<'a> {
 }
 
 ///
-/// Available on gfx1250+.
+/// Available on gfx1200+.
+///
+/// Example:
+/// ```mlir
+/// // Signal barrier and check if this wave is first to arrive.
+/// %0 = rocdl.s.barrier.signal.isfirst id = 1 -> i1
+/// ```
 #[mlir::op("rocdl.s.barrier.signal.isfirst", format = "`id` `=` $id attr-dict `->` type($res)", results(res))]
 pub struct BarrierSignalIsfirstOp<'a> {
     #[attr(int = "i32")]
@@ -169,6 +286,14 @@ pub struct BarrierSignalIsfirstOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Signal a barrier by id. Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Signal barrier with id -1 (all barriers).
+/// rocdl.s.barrier.signal id = -1
+/// ```
 #[mlir::op("rocdl.s.barrier.signal", format = "`id` `=` $id attr-dict")]
 pub struct BarrierSignalOp<'a> {
     #[attr(int = "i32")]
@@ -177,6 +302,14 @@ pub struct BarrierSignalOp<'a> {
 
 ///
 /// Available on gfx1250+.
+///
+/// If `memberCnt` is 0, the member count is retained from a previous initialization.
+///
+/// Example:
+/// ```mlir
+/// // Signal a named barrier with variable ID.
+/// rocdl.s.barrier.signal.var %ptr member_cnt = 1 : !llvm.ptr<3>
+/// ```
 #[mlir::op("rocdl.s.barrier.signal.var", format = "$ptr `member_cnt` `=` $memberCnt attr-dict `:` qualified(type($ptr))")]
 pub struct BarrierSignalVarOp<'a> {
     #[slot(ptr_ty)]
@@ -187,33 +320,32 @@ pub struct BarrierSignalVarOp<'a> {
     pub ptr_ty: Type<'a>,
 }
 
+///
+/// Wait on a barrier by id. Available on gfx1200+.
+///
+/// Example:
+/// ```mlir
+/// // Wait on barrier with id -1 (all barriers).
+/// rocdl.s.barrier.wait id = -1
+/// ```
 #[mlir::op("rocdl.s.barrier.wait", format = "`id` `=` $id attr-dict")]
 pub struct BarrierWaitOp<'a> {
     #[attr(int = "i16")]
     pub id: Attribute<'a>,
 }
 
-#[mlir::op("rocdl.workgroup.dim.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
-pub struct BlockDimXOp<'a> {
-    #[attr(dialect = "llvm.constant_range")]
-    pub range: Option<Attribute<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.workgroup.dim.y", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
-pub struct BlockDimYOp<'a> {
-    #[attr(dialect = "llvm.constant_range")]
-    pub range: Option<Attribute<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.workgroup.dim.z", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
-pub struct BlockDimZOp<'a> {
-    #[attr(dialect = "llvm.constant_range")]
-    pub range: Option<Attribute<'a>>,
-    pub res: Type<'a>,
-}
-
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.workgroup.id.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct BlockIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -221,6 +353,18 @@ pub struct BlockIdXOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.workgroup.id.y", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct BlockIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -228,6 +372,18 @@ pub struct BlockIdYOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.workgroup.id.z", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct BlockIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -235,6 +391,18 @@ pub struct BlockIdZOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.cluster.id.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ClusterIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -242,6 +410,18 @@ pub struct ClusterIdXOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.cluster.id.y", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ClusterIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -249,6 +429,18 @@ pub struct ClusterIdYOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.cluster.id.z", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ClusterIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -260,7 +452,15 @@ pub struct ClusterIdZOp<'a> {
 /// Broadcasts memory load of 128 bits of data for a cluster of workgroups.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.cluster.load.async.to.lds.b128", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $cpol `,` $mask attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Cluster broadcast 128-bit load to LDS.
+/// rocdl.cluster.load.async.to.lds.b128 %src, %dst, 0, 0, %mask : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.cluster.load.async.to.lds.b128")]
 pub struct ClusterLoadAsyncToLDSB128Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -270,8 +470,7 @@ pub struct ClusterLoadAsyncToLDSB128Op<'a> {
     pub mask: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub cpol: Attribute<'a>,
+    pub cpol: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -287,7 +486,15 @@ pub struct ClusterLoadAsyncToLDSB128Op<'a> {
 /// Broadcasts memory load of 32 bits of data for a cluster of workgroups.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.cluster.load.async.to.lds.b32", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $cpol `,` $mask attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Cluster broadcast 32-bit load to LDS.
+/// rocdl.cluster.load.async.to.lds.b32 %src, %dst, 0, 0, %mask : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.cluster.load.async.to.lds.b32")]
 pub struct ClusterLoadAsyncToLDSB32Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -297,8 +504,7 @@ pub struct ClusterLoadAsyncToLDSB32Op<'a> {
     pub mask: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub cpol: Attribute<'a>,
+    pub cpol: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -314,7 +520,15 @@ pub struct ClusterLoadAsyncToLDSB32Op<'a> {
 /// Broadcasts memory load of 64 bits of data for a cluster of workgroups.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.cluster.load.async.to.lds.b64", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $cpol `,` $mask attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Cluster broadcast 64-bit load to LDS.
+/// rocdl.cluster.load.async.to.lds.b64 %src, %dst, 0, 0, %mask : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.cluster.load.async.to.lds.b64")]
 pub struct ClusterLoadAsyncToLDSB64Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -324,8 +538,7 @@ pub struct ClusterLoadAsyncToLDSB64Op<'a> {
     pub mask: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub cpol: Attribute<'a>,
+    pub cpol: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -341,7 +554,15 @@ pub struct ClusterLoadAsyncToLDSB64Op<'a> {
 /// Broadcasts memory load of 8 bits of data for a cluster of workgroups.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.cluster.load.async.to.lds.b8", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $cpol `,` $mask attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Cluster broadcast 8-bit load to LDS.
+/// rocdl.cluster.load.async.to.lds.b8 %src, %dst, 0, 0, %mask : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.cluster.load.async.to.lds.b8")]
 pub struct ClusterLoadAsyncToLDSB8Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -351,8 +572,7 @@ pub struct ClusterLoadAsyncToLDSB8Op<'a> {
     pub mask: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub cpol: Attribute<'a>,
+    pub cpol: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -364,9 +584,72 @@ pub struct ClusterLoadAsyncToLDSB8Op<'a> {
     pub mask_ty: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
+#[mlir::op("rocdl.cluster.workgroup.id.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
+pub struct ClusterWorkgroupIdXOp<'a> {
+    #[attr(dialect = "llvm.constant_range")]
+    pub range: Option<Attribute<'a>>,
+    pub res: Type<'a>,
+}
+
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
+#[mlir::op("rocdl.cluster.workgroup.id.y", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
+pub struct ClusterWorkgroupIdYOp<'a> {
+    #[attr(dialect = "llvm.constant_range")]
+    pub range: Option<Attribute<'a>>,
+    pub res: Type<'a>,
+}
+
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
+#[mlir::op("rocdl.cluster.workgroup.id.z", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
+pub struct ClusterWorkgroupIdZOp<'a> {
+    #[attr(dialect = "llvm.constant_range")]
+    pub range: Option<Attribute<'a>>,
+    pub res: Type<'a>,
+}
+
 /// `rocdl.cvt.f32.bf8`: Convert bf8 to f32
 ///
 /// Convert 8-bit bf8 value from the `byteSel`th bit of `srcA` to fp32.
+///
+/// Example:
+/// ```mlir
+/// // Convert bf8 byte 0 to f32.
+/// %0 = rocdl.cvt.f32.bf8 %src[0] : f32
+/// ```
 #[mlir::op("rocdl.cvt.f32.bf8", format = "attr-dict $srcA `[` $byteSel `]` `:` type($res)", results(res))]
 pub struct CvtF32Bf8Op<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -381,6 +664,12 @@ pub struct CvtF32Bf8Op<'a> {
 /// `rocdl.cvt.f32.fp8`: Convert fp8 to f32
 ///
 /// Convert 8-bit fp8 value from the `byteSel`th bit of `srcA` to fp32.
+///
+/// Example:
+/// ```mlir
+/// // Convert fp8 byte 0 to f32.
+/// %0 = rocdl.cvt.f32.fp8 %src[0] : f32
+/// ```
 #[mlir::op("rocdl.cvt.f32.fp8", format = "attr-dict $srcA `[` $byteSel `]` `:` type($res)", results(res))]
 pub struct CvtF32Fp8Op<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -396,6 +685,12 @@ pub struct CvtF32Fp8Op<'a> {
 ///
 /// Convert `srcA` and `srcB` to bf8 and store into the low/high word of
 /// `old`, preserving the other word.
+///
+/// Example:
+/// ```mlir
+/// // Pack two f32 values into bf8 in the low word of old.
+/// %0 = rocdl.cvt.pk.bf8.f32 %a, %b -> %old[false] : i32
+/// ```
 #[mlir::op("rocdl.cvt.pk.bf8.f32", format = "attr-dict $srcA `,` $srcB `->` $old `[` $wordSel `]` `:` type($res)", results(res))]
 pub struct CvtPkBf8F32Op<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -417,7 +712,13 @@ pub struct CvtPkBf8F32Op<'a> {
 
 /// `rocdl.cvt.pk.f32.bf8`: Convert packed bf8 to packed f32
 ///
-/// Convert `src` based on $wordSel to packed fp32,
+/// Convert `src` based on $wordSel to packed fp32.
+///
+/// Example:
+/// ```mlir
+/// // Unpack bf8 word to packed f32.
+/// %0 = rocdl.cvt.pk.f32.bf8 %src[false] : vector<2xf32>
+/// ```
 #[mlir::op("rocdl.cvt.pk.f32.bf8", format = "attr-dict $src `[` $wordSel `]` `:` type($res)", results(res))]
 pub struct CvtPkF32Bf8Op<'a> {
     #[slot(src_ty)]
@@ -432,6 +733,12 @@ pub struct CvtPkF32Bf8Op<'a> {
 /// `rocdl.cvt.pk.f32.fp8`: Convert packed fp8 to packed f32
 ///
 /// Convert `src` based on $wordSel to packed fp32.
+///
+/// Example:
+/// ```mlir
+/// // Unpack fp8 word to packed f32.
+/// %0 = rocdl.cvt.pk.f32.fp8 %src[false] : vector<2xf32>
+/// ```
 #[mlir::op("rocdl.cvt.pk.f32.fp8", format = "attr-dict $src `[` $wordSel `]` `:` type($res)", results(res))]
 pub struct CvtPkF32Fp8Op<'a> {
     #[slot(src_ty)]
@@ -447,6 +754,12 @@ pub struct CvtPkF32Fp8Op<'a> {
 ///
 /// Convert `srcA` and `srcB` to fp8 and store into the low/high word of
 /// `old`, preserving the other word.
+///
+/// Example:
+/// ```mlir
+/// // Pack two f32 values into fp8 in the low word of old.
+/// %0 = rocdl.cvt.pk.fp8.f32 %a, %b -> %old[false] : i32
+/// ```
 #[mlir::op("rocdl.cvt.pk.fp8.f32", format = "attr-dict $srcA `,` $srcB `->` $old `[` $wordSel `]` `:` type($res)", results(res))]
 pub struct CvtPkFp8F32Op<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -469,6 +782,12 @@ pub struct CvtPkFp8F32Op<'a> {
 /// `rocdl.cvt.pkrtz`: Convert two f32 input into a vector<2xf16>
 ///
 /// Convert two f32 values into a packed vector<2xf16>.
+///
+/// Example:
+/// ```mlir
+/// // Pack two f32 values into a vector<2xf16> with round-to-zero.
+/// %0 = rocdl.cvt.pkrtz %a, %b : vector<2xf16>
+/// ```
 #[mlir::op("rocdl.cvt.pkrtz", format = "attr-dict $srcA `,` $srcB `:` type($res)", results(res))]
 pub struct CvtPkRtz<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -1717,6 +2036,12 @@ pub struct CvtScaleF32PkFp4F16Op<'a> {
 /// The two scaled values are packed  into a byte.
 /// That byte is used to update the `dstSelIndex`th
 /// byte of `oldVdst`, which is returned in its entirity.
+///
+/// Example:
+/// ```mlir
+/// // Scaled convert two f32 values to packed fp4 in byte 0 of old.
+/// %0 = rocdl.cvt.scalef32.pk.fp4.f32 %a, %b, %scale -> %old[0] : i32
+/// ```
 #[mlir::op("rocdl.cvt.scalef32.pk.fp4.f32", format = "attr-dict $src0 `,` $src1 `,` $scale `->` $oldVdst `[` $dstSelIndex `]` `:` type($res)", results(res))]
 pub struct CvtScaleF32PkFp4F32Op<'a> {
     #[slot(old_vdst_ty, name = "oldVdst")]
@@ -2575,6 +2900,12 @@ pub struct CvtScaleF32SrPkFp4F32Op<'a> {
 ///
 /// Convert `srcA` to bf8, adding the rounding factor from `srcB`,
 /// and store into the `byteSel`th byte of `old`, preserving the others.
+///
+/// Example:
+/// ```mlir
+/// // Stochastic rounding convert f32 to bf8 in byte 2 of old.
+/// %0 = rocdl.cvt.sr.bf8.f32 %val, %stoch -> %old[2] : i32
+/// ```
 #[mlir::op("rocdl.cvt.sr.bf8.f32", format = "attr-dict $srcA `,` $srcB `->` $old `[` $byteSel `]` `:` type($res)", results(res))]
 pub struct CvtSrBf8F32Op<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -2598,6 +2929,12 @@ pub struct CvtSrBf8F32Op<'a> {
 ///
 /// Convert `srcA` to fp8, adding the rounding factor from `srcB`,
 /// and store into the `byteSel`th byte of `old`, preserving the others.
+///
+/// Example:
+/// ```mlir
+/// // Stochastic rounding convert f32 to fp8 in byte 3 of old.
+/// %0 = rocdl.cvt.sr.fp8.f32 %val, %stoch -> %old[3] : i32
+/// ```
 #[mlir::op("rocdl.cvt.sr.fp8.f32", format = "attr-dict $srcA `,` $srcB `->` $old `[` $byteSel `]` `:` type($res)", results(res))]
 pub struct CvtSrFp8F32Op<'a> {
     #[slot(src_a_ty, name = "srcA")]
@@ -2638,6 +2975,12 @@ pub struct DPPUpdateOp<'a> {
 /// Waits on a given DS barrier and decrements pending count by -1.
 /// Stays in order with ASYNC loads to LDS, and uses ASYNCcnt to track its completion.
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Async atomic barrier arrive (fire-and-forget).
+/// rocdl.ds.atomic.async.barrier.arrive.b64 %ptr : !llvm.ptr<3>
+/// ```
 #[mlir::op("rocdl.ds.atomic.async.barrier.arrive.b64", format = "$barrierPtr attr-dict `:` qualified(type($barrierPtr))")]
 pub struct DsAtomicAsyncBarrierArriveOp<'a> {
     #[slot(barrier_ptr_ty, name = "barrierPtr")]
@@ -2655,6 +2998,12 @@ pub struct DsAtomicAsyncBarrierArriveOp<'a> {
 /// barrier state. The op is executed as an ordinary LDS operations and it is ordered with other LDS operations.
 /// Thus, check DSCNT to determine when this instruction has executed.
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Atomic barrier arrive with return of old barrier state.
+/// %res = rocdl.ds.atomic.barrier.arrive.rtn.b64 %ptr, %val : !llvm.ptr<3>, i64 -> i64
+/// ```
 #[mlir::op("rocdl.ds.atomic.barrier.arrive.rtn.b64", format = "$barrierPtr `,` $val attr-dict `:` qualified(type($barrierPtr)) `,` type($val) `->` type($res)", results(res))]
 pub struct DsAtomicBarrierArriveRtnOp<'a> {
     #[slot(barrier_ptr_ty, name = "barrierPtr")]
@@ -2672,6 +3021,20 @@ pub struct DsAtomicBarrierArriveRtnOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Perform a backward permute (pull) operation across lanes using DS/LDS permute hardware.
+///
+/// Each lane reads the value of `src` from the lane whose byte address is
+/// given by `index` (i.e. lane id = `index / 4`).
+///
+/// This is “backward” (pull) in contrast to `ds_permute_b32`, which is
+/// “forward” (push/scatter).
+///
+/// Example:
+/// ```mlir
+/// // Backward permute across lanes (pull from selected lane).
+/// %0 = rocdl.ds_bpermute %index, %src : (i32, i32) -> i32
+/// ```
 #[mlir::op("rocdl.ds_bpermute", format = "$index `,` $src attr-dict `:` `(` type($index) `,` type($src) `)` `->` type($res)", results(res))]
 pub struct DsBpermuteOp<'a> {
     #[slot(index_ty)]
@@ -2693,6 +3056,21 @@ pub struct DsBpermuteOp<'a> {
 /// and store the result into a 128-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.ds.load.tr16.b128", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct DsLoadTr16_B128<'a> {
     #[slot(ptr_ty)]
@@ -2712,6 +3090,21 @@ pub struct DsLoadTr16_B128<'a> {
 /// and store the result into a 64-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.ds.load.tr4.b64", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct DsLoadTr4_B64<'a> {
     #[slot(ptr_ty)]
@@ -2731,6 +3124,21 @@ pub struct DsLoadTr4_B64<'a> {
 /// and store the result into a 96-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.ds.load.tr6.b96", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct DsLoadTr6_B96<'a> {
     #[slot(ptr_ty)]
@@ -2750,6 +3158,21 @@ pub struct DsLoadTr6_B96<'a> {
 /// and store the result into a 64-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.ds.load.tr8.b64", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct DsLoadTr8_B64<'a> {
     #[slot(ptr_ty)]
@@ -2762,6 +3185,19 @@ pub struct DsLoadTr8_B64<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Perform a data-sharing swizzle operation within a wavefront.
+///
+/// The `offset` operand encodes the *swizzle pattern* that will be placed in the
+/// instruction's `offset` field (i.e., the pattern used by `ds_swizzle_b32`).
+/// See https://llvm.org/docs/AMDGPUModifierSyntax.html#swizzle-pattern for
+/// how this 16-bit pattern is constructed.
+///
+/// Example:
+/// ```mlir
+/// // Swizzle data within a wavefront.
+/// %0 = rocdl.ds_swizzle %src, %offset : (i32, i32) -> i32
+/// ```
 #[mlir::op("rocdl.ds_swizzle", format = "$src `,` $offset attr-dict `:` `(` type($src) `,` type($offset) `)` `->` type($res)", results(res))]
 pub struct DsSwizzleOp<'a> {
     #[slot(src_ty)]
@@ -2806,12 +3242,20 @@ pub struct FMed3Op<'a> {
 ///
 /// Prefetches 1 byte of data per lane using flat-memory addresses into the WGP-cache or L2-cache.
 /// Available on gfx1250+.
-#[mlir::op("rocdl.flat.prefetch", format = "$ptr `,` `scope` $scope attr-dict `:` qualified(type($ptr))")]
+///
+/// Example:
+/// ```mlir
+/// // Prefetch from flat memory into cache.
+/// rocdl.flat.prefetch %ptr, 0 : !llvm.ptr
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.flat.prefetch")]
 pub struct FlatPrefetchOp<'a> {
     #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[attr(int = "i32")]
-    pub scope: Attribute<'a>,
+    #[attr(name = "cachePolicy")]
+    pub cache_policy: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -2820,7 +3264,13 @@ pub struct FlatPrefetchOp<'a> {
 }
 
 ///
-/// Available on gfx1250+.
+/// Available on gfx1200+.
+///
+/// Example:
+/// ```mlir
+/// // Query barrier state by id.
+/// %0 = rocdl.s.get.barrier.state id = 1 -> i32
+/// ```
 #[mlir::op("rocdl.s.get.barrier.state", format = "`id` `=` $id attr-dict `->` type($res)", results(res))]
 pub struct GetBarrierStateOp<'a> {
     #[attr(int = "i32")]
@@ -2831,6 +3281,12 @@ pub struct GetBarrierStateOp<'a> {
 
 ///
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Query named barrier state by pointer.
+/// %0 = rocdl.s.get.named.barrier.state %ptr : !llvm.ptr<3> -> i32
+/// ```
 #[mlir::op("rocdl.s.get.named.barrier.state", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct GetNamedBarrierStateOp<'a> {
     #[slot(ptr_ty)]
@@ -2841,12 +3297,57 @@ pub struct GetNamedBarrierStateOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `rocdl.global.load.async.lds`: Version of rocdl.load.async.to.lds specialized to global pointers
+///
+/// This operation works identically to `rocdl.load.async.to.lds` except that the
+/// global pointer argument is limited to pointers in address space 1 (pure global
+/// pointers) instead of also allowing fat buffer pointers.
+///
+/// Available on gfx9 and gfx10.
+///
+/// For the operation introduced in gfx1250, see `rocdl.global.load.async.to.lds.bN`.
+///
+/// Example:
+/// ```mlir
+/// // Async load from global pointer to LDS (address space 1 only).
+/// rocdl.load.async.to.lds %global, %shared, 4, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.load.async.lds")]
+pub struct GlobalLoadAsyncLDSOp<'a> {
+    #[slot(global_ptr_ty, name = "globalPtr")]
+    pub global_ptr: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[attr(int = "i32")]
+    pub size: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub offset: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
+    pub global_ptr_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
+}
+
 ///
 /// Asynchronously loads 128 bits of data from a global memory pointer
 /// to a Local Data Share (LDS) pointer.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.global.load.async.to.lds.b128", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $aux attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Async 128-bit load from global to LDS.
+/// rocdl.global.load.async.to.lds.b128 %src, %dst, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.load.async.to.lds.b128")]
 pub struct GlobalLoadAsyncToLDSB128Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -2854,8 +3355,7 @@ pub struct GlobalLoadAsyncToLDSB128Op<'a> {
     pub lds_ptr: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub aux: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -2870,7 +3370,15 @@ pub struct GlobalLoadAsyncToLDSB128Op<'a> {
 /// to a Local Data Share (LDS) pointer.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.global.load.async.to.lds.b32", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $aux attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Async 32-bit load from global to LDS.
+/// rocdl.global.load.async.to.lds.b32 %src, %dst, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.load.async.to.lds.b32")]
 pub struct GlobalLoadAsyncToLDSB32Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -2878,8 +3386,7 @@ pub struct GlobalLoadAsyncToLDSB32Op<'a> {
     pub lds_ptr: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub aux: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -2894,7 +3401,15 @@ pub struct GlobalLoadAsyncToLDSB32Op<'a> {
 /// to a Local Data Share (LDS) pointer.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.global.load.async.to.lds.b64", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $aux attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Async 64-bit load from global to LDS.
+/// rocdl.global.load.async.to.lds.b64 %src, %dst, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.load.async.to.lds.b64")]
 pub struct GlobalLoadAsyncToLDSB64Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -2902,8 +3417,7 @@ pub struct GlobalLoadAsyncToLDSB64Op<'a> {
     pub lds_ptr: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub aux: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -2918,7 +3432,15 @@ pub struct GlobalLoadAsyncToLDSB64Op<'a> {
 /// to a Local Data Share (LDS) pointer.
 ///
 /// Available on gfx1250+.
-#[mlir::op("rocdl.global.load.async.to.lds.b8", format = "$globalPtr `,` $ldsPtr `,` $offset `,` $aux attr-dict `:` qualified(type($globalPtr)) `,` qualified(type($ldsPtr))")]
+///
+/// Example:
+/// ```mlir
+/// // Async 8-bit load from global to LDS.
+/// rocdl.global.load.async.to.lds.b8 %src, %dst, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.load.async.to.lds.b8")]
 pub struct GlobalLoadAsyncToLDSB8Op<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -2926,8 +3448,7 @@ pub struct GlobalLoadAsyncToLDSB8Op<'a> {
     pub lds_ptr: Value<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub aux: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -2937,7 +3458,9 @@ pub struct GlobalLoadAsyncToLDSB8Op<'a> {
     pub lds_ptr_ty: Type<'a>,
 }
 
-#[mlir::op("rocdl.global.load.lds", format = "$globalPtr `,` $ldsPtr `,` $size `,` $offset `,` $aux attr-dict")]
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.load.lds")]
 pub struct GlobalLoadLDSOp<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
@@ -2947,8 +3470,7 @@ pub struct GlobalLoadLDSOp<'a> {
     pub size: Attribute<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub aux: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -2965,6 +3487,21 @@ pub struct GlobalLoadLDSOp<'a> {
 /// and store the result into a 64-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.global.load.tr4.b64", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct GlobalLoadTr4_B64<'a> {
     #[slot(ptr_ty)]
@@ -2984,6 +3521,21 @@ pub struct GlobalLoadTr4_B64<'a> {
 /// and store the result into a 96-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.global.load.tr6.b96", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct GlobalLoadTr6_B96<'a> {
     #[slot(ptr_ty)]
@@ -3003,6 +3555,21 @@ pub struct GlobalLoadTr6_B96<'a> {
 /// and store the result into a 128-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.global.load.tr.b128", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct GlobalLoadTr8_B128<'a> {
     #[slot(ptr_ty)]
@@ -3022,6 +3589,21 @@ pub struct GlobalLoadTr8_B128<'a> {
 /// and store the result into a 64-bit vector register.
 ///
 /// Available in gfx1250+.
+///
+/// Example (concrete mnemonics depend on address space and element size):
+/// ```mlir
+/// // 64-bit transpose load from global memory.
+/// %0 = rocdl.global.load.tr4.b64 %ptr : !llvm.ptr<1> -> vector<2xi32>
+///
+/// // 128-bit transpose load from global memory with f16 result.
+/// %1 = rocdl.global.load.tr.b128 %ptr : !llvm.ptr<1> -> vector<8xf16>
+///
+/// // 64-bit transpose load from LDS.
+/// %2 = rocdl.ds.load.tr4.b64 %ptr : !llvm.ptr<3> -> vector<2xi32>
+///
+/// // 128-bit transpose load from LDS with bf16 result.
+/// %3 = rocdl.ds.load.tr16.b128 %ptr : !llvm.ptr<3> -> vector<8xbf16>
+/// ```
 #[mlir::op("rocdl.global.load.tr.b64", format = "$ptr attr-dict `:` qualified(type($ptr)) `->` type($res)", results(res))]
 pub struct GlobalLoadTr8_B64<'a> {
     #[slot(ptr_ty)]
@@ -3037,12 +3619,20 @@ pub struct GlobalLoadTr8_B64<'a> {
 ///
 /// Prefetches 1 byte of data per lane from global memory into the WGP-cache or L2-cache.
 /// Available on gfx1250+.
-#[mlir::op("rocdl.global.prefetch", format = "$ptr `,` `scope` $scope attr-dict `:` qualified(type($ptr))")]
+///
+/// Example:
+/// ```mlir
+/// // Prefetch from global memory into cache.
+/// rocdl.global.prefetch %ptr, 0 : !llvm.ptr<1>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.prefetch")]
 pub struct GlobalPrefetchOp<'a> {
     #[slot(ptr_ty)]
     pub ptr: Value<'a>,
-    #[attr(int = "i32")]
-    pub scope: Attribute<'a>,
+    #[attr(name = "cachePolicy")]
+    pub cache_policy: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3050,35 +3640,173 @@ pub struct GlobalPrefetchOp<'a> {
     pub ptr_ty: Type<'a>,
 }
 
-#[mlir::op("rocdl.grid.dim.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
-pub struct GridDimXOp<'a> {
-    #[attr(dialect = "llvm.constant_range")]
-    pub range: Option<Attribute<'a>>,
-    pub res: Type<'a>,
+///
+/// Asynchronously stores 128 bits of data from a Local Data Share (LDS)
+/// pointer to a global memory pointer.
+///
+/// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Async 128-bit store from LDS to global.
+/// rocdl.global.store.async.from.lds.b128 %dst, %src, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.store.async.from.lds.b128")]
+pub struct GlobalStoreAsyncFromLDSB128Op<'a> {
+    #[slot(global_ptr_ty, name = "globalPtr")]
+    pub global_ptr: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[attr(int = "i32")]
+    pub offset: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
+    pub global_ptr_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
 }
 
-#[mlir::op("rocdl.grid.dim.y", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
-pub struct GridDimYOp<'a> {
-    #[attr(dialect = "llvm.constant_range")]
-    pub range: Option<Attribute<'a>>,
-    pub res: Type<'a>,
+///
+/// Asynchronously stores 32 bits of data from a Local Data Share (LDS)
+/// pointer to a global memory pointer.
+///
+/// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Async 32-bit store from LDS to global.
+/// rocdl.global.store.async.from.lds.b32 %dst, %src, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.store.async.from.lds.b32")]
+pub struct GlobalStoreAsyncFromLDSB32Op<'a> {
+    #[slot(global_ptr_ty, name = "globalPtr")]
+    pub global_ptr: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[attr(int = "i32")]
+    pub offset: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
+    pub global_ptr_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
 }
 
-#[mlir::op("rocdl.grid.dim.z", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
-pub struct GridDimZOp<'a> {
-    #[attr(dialect = "llvm.constant_range")]
-    pub range: Option<Attribute<'a>>,
-    pub res: Type<'a>,
+///
+/// Asynchronously stores 64 bits of data from a Local Data Share (LDS)
+/// pointer to a global memory pointer.
+///
+/// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Async 64-bit store from LDS to global.
+/// rocdl.global.store.async.from.lds.b64 %dst, %src, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.store.async.from.lds.b64")]
+pub struct GlobalStoreAsyncFromLDSB64Op<'a> {
+    #[slot(global_ptr_ty, name = "globalPtr")]
+    pub global_ptr: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[attr(int = "i32")]
+    pub offset: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
+    pub global_ptr_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
 }
 
+///
+/// Asynchronously stores 8 bits of data from a Local Data Share (LDS)
+/// pointer to a global memory pointer.
+///
+/// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Async 8-bit store from LDS to global.
+/// rocdl.global.store.async.from.lds.b8 %dst, %src, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.global.store.async.from.lds.b8")]
+pub struct GlobalStoreAsyncFromLDSB8Op<'a> {
+    #[slot(global_ptr_ty, name = "globalPtr")]
+    pub global_ptr: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[attr(int = "i32")]
+    pub offset: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(is = "!llvm.ptr<1>", strip = "llvm.ptr")]
+    pub global_ptr_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
+}
+
+///
+/// Instruction-group-level parallelism optimization hint.
+///
+/// Example:
+/// ```mlir
+/// // IGLP optimization hint variant 0.
+/// rocdl.iglp.opt 0
+/// ```
 #[mlir::op("rocdl.iglp.opt", format = "$variant attr-dict")]
 pub struct IglpOpt<'a> {
     #[attr(int = "i32")]
     pub variant: Attribute<'a>,
 }
 
-#[mlir::op("rocdl.load.to.lds", format = "$globalPtr `,` $ldsPtr `,` $size `,` $offset `,` $aux attr-dict `:` type($globalPtr)")]
-pub struct LoadToLDSOp<'a> {
+/// `rocdl.load.async.to.lds`: Gathering load to LDS that requires explicit async memory tracking
+///
+/// Load `size` bytes (the valid sizes vary by architecture) from the global memory
+/// pointed to by `globalPtr` and put them at `ldsPtr`, concantenating (and applying
+/// padding for sizes less than 4 bytes, along with padding out 12-byte reads
+/// to 16-byte writes). The value of `globalPtr` can vary between lanes, while
+/// `sharedPtr` must be subgroup-uniform (the values from each lane are concatentated
+/// before being written to LDS with appropriate padding applied.)
+///
+/// `offset` is a constant offset applied to **both** pointers, and `aux` sets the cache
+/// policy. Unlike `rocdl.load.to.lds`, the compiler will not automatically inserts waits
+/// for this load to complete at the point it thinks you're using a region of LDS you've
+/// stored values to - you need to use the `rocdl.asyncmark` and `rocdl.wait.asyncmark`
+/// operations to explicitly group these operations and wait for their completion.
+///
+/// Available on gfx10 and earlier with varying suppported values of `size`.
+///
+/// Example:
+/// ```mlir
+/// // Async load 4 bytes from global pointer to LDS.
+/// rocdl.load.async.to.lds %global, %shared, 4, 0, 0 : !llvm.ptr<1>, !llvm.ptr<3>
+///
+/// // Async load 4 bytes from fat buffer pointer to LDS.
+/// rocdl.load.async.to.lds %fatBuffer, %shared, 4, 0, 0 : !llvm.ptr<7>, !llvm.ptr<3>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.load.async.to.lds")]
+pub struct LoadAsyncToLDSOp<'a> {
     #[slot(global_ptr_ty, name = "globalPtr")]
     pub global_ptr: Value<'a>,
     #[slot(lds_ptr_ty, name = "ldsPtr")]
@@ -3087,8 +3815,7 @@ pub struct LoadToLDSOp<'a> {
     pub size: Attribute<'a>,
     #[attr(int = "i32")]
     pub offset: Attribute<'a>,
-    #[attr(int = "i32")]
-    pub aux: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3099,8 +3826,28 @@ pub struct LoadToLDSOp<'a> {
 }
 
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.make.buffer.rsrc", results(res))]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.load.to.lds")]
+pub struct LoadToLDSOp<'a> {
+    #[slot(global_ptr_ty, name = "globalPtr")]
+    pub global_ptr: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[attr(int = "i32")]
+    pub size: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub offset: Attribute<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(strip = "llvm.ptr")]
+    pub global_ptr_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
+}
+
+#[mlir::op("rocdl.make.buffer.rsrc", format = "$base `,` $stride `,` $numRecords `,` $flags attr-dict `:` type($base) `to` type($res)", results(res))]
 pub struct MakeBufferRsrcOp<'a> {
     #[slot(base_ty)]
     pub base: Value<'a>,
@@ -3122,6 +3869,30 @@ pub struct MakeBufferRsrcOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Masked bit count of threads below the current lane in a wavefront.
+///
+/// `in0` is a 32-bit mask that is AND-ed with the relevant half of the
+/// execution mask and the bits below the current lane; `in1` is added
+/// to the resulting popcount:
+///
+/// - **lo**: `in1 + popcount(in0 & exec_lo & ((1 << min(lane_id, 32)) - 1))`
+/// - **hi**: `in1 + popcount(in0 & exec_hi & ((1 << saturating_usub(lane_id, 32)) - 1))`
+///
+/// To obtain a unique thread index within a wave64, chain the two ops
+/// with `in0 = -1` (all bits set):
+///
+/// Example:
+/// ```mlir
+/// %all_ones = arith.constant -1 : i32
+/// %zero = arith.constant 0 : i32
+///
+/// // Count active threads below this lane in the low 32 lanes.
+/// %lo = rocdl.mbcnt.lo %all_ones, %zero : (i32, i32) -> i32
+///
+/// // Add the count from the high 32 lanes to get the full lane index.
+/// %hi = rocdl.mbcnt.hi %all_ones, %lo : (i32, i32) -> i32
+/// ```
 #[mlir::op("rocdl.mbcnt.hi", format = "$in0 `,` $in1 attr-dict `:` `(` type($in0) `,` type($in1) `)` `->` type($res)", results(res))]
 pub struct MbcntHiOp<'a> {
     #[slot(in0_ty)]
@@ -3138,6 +3909,30 @@ pub struct MbcntHiOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Masked bit count of threads below the current lane in a wavefront.
+///
+/// `in0` is a 32-bit mask that is AND-ed with the relevant half of the
+/// execution mask and the bits below the current lane; `in1` is added
+/// to the resulting popcount:
+///
+/// - **lo**: `in1 + popcount(in0 & exec_lo & ((1 << min(lane_id, 32)) - 1))`
+/// - **hi**: `in1 + popcount(in0 & exec_hi & ((1 << saturating_usub(lane_id, 32)) - 1))`
+///
+/// To obtain a unique thread index within a wave64, chain the two ops
+/// with `in0 = -1` (all bits set):
+///
+/// Example:
+/// ```mlir
+/// %all_ones = arith.constant -1 : i32
+/// %zero = arith.constant 0 : i32
+///
+/// // Count active threads below this lane in the low 32 lanes.
+/// %lo = rocdl.mbcnt.lo %all_ones, %zero : (i32, i32) -> i32
+///
+/// // Add the count from the high 32 lanes to get the full lane index.
+/// %hi = rocdl.mbcnt.hi %all_ones, %lo : (i32, i32) -> i32
+/// ```
 #[mlir::op("rocdl.mbcnt.lo", format = "$in0 `,` $in1 attr-dict `:` `(` type($in0) `,` type($in1) `)` `->` type($res)", results(res))]
 pub struct MbcntLoOp<'a> {
     #[slot(in0_ty)]
@@ -3157,6 +3952,12 @@ pub struct MbcntLoOp<'a> {
 ///
 /// Performs a `permlane16.swap` operation with the given operands, applying the
 /// permutation specified by $fi to the provided inputs.
+///
+/// Example:
+/// ```mlir
+/// // Swap lanes between groups of 16 threads.
+/// %res = rocdl.permlane16.swap %src, %src, 0, -1 : (i32, i32) -> !llvm.struct<(i32, i32)>
+/// ```
 #[mlir::op("rocdl.permlane16.swap", format = "attr-dict $old `,` $src `,` $fi `,` $boundControl `:` `(` type($old) `,` type($src) `)` `->` type($res)", results(res))]
 pub struct Permlane16SwapOp<'a> {
     #[slot(old_ty)]
@@ -3176,8 +3977,50 @@ pub struct Permlane16SwapOp<'a> {
 }
 
 ///
+/// Performs a `permlane16.var` operation: a per-lane variable-selector
+/// intra-row permutation (within each 16-lane row). Maps to
+/// `llvm.amdgcn.permlane16.var`.
+///
+/// Each destination lane within a 16-lane row reads its value from the
+/// source lane whose index is given by the corresponding per-lane entry
+/// in `$src1` (a VGPR). `$fi` and `$boundControl` are immediate i1 attrs
+/// matching the underlying intrinsic's modifiers.
+///
+/// Example:
+/// ```mlir
+/// %res = rocdl.permlane16.var %old, %src, %selector, false, true : (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.permlane16.var", format = "attr-dict $old `,` $src0 `,` $src1 `,` $fi `,` $boundControl `:` functional-type($old $src0 $src1, $res)", results(res))]
+pub struct Permlane16VarOp<'a> {
+    #[slot(old_ty)]
+    pub old: Value<'a>,
+    #[slot(src0_ty)]
+    pub src0: Value<'a>,
+    #[slot(src1_ty)]
+    pub src1: Value<'a>,
+    #[attr(int = "i1")]
+    pub fi: Attribute<'a>,
+    #[attr(name = "boundControl", int = "i1")]
+    pub bound_control: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub old_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub src0_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub src1_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
 /// Performs a `permlane32.swap` operation with the given operands, applying the
 /// permutation specified by $fi to the provided inputs.
+///
+/// Example:
+/// ```mlir
+/// // Swap lanes between groups of 32 threads.
+/// %res = rocdl.permlane32.swap %src, %src, 0, -1 : (i32, i32) -> !llvm.struct<(i32, i32)>
+/// ```
 #[mlir::op("rocdl.permlane32.swap", format = "attr-dict $old `,` $src `,` $fi `,` $boundControl `:` `(` type($old) `,` type($src) `)` `->` type($res)", results(res))]
 pub struct Permlane32SwapOp<'a> {
     #[slot(old_ty)]
@@ -3199,6 +4042,15 @@ pub struct Permlane32SwapOp<'a> {
 ///
 /// Performs a `permlanex16` operation with the given operands, applying the
 /// permutation specified by $fi to the provided inputs.
+///
+/// Example:
+/// ```mlir
+/// // Scalar permlanex16.
+/// %ret0 = rocdl.permlanex16 %src0, %src0, %sel, %sel, 0, -1 : f32, i32
+///
+/// // Vector permlanex16.
+/// %ret1 = rocdl.permlanex16 %src1, %src1, %sel, %sel, 0, -1 : vector<2xf32>, i32
+/// ```
 #[mlir::op("rocdl.permlanex16", format = "attr-dict $old `,` $src0 `,` $src1 `,` $src2 `,` $fi `,` $boundControl `:` type($src0) `,` type($src1)", results(res))]
 pub struct PermlaneX16Op<'a> {
     #[slot(res)]
@@ -3218,7 +4070,44 @@ pub struct PermlaneX16Op<'a> {
 }
 
 ///
-/// Generic form only (directive `operands`).
+/// Performs a `permlanex16.var` operation: a per-lane variable-selector
+/// cross-row permutation (each lane in one 16-lane row reads from a
+/// per-lane-chosen source lane in the opposite row). Maps to
+/// `llvm.amdgcn.permlanex16.var`.
+///
+/// With per-lane "identity" selectors this realises an XOR-16 swap pattern
+/// in pure VALU; with arbitrary selectors it enables general per-lane
+/// cross-half-wave permutations. `$fi` and `$boundControl` are immediate
+/// i1 attrs matching the underlying intrinsic's modifiers.
+///
+/// Example:
+/// ```mlir
+/// %res = rocdl.permlanex16.var %old, %src, %selector, false, true : (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.permlanex16.var", format = "attr-dict $old `,` $src0 `,` $src1 `,` $fi `,` $boundControl `:` functional-type($old $src0 $src1, $res)", results(res))]
+pub struct PermlaneX16VarOp<'a> {
+    #[slot(old_ty)]
+    pub old: Value<'a>,
+    #[slot(src0_ty)]
+    pub src0: Value<'a>,
+    #[slot(src1_ty)]
+    pub src1: Value<'a>,
+    #[attr(int = "i1")]
+    pub fi: Attribute<'a>,
+    #[attr(name = "boundControl", int = "i1")]
+    pub bound_control: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub old_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub src0_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub src1_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.raw.buffer.atomic.cmpswap", results(res))]
 pub struct RawBufferAtomicCmpSwap<'a> {
     #[slot(res)]
@@ -3231,23 +4120,21 @@ pub struct RawBufferAtomicCmpSwap<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (custom C++ syntax).
-#[mlir::op("rocdl.raw.buffer.atomic.fadd")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.buffer.atomic.fadd", results(res))]
 pub struct RawBufferAtomicFAddOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3255,20 +4142,21 @@ pub struct RawBufferAtomicFAddOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
-    pub vdata_ty: Type<'a>,
+    pub aux: Option<Attribute<'a>>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (custom C++ syntax).
-#[mlir::op("rocdl.raw.buffer.atomic.fmax")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.buffer.atomic.fmax", results(res))]
 pub struct RawBufferAtomicFMaxOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3276,20 +4164,21 @@ pub struct RawBufferAtomicFMaxOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
-    pub vdata_ty: Type<'a>,
+    pub aux: Option<Attribute<'a>>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (custom C++ syntax).
-#[mlir::op("rocdl.raw.buffer.atomic.smax")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.buffer.atomic.smax", results(res))]
 pub struct RawBufferAtomicSMaxOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3297,20 +4186,21 @@ pub struct RawBufferAtomicSMaxOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
-    pub vdata_ty: Type<'a>,
+    pub aux: Option<Attribute<'a>>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (custom C++ syntax).
-#[mlir::op("rocdl.raw.buffer.atomic.umin")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.buffer.atomic.umin", results(res))]
 pub struct RawBufferAtomicUMinOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3318,17 +4208,18 @@ pub struct RawBufferAtomicUMinOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
-    pub vdata_ty: Type<'a>,
+    pub aux: Option<Attribute<'a>>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (custom C++ syntax).
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.raw.buffer.load", results(res))]
 pub struct RawBufferLoadOp<'a> {
     #[slot(rsrc_ty)]
@@ -3337,17 +4228,18 @@ pub struct RawBufferLoadOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    pub aux_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (custom C++ syntax).
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.raw.buffer.store")]
 pub struct RawBufferStoreOp<'a> {
     #[slot(vdata_ty)]
@@ -3358,17 +4250,18 @@ pub struct RawBufferStoreOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub vdata_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
     pub rsrc_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
+    #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    pub aux_ty: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.raw.ptr.buffer.atomic.cmpswap", results(res))]
 pub struct RawPtrBufferAtomicCmpSwap<'a> {
     #[slot(res)]
@@ -3381,8 +4274,7 @@ pub struct RawPtrBufferAtomicCmpSwap<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3392,16 +4284,14 @@ pub struct RawPtrBufferAtomicCmpSwap<'a> {
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.raw.ptr.buffer.atomic.fadd")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.ptr.buffer.atomic.fadd", results(res))]
 pub struct RawPtrBufferAtomicFaddOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3409,27 +4299,24 @@ pub struct RawPtrBufferAtomicFaddOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    pub vdata_ty: Type<'a>,
     #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.raw.ptr.buffer.atomic.fmax")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.ptr.buffer.atomic.fmax", results(res))]
 pub struct RawPtrBufferAtomicFmaxOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3437,27 +4324,24 @@ pub struct RawPtrBufferAtomicFmaxOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    pub vdata_ty: Type<'a>,
     #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.raw.ptr.buffer.atomic.smax")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.ptr.buffer.atomic.smax", results(res))]
 pub struct RawPtrBufferAtomicSmaxOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3465,27 +4349,24 @@ pub struct RawPtrBufferAtomicSmaxOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    pub vdata_ty: Type<'a>,
     #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.raw.ptr.buffer.atomic.umin")]
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.ptr.buffer.atomic.umin", results(res))]
 pub struct RawPtrBufferAtomicUminOp<'a> {
-    #[slot(vdata_ty)]
+    #[slot(res)]
     pub vdata: Value<'a>,
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
@@ -3493,26 +4374,38 @@ pub struct RawPtrBufferAtomicUminOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
-    pub vdata_ty: Type<'a>,
     #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
     pub rsrc_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
+    pub res: Type<'a>,
 }
 
+/// `rocdl.raw.ptr.buffer.load.async.lds`: Async variant of raw.ptr.buffer.load.lds
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.raw.ptr.buffer.load.lds")]
-pub struct RawPtrBufferLoadLdsOp<'a> {
+/// Load from a buffer resource `rsrc` to `ldsPtr`, which must be uniform.
+///
+/// See `rocdl.load.async.to.lds` for overall semantics of such loads, noting that
+/// here `voffset` can be lane-varying and that `rsrc` (which holds the base addres)
+/// must, as always, be uniform.
+///
+/// Available on gfx9 and gfx10.
+///
+/// Example:
+/// ```mlir
+/// // Async buffer load to LDS via buffer resource pointer.
+/// rocdl.raw.ptr.buffer.load.async.lds %rsrc, %ldsPtr, %size, %voffset, %soffset, %offset, 0
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.ptr.buffer.load.async.lds")]
+pub struct RawPtrBufferLoadAsyncLdsOp<'a> {
     #[slot(rsrc_ty)]
     pub rsrc: Value<'a>,
     #[slot(lds_ptr_ty, name = "ldsPtr")]
@@ -3525,8 +4418,7 @@ pub struct RawPtrBufferLoadLdsOp<'a> {
     pub soffset: Value<'a>,
     #[slot(offset_ty)]
     pub offset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3542,12 +4434,44 @@ pub struct RawPtrBufferLoadLdsOp<'a> {
     pub soffset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub offset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `custom<CachePolicy>`).
+#[mlir::op("rocdl.raw.ptr.buffer.load.lds")]
+pub struct RawPtrBufferLoadLdsOp<'a> {
+    #[slot(rsrc_ty)]
+    pub rsrc: Value<'a>,
+    #[slot(lds_ptr_ty, name = "ldsPtr")]
+    pub lds_ptr: Value<'a>,
+    #[slot(size_ty)]
+    pub size: Value<'a>,
+    #[slot(voffset_ty)]
+    pub voffset: Value<'a>,
+    #[slot(soffset_ty)]
+    pub soffset: Value<'a>,
+    #[slot(offset_ty)]
+    pub offset: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
+    pub alias_scopes: Option<Attribute<'a>>,
+    pub noalias_scopes: Option<Attribute<'a>>,
+    pub tbaa: Option<Attribute<'a>>,
+    #[dtype(is = "!llvm.ptr<8>", strip = "llvm.ptr")]
+    pub rsrc_ty: Type<'a>,
+    #[dtype(is = "!llvm.ptr<3>", strip = "llvm.ptr")]
+    pub lds_ptr_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub size_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub voffset_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub soffset_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub offset_ty: Type<'a>,
+}
+
+///
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.raw.ptr.buffer.load", results(res))]
 pub struct RawPtrBufferLoadOp<'a> {
     #[slot(rsrc_ty)]
@@ -3556,8 +4480,7 @@ pub struct RawPtrBufferLoadOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3567,13 +4490,11 @@ pub struct RawPtrBufferLoadOp<'a> {
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.raw.ptr.buffer.store")]
 pub struct RawPtrBufferStoreOp<'a> {
     #[slot(vdata_ty)]
@@ -3584,8 +4505,7 @@ pub struct RawPtrBufferStoreOp<'a> {
     pub offset: Value<'a>,
     #[slot(soffset_ty)]
     pub soffset: Value<'a>,
-    #[slot(aux_ty)]
-    pub aux: Value<'a>,
+    pub aux: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3596,13 +4516,20 @@ pub struct RawPtrBufferStoreOp<'a> {
     pub offset_ty: Type<'a>,
     #[dtype(is = i32)]
     pub soffset_ty: Type<'a>,
-    #[dtype(is = i32)]
-    pub aux_ty: Type<'a>,
 }
 
 /// `rocdl.readfirstlane`: Get the value in first active lane.
 ///
 /// Returns the value in the lowest active lane of the input operand.
+///
+/// Example:
+/// ```mlir
+/// // Scalar readfirstlane.
+/// %0 = rocdl.readfirstlane %src0 : f32
+///
+/// // Vector readfirstlane.
+/// %1 = rocdl.readfirstlane %src1 : vector<2xf32>
+/// ```
 #[mlir::op("rocdl.readfirstlane", format = "$src attr-dict `:` type($res)", results(res))]
 pub struct ReadfirstlaneOp<'a> {
     #[slot(res)]
@@ -3613,6 +4540,15 @@ pub struct ReadfirstlaneOp<'a> {
 /// `rocdl.readlane`: Get the value in the specific lane.
 ///
 /// Get the value in lane `src1` from input `src0`.
+///
+/// Example:
+/// ```mlir
+/// // Scalar readlane.
+/// %0 = rocdl.readlane %src0, %idx : (f32, i32) -> f32
+///
+/// // Vector readlane.
+/// %1 = rocdl.readlane %src1, %idx : (vector<2xf32>, i32) -> vector<2xf32>
+/// ```
 #[mlir::op("rocdl.readlane", format = "$src0 `,` $src1 attr-dict `:` `(` type($src0) `,` type($src1) `)` `->` type($res)", results(res))]
 pub struct ReadlaneOp<'a> {
     #[slot(res)]
@@ -3624,37 +4560,97 @@ pub struct ReadlaneOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Insert a workgroup barrier without memory fences.
+///
+/// Available on gfx9 and later but deprecated on gfx12+; see
+/// `rocdl.s.barrier.signal` and `rocdl.s.barrier.wait` instead.
+///
+/// Example:
+/// ```mlir
+/// // Synchronize threads within a workgroup.
+/// rocdl.s.barrier
+/// ```
 #[mlir::op("rocdl.s.barrier", format = "attr-dict")]
 pub struct SBarrierOp<'a> {
 }
 
+///
+/// Insert a number of NOP cycles.
+///
+/// Example:
+/// ```mlir
+/// // Insert a no-op.
+/// rocdl.s.nop 0
+/// ```
 #[mlir::op("rocdl.s.nop", format = "attr-dict $count")]
 pub struct SNopOp<'a> {
     #[attr(int = "i16")]
     pub count: Attribute<'a>,
 }
 
+///
+/// Sleep for a number of clock cycles.
+///
+/// Example:
+/// ```mlir
+/// // Sleep for a minimum duration.
+/// rocdl.s.sleep 0
+/// ```
 #[mlir::op("rocdl.s.sleep", format = "attr-dict $count")]
 pub struct SSleepOp<'a> {
     #[attr(int = "i32")]
     pub count: Attribute<'a>,
 }
 
+///
+/// Wait for outstanding memory operations to complete, as specified by a
+/// bitfield whose semantics depend on the target chipset.
+///
+/// Example:
+/// ```mlir
+/// // Wait for all counters to reach zero.
+/// rocdl.s.waitcnt 0
+/// ```
 #[mlir::op("rocdl.s.waitcnt", format = "attr-dict $bitfield")]
 pub struct SWaitcntOp<'a> {
     #[attr(int = "i32")]
     pub bitfield: Attribute<'a>,
 }
 
+///
+/// Insert a scheduling barrier with the given mask. The mask is a
+/// bitfield that controls which instruction types may be scheduled
+/// across the barrier. The mask values mirror the `llvm.amdgcn.sched.barrier`
+/// intrinsic's documented mask values and the AMDGPU backend's
+/// `SchedGroupMask` enum.
+///
+/// Example:
+/// ```mlir
+/// // Scheduling barrier with no instructions allowed to cross.
+/// rocdl.sched.barrier none
+///
+/// // Allow VALU and all VMEM instructions to cross.
+/// rocdl.sched.barrier valu|all_vmem
+/// ```
 #[mlir::op("rocdl.sched.barrier", format = "$mask attr-dict")]
 pub struct SchedBarrier<'a> {
-    #[attr(int = "i32")]
+    #[attr(dialect = "rocdl<sched_group_mask")]
     pub mask: Attribute<'a>,
 }
 
+///
+/// Insert a scheduling group barrier. The first parameter uses the same
+/// scheduling group mask values as `rocdl.sched.barrier`.
+///
+/// Example:
+/// ```mlir
+/// // Schedule group barrier with mask, size, and group id.
+/// rocdl.sched.group.barrier mfma_wmma, 1, 0
+/// ```
 #[mlir::op("rocdl.sched.group.barrier", format = "$mask `,` $size `,` $groupId attr-dict")]
 pub struct SchedGroupBarrier<'a> {
-    #[attr(int = "i32")]
+    #[attr(dialect = "rocdl<sched_group_mask")]
     pub mask: Attribute<'a>,
     #[attr(int = "i32")]
     pub size: Attribute<'a>,
@@ -3662,49 +4658,39 @@ pub struct SchedGroupBarrier<'a> {
     pub group_id: Attribute<'a>,
 }
 
+///
+/// Set the wavefront scheduling priority.
+///
+/// Example:
+/// ```mlir
+/// // Set priority to 0.
+/// rocdl.s.setprio 0
+/// ```
 #[mlir::op("rocdl.s.setprio", format = "$priority attr-dict")]
 pub struct SetPrioOp<'a> {
     #[attr(int = "i16")]
     pub priority: Attribute<'a>,
 }
 
-/// `rocdl.tensor.load.to.lds.d2`: Base class for ROCDL tensor load/store to/from LDS (D2 variant).
-///
-/// Moves tiles of tensor data between global memory and LDS. The tile is
-/// described by the $dgroup descriptors. 2 $dgroup descriptors allows for
-/// movement of up to 2D tensors. $cachePolicy describes the memory scope and an
-/// indicator of expected data re-use.
-///
-/// This op is for gfx1250+ architectures.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.tensor.load.to.lds.d2")]
-pub struct TensorLoadToLDSD2Op<'a> {
-    #[slot(dgroup0_ty)]
-    pub dgroup0: Value<'a>,
-    #[slot(dgroup1_ty)]
-    pub dgroup1: Value<'a>,
-    #[attr(name = "cachePolicy", int = "i32")]
-    pub cache_policy: Attribute<'a>,
-    pub alias_scopes: Option<Attribute<'a>>,
-    pub noalias_scopes: Option<Attribute<'a>>,
-    pub tbaa: Option<Attribute<'a>>,
-    #[dtype(is = "vector<4xi32>")]
-    pub dgroup0_ty: Type<'a>,
-    #[dtype(is = "vector<8xi32>")]
-    pub dgroup1_ty: Type<'a>,
-}
-
 /// `rocdl.tensor.load.to.lds`: Base class for ROCDL tensor load/store to/from LDS.
 ///
 /// Moves tiles of tensor data between global memory and LDS. The tile is
-/// described by the $dgroup descriptors. 4 $dgroup descriptors allows for
+/// described by the $dgroup descriptors. 5 $dgroup descriptors allows for
 /// movement of up to 5D tensors. $cachePolicy describes the memory scope and an
 /// indicator of expected data re-use.
 ///
 /// This op is for gfx1250+ architectures.
 ///
-/// Generic form only (directive `operands`).
+/// Example:
+/// ```mlir
+/// // Tensor load from global memory to LDS using 4 descriptor groups.
+/// rocdl.tensor.load.to.lds %dg0, %dg1, %dg2, %dg3, %dg4, 0 : vector<4xi32>, vector<8xi32>
+///
+/// // Tensor store from LDS to global memory using 4 descriptor groups.
+/// rocdl.tensor.store.from.lds %dg0, %dg1, %dg2, %dg3, %dg4, 0 : vector<4xi32>, vector<8xi32>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.tensor.load.to.lds")]
 pub struct TensorLoadToLDSOp<'a> {
     #[slot(dgroup0_ty)]
@@ -3715,8 +4701,10 @@ pub struct TensorLoadToLDSOp<'a> {
     pub dgroup2: Value<'a>,
     #[slot(dgroup3_ty)]
     pub dgroup3: Value<'a>,
-    #[attr(name = "cachePolicy", int = "i32")]
-    pub cache_policy: Attribute<'a>,
+    #[slot(dgroup4_ty)]
+    pub dgroup4: Value<'a>,
+    #[attr(name = "cachePolicy")]
+    pub cache_policy: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3728,45 +4716,29 @@ pub struct TensorLoadToLDSOp<'a> {
     pub dgroup2_ty: Type<'a>,
     #[dtype(is = "vector<4xi32>")]
     pub dgroup3_ty: Type<'a>,
-}
-
-/// `rocdl.tensor.store.from.lds.d2`: Base class for ROCDL tensor load/store to/from LDS (D2 variant).
-///
-/// Moves tiles of tensor data between global memory and LDS. The tile is
-/// described by the $dgroup descriptors. 2 $dgroup descriptors allows for
-/// movement of up to 2D tensors. $cachePolicy describes the memory scope and an
-/// indicator of expected data re-use.
-///
-/// This op is for gfx1250+ architectures.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("rocdl.tensor.store.from.lds.d2")]
-pub struct TensorStoreFromLDSD2Op<'a> {
-    #[slot(dgroup0_ty)]
-    pub dgroup0: Value<'a>,
-    #[slot(dgroup1_ty)]
-    pub dgroup1: Value<'a>,
-    #[attr(name = "cachePolicy", int = "i32")]
-    pub cache_policy: Attribute<'a>,
-    pub alias_scopes: Option<Attribute<'a>>,
-    pub noalias_scopes: Option<Attribute<'a>>,
-    pub tbaa: Option<Attribute<'a>>,
-    #[dtype(is = "vector<4xi32>")]
-    pub dgroup0_ty: Type<'a>,
     #[dtype(is = "vector<8xi32>")]
-    pub dgroup1_ty: Type<'a>,
+    pub dgroup4_ty: Type<'a>,
 }
 
 /// `rocdl.tensor.store.from.lds`: Base class for ROCDL tensor load/store to/from LDS.
 ///
 /// Moves tiles of tensor data between global memory and LDS. The tile is
-/// described by the $dgroup descriptors. 4 $dgroup descriptors allows for
+/// described by the $dgroup descriptors. 5 $dgroup descriptors allows for
 /// movement of up to 5D tensors. $cachePolicy describes the memory scope and an
 /// indicator of expected data re-use.
 ///
 /// This op is for gfx1250+ architectures.
 ///
-/// Generic form only (directive `operands`).
+/// Example:
+/// ```mlir
+/// // Tensor load from global memory to LDS using 4 descriptor groups.
+/// rocdl.tensor.load.to.lds %dg0, %dg1, %dg2, %dg3, %dg4, 0 : vector<4xi32>, vector<8xi32>
+///
+/// // Tensor store from LDS to global memory using 4 descriptor groups.
+/// rocdl.tensor.store.from.lds %dg0, %dg1, %dg2, %dg3, %dg4, 0 : vector<4xi32>, vector<8xi32>
+/// ```
+///
+/// Generic form only (directive `custom<CachePolicy>`).
 #[mlir::op("rocdl.tensor.store.from.lds")]
 pub struct TensorStoreFromLDSOp<'a> {
     #[slot(dgroup0_ty)]
@@ -3777,8 +4749,10 @@ pub struct TensorStoreFromLDSOp<'a> {
     pub dgroup2: Value<'a>,
     #[slot(dgroup3_ty)]
     pub dgroup3: Value<'a>,
-    #[attr(name = "cachePolicy", int = "i32")]
-    pub cache_policy: Attribute<'a>,
+    #[slot(dgroup4_ty)]
+    pub dgroup4: Value<'a>,
+    #[attr(name = "cachePolicy")]
+    pub cache_policy: Option<Attribute<'a>>,
     pub alias_scopes: Option<Attribute<'a>>,
     pub noalias_scopes: Option<Attribute<'a>>,
     pub tbaa: Option<Attribute<'a>>,
@@ -3790,8 +4764,22 @@ pub struct TensorStoreFromLDSOp<'a> {
     pub dgroup2_ty: Type<'a>,
     #[dtype(is = "vector<4xi32>")]
     pub dgroup3_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub dgroup4_ty: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.workitem.id.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ThreadIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -3799,6 +4787,18 @@ pub struct ThreadIdXOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.workitem.id.y", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ThreadIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -3806,6 +4806,18 @@ pub struct ThreadIdYOp<'a> {
     pub res: Type<'a>,
 }
 
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.workitem.id.z", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ThreadIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
@@ -3819,8 +4831,54 @@ pub struct ThreadIdZOp<'a> {
 /// before continuing.
 ///
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Wait for async counter to drain.
+/// rocdl.s.wait.asynccnt 0
+/// ```
 #[mlir::op("rocdl.s.wait.asynccnt", format = "$count attr-dict")]
 pub struct WaitAsynccntOp<'a> {
+    #[attr(int = "i16")]
+    pub count: Attribute<'a>,
+}
+
+/// `rocdl.wait.asyncmark`: Wait until N or fewer async operation groups are unexecuted
+///
+/// This operation, along with `rocdl.asyncmark`, forms the compiler-provided
+/// framework for explicitly tracking asynchronous operations.
+///
+/// At the point where a wait.asyncmark operation is executed, all async operations
+/// that were parts of any async group (established by asyncmark in program order)
+/// other than the `count` previously-added ones will have finished executing.
+///
+/// For more detail, including on how this mechanism composes with function calls,
+/// see [the LLVM documentation on async tracking](/llvm/docs/AMDGPUAsyncOperations.rst).
+///
+/// Available on gfx9 and later.
+///
+/// Example:
+/// ```mlir
+/// // Wait until at most N async groups remain outstanding.
+/// rocdl.wait.asyncmark 1
+/// ```
+///
+/// Usage example:
+/// ```mlir
+/// rocdl.tensor.load.to.lds ...
+/// rocdl.global.async.load.to.lds ...
+///
+/// rocdl.asyncmark
+///
+/// rocdl.tensor.load.to.lds ...
+/// rocdl.global.async.load.to.lds ...
+///
+/// rocdl.asyncmark
+///
+/// rocdl.wait.asyncmark 1 // First group of loads completes after this
+/// ```
+#[mlir::op("rocdl.wait.asyncmark", format = "$count attr-dict")]
+pub struct WaitAsyncmarkOp<'a> {
     #[attr(int = "i16")]
     pub count: Attribute<'a>,
 }
@@ -3831,6 +4889,12 @@ pub struct WaitAsynccntOp<'a> {
 /// before continuing.
 ///
 /// Available on gfx12+.
+///
+/// Example:
+/// ```mlir
+/// // Wait for data-sharing counter to drain.
+/// rocdl.s.wait.dscnt 0
+/// ```
 #[mlir::op("rocdl.s.wait.dscnt", format = "$count attr-dict")]
 pub struct WaitDscntOp<'a> {
     #[attr(int = "i16")]
@@ -3843,6 +4907,12 @@ pub struct WaitDscntOp<'a> {
 /// before continuing.
 ///
 /// Available on gfx12+.
+///
+/// Example:
+/// ```mlir
+/// // Wait for export counter to drain.
+/// rocdl.s.wait.expcnt 0
+/// ```
 #[mlir::op("rocdl.s.wait.expcnt", format = "$count attr-dict")]
 pub struct WaitExpcntOp<'a> {
     #[attr(int = "i16")]
@@ -3855,6 +4925,12 @@ pub struct WaitExpcntOp<'a> {
 /// before continuing.
 ///
 /// Available on gfx12+.
+///
+/// Example:
+/// ```mlir
+/// // Wait for load counter to drain.
+/// rocdl.s.wait.loadcnt 0
+/// ```
 #[mlir::op("rocdl.s.wait.loadcnt", format = "$count attr-dict")]
 pub struct WaitLoadcntOp<'a> {
     #[attr(int = "i16")]
@@ -3867,6 +4943,12 @@ pub struct WaitLoadcntOp<'a> {
 /// before continuing.
 ///
 /// Available on gfx12+.
+///
+/// Example:
+/// ```mlir
+/// // Wait for store counter to drain.
+/// rocdl.s.wait.storecnt 0
+/// ```
 #[mlir::op("rocdl.s.wait.storecnt", format = "$count attr-dict")]
 pub struct WaitStorecntOp<'a> {
     #[attr(int = "i16")]
@@ -3879,6 +4961,12 @@ pub struct WaitStorecntOp<'a> {
 /// before continuing.
 ///
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Wait for tensor counter to drain.
+/// rocdl.s.wait.tensorcnt 0
+/// ```
 #[mlir::op("rocdl.s.wait.tensorcnt", format = "$count attr-dict")]
 pub struct WaitTensorcntOp<'a> {
     #[attr(int = "i16")]
@@ -3890,6 +4978,12 @@ pub struct WaitTensorcntOp<'a> {
 /// at the barrier. It just signal other waves in the same work-group waiting on the indicated named barrier
 /// to wake up.
 /// Available on gfx1250+.
+///
+/// Example:
+/// ```mlir
+/// // Wake up waves waiting on a named barrier.
+/// rocdl.s.wakeup.barrier %ptr : !llvm.ptr<3>
+/// ```
 #[mlir::op("rocdl.s.wakeup.barrier", format = "$ptr attr-dict `:` qualified(type($ptr))")]
 pub struct WakeupBarrierOp<'a> {
     #[slot(ptr_ty)]
@@ -3898,10 +4992,169 @@ pub struct WakeupBarrierOp<'a> {
     pub ptr_ty: Type<'a>,
 }
 
+///
+/// Insert a wave-level (subgroup) barrier. Synchronizes lanes within a
+/// single wave/wavefront without any memory ordering guarantees.
+///
+/// Example:
+/// ```mlir
+/// rocdl.wave.barrier
+/// ```
+#[mlir::op("rocdl.wave.barrier", format = "attr-dict")]
+pub struct WaveBarrierOp<'a> {
+}
+
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
+#[mlir::op("rocdl.wave.id", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
+pub struct WaveId<'a> {
+    #[attr(dialect = "llvm.constant_range")]
+    pub range: Option<Attribute<'a>>,
+    pub res: Type<'a>,
+}
+
+///
+/// Read a hardware register for thread/workgroup/cluster identification.
+/// An optional `range` attribute can constrain the returned value.
+///
+/// Example:
+/// ```mlir
+/// // Read the workitem id in the x dimension.
+/// %0 = rocdl.workitem.id.x : i32
+///
+/// // Read with a known range constraint.
+/// %1 = rocdl.workitem.id.x range <i32, 0, 64> : i32
+/// ```
 #[mlir::op("rocdl.wavefrontsize", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct WavefrontSizeOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with no clamp control.
+/// Computes `res = sum_i a[i]*b[i] + c`. Covers the full-f16/bf16
+/// accumulator forms (`fdot2.f16.f16`, `fdot2.bf16.bf16`) and the
+/// FP8/BF8 `dot4.f32.*` variants, whose hardware instructions have no
+/// CLAMP bit in their modifier word.
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.dot4.f32.bf8.bf8 %a, %b, %c : (i32, i32, f32) -> f32
+/// ```
+#[mlir::op("rocdl.dot4.f32.bf8.bf8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct dot4_f32_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with no clamp control.
+/// Computes `res = sum_i a[i]*b[i] + c`. Covers the full-f16/bf16
+/// accumulator forms (`fdot2.f16.f16`, `fdot2.bf16.bf16`) and the
+/// FP8/BF8 `dot4.f32.*` variants, whose hardware instructions have no
+/// CLAMP bit in their modifier word.
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.dot4.f32.bf8.fp8 %a, %b, %c : (i32, i32, f32) -> f32
+/// ```
+#[mlir::op("rocdl.dot4.f32.bf8.fp8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct dot4_f32_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with no clamp control.
+/// Computes `res = sum_i a[i]*b[i] + c`. Covers the full-f16/bf16
+/// accumulator forms (`fdot2.f16.f16`, `fdot2.bf16.bf16`) and the
+/// FP8/BF8 `dot4.f32.*` variants, whose hardware instructions have no
+/// CLAMP bit in their modifier word.
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.dot4.f32.fp8.bf8 %a, %b, %c : (i32, i32, f32) -> f32
+/// ```
+#[mlir::op("rocdl.dot4.f32.fp8.bf8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct dot4_f32_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with no clamp control.
+/// Computes `res = sum_i a[i]*b[i] + c`. Covers the full-f16/bf16
+/// accumulator forms (`fdot2.f16.f16`, `fdot2.bf16.bf16`) and the
+/// FP8/BF8 `dot4.f32.*` variants, whose hardware instructions have no
+/// CLAMP bit in their modifier word.
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.dot4.f32.fp8.fp8 %a, %b, %c : (i32, i32, f32) -> f32
+/// ```
+#[mlir::op("rocdl.dot4.f32.fp8.fp8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct dot4_f32_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f32)]
     pub res: Type<'a>,
 }
 
@@ -3953,609 +5206,3897 @@ pub struct ds_read_tr8_b64<'a> {
     pub res: Type<'a>,
 }
 
-#[mlir::op("rocdl.mfma.f32.16x16x16bf16.1k", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x16bf16_1k<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x16f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x16f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x1f32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x1f32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x2bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x2bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x32.bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x32_bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x32.bf8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x32_bf8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x32.bf8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x32_bf8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x32.f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x32_f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x32.fp8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x32_fp8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x32.fp8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x32_fp8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x4bf16.1k", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x4bf16_1k<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x4f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x4f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x4f32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x4f32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x8.xf32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x8_xf32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.16x16x8bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_16x16x8bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x16.bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x16_bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x16.bf8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x16_bf8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x16.bf8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x16_bf8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x16.f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x16_f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x16.fp8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x16_fp8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x16.fp8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x16_fp8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x1f32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x1f32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x2bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x2bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x2f32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x2f32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x4.xf32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x4_xf32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x4bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x4bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x4bf16.1k", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x4bf16_1k<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x4f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x4f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x8bf16.1k", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x8bf16_1k<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.32x32x8f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_32x32x8f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.4x4x1f32", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_4x4x1f32<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.4x4x2bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_4x4x2bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.4x4x4bf16.1k", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_4x4x4bf16_1k<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f32.4x4x4f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f32_4x4x4f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f64.16x16x4f64", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f64_16x16x4f64<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.f64.4x4x4f64", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_f64_4x4x4f64<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.16x16x16i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_16x16x16i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.16x16x32.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_16x16x32_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.16x16x4i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_16x16x4i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.16x16x64.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_16x16x64_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.32x32x16.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_32x32x16_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.32x32x32.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_32x32x32_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.32x32x4i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_32x32x4i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.32x32x8i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_32x32x8i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.i32.4x4x4i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_i32_4x4x4i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.scale.f32.16x16x128.f8f6f4", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_scale_f32_16x16x128_f8f6f4<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.mfma.scale.f32.32x32x64.f8f6f4", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct mfma_scale_f32_32x32x64_f8f6f4<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x128.bf8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x128_bf8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x128.bf8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x128_bf8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x128.fp8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x128_fp8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x128.fp8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x128_fp8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x32.bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x32_bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x32.f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x32_f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x64.bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x64_bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x64.bf8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x64_bf8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x64.bf8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x64_bf8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x64.f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x64_f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x64.fp8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x64_fp8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.16x16x64.fp8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_16x16x64_fp8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x16.bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x16_bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x16.f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x16_f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x32.bf16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x32_bf16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x32.bf8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x32_bf8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x32.bf8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x32_bf8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x32.f16", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x32_f16<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x32.fp8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x32_fp8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x32.fp8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x32_fp8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x64.bf8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x64_bf8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x64.bf8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x64_bf8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x64.fp8.bf8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x64_fp8_bf8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.f32.32x32x64.fp8.fp8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_f32_32x32x64_fp8_fp8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.i32.16x16x128.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_i32_16x16x128_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.i32.16x16x64.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_i32_16x16x64_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.i32.32x32x32.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_i32_32x32x32_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
-    pub res: Type<'a>,
-}
-
-#[mlir::op("rocdl.smfmac.i32.32x32x64.i8", format = "$args attr-dict `:` functional-type($args, $res)", results(res))]
-pub struct smfmac_i32_32x32x64_i8<'a> {
-    #[slot(args_ty)]
-    pub args: Vec<Value<'a>>,
-    pub args_ty: Vec<Type<'a>>,
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.fdot2 %a, %b, %c {clamp = true} :
+///      (vector<2xf16>, vector<2xf16>, f32) -> f32
+/// ```
+#[mlir::op("rocdl.fdot2", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct fdot2<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = "vector<2xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f32)]
     pub res: Type<'a>,
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.bf16.16x16x16.bf16", results(res))]
+/// Packed intra-lane dot-product with no clamp control.
+/// Computes `res = sum_i a[i]*b[i] + c`. Covers the full-f16/bf16
+/// accumulator forms (`fdot2.f16.f16`, `fdot2.bf16.bf16`) and the
+/// FP8/BF8 `dot4.f32.*` variants, whose hardware instructions have no
+/// CLAMP bit in their modifier word.
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.fdot2.bf16.bf16 %a, %b, %c : (vector<2xbf16>, vector<2xbf16>, bf16) -> bf16
+/// ```
+#[mlir::op("rocdl.fdot2.bf16.bf16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct fdot2_bf16_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[dtype(is = "vector<2xbf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xbf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = bf16)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = bf16)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with no clamp control.
+/// Computes `res = sum_i a[i]*b[i] + c`. Covers the full-f16/bf16
+/// accumulator forms (`fdot2.f16.f16`, `fdot2.bf16.bf16`) and the
+/// FP8/BF8 `dot4.f32.*` variants, whose hardware instructions have no
+/// CLAMP bit in their modifier word.
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.fdot2.f16.f16 %a, %b, %c : (vector<2xf16>, vector<2xf16>, f16) -> f16
+/// ```
+#[mlir::op("rocdl.fdot2.f16.f16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct fdot2_f16_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[dtype(is = "vector<2xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f16)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f16)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.fdot2.f32.bf16 %a, %b, %c {clamp = true} :
+///      (vector<2xbf16>, vector<2xbf16>, f32) -> f32
+/// ```
+#[mlir::op("rocdl.fdot2.f32.bf16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct fdot2_f32_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = "vector<2xbf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xbf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x16bf16.1k %a0, %b0, %c0, 0, 0, none : (vector<4xi16>, vector<4xi16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x16bf16.1k", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x16bf16_1k<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x16f16 %a0, %b0, %c0, 0, 0, none : (vector<4xf16>, vector<4xf16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x16f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x16f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x1f32 %a0, %b0, %c0, 0, 0, none : (f32, f32, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x1f32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x1f32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x2bf16 %a0, %b0, %c0, 0, 0, none : (vector<2xi16>, vector<2xi16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x2bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x2bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x32.bf16 %a0, %b0, %c0, 0, 0, none : (vector<8xbf16>, vector<8xbf16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x32.bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x32_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<8xbf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xbf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x32.bf8.bf8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x32.bf8.bf8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x32_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x32.bf8.fp8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x32.bf8.fp8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x32_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x32.f16 %a0, %b0, %c0, 0, 0, none : (vector<8xf16>, vector<8xf16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x32.f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x32_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x32.fp8.bf8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x32.fp8.bf8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x32_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x32.fp8.fp8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x32.fp8.fp8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x32_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x4bf16.1k %a0, %b0, %c0, 0, 0, none : (vector<4xi16>, vector<4xi16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x4bf16.1k", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x4bf16_1k<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x4f16 %a0, %b0, %c0, 0, 0, none : (vector<4xf16>, vector<4xf16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x4f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x4f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x4f32 %a0, %b0, %c0, 0, 0, none : (f32, f32, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x4f32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x4f32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x8.xf32 %a0, %b0, %c0, 0, 0, none : (vector<2xf32>, vector<2xf32>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x8.xf32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x8_xf32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xf32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xf32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.16x16x8bf16 %a0, %b0, %c0, 0, 0, none : (vector<2xi16>, vector<2xi16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.16x16x8bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_16x16x8bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x16.bf16 %a0, %b0, %c0, 0, 0, none : (vector<8xbf16>, vector<8xbf16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x16.bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x16_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<8xbf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xbf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x16.bf8.bf8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x16.bf8.bf8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x16_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x16.bf8.fp8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x16.bf8.fp8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x16_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x16.f16 %a0, %b0, %c0, 0, 0, none : (vector<8xf16>, vector<8xf16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x16.f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x16_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x16.fp8.bf8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x16.fp8.bf8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x16_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x16.fp8.fp8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x16.fp8.fp8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x16_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x1f32 %a0, %b0, %c0, 0, 0, none : (f32, f32, vector<32xf32>) -> vector<32xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x1f32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x1f32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x2bf16 %a0, %b0, %c0, 0, 0, none : (vector<2xi16>, vector<2xi16>, vector<32xf32>) -> vector<32xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x2bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x2bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x2f32 %a0, %b0, %c0, 0, 0, none : (f32, f32, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x2f32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x2f32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x4.xf32 %a0, %b0, %c0, 0, 0, none : (vector<2xf32>, vector<2xf32>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x4.xf32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x4_xf32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xf32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xf32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x4bf16 %a0, %b0, %c0, 0, 0, none : (vector<2xi16>, vector<2xi16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x4bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x4bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x4bf16.1k %a0, %b0, %c0, 0, 0, none : (vector<4xi16>, vector<4xi16>, vector<32xf32>) -> vector<32xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x4bf16.1k", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x4bf16_1k<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x4f16 %a0, %b0, %c0, 0, 0, none : (vector<4xf16>, vector<4xf16>, vector<32xf32>) -> vector<32xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x4f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x4f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<32xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x8bf16.1k %a0, %b0, %c0, 0, 0, none : (vector<4xi16>, vector<4xi16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x8bf16.1k", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x8bf16_1k<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.32x32x8f16 %a0, %b0, %c0, 0, 0, none : (vector<4xf16>, vector<4xf16>, vector<16xf32>) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.32x32x8f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_32x32x8f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.4x4x1f32 %a0, %b0, %c0, 0, 0, none : (f32, f32, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.4x4x1f32", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_4x4x1f32<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.4x4x2bf16 %a0, %b0, %c0, 0, 0, none : (vector<2xi16>, vector<2xi16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.4x4x2bf16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_4x4x2bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.4x4x4bf16.1k %a0, %b0, %c0, 0, 0, none : (vector<4xi16>, vector<4xi16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.4x4x4bf16.1k", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_4x4x4bf16_1k<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f32.4x4x4f16 %a0, %b0, %c0, 0, 0, none : (vector<4xf16>, vector<4xf16>, vector<4xf32>) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.mfma.f32.4x4x4f16", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f32_4x4x4f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Double-precision matrix fused multiply-add (MFMA) intrinsic. On gfx94x,
+/// the `blgp` immarg is a NEG bitfield rather than a B-lane permutation.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f64.16x16x4f64 %a0, %b0, %c0, 0, 0, neg_a|neg_b : (f64, f64, vector<4xf64>) -> vector<4xf64>
+/// ```
+#[mlir::op("rocdl.mfma.f64.16x16x4f64", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f64_16x16x4f64<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_neg_modifier")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf64>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xf64>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Double-precision matrix fused multiply-add (MFMA) intrinsic. On gfx94x,
+/// the `blgp` immarg is a NEG bitfield rather than a B-lane permutation.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.f64.4x4x4f64 %a0, %b0, %c0, 0, 0, neg_a|neg_b : (f64, f64, f64) -> f64
+/// ```
+#[mlir::op("rocdl.mfma.f64.4x4x4f64", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_f64_4x4x4f64<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_neg_modifier")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = f64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = f64)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = f64)]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.16x16x16i8 %a0, %b0, %c0, 0, 0, none : (i32, i32, vector<4xi32>) -> vector<4xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.16x16x16i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_16x16x16i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.16x16x32.i8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<4xi32>) -> vector<4xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.16x16x32.i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_16x16x32_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.16x16x4i8 %a0, %b0, %c0, 0, 0, none : (i32, i32, vector<16xi32>) -> vector<16xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.16x16x4i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_16x16x4i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.16x16x64.i8 %a0, %b0, %c0, 0, 0, none : (vector<4xi32>, vector<4xi32>, vector<4xi32>) -> vector<4xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.16x16x64.i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_16x16x64_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.32x32x16.i8 %a0, %b0, %c0, 0, 0, none : (i64, i64, vector<16xi32>) -> vector<16xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.32x32x16.i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_32x32x16_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i64)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.32x32x32.i8 %a0, %b0, %c0, 0, 0, none : (vector<4xi32>, vector<4xi32>, vector<16xi32>) -> vector<16xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.32x32x32.i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_32x32x32_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.32x32x4i8 %a0, %b0, %c0, 0, 0, none : (i32, i32, vector<32xi32>) -> vector<32xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.32x32x4i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_32x32x4i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<32xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<32xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.32x32x8i8 %a0, %b0, %c0, 0, 0, none : (i32, i32, vector<16xi32>) -> vector<16xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.32x32x8i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_32x32x8i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Matrix fused multiply-add (MFMA) intrinsic. Computes `D = A * B + C`
+/// with matrix operands. The `cbsz`, `abid`, and `blgp` attributes control
+/// broadcast and block layout modes.
+///
+/// Example:
+/// ```mlir
+/// %r0 = mfma.i32.4x4x4i8 %a0, %b0, %c0, 0, 0, none : (i32, i32, vector<4xi32>) -> vector<4xi32>
+/// ```
+#[mlir::op("rocdl.mfma.i32.4x4x4i8", format = "$a `,` $b `,` $c `,` $cbsz `,` $abid `,` $blgp attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct mfma_i32_4x4x4i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[attr(dialect = "rocdl<mfma_perm_b")]
+    pub blgp: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Scaled matrix fused multiply-add (MFMA) intrinsic with per-operand scaling.
+/// The `opselA`/`opselB` and `scaleA`/`scaleB` arguments control the scaling
+/// of input operands.
+///
+/// Example:
+/// ```mlir
+/// // Scaled MFMA with fp8 * fp8 inputs.
+/// %r0 = rocdl.mfma.scale.f32.32x32x64.f8f6f4 %a, %a, %c, fp8_e4m3, fp8_e4m3, 0, %scaleA, 0, %scaleB :
+///   (vector<8xi32>, vector<8xi32>, vector<16xf32>, i32, i32) -> vector<16xf32>
+///
+/// // Scaled MFMA with fp8 * bf8 inputs.
+/// %r1 = rocdl.mfma.scale.f32.32x32x64.f8f6f4 %a, %a, %c, fp8_e4m3, fp8_e5m2, 0, %scaleA, 0, %scaleB :
+///   (vector<8xi32>, vector<8xi32>, vector<16xf32>, i32, i32) -> vector<16xf32>
+///
+/// // Scaled MFMA with fp8 * fp6 inputs (6xi32 operand B).
+/// %r2 = rocdl.mfma.scale.f32.32x32x64.f8f6f4 %a, %b6, %c, fp8_e4m3, fp6_e2m3, 0, %scaleA, 0, %scaleB :
+///   (vector<8xi32>, vector<6xi32>, vector<16xf32>, i32, i32) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.scale.f32.16x16x128.f8f6f4", format = "$a `,` $b `,` $c `,` $cbsz `,` $blgp `,` $opselA `,` $scaleA `,` $opselB `,` $scaleB attr-dict `:` functional-type($a $b $c $scaleA $scaleB, $res)", results(res))]
+pub struct mfma_scale_f32_16x16x128_f8f6f4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(scale_a_ty, name = "scaleA")]
+    pub scale_a: Value<'a>,
+    #[slot(scale_b_ty, name = "scaleB")]
+    pub scale_b: Value<'a>,
+    #[attr(dialect = "rocdl<matrix_format")]
+    pub cbsz: Attribute<'a>,
+    #[attr(dialect = "rocdl<matrix_format")]
+    pub blgp: Attribute<'a>,
+    #[attr(name = "opselA", int = "i32")]
+    pub opsel_a: Attribute<'a>,
+    #[attr(name = "opselB", int = "i32")]
+    pub opsel_b: Attribute<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub scale_a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub scale_b_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+///
+/// Scaled matrix fused multiply-add (MFMA) intrinsic with per-operand scaling.
+/// The `opselA`/`opselB` and `scaleA`/`scaleB` arguments control the scaling
+/// of input operands.
+///
+/// Example:
+/// ```mlir
+/// // Scaled MFMA with fp8 * fp8 inputs.
+/// %r0 = rocdl.mfma.scale.f32.32x32x64.f8f6f4 %a, %a, %c, fp8_e4m3, fp8_e4m3, 0, %scaleA, 0, %scaleB :
+///   (vector<8xi32>, vector<8xi32>, vector<16xf32>, i32, i32) -> vector<16xf32>
+///
+/// // Scaled MFMA with fp8 * bf8 inputs.
+/// %r1 = rocdl.mfma.scale.f32.32x32x64.f8f6f4 %a, %a, %c, fp8_e4m3, fp8_e5m2, 0, %scaleA, 0, %scaleB :
+///   (vector<8xi32>, vector<8xi32>, vector<16xf32>, i32, i32) -> vector<16xf32>
+///
+/// // Scaled MFMA with fp8 * fp6 inputs (6xi32 operand B).
+/// %r2 = rocdl.mfma.scale.f32.32x32x64.f8f6f4 %a, %b6, %c, fp8_e4m3, fp6_e2m3, 0, %scaleA, 0, %scaleB :
+///   (vector<8xi32>, vector<6xi32>, vector<16xf32>, i32, i32) -> vector<16xf32>
+/// ```
+#[mlir::op("rocdl.mfma.scale.f32.32x32x64.f8f6f4", format = "$a `,` $b `,` $c `,` $cbsz `,` $blgp `,` $opselA `,` $scaleA `,` $opselB `,` $scaleB attr-dict `:` functional-type($a $b $c $scaleA $scaleB, $res)", results(res))]
+pub struct mfma_scale_f32_32x32x64_f8f6f4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(scale_a_ty, name = "scaleA")]
+    pub scale_a: Value<'a>,
+    #[slot(scale_b_ty, name = "scaleB")]
+    pub scale_b: Value<'a>,
+    #[attr(dialect = "rocdl<matrix_format")]
+    pub cbsz: Attribute<'a>,
+    #[attr(dialect = "rocdl<matrix_format")]
+    pub blgp: Attribute<'a>,
+    #[attr(name = "opselA", int = "i32")]
+    pub opsel_a: Attribute<'a>,
+    #[attr(name = "opselB", int = "i32")]
+    pub opsel_b: Attribute<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub scale_a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub scale_b_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.sdot2 %a, %b, %c {clamp = true} :
+///      (vector<2xi16>, vector<2xi16>, i32) -> i32
+/// ```
+#[mlir::op("rocdl.sdot2", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct sdot2<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.sdot4 %a, %b, %c {clamp = true} :
+///      (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.sdot4", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct sdot4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.sdot8 %a, %b, %c {clamp = true} :
+///      (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.sdot8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct sdot8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x128.bf8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x128_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x128.bf8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x128_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x128.fp8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x128_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x128.fp8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x128_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x32.bf16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x32_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x32.f16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x32_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x64.bf16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x64_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<8xbf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<16xbf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x64.bf8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x64_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x64.bf8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x64_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x64.f16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x64_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<16xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x64.fp8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x64_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.16x16x64.fp8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_16x16x64_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x16.bf16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x16_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x16.f16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x16_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x32.bf16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x32_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<8xbf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<16xbf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x32.bf8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x32_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x32.bf8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x32_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x32.f16", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x32_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<8xf16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<16xf16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x32.fp8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x32_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x32.fp8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x32_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x64.bf8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x64_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x64.bf8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x64_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x64.fp8.bf8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x64_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.f32.32x32x64.fp8.fp8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_f32_32x32x64_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xf32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.i32.16x16x128.i8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_i32_16x16x128_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.i32.16x16x64.i8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_i32_16x16x64_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.i32.32x32x32.i8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_i32_32x32x32_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<2xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Sparse matrix fused multiply-accumulate (SMFMAC) intrinsic with 2:4
+/// structured sparsity. The `index` operand provides the sparsity metadata,
+/// and `cbsz`/`abid` control broadcast modes.
+///
+/// Example:
+/// ```mlir
+/// // SMFMAC with f16 inputs.
+/// %r0 = rocdl.smfmac.f32.16x16x32.f16 %a0, %b0, %c0, %idx, 0, 0 :
+///   (vector<4xf16>, vector<8xf16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with bf16 inputs.
+/// %r1 = rocdl.smfmac.f32.16x16x32.bf16 %a1, %b1, %c0, %idx, 0, 0 :
+///   (vector<4xi16>, vector<8xi16>, vector<4xf32>, i32) -> vector<4xf32>
+///
+/// // SMFMAC with i8 inputs and i32 accumulator.
+/// %r2 = rocdl.smfmac.i32.16x16x64.i8 %a2, %b2, %c2, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xi32>, i32) -> vector<4xi32>
+///
+/// // SMFMAC with fp8 inputs.
+/// %r3 = rocdl.smfmac.f32.16x16x64.fp8.fp8 %a2, %b2, %c0, %idx, 0, 0 :
+///   (vector<2xi32>, vector<4xi32>, vector<4xf32>, i32) -> vector<4xf32>
+/// ```
+#[mlir::op("rocdl.smfmac.i32.32x32x64.i8", format = "$a `,` $b `,` $c `,` $index `,` $cbsz `,` $abid attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct smfmac_i32_32x32x64_i8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(int = "i32")]
+    pub cbsz: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub abid: Attribute<'a>,
+    #[dtype(is = "vector<4xi32>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<8xi32>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    #[dtype(is = "vector<16xi32>")]
+    pub res: Type<'a>,
+}
+
+///
+/// Mixed-signedness packed dot-product with per-operand sign controls.
+/// Computes `res = sum_i a[i]*b[i] + c`. Each lane of `a` is treated as
+/// signed when `signA = true`; when `signA = false`, the unsigned lane
+/// value is zero-extended into a wider signed integer. `signB` controls
+/// the same for `b`. `clamp` controls result clamping.
+///
+/// These ops correspond to RDNA's unified mixed-sign `v_dot4_i32_iu8`
+/// and `v_dot8_i32_iu4` instructions (gfx11+).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.sudot4 %a, %b, %c
+///        {signA = true, signB = false, clamp = true} :
+///      (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.sudot4", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct sudot4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Mixed-signedness packed dot-product with per-operand sign controls.
+/// Computes `res = sum_i a[i]*b[i] + c`. Each lane of `a` is treated as
+/// signed when `signA = true`; when `signA = false`, the unsigned lane
+/// value is zero-extended into a wider signed integer. `signB` controls
+/// the same for `b`. `clamp` controls result clamping.
+///
+/// These ops correspond to RDNA's unified mixed-sign `v_dot4_i32_iu8`
+/// and `v_dot8_i32_iu4` instructions (gfx11+).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.sudot8 %a, %b, %c
+///        {signA = true, signB = false, clamp = true} :
+///      (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.sudot8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct sudot8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.bf16.16x16x32.bf16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_bf16_16x16x32_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.bf16.16x16x64.bf16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_bf16_16x16x64_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.bf16f32.16x16x64.bf16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_bf16f32_16x16x64_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f16.16x16x128.bf8.bf8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f16_16x16x128_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f16.16x16x128.bf8.fp8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f16_16x16x128_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f16.16x16x128.fp8.bf8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f16_16x16x128_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f16.16x16x128.fp8.fp8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f16_16x16x128_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f16.16x16x32.f16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f16_16x16x32_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f16.16x16x64.f16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f16_16x16x64_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x128.bf8.bf8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x128_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x128.bf8.fp8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x128_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x128.fp8.bf8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x128_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x128.fp8.fp8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x128_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x32.bf16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x32_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x32.bf8.bf8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x32_bf8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x32.bf8.fp8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x32_bf8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x32.f16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x32_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x32.fp8.bf8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x32_fp8_bf8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x32.fp8.fp8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x32_fp8_fp8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x64.bf16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x64_bf16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.f32.16x16x64.f16", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_f32_16x16x64_f16<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.i32.16x16x128.iu8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_i32_16x16x128_iu8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(name = "reuseA", int = "i1", default = "0")]
+    pub reuse_a: Option<Attribute<'a>>,
+    #[attr(name = "reuseB", int = "i1", default = "0")]
+    pub reuse_b: Option<Attribute<'a>>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.i32.16x16x32.iu4", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_i32_16x16x32_iu4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.i32.16x16x32.iu8", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_i32_16x16x32_iu8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("rocdl.swmmac.i32.16x16x64.iu4", format = "$a `,` $b `,` $c `,` $index attr-dict `:` functional-type($a $b $c $index, $res)", results(res))]
+pub struct swmmac_i32_16x16x64_iu4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[slot(index_ty)]
+    pub index: Value<'a>,
+    #[attr(name = "signA", int = "i1", default = "0")]
+    pub sign_a: Option<Attribute<'a>>,
+    #[attr(name = "signB", int = "i1", default = "0")]
+    pub sign_b: Option<Attribute<'a>>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub index_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.udot2 %a, %b, %c {clamp = true} :
+///      (vector<2xi16>, vector<2xi16>, i32) -> i32
+/// ```
+#[mlir::op("rocdl.udot2", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct udot2<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = "vector<2xi16>")]
+    pub a_ty: Type<'a>,
+    #[dtype(is = "vector<2xi16>")]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.udot4 %a, %b, %c {clamp = true} :
+///      (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.udot4", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct udot4<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Packed intra-lane dot-product with optional result clamping (`clamp`).
+/// Computes `res = sum_i a[i]*b[i] + c`, where `a` and `b` hold packed
+/// 4/8/16-bit data (for `dot2`,`dot4`,`dot8`).
+///
+/// Example:
+/// ```mlir
+/// %r = rocdl.udot8 %a, %b, %c {clamp = true} :
+///      (i32, i32, i32) -> i32
+/// ```
+#[mlir::op("rocdl.udot8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
+pub struct udot8<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Value<'a>,
+    #[attr(int = "i1", default = "0")]
+    pub clamp: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub c_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+///
+/// Wave Matrix Multiply-Accumulate (WMMA) with output operand selection.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f16 with opsel control.
+/// %r = rocdl.wmma.f16.16x16x16.f16 %a, %b, %c {opsel = false} :
+///   (vector<16xf16>, vector<16xf16>, vector<16xf16>) -> vector<16xf16>
+/// ```
+#[mlir::op("rocdl.wmma.bf16.16x16x16.bf16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_bf16_16x16x16_bf16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4572,8 +9113,15 @@ pub struct wmma_bf16_16x16x16_bf16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.bf16.16x16x32.bf16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.bf16.16x16x32.bf16", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_bf16_16x16x32_bf16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4581,11 +9129,7 @@ pub struct wmma_bf16_16x16x32_bf16<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "signA", int = "i1", default = "0")]
-    pub sign_a: Option<Attribute<'a>>,
-    #[attr(name = "signB", int = "i1", default = "0")]
-    pub sign_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4598,8 +9142,15 @@ pub struct wmma_bf16_16x16x32_bf16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.bf16f32.16x16x32.bf16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with different C and D types.
+///
+/// Example:
+/// ```mlir
+/// // WMMA bf16 output from f32 accumulator with bf16 inputs.
+/// %r = rocdl.wmma.bf16f32.16x16x32.bf16 %a, %b, %c, modC = none :
+///   (vector<16xbf16>, vector<16xbf16>, vector<8xf32>) -> vector<16xbf16>
+/// ```
+#[mlir::op("rocdl.wmma.bf16f32.16x16x32.bf16", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_bf16f32_16x16x32_bf16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4607,11 +9158,7 @@ pub struct wmma_bf16f32_16x16x32_bf16<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "signA", int = "i1", default = "0")]
-    pub sign_a: Option<Attribute<'a>>,
-    #[attr(name = "signB", int = "i1", default = "0")]
-    pub sign_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4624,8 +9171,15 @@ pub struct wmma_bf16f32_16x16x32_bf16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x128.bf8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x128.bf8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x128_bf8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4633,7 +9187,7 @@ pub struct wmma_f16_16x16x128_bf8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4646,8 +9200,15 @@ pub struct wmma_f16_16x16x128_bf8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x128.bf8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x128.bf8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x128_bf8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4655,7 +9216,7 @@ pub struct wmma_f16_16x16x128_bf8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4668,8 +9229,15 @@ pub struct wmma_f16_16x16x128_bf8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x128.fp8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x128.fp8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x128_fp8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4677,7 +9245,7 @@ pub struct wmma_f16_16x16x128_fp8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4690,8 +9258,15 @@ pub struct wmma_f16_16x16x128_fp8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x128.fp8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x128.fp8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x128_fp8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4699,7 +9274,7 @@ pub struct wmma_f16_16x16x128_fp8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4712,8 +9287,15 @@ pub struct wmma_f16_16x16x128_fp8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x16.f16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with output operand selection.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f16 with opsel control.
+/// %r = rocdl.wmma.f16.16x16x16.f16 %a, %b, %c {opsel = false} :
+///   (vector<16xf16>, vector<16xf16>, vector<16xf16>) -> vector<16xf16>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x16.f16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x16_f16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4730,8 +9312,15 @@ pub struct wmma_f16_16x16x16_f16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x32.f16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x32.f16", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x32_f16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4739,11 +9328,7 @@ pub struct wmma_f16_16x16x32_f16<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "signA", int = "i1", default = "0")]
-    pub sign_a: Option<Attribute<'a>>,
-    #[attr(name = "signB", int = "i1", default = "0")]
-    pub sign_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4756,8 +9341,15 @@ pub struct wmma_f16_16x16x32_f16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x64.bf8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x64.bf8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x64_bf8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4765,7 +9357,7 @@ pub struct wmma_f16_16x16x64_bf8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4778,8 +9370,15 @@ pub struct wmma_f16_16x16x64_bf8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x64.bf8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x64.bf8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x64_bf8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4787,7 +9386,7 @@ pub struct wmma_f16_16x16x64_bf8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4800,8 +9399,15 @@ pub struct wmma_f16_16x16x64_bf8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x64.fp8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x64.fp8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x64_fp8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4809,7 +9415,7 @@ pub struct wmma_f16_16x16x64_fp8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4822,8 +9428,15 @@ pub struct wmma_f16_16x16x64_fp8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f16.16x16x64.fp8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f16.16x16x64.fp8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f16_16x16x64_fp8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4831,7 +9444,7 @@ pub struct wmma_f16_16x16x64_fp8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4844,8 +9457,15 @@ pub struct wmma_f16_16x16x64_fp8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x128.bf8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x128.bf8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x128_bf8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4853,7 +9473,7 @@ pub struct wmma_f32_16x16x128_bf8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4866,8 +9486,15 @@ pub struct wmma_f32_16x16x128_bf8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x128.bf8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x128.bf8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x128_bf8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4875,7 +9502,7 @@ pub struct wmma_f32_16x16x128_bf8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4888,8 +9515,15 @@ pub struct wmma_f32_16x16x128_bf8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x128.fp8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x128.fp8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x128_fp8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4897,7 +9531,7 @@ pub struct wmma_f32_16x16x128_fp8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4910,8 +9544,15 @@ pub struct wmma_f32_16x16x128_fp8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x128.fp8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x128.fp8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x128_fp8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4919,7 +9560,7 @@ pub struct wmma_f32_16x16x128_fp8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -4932,8 +9573,15 @@ pub struct wmma_f32_16x16x128_fp8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x16.bf16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) intrinsic.
+///
+/// Example:
+/// ```mlir
+/// // WMMA with f16 inputs and f32 accumulator.
+/// %r = rocdl.wmma.f32.16x16x16.f16 %a, %b, %c :
+///   (vector<16xf16>, vector<16xf16>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x16.bf16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x16_bf16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4948,8 +9596,15 @@ pub struct wmma_f32_16x16x16_bf16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x16.bf8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) intrinsic.
+///
+/// Example:
+/// ```mlir
+/// // WMMA with f16 inputs and f32 accumulator.
+/// %r = rocdl.wmma.f32.16x16x16.f16 %a, %b, %c :
+///   (vector<16xf16>, vector<16xf16>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x16.bf8_bf8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x16_bf8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4964,8 +9619,15 @@ pub struct wmma_f32_16x16x16_bf8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x16.bf8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) intrinsic.
+///
+/// Example:
+/// ```mlir
+/// // WMMA with f16 inputs and f32 accumulator.
+/// %r = rocdl.wmma.f32.16x16x16.f16 %a, %b, %c :
+///   (vector<16xf16>, vector<16xf16>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x16.bf8_fp8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x16_bf8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4980,8 +9642,15 @@ pub struct wmma_f32_16x16x16_bf8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x16.f16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) intrinsic.
+///
+/// Example:
+/// ```mlir
+/// // WMMA with f16 inputs and f32 accumulator.
+/// %r = rocdl.wmma.f32.16x16x16.f16 %a, %b, %c :
+///   (vector<16xf16>, vector<16xf16>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x16.f16", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x16_f16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -4996,8 +9665,15 @@ pub struct wmma_f32_16x16x16_f16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x16.fp8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) intrinsic.
+///
+/// Example:
+/// ```mlir
+/// // WMMA with f16 inputs and f32 accumulator.
+/// %r = rocdl.wmma.f32.16x16x16.f16 %a, %b, %c :
+///   (vector<16xf16>, vector<16xf16>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x16.fp8_bf8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x16_fp8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5012,8 +9688,15 @@ pub struct wmma_f32_16x16x16_fp8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x16.fp8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) intrinsic.
+///
+/// Example:
+/// ```mlir
+/// // WMMA with f16 inputs and f32 accumulator.
+/// %r = rocdl.wmma.f32.16x16x16.f16 %a, %b, %c :
+///   (vector<16xf16>, vector<16xf16>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x16.fp8_fp8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x16_fp8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5028,8 +9711,15 @@ pub struct wmma_f32_16x16x16_fp8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x32.bf16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x32.bf16", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x32_bf16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5037,11 +9727,7 @@ pub struct wmma_f32_16x16x32_bf16<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "signA", int = "i1", default = "0")]
-    pub sign_a: Option<Attribute<'a>>,
-    #[attr(name = "signB", int = "i1", default = "0")]
-    pub sign_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5054,8 +9740,15 @@ pub struct wmma_f32_16x16x32_bf16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x32.f16", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x32.f16", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x32_f16<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5063,11 +9756,7 @@ pub struct wmma_f32_16x16x32_f16<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "signA", int = "i1", default = "0")]
-    pub sign_a: Option<Attribute<'a>>,
-    #[attr(name = "signB", int = "i1", default = "0")]
-    pub sign_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5080,8 +9769,15 @@ pub struct wmma_f32_16x16x32_f16<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x4.f32", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x4.f32", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x4_f32<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5089,11 +9785,7 @@ pub struct wmma_f32_16x16x4_f32<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "signA", int = "i1", default = "0")]
-    pub sign_a: Option<Attribute<'a>>,
-    #[attr(name = "signB", int = "i1", default = "0")]
-    pub sign_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5106,8 +9798,15 @@ pub struct wmma_f32_16x16x4_f32<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x64.bf8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x64.bf8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x64_bf8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5115,7 +9814,7 @@ pub struct wmma_f32_16x16x64_bf8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5128,8 +9827,15 @@ pub struct wmma_f32_16x16x64_bf8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x64.bf8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x64.bf8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x64_bf8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5137,7 +9843,7 @@ pub struct wmma_f32_16x16x64_bf8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5150,8 +9856,15 @@ pub struct wmma_f32_16x16x64_bf8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x64.fp8_bf8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x64.fp8_bf8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x64_fp8_bf8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5159,7 +9872,7 @@ pub struct wmma_f32_16x16x64_fp8_bf8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5172,8 +9885,15 @@ pub struct wmma_f32_16x16x64_fp8_bf8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.f32.16x16x64.fp8_fp8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) with modC and reuse controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA f32 with fp8 inputs and modC/reuse controls.
+/// %r = rocdl.wmma.f32.16x16x64.fp8_fp8 %a, %b, %c, modC = none :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.f32.16x16x64.fp8_fp8", format = "$a `,` $b `,` $c `,` `modC` `=` $modC attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_f32_16x16x64_fp8_fp8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5181,7 +9901,7 @@ pub struct wmma_f32_16x16x64_fp8_fp8<'a> {
     pub b: Value<'a>,
     #[slot(c_ty)]
     pub c: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5194,8 +9914,17 @@ pub struct wmma_f32_16x16x64_fp8_fp8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.i32.16x16x16.iu4", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) for integer types with
+/// sign and clamp control.
+///
+/// Example:
+/// ```mlir
+/// // WMMA i32 with unsigned i8 inputs.
+/// %r = rocdl.wmma.i32.16x16x16.iu8 %a, %b, %c
+///   {signA = false, signB = false, clamp = false} :
+///   (vector<4xi32>, vector<4xi32>, vector<8xi32>) -> vector<8xi32>
+/// ```
+#[mlir::op("rocdl.wmma.i32.16x16x16.iu4", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_i32_16x16x16_iu4<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5216,8 +9945,17 @@ pub struct wmma_i32_16x16x16_iu4<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.i32.16x16x16.iu8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) for integer types with
+/// sign and clamp control.
+///
+/// Example:
+/// ```mlir
+/// // WMMA i32 with unsigned i8 inputs.
+/// %r = rocdl.wmma.i32.16x16x16.iu8 %a, %b, %c
+///   {signA = false, signB = false, clamp = false} :
+///   (vector<4xi32>, vector<4xi32>, vector<8xi32>) -> vector<8xi32>
+/// ```
+#[mlir::op("rocdl.wmma.i32.16x16x16.iu8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_i32_16x16x16_iu8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5238,8 +9976,17 @@ pub struct wmma_i32_16x16x16_iu8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.i32.16x16x32.iu4", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) for integer types with
+/// sign and clamp control.
+///
+/// Example:
+/// ```mlir
+/// // WMMA i32 with unsigned i8 inputs.
+/// %r = rocdl.wmma.i32.16x16x16.iu8 %a, %b, %c
+///   {signA = false, signB = false, clamp = false} :
+///   (vector<4xi32>, vector<4xi32>, vector<8xi32>) -> vector<8xi32>
+/// ```
+#[mlir::op("rocdl.wmma.i32.16x16x32.iu4", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_i32_16x16x32_iu4<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5260,8 +10007,17 @@ pub struct wmma_i32_16x16x32_iu4<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.i32.16x16x64.iu8", results(res))]
+/// Wave Matrix Multiply-Accumulate (WMMA) for integer types with
+/// sign, reuse, and clamp controls.
+///
+/// Example:
+/// ```mlir
+/// // WMMA i32 with unsigned i8 inputs and reuse controls.
+/// %r = rocdl.wmma.i32.16x16x64.iu8 %a, %b, %c
+///   {signA = false, signB = false, reuseA = false, reuseB = false, clamp = false} :
+///   (vector<8xi32>, vector<8xi32>, vector<8xi32>) -> vector<8xi32>
+/// ```
+#[mlir::op("rocdl.wmma.i32.16x16x64.iu8", format = "$a `,` $b `,` $c attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct wmma_i32_16x16x64_iu8<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5286,8 +10042,17 @@ pub struct wmma_i32_16x16x64_iu8<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.scale16.f32.16x16x128.f8f6f4", results(res))]
+/// Scaled Wave Matrix Multiply-Accumulate (WMMA) with per-operand scaling.
+///
+/// Example:
+/// ```mlir
+/// // Scaled WMMA with f8f6f4 format inputs.
+/// %r = rocdl.wmma.scale.f32.16x16x128.f8f6f4 %a, %b, %c, %scaleA, %scaleB
+///   fmtA = fp8_e4m3, fmtB = fp8_e4m3, modC = none,
+///   scaleAType = row0, fmtScaleA = e8, scaleBType = row0, fmtScaleB = e8 :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>, i32, i32) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.scale16.f32.16x16x128.f8f6f4", format = "$a `,` $b `,` $c `,` $scaleA `,` $scaleB `,` `fmtA` `=` $fmtA `,` `fmtB` `=` $fmtB `,` `modC` `=` $modC `,` `scaleAType` `=` $scaleAType `,` `fmtScaleA` `=` $fmtScaleA `,` `scaleBType` `=` $scaleBType `,` `fmtScaleB` `=` $fmtScaleB attr-dict `:` functional-type($a $b $c $scaleA $scaleB, $res)", results(res))]
 pub struct wmma_scale16_f32_16x16x128_f8f6f4<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5299,19 +10064,19 @@ pub struct wmma_scale16_f32_16x16x128_f8f6f4<'a> {
     pub scale_a: Value<'a>,
     #[slot(scale_b_ty, name = "scaleB")]
     pub scale_b: Value<'a>,
-    #[attr(name = "fmtA", int = "i32", default = "0")]
+    #[attr(name = "fmtA", dialect = "rocdl<matrix_format", default = "fp8_e4m3")]
     pub fmt_a: Option<Attribute<'a>>,
-    #[attr(name = "fmtB", int = "i32", default = "0")]
+    #[attr(name = "fmtB", dialect = "rocdl<matrix_format", default = "fp8_e4m3")]
     pub fmt_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
-    #[attr(name = "scaleAType", int = "i32", default = "0")]
+    #[attr(name = "scaleAType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_a_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleA", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleA", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_a: Option<Attribute<'a>>,
-    #[attr(name = "scaleBType", int = "i32", default = "0")]
+    #[attr(name = "scaleBType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_b_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleB", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleB", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_b: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5328,8 +10093,17 @@ pub struct wmma_scale16_f32_16x16x128_f8f6f4<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.scale16.f32.32x16x128.f4", results(res))]
+/// Scaled Wave Matrix Multiply-Accumulate (WMMA) for F4 format inputs.
+///
+/// Example:
+/// ```mlir
+/// // Scaled WMMA with f4 format inputs.
+/// %r = rocdl.wmma.scale.f32.16x16x128.f4 %a, %b, %c, %scaleA, %scaleB
+///   modC = none, scaleAType = row0, fmtScaleA = e8,
+///   scaleBType = row0, fmtScaleB = e8 :
+///   (vector<8xi32>, vector<8xi32>, vector<8xf32>, i32, i32) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.scale16.f32.32x16x128.f4", format = "$a `,` $b `,` $c `,` $scaleA `,` $scaleB `,` `modC` `=` $modC `,` `scaleAType` `=` $scaleAType `,` `fmtScaleA` `=` $fmtScaleA `,` `scaleBType` `=` $scaleBType `,` `fmtScaleB` `=` $fmtScaleB attr-dict `:` functional-type($a $b $c $scaleA $scaleB, $res)", results(res))]
 pub struct wmma_scale16_f32_32x16x128_f4<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5341,15 +10115,15 @@ pub struct wmma_scale16_f32_32x16x128_f4<'a> {
     pub scale_a: Value<'a>,
     #[slot(scale_b_ty, name = "scaleB")]
     pub scale_b: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
-    #[attr(name = "scaleAType", int = "i32", default = "0")]
+    #[attr(name = "scaleAType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_a_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleA", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleA", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_a: Option<Attribute<'a>>,
-    #[attr(name = "scaleBType", int = "i32", default = "0")]
+    #[attr(name = "scaleBType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_b_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleB", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleB", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_b: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5366,8 +10140,17 @@ pub struct wmma_scale16_f32_32x16x128_f4<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.scale.f32.16x16x128.f8f6f4", results(res))]
+/// Scaled Wave Matrix Multiply-Accumulate (WMMA) with per-operand scaling.
+///
+/// Example:
+/// ```mlir
+/// // Scaled WMMA with f8f6f4 format inputs.
+/// %r = rocdl.wmma.scale.f32.16x16x128.f8f6f4 %a, %b, %c, %scaleA, %scaleB
+///   fmtA = fp8_e4m3, fmtB = fp8_e4m3, modC = none,
+///   scaleAType = row0, fmtScaleA = e8, scaleBType = row0, fmtScaleB = e8 :
+///   (vector<16xi32>, vector<16xi32>, vector<8xf32>, i32, i32) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.scale.f32.16x16x128.f8f6f4", format = "$a `,` $b `,` $c `,` $scaleA `,` $scaleB `,` `fmtA` `=` $fmtA `,` `fmtB` `=` $fmtB `,` `modC` `=` $modC `,` `scaleAType` `=` $scaleAType `,` `fmtScaleA` `=` $fmtScaleA `,` `scaleBType` `=` $scaleBType `,` `fmtScaleB` `=` $fmtScaleB attr-dict `:` functional-type($a $b $c $scaleA $scaleB, $res)", results(res))]
 pub struct wmma_scale_f32_16x16x128_f8f6f4<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5379,19 +10162,19 @@ pub struct wmma_scale_f32_16x16x128_f8f6f4<'a> {
     pub scale_a: Value<'a>,
     #[slot(scale_b_ty, name = "scaleB")]
     pub scale_b: Value<'a>,
-    #[attr(name = "fmtA", int = "i32", default = "0")]
+    #[attr(name = "fmtA", dialect = "rocdl<matrix_format", default = "fp8_e4m3")]
     pub fmt_a: Option<Attribute<'a>>,
-    #[attr(name = "fmtB", int = "i32", default = "0")]
+    #[attr(name = "fmtB", dialect = "rocdl<matrix_format", default = "fp8_e4m3")]
     pub fmt_b: Option<Attribute<'a>>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
-    #[attr(name = "scaleAType", int = "i32", default = "0")]
+    #[attr(name = "scaleAType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_a_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleA", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleA", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_a: Option<Attribute<'a>>,
-    #[attr(name = "scaleBType", int = "i32", default = "0")]
+    #[attr(name = "scaleBType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_b_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleB", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleB", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_b: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5408,8 +10191,17 @@ pub struct wmma_scale_f32_16x16x128_f8f6f4<'a> {
 }
 
 ///
-/// Generic form only (directive `operands,`).
-#[mlir::op("rocdl.wmma.scale.f32.32x16x128.f4", results(res))]
+/// Scaled Wave Matrix Multiply-Accumulate (WMMA) for F4 format inputs.
+///
+/// Example:
+/// ```mlir
+/// // Scaled WMMA with f4 format inputs.
+/// %r = rocdl.wmma.scale.f32.16x16x128.f4 %a, %b, %c, %scaleA, %scaleB
+///   modC = none, scaleAType = row0, fmtScaleA = e8,
+///   scaleBType = row0, fmtScaleB = e8 :
+///   (vector<8xi32>, vector<8xi32>, vector<8xf32>, i32, i32) -> vector<8xf32>
+/// ```
+#[mlir::op("rocdl.wmma.scale.f32.32x16x128.f4", format = "$a `,` $b `,` $c `,` $scaleA `,` $scaleB `,` `modC` `=` $modC `,` `scaleAType` `=` $scaleAType `,` `fmtScaleA` `=` $fmtScaleA `,` `scaleBType` `=` $scaleBType `,` `fmtScaleB` `=` $fmtScaleB attr-dict `:` functional-type($a $b $c $scaleA $scaleB, $res)", results(res))]
 pub struct wmma_scale_f32_32x16x128_f4<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -5421,15 +10213,15 @@ pub struct wmma_scale_f32_32x16x128_f4<'a> {
     pub scale_a: Value<'a>,
     #[slot(scale_b_ty, name = "scaleB")]
     pub scale_b: Value<'a>,
-    #[attr(name = "modC", int = "i16", default = "0")]
+    #[attr(name = "modC", dialect = "rocdl<wmma_c_modifier", default = "none")]
     pub mod_c: Option<Attribute<'a>>,
-    #[attr(name = "scaleAType", int = "i32", default = "0")]
+    #[attr(name = "scaleAType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_a_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleA", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleA", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_a: Option<Attribute<'a>>,
-    #[attr(name = "scaleBType", int = "i32", default = "0")]
+    #[attr(name = "scaleBType", dialect = "rocdl<wmma_matrix_scale", default = "row0")]
     pub scale_b_type: Option<Attribute<'a>>,
-    #[attr(name = "fmtScaleB", int = "i32", default = "0")]
+    #[attr(name = "fmtScaleB", dialect = "rocdl<wmma_matrix_scale_format", default = "e8")]
     pub fmt_scale_b: Option<Attribute<'a>>,
     #[attr(name = "reuseA", int = "i1", default = "0")]
     pub reuse_a: Option<Attribute<'a>>,
@@ -5448,7 +10240,7 @@ pub struct wmma_scale_f32_32x16x128_f4<'a> {
 /// The `rocdl` dialect.
 #[mlir::dialect(
     "rocdl",
-    ops = [ROCDLCos, ROCDLExp, ROCDLExp2, ROCDLLog, ROCDLRcp, ROCDLSin, ROCDLSqrt, ROCDLTanh, BallotOp, BarrierInitOp, BarrierJoinOp, BarrierLeaveOp, BarrierOp, BarrierSignalIsfirstOp, BarrierSignalOp, BarrierSignalVarOp, BarrierWaitOp, BlockDimXOp, BlockDimYOp, BlockDimZOp, BlockIdXOp, BlockIdYOp, BlockIdZOp, ClusterIdXOp, ClusterIdYOp, ClusterIdZOp, ClusterLoadAsyncToLDSB128Op, ClusterLoadAsyncToLDSB32Op, ClusterLoadAsyncToLDSB64Op, ClusterLoadAsyncToLDSB8Op, CvtF32Bf8Op, CvtF32Fp8Op, CvtPkBf8F32Op, CvtPkF32Bf8Op, CvtPkF32Fp8Op, CvtPkFp8F32Op, CvtPkRtz, CvtPkScalePk16Bf16Bf6Op, CvtPkScalePk16Bf16Fp6Op, CvtPkScalePk16F16Bf6Op, CvtPkScalePk16F16Fp6Op, CvtPkScalePk16F32Bf6Op, CvtPkScalePk16F32Fp6Op, CvtPkScalePk8Bf16Bf8Op, CvtPkScalePk8Bf16Fp4Op, CvtPkScalePk8Bf16Fp8Op, CvtPkScalePk8F16Bf8Op, CvtPkScalePk8F16Fp4Op, CvtPkScalePk8F16Fp8Op, CvtPkScalePk8F32Bf8Op, CvtPkScalePk8F32Fp4Op, CvtPkScalePk8F32Fp8Op, CvtScaleF322xPk16Bf6F32Op, CvtScaleF322xPk16Fp6F32Op, CvtScaleF32F16Bf8Op, CvtScaleF32F16Fp8Op, CvtScaleF32F32Bf8Op, CvtScaleF32F32Fp8Op, CvtScaleF32Pk16Bf6Bf16Op, CvtScaleF32Pk16Bf6F16Op, CvtScaleF32Pk16Bf6F32Op, CvtScaleF32Pk16Fp6Bf16Op, CvtScaleF32Pk16Fp6F16Op, CvtScaleF32Pk16Fp6F32Op, CvtScaleF32Pk32Bf16Bf6Op, CvtScaleF32Pk32Bf16Fp6Op, CvtScaleF32Pk32Bf6Bf16Op, CvtScaleF32Pk32Bf6F16Op, CvtScaleF32Pk32F16Bf6Op, CvtScaleF32Pk32F16Fp6Op, CvtScaleF32Pk32F32Bf6Op, CvtScaleF32Pk32F32Fp6Op, CvtScaleF32Pk32Fp6Bf16Op, CvtScaleF32Pk32Fp6F16Op, CvtScaleF32Pk8Bf8Bf16Op, CvtScaleF32Pk8Bf8F16Op, CvtScaleF32Pk8Bf8F32Op, CvtScaleF32Pk8Fp4Bf16Op, CvtScaleF32Pk8Fp4F16Op, CvtScaleF32Pk8Fp4F32Op, CvtScaleF32Pk8Fp8Bf16Op, CvtScaleF32Pk8Fp8F16Op, CvtScaleF32Pk8Fp8F32Op, CvtScaleF32PkBf16Bf8Op, CvtScaleF32PkBf16Fp4Op, CvtScaleF32PkBf16Fp8Op, CvtScaleF32PkBf8Bf16Op, CvtScaleF32PkBf8F16Op, CvtScaleF32PkBf8F32Op, CvtScaleF32PkF16Bf8Op, CvtScaleF32PkF16Fp4Op, CvtScaleF32PkF16Fp8Op, CvtScaleF32PkF32Bf8Op, CvtScaleF32PkF32Fp4Op, CvtScaleF32PkF32Fp8Op, CvtScaleF32PkFp4Bf16Op, CvtScaleF32PkFp4F16Op, CvtScaleF32PkFp4F32Op, CvtScaleF32PkFp8Bf16Op, CvtScaleF32PkFp8F16Op, CvtScaleF32PkFp8F32Op, CvtScaleF32SrBf8BF16Op, CvtScaleF32SrBf8F16Op, CvtScaleF32SrBf8F32Op, CvtScaleF32SrFp8BF16Op, CvtScaleF32SrFp8F16Op, CvtScaleF32SrFp8F32Op, CvtScaleF32SrPk16Bf6Bf16Op, CvtScaleF32SrPk16Bf6F16Op, CvtScaleF32SrPk16Bf6F32Op, CvtScaleF32SrPk16Fp6Bf16Op, CvtScaleF32SrPk16Fp6F16Op, CvtScaleF32SrPk16Fp6F32Op, CvtScaleF32SrPk32Bf6Bf16Op, CvtScaleF32SrPk32Bf6F16Op, CvtScaleF32SrPk32Bf6F32Op, CvtScaleF32SrPk32Fp6Bf16Op, CvtScaleF32SrPk32Fp6F16Op, CvtScaleF32SrPk32Fp6F32Op, CvtScaleF32SrPk8Bf8Bf16Op, CvtScaleF32SrPk8Bf8F16Op, CvtScaleF32SrPk8Bf8F32Op, CvtScaleF32SrPk8Fp4Bf16Op, CvtScaleF32SrPk8Fp4F16Op, CvtScaleF32SrPk8Fp4F32Op, CvtScaleF32SrPk8Fp8Bf16Op, CvtScaleF32SrPk8Fp8F16Op, CvtScaleF32SrPk8Fp8F32Op, CvtScaleF32SrPkFp4Bf16Op, CvtScaleF32SrPkFp4F16Op, CvtScaleF32SrPkFp4F32Op, CvtSrBf8F32Op, CvtSrFp8F32Op, DPPUpdateOp, DsAtomicAsyncBarrierArriveOp, DsAtomicBarrierArriveRtnOp, DsBpermuteOp, DsLoadTr16_B128, DsLoadTr4_B64, DsLoadTr6_B96, DsLoadTr8_B64, DsSwizzleOp, FMed3Op, FlatPrefetchOp, GetBarrierStateOp, GetNamedBarrierStateOp, GlobalLoadAsyncToLDSB128Op, GlobalLoadAsyncToLDSB32Op, GlobalLoadAsyncToLDSB64Op, GlobalLoadAsyncToLDSB8Op, GlobalLoadLDSOp, GlobalLoadTr4_B64, GlobalLoadTr6_B96, GlobalLoadTr8_B128, GlobalLoadTr8_B64, GlobalPrefetchOp, GridDimXOp, GridDimYOp, GridDimZOp, IglpOpt, LoadToLDSOp, MakeBufferRsrcOp, MbcntHiOp, MbcntLoOp, Permlane16SwapOp, Permlane32SwapOp, PermlaneX16Op, RawBufferAtomicCmpSwap, RawBufferAtomicFAddOp, RawBufferAtomicFMaxOp, RawBufferAtomicSMaxOp, RawBufferAtomicUMinOp, RawBufferLoadOp, RawBufferStoreOp, RawPtrBufferAtomicCmpSwap, RawPtrBufferAtomicFaddOp, RawPtrBufferAtomicFmaxOp, RawPtrBufferAtomicSmaxOp, RawPtrBufferAtomicUminOp, RawPtrBufferLoadLdsOp, RawPtrBufferLoadOp, RawPtrBufferStoreOp, ReadfirstlaneOp, ReadlaneOp, SBarrierOp, SNopOp, SSleepOp, SWaitcntOp, SchedBarrier, SchedGroupBarrier, SetPrioOp, TensorLoadToLDSD2Op, TensorLoadToLDSOp, TensorStoreFromLDSD2Op, TensorStoreFromLDSOp, ThreadIdXOp, ThreadIdYOp, ThreadIdZOp, WaitAsynccntOp, WaitDscntOp, WaitExpcntOp, WaitLoadcntOp, WaitStorecntOp, WaitTensorcntOp, WakeupBarrierOp, WavefrontSizeOp, ds_read_tr16_b64, ds_read_tr4_b64, ds_read_tr6_b96, ds_read_tr8_b64, mfma_f32_16x16x16bf16_1k, mfma_f32_16x16x16f16, mfma_f32_16x16x1f32, mfma_f32_16x16x2bf16, mfma_f32_16x16x32_bf16, mfma_f32_16x16x32_bf8_bf8, mfma_f32_16x16x32_bf8_fp8, mfma_f32_16x16x32_f16, mfma_f32_16x16x32_fp8_bf8, mfma_f32_16x16x32_fp8_fp8, mfma_f32_16x16x4bf16_1k, mfma_f32_16x16x4f16, mfma_f32_16x16x4f32, mfma_f32_16x16x8_xf32, mfma_f32_16x16x8bf16, mfma_f32_32x32x16_bf16, mfma_f32_32x32x16_bf8_bf8, mfma_f32_32x32x16_bf8_fp8, mfma_f32_32x32x16_f16, mfma_f32_32x32x16_fp8_bf8, mfma_f32_32x32x16_fp8_fp8, mfma_f32_32x32x1f32, mfma_f32_32x32x2bf16, mfma_f32_32x32x2f32, mfma_f32_32x32x4_xf32, mfma_f32_32x32x4bf16, mfma_f32_32x32x4bf16_1k, mfma_f32_32x32x4f16, mfma_f32_32x32x8bf16_1k, mfma_f32_32x32x8f16, mfma_f32_4x4x1f32, mfma_f32_4x4x2bf16, mfma_f32_4x4x4bf16_1k, mfma_f32_4x4x4f16, mfma_f64_16x16x4f64, mfma_f64_4x4x4f64, mfma_i32_16x16x16i8, mfma_i32_16x16x32_i8, mfma_i32_16x16x4i8, mfma_i32_16x16x64_i8, mfma_i32_32x32x16_i8, mfma_i32_32x32x32_i8, mfma_i32_32x32x4i8, mfma_i32_32x32x8i8, mfma_i32_4x4x4i8, mfma_scale_f32_16x16x128_f8f6f4, mfma_scale_f32_32x32x64_f8f6f4, smfmac_f32_16x16x128_bf8_bf8, smfmac_f32_16x16x128_bf8_fp8, smfmac_f32_16x16x128_fp8_bf8, smfmac_f32_16x16x128_fp8_fp8, smfmac_f32_16x16x32_bf16, smfmac_f32_16x16x32_f16, smfmac_f32_16x16x64_bf16, smfmac_f32_16x16x64_bf8_bf8, smfmac_f32_16x16x64_bf8_fp8, smfmac_f32_16x16x64_f16, smfmac_f32_16x16x64_fp8_bf8, smfmac_f32_16x16x64_fp8_fp8, smfmac_f32_32x32x16_bf16, smfmac_f32_32x32x16_f16, smfmac_f32_32x32x32_bf16, smfmac_f32_32x32x32_bf8_bf8, smfmac_f32_32x32x32_bf8_fp8, smfmac_f32_32x32x32_f16, smfmac_f32_32x32x32_fp8_bf8, smfmac_f32_32x32x32_fp8_fp8, smfmac_f32_32x32x64_bf8_bf8, smfmac_f32_32x32x64_bf8_fp8, smfmac_f32_32x32x64_fp8_bf8, smfmac_f32_32x32x64_fp8_fp8, smfmac_i32_16x16x128_i8, smfmac_i32_16x16x64_i8, smfmac_i32_32x32x32_i8, smfmac_i32_32x32x64_i8, wmma_bf16_16x16x16_bf16, wmma_bf16_16x16x32_bf16, wmma_bf16f32_16x16x32_bf16, wmma_f16_16x16x128_bf8_bf8, wmma_f16_16x16x128_bf8_fp8, wmma_f16_16x16x128_fp8_bf8, wmma_f16_16x16x128_fp8_fp8, wmma_f16_16x16x16_f16, wmma_f16_16x16x32_f16, wmma_f16_16x16x64_bf8_bf8, wmma_f16_16x16x64_bf8_fp8, wmma_f16_16x16x64_fp8_bf8, wmma_f16_16x16x64_fp8_fp8, wmma_f32_16x16x128_bf8_bf8, wmma_f32_16x16x128_bf8_fp8, wmma_f32_16x16x128_fp8_bf8, wmma_f32_16x16x128_fp8_fp8, wmma_f32_16x16x16_bf16, wmma_f32_16x16x16_bf8_bf8, wmma_f32_16x16x16_bf8_fp8, wmma_f32_16x16x16_f16, wmma_f32_16x16x16_fp8_bf8, wmma_f32_16x16x16_fp8_fp8, wmma_f32_16x16x32_bf16, wmma_f32_16x16x32_f16, wmma_f32_16x16x4_f32, wmma_f32_16x16x64_bf8_bf8, wmma_f32_16x16x64_bf8_fp8, wmma_f32_16x16x64_fp8_bf8, wmma_f32_16x16x64_fp8_fp8, wmma_i32_16x16x16_iu4, wmma_i32_16x16x16_iu8, wmma_i32_16x16x32_iu4, wmma_i32_16x16x64_iu8, wmma_scale16_f32_16x16x128_f8f6f4, wmma_scale16_f32_32x16x128_f4, wmma_scale_f32_16x16x128_f8f6f4, wmma_scale_f32_32x16x128_f4],
+    ops = [ROCDLCos, ROCDLExp, ROCDLExp2, ROCDLLog, ROCDLRcp, ROCDLRsq, ROCDLSin, ROCDLSqrt, ROCDLTanh, AsyncmarkOp, BallotOp, BarrierInitOp, BarrierJoinOp, BarrierLeaveOp, BarrierOp, BarrierSignalIsfirstOp, BarrierSignalOp, BarrierSignalVarOp, BarrierWaitOp, BlockIdXOp, BlockIdYOp, BlockIdZOp, ClusterIdXOp, ClusterIdYOp, ClusterIdZOp, ClusterLoadAsyncToLDSB128Op, ClusterLoadAsyncToLDSB32Op, ClusterLoadAsyncToLDSB64Op, ClusterLoadAsyncToLDSB8Op, ClusterWorkgroupIdXOp, ClusterWorkgroupIdYOp, ClusterWorkgroupIdZOp, CvtF32Bf8Op, CvtF32Fp8Op, CvtPkBf8F32Op, CvtPkF32Bf8Op, CvtPkF32Fp8Op, CvtPkFp8F32Op, CvtPkRtz, CvtPkScalePk16Bf16Bf6Op, CvtPkScalePk16Bf16Fp6Op, CvtPkScalePk16F16Bf6Op, CvtPkScalePk16F16Fp6Op, CvtPkScalePk16F32Bf6Op, CvtPkScalePk16F32Fp6Op, CvtPkScalePk8Bf16Bf8Op, CvtPkScalePk8Bf16Fp4Op, CvtPkScalePk8Bf16Fp8Op, CvtPkScalePk8F16Bf8Op, CvtPkScalePk8F16Fp4Op, CvtPkScalePk8F16Fp8Op, CvtPkScalePk8F32Bf8Op, CvtPkScalePk8F32Fp4Op, CvtPkScalePk8F32Fp8Op, CvtScaleF322xPk16Bf6F32Op, CvtScaleF322xPk16Fp6F32Op, CvtScaleF32F16Bf8Op, CvtScaleF32F16Fp8Op, CvtScaleF32F32Bf8Op, CvtScaleF32F32Fp8Op, CvtScaleF32Pk16Bf6Bf16Op, CvtScaleF32Pk16Bf6F16Op, CvtScaleF32Pk16Bf6F32Op, CvtScaleF32Pk16Fp6Bf16Op, CvtScaleF32Pk16Fp6F16Op, CvtScaleF32Pk16Fp6F32Op, CvtScaleF32Pk32Bf16Bf6Op, CvtScaleF32Pk32Bf16Fp6Op, CvtScaleF32Pk32Bf6Bf16Op, CvtScaleF32Pk32Bf6F16Op, CvtScaleF32Pk32F16Bf6Op, CvtScaleF32Pk32F16Fp6Op, CvtScaleF32Pk32F32Bf6Op, CvtScaleF32Pk32F32Fp6Op, CvtScaleF32Pk32Fp6Bf16Op, CvtScaleF32Pk32Fp6F16Op, CvtScaleF32Pk8Bf8Bf16Op, CvtScaleF32Pk8Bf8F16Op, CvtScaleF32Pk8Bf8F32Op, CvtScaleF32Pk8Fp4Bf16Op, CvtScaleF32Pk8Fp4F16Op, CvtScaleF32Pk8Fp4F32Op, CvtScaleF32Pk8Fp8Bf16Op, CvtScaleF32Pk8Fp8F16Op, CvtScaleF32Pk8Fp8F32Op, CvtScaleF32PkBf16Bf8Op, CvtScaleF32PkBf16Fp4Op, CvtScaleF32PkBf16Fp8Op, CvtScaleF32PkBf8Bf16Op, CvtScaleF32PkBf8F16Op, CvtScaleF32PkBf8F32Op, CvtScaleF32PkF16Bf8Op, CvtScaleF32PkF16Fp4Op, CvtScaleF32PkF16Fp8Op, CvtScaleF32PkF32Bf8Op, CvtScaleF32PkF32Fp4Op, CvtScaleF32PkF32Fp8Op, CvtScaleF32PkFp4Bf16Op, CvtScaleF32PkFp4F16Op, CvtScaleF32PkFp4F32Op, CvtScaleF32PkFp8Bf16Op, CvtScaleF32PkFp8F16Op, CvtScaleF32PkFp8F32Op, CvtScaleF32SrBf8BF16Op, CvtScaleF32SrBf8F16Op, CvtScaleF32SrBf8F32Op, CvtScaleF32SrFp8BF16Op, CvtScaleF32SrFp8F16Op, CvtScaleF32SrFp8F32Op, CvtScaleF32SrPk16Bf6Bf16Op, CvtScaleF32SrPk16Bf6F16Op, CvtScaleF32SrPk16Bf6F32Op, CvtScaleF32SrPk16Fp6Bf16Op, CvtScaleF32SrPk16Fp6F16Op, CvtScaleF32SrPk16Fp6F32Op, CvtScaleF32SrPk32Bf6Bf16Op, CvtScaleF32SrPk32Bf6F16Op, CvtScaleF32SrPk32Bf6F32Op, CvtScaleF32SrPk32Fp6Bf16Op, CvtScaleF32SrPk32Fp6F16Op, CvtScaleF32SrPk32Fp6F32Op, CvtScaleF32SrPk8Bf8Bf16Op, CvtScaleF32SrPk8Bf8F16Op, CvtScaleF32SrPk8Bf8F32Op, CvtScaleF32SrPk8Fp4Bf16Op, CvtScaleF32SrPk8Fp4F16Op, CvtScaleF32SrPk8Fp4F32Op, CvtScaleF32SrPk8Fp8Bf16Op, CvtScaleF32SrPk8Fp8F16Op, CvtScaleF32SrPk8Fp8F32Op, CvtScaleF32SrPkFp4Bf16Op, CvtScaleF32SrPkFp4F16Op, CvtScaleF32SrPkFp4F32Op, CvtSrBf8F32Op, CvtSrFp8F32Op, DPPUpdateOp, DsAtomicAsyncBarrierArriveOp, DsAtomicBarrierArriveRtnOp, DsBpermuteOp, DsLoadTr16_B128, DsLoadTr4_B64, DsLoadTr6_B96, DsLoadTr8_B64, DsSwizzleOp, FMed3Op, FlatPrefetchOp, GetBarrierStateOp, GetNamedBarrierStateOp, GlobalLoadAsyncLDSOp, GlobalLoadAsyncToLDSB128Op, GlobalLoadAsyncToLDSB32Op, GlobalLoadAsyncToLDSB64Op, GlobalLoadAsyncToLDSB8Op, GlobalLoadLDSOp, GlobalLoadTr4_B64, GlobalLoadTr6_B96, GlobalLoadTr8_B128, GlobalLoadTr8_B64, GlobalPrefetchOp, GlobalStoreAsyncFromLDSB128Op, GlobalStoreAsyncFromLDSB32Op, GlobalStoreAsyncFromLDSB64Op, GlobalStoreAsyncFromLDSB8Op, IglpOpt, LoadAsyncToLDSOp, LoadToLDSOp, MakeBufferRsrcOp, MbcntHiOp, MbcntLoOp, Permlane16SwapOp, Permlane16VarOp, Permlane32SwapOp, PermlaneX16Op, PermlaneX16VarOp, RawBufferAtomicCmpSwap, RawBufferAtomicFAddOp, RawBufferAtomicFMaxOp, RawBufferAtomicSMaxOp, RawBufferAtomicUMinOp, RawBufferLoadOp, RawBufferStoreOp, RawPtrBufferAtomicCmpSwap, RawPtrBufferAtomicFaddOp, RawPtrBufferAtomicFmaxOp, RawPtrBufferAtomicSmaxOp, RawPtrBufferAtomicUminOp, RawPtrBufferLoadAsyncLdsOp, RawPtrBufferLoadLdsOp, RawPtrBufferLoadOp, RawPtrBufferStoreOp, ReadfirstlaneOp, ReadlaneOp, SBarrierOp, SNopOp, SSleepOp, SWaitcntOp, SchedBarrier, SchedGroupBarrier, SetPrioOp, TensorLoadToLDSOp, TensorStoreFromLDSOp, ThreadIdXOp, ThreadIdYOp, ThreadIdZOp, WaitAsynccntOp, WaitAsyncmarkOp, WaitDscntOp, WaitExpcntOp, WaitLoadcntOp, WaitStorecntOp, WaitTensorcntOp, WakeupBarrierOp, WaveBarrierOp, WaveId, WavefrontSizeOp, dot4_f32_bf8_bf8, dot4_f32_bf8_fp8, dot4_f32_fp8_bf8, dot4_f32_fp8_fp8, ds_read_tr16_b64, ds_read_tr4_b64, ds_read_tr6_b96, ds_read_tr8_b64, fdot2, fdot2_bf16_bf16, fdot2_f16_f16, fdot2_f32_bf16, mfma_f32_16x16x16bf16_1k, mfma_f32_16x16x16f16, mfma_f32_16x16x1f32, mfma_f32_16x16x2bf16, mfma_f32_16x16x32_bf16, mfma_f32_16x16x32_bf8_bf8, mfma_f32_16x16x32_bf8_fp8, mfma_f32_16x16x32_f16, mfma_f32_16x16x32_fp8_bf8, mfma_f32_16x16x32_fp8_fp8, mfma_f32_16x16x4bf16_1k, mfma_f32_16x16x4f16, mfma_f32_16x16x4f32, mfma_f32_16x16x8_xf32, mfma_f32_16x16x8bf16, mfma_f32_32x32x16_bf16, mfma_f32_32x32x16_bf8_bf8, mfma_f32_32x32x16_bf8_fp8, mfma_f32_32x32x16_f16, mfma_f32_32x32x16_fp8_bf8, mfma_f32_32x32x16_fp8_fp8, mfma_f32_32x32x1f32, mfma_f32_32x32x2bf16, mfma_f32_32x32x2f32, mfma_f32_32x32x4_xf32, mfma_f32_32x32x4bf16, mfma_f32_32x32x4bf16_1k, mfma_f32_32x32x4f16, mfma_f32_32x32x8bf16_1k, mfma_f32_32x32x8f16, mfma_f32_4x4x1f32, mfma_f32_4x4x2bf16, mfma_f32_4x4x4bf16_1k, mfma_f32_4x4x4f16, mfma_f64_16x16x4f64, mfma_f64_4x4x4f64, mfma_i32_16x16x16i8, mfma_i32_16x16x32_i8, mfma_i32_16x16x4i8, mfma_i32_16x16x64_i8, mfma_i32_32x32x16_i8, mfma_i32_32x32x32_i8, mfma_i32_32x32x4i8, mfma_i32_32x32x8i8, mfma_i32_4x4x4i8, mfma_scale_f32_16x16x128_f8f6f4, mfma_scale_f32_32x32x64_f8f6f4, sdot2, sdot4, sdot8, smfmac_f32_16x16x128_bf8_bf8, smfmac_f32_16x16x128_bf8_fp8, smfmac_f32_16x16x128_fp8_bf8, smfmac_f32_16x16x128_fp8_fp8, smfmac_f32_16x16x32_bf16, smfmac_f32_16x16x32_f16, smfmac_f32_16x16x64_bf16, smfmac_f32_16x16x64_bf8_bf8, smfmac_f32_16x16x64_bf8_fp8, smfmac_f32_16x16x64_f16, smfmac_f32_16x16x64_fp8_bf8, smfmac_f32_16x16x64_fp8_fp8, smfmac_f32_32x32x16_bf16, smfmac_f32_32x32x16_f16, smfmac_f32_32x32x32_bf16, smfmac_f32_32x32x32_bf8_bf8, smfmac_f32_32x32x32_bf8_fp8, smfmac_f32_32x32x32_f16, smfmac_f32_32x32x32_fp8_bf8, smfmac_f32_32x32x32_fp8_fp8, smfmac_f32_32x32x64_bf8_bf8, smfmac_f32_32x32x64_bf8_fp8, smfmac_f32_32x32x64_fp8_bf8, smfmac_f32_32x32x64_fp8_fp8, smfmac_i32_16x16x128_i8, smfmac_i32_16x16x64_i8, smfmac_i32_32x32x32_i8, smfmac_i32_32x32x64_i8, sudot4, sudot8, swmmac_bf16_16x16x32_bf16, swmmac_bf16_16x16x64_bf16, swmmac_bf16f32_16x16x64_bf16, swmmac_f16_16x16x128_bf8_bf8, swmmac_f16_16x16x128_bf8_fp8, swmmac_f16_16x16x128_fp8_bf8, swmmac_f16_16x16x128_fp8_fp8, swmmac_f16_16x16x32_f16, swmmac_f16_16x16x64_f16, swmmac_f32_16x16x128_bf8_bf8, swmmac_f32_16x16x128_bf8_fp8, swmmac_f32_16x16x128_fp8_bf8, swmmac_f32_16x16x128_fp8_fp8, swmmac_f32_16x16x32_bf16, swmmac_f32_16x16x32_bf8_bf8, swmmac_f32_16x16x32_bf8_fp8, swmmac_f32_16x16x32_f16, swmmac_f32_16x16x32_fp8_bf8, swmmac_f32_16x16x32_fp8_fp8, swmmac_f32_16x16x64_bf16, swmmac_f32_16x16x64_f16, swmmac_i32_16x16x128_iu8, swmmac_i32_16x16x32_iu4, swmmac_i32_16x16x32_iu8, swmmac_i32_16x16x64_iu4, udot2, udot4, udot8, wmma_bf16_16x16x16_bf16, wmma_bf16_16x16x32_bf16, wmma_bf16f32_16x16x32_bf16, wmma_f16_16x16x128_bf8_bf8, wmma_f16_16x16x128_bf8_fp8, wmma_f16_16x16x128_fp8_bf8, wmma_f16_16x16x128_fp8_fp8, wmma_f16_16x16x16_f16, wmma_f16_16x16x32_f16, wmma_f16_16x16x64_bf8_bf8, wmma_f16_16x16x64_bf8_fp8, wmma_f16_16x16x64_fp8_bf8, wmma_f16_16x16x64_fp8_fp8, wmma_f32_16x16x128_bf8_bf8, wmma_f32_16x16x128_bf8_fp8, wmma_f32_16x16x128_fp8_bf8, wmma_f32_16x16x128_fp8_fp8, wmma_f32_16x16x16_bf16, wmma_f32_16x16x16_bf8_bf8, wmma_f32_16x16x16_bf8_fp8, wmma_f32_16x16x16_f16, wmma_f32_16x16x16_fp8_bf8, wmma_f32_16x16x16_fp8_fp8, wmma_f32_16x16x32_bf16, wmma_f32_16x16x32_f16, wmma_f32_16x16x4_f32, wmma_f32_16x16x64_bf8_bf8, wmma_f32_16x16x64_bf8_fp8, wmma_f32_16x16x64_fp8_bf8, wmma_f32_16x16x64_fp8_fp8, wmma_i32_16x16x16_iu4, wmma_i32_16x16x16_iu8, wmma_i32_16x16x32_iu4, wmma_i32_16x16x64_iu8, wmma_scale16_f32_16x16x128_f8f6f4, wmma_scale16_f32_32x16x128_f4, wmma_scale_f32_16x16x128_f8f6f4, wmma_scale_f32_32x16x128_f4],
     dependents = ["llvm"]
 )]
 pub struct RocdlDialect;

@@ -1,5 +1,5 @@
 //! The TableGen front end behind `mlirformat tblgen`: `.td` ⇒ the resolved records, as the JSON that
-//! `llvm-tblgen --dump-json` (LLVM 22.1.8) prints — byte for byte. A port of `llvm/lib/TableGen`
+//! `llvm-tblgen --dump-json` (LLVM 23.1.5) prints — byte for byte. A port of `llvm/lib/TableGen`
 //! (TGLexer, TGParser, Record, JSONBackend), so no LLVM build is needed to generate a dialect.
 //!
 //! ```text
@@ -2924,6 +2924,26 @@ impl Keeper {
 // ======================================================================== parse
 // ================ parsing (as TGParser.cpp) ================
 
+/// How a `let` sets its field (`LetMode`): `let x = v`, `let append x = v`, `let prepend x = v`.
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+enum LetMode {
+    #[default]
+    Replace,
+    Append,
+    Prepend,
+}
+
+impl LetMode {
+    /// The contextual keyword an identifier is, if it is one.
+    fn of(id: &str) -> Self {
+        match id {
+            "append" => Self::Append,
+            "prepend" => Self::Prepend,
+            _ => Self::Replace,
+        }
+    }
+}
+
 /// One `let` item.
 #[derive(Clone)]
 struct LetRecord {
@@ -2931,6 +2951,7 @@ struct LetRecord {
     bits: Vec<u32>,
     value: I,
     loc: Loc,
+    mode: LetMode,
 }
 
 /// A record, a loop, an assertion or a dump (`RecordsEntry`).
@@ -3155,12 +3176,37 @@ impl Parser {
     }
 
     /// `SetValue`。
-    fn set_value(&mut self, rec: Option<RecId>, loc: Loc, name: I, bits: &[u32], v: I, allow_self: bool) -> R<()> {
+    fn set_value(&mut self, rec: Option<RecId>, loc: Loc, name: I, bits: &[u32], v: I, allow_self: bool, mode: LetMode) -> R<()> {
         let rec = rec.or_else(|| self.mc_rec()).expect("a current record");
-        let Some(cur) = self.k.rec(rec).value(name).map(|v| v.value) else {
+        let Some((cur, fty)) = self.k.rec(rec).value(name).map(|v| (v.value, v.ty)) else {
             let msg = format!("Value '{}' unknown!", self.k.unquoted(name));
             return self.err_at(loc, msg);
         };
+        let mut v = v;
+        if mode != LetMode::Replace {
+            if !bits.is_empty() {
+                return self.err_at(loc, "Cannot use append/prepend with bit range");
+            }
+            if !self.k.is_unset(cur) {
+                let (l, r) = if mode == LetMode::Append { (cur, v) } else { (v, cur) };
+                let op = match self.k.kind(fty) {
+                    TyKind::List(_) => BinOp::ListConcat,
+                    TyKind::Str => BinOp::StrConcat,
+                    TyKind::Dag => BinOp::Concat,
+                    _ => {
+                        let msg = format!(
+                            "Cannot {} field '{}' of type '{}' (expected list, string, code, or dag)",
+                            if mode == LetMode::Append { "append to" } else { "prepend to" },
+                            self.k.unquoted(name),
+                            self.k.ty_string(fty)
+                        );
+                        return self.err_at(loc, msg);
+                    }
+                };
+                let b = self.k.get(Init::Bin(op, l, r, fty));
+                v = self.k.fold_bin(b, Some(rec));
+            }
+        }
         if bits.is_empty()
             && let Init::Var(n, _) = *self.k.init(v)
             && n == name
@@ -3168,7 +3214,6 @@ impl Parser {
         {
             return self.err_at(loc, "Recursion / self-assignment forbidden");
         }
-        let mut v = v;
         if !bits.is_empty() {
             let Init::Bits(curbits) = self.k.init(cur).clone() else {
                 let msg = format!("Value '{}' is not a bits type", self.k.unquoted(name));
@@ -3612,7 +3657,7 @@ impl Parser {
         if self.consume(Tok::Equal)? {
             let vloc = self.lex.loc();
             let v = self.parse_value(cur, Some(ty), Mode::Value)?;
-            self.set_value(cur, vloc, decl, &[], v, false)?;
+            self.set_value(cur, vloc, decl, &[], v, false, LetMode::Replace)?;
         }
         Ok(decl)
     }
@@ -3637,7 +3682,7 @@ impl Parser {
     fn apply_let_stack(&mut self, cur: RecId) -> R<()> {
         let lets: Vec<LetRecord> = self.let_stack.iter().flatten().cloned().collect();
         for lr in lets {
-            self.set_value(Some(cur), lr.loc, lr.name, &lr.bits, lr.value, false)?;
+            self.set_value(Some(cur), lr.loc, lr.name, &lr.bits, lr.value, false, lr.mode)?;
         }
         Ok(())
     }
@@ -3689,9 +3734,7 @@ impl Parser {
         if self.next()? != Tok::Id {
             return self.err("expected field identifier after let");
         }
-        let id_loc = self.lex.loc();
-        let field = self.k.str(&self.lex.str_val.clone());
-        self.next()?;
+        let (mode, id_loc, field) = self.parse_let_mode_and_name()?;
         let mut bits = self.parse_optional_bit_list()?;
         bits.reverse();
         if !self.consume(Tok::Equal)? {
@@ -3708,7 +3751,22 @@ impl Parser {
         if !self.consume(Tok::Semi)? {
             return self.err("expected ';' after let expression");
         }
-        self.set_value(Some(cur), id_loc, field, &bits, v, false)
+        self.set_value(Some(cur), id_loc, field, &bits, v, false, mode)
+    }
+
+    /// `ParseLetModeAndName`: an optional `append` / `prepend` (contextual: a field may be named
+    /// so) and the field name; the current token is an identifier.
+    fn parse_let_mode_and_name(&mut self) -> R<(LetMode, Loc, I)> {
+        let loc = self.lex.loc();
+        let id = self.lex.str_val.clone();
+        let mode = LetMode::of(&id);
+        self.next()?;
+        if mode != LetMode::Replace && self.tok() == Tok::Id {
+            let (loc, name) = (self.lex.loc(), self.k.str(&self.lex.str_val.clone()));
+            self.next()?;
+            return Ok((mode, loc, name));
+        }
+        Ok((LetMode::Replace, loc, self.k.str(&id)))
     }
 
     fn parse_def(&mut self, mc: Option<usize>) -> R<()> {
@@ -4074,16 +4132,14 @@ impl Parser {
             if self.tok() != Tok::Id {
                 return self.err("expected identifier in let definition");
             }
-            let name = self.k.str(&self.lex.str_val.clone());
-            let loc = self.lex.loc();
-            self.next()?;
+            let (mode, loc, name) = self.parse_let_mode_and_name()?;
             let mut bits = self.parse_optional_range_list()?;
             bits.reverse();
             if !self.consume(Tok::Equal)? {
                 return self.err("expected '=' in let expression");
             }
             let value = self.parse_value(None, None, Mode::Value)?;
-            lets.push(LetRecord { name, bits, value, loc });
+            lets.push(LetRecord { name, bits, value, loc, mode });
             if !self.consume(Tok::Comma)? {
                 break;
             }

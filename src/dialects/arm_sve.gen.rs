@@ -149,7 +149,7 @@ pub struct DupQLaneIntrOp<'a> {
 /// // %V = [A B C D E F H A B C D E F H]
 /// ```
 ///
-/// Note: The semantics of the operation match those of the `svdupq_lane` instrinsics.
+/// Note: The semantics of the operation match those of the `svdupq_lane` intrinsics.
 /// [Source](https://developer.arm.com/architectures/instruction-sets/intrinsics/#q=svdupq_lane)
 #[mlir::op("arm_sve.dupq_lane", format = "$src `[` $lane `]` attr-dict `:` type($dst)", results(dst))]
 pub struct DupQLaneOp<'a> {

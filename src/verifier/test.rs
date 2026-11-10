@@ -27,6 +27,9 @@ keywords! {
         Struct = "struct",
         DynamicSingleton = "dynamic_singleton",
         DynamicPair = "dynamic_pair",
+        PredTrait = "type_pred_trait",
+        PredTraitMulti = "type_pred_trait_multi",
+        PredTraitCombined = "type_pred_trait_combined",
     }
 }
 
@@ -232,6 +235,51 @@ impl Test {
     }
 
     /// Reads `body` with `f`.
+    /// The `PredTypeTrait` types: `<value>` positive; `<value, min>` with `value >= min`;
+    /// `<count, [elements], i16 | i32>` with as many elements as `count`.
+    fn pred_trait(kind: TypeKind, body: &str) -> Result<(), String> {
+        let r = Parser::read(body.trim(), |p| {
+            p.expect("<")?;
+            let first: i64 = p.number()?;
+            let out = match kind {
+                TypeKind::PredTrait => (first > 0).then_some(()).ok_or("failed to verify that value must be positive"),
+                TypeKind::PredTraitMulti => {
+                    p.expect(",")?;
+                    let min: i64 = p.number()?;
+                    (first >= min).then_some(()).ok_or("failed to verify that value must be at least min")
+                }
+                _ => {
+                    p.expect(",")?;
+                    p.expect("[")?;
+                    let mut n = 0;
+                    if !p.eat("]") {
+                        loop {
+                            p.eat("-");
+                            let _: i64 = p.number()?;
+                            n += 1;
+                            if !p.eat(",") {
+                                break;
+                            }
+                        }
+                        p.expect("]")?;
+                    }
+                    p.expect(",")?;
+                    match p.ty()? {
+                        Type::Integer { signedness: Signedness::Signless, width: 16 | 32 } if n == first => Ok(()),
+                        Type::Integer { signedness: Signedness::Signless, width: 16 | 32 } => Err("failed to verify that count must match number of elements"),
+                        _ => Err("failed to verify 'elementType': 16-bit signless integer or 32-bit signless integer"),
+                    }
+                }
+            };
+            p.expect(">")?;
+            Ok(out)
+        });
+        match r {
+            Ok(r) => r.map_err(String::from),
+            Err(e) => Err(e.placed(body).to_string()),
+        }
+    }
+
     fn read<'a, 'd>(opt: &'d MlirOpt, body: &'a str, f: impl FnOnce(&mut TestText<'a, 'd>) -> R<()>) -> Result<(), String> {
         let mut t = TestText { p: Parser::new(body, opt) };
         f(&mut t).map_err(|e| e.placed(body).to_string())
@@ -251,6 +299,7 @@ impl DialectRules for Test {
             Ok(TypeKind::DynamicSingleton) => Self::dynamic(body, 0, "type"),
             Ok(TypeKind::DynamicPair) => Self::dynamic(body, 2, "type"),
             Ok(TypeKind::Struct) => Self::read(v.opt, body.unwrap_or(""), TestText::structure),
+            Ok(k @ (TypeKind::PredTrait | TypeKind::PredTraitMulti | TypeKind::PredTraitCombined)) => Self::pred_trait(k, body.unwrap_or("")),
             // `AnyTypeOf<[I16, I32]>:$param`.
             Ok(TypeKind::TypeVerification) => match body.and_then(|b| Parser::read(b.trim().strip_prefix('<')?.strip_suffix('>')?, |p| p.ty()).ok()) {
                 Some(Type::Integer { signedness: Signedness::Signless, width: 16 | 32 }) | None => Ok(()),
@@ -259,6 +308,18 @@ impl DialectRules for Test {
             Err(()) => Ok(()),
         };
         r.map_err(|why| Invalid::DialectType { ty: t.to_string(), why })
+    }
+
+    /// `test.token.consume %t`: `Token:$token` fixes its operand's type to `token`, so a value of
+    /// another type is a use of another type (`resolveOperand`).
+    fn op(&self, v: &Verifier<'_>, op: &crate::Operation<'_>) -> Result<(), Invalid> {
+        let (Some(raw), "test.token.consume") = (&op.raw, &*op.name) else { return Ok(()) };
+        let Some(crate::Piece::Text(text)) = raw.first() else { return Ok(()) };
+        let name = text.trim_start().strip_prefix('%').map(|r| r.split(|c: char| !(c.is_ascii_alphanumeric() || matches!(c, '_' | '$' | '.' | '-'))).next().unwrap_or(""));
+        match name.and_then(|n| v.visible(n)).and_then(|tys| tys.first()?.as_deref()) {
+            Some(t) if *t != Type::Token => Err(Invalid::ValueType(name.unwrap_or("").into(), "token".into())),
+            _ => Ok(()),
+        }
     }
 
     fn attr(&self, v: &Verifier<'_>, a: &Attribute<'_>) -> Result<(), Invalid> {

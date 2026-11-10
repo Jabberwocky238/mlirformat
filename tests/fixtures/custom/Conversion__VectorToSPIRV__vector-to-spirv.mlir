@@ -70,10 +70,9 @@ module {
 
 // -----
 module {
-  func.func @extract(%arg0: vector<2xf32>) -> (vector<1xf32>, f32) {
-    %0 = vector.extract %arg0[0] : vector<1xf32> from vector<2xf32>
-    %1 = vector.extract %arg0[1] : f32 from vector<2xf32>
-    return %0, %1 : vector<1xf32>, f32
+  func.func @extract(%arg0: vector<2xf32>) -> f32 {
+    %0 = vector.extract %arg0[1] : f32 from vector<2xf32>
+    return %0 : f32
   }
 }
 
@@ -511,6 +510,86 @@ module {
 }
 
 // -----
+module {
+  func.func @reduction_and(%arg0: vector<4xi32>) -> i32 {
+    %0 = vector.reduction <and>, %arg0 : vector<4xi32> into i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @reduction_and_acc(%arg0: vector<3xi32>, %arg1: i32) -> i32 {
+    %0 = vector.reduction <and>, %arg0, %arg1 : vector<3xi32> into i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @reduction_or(%arg0: vector<4xi32>) -> i32 {
+    %0 = vector.reduction <or>, %arg0 : vector<4xi32> into i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @reduction_or_acc(%arg0: vector<3xi32>, %arg1: i32) -> i32 {
+    %0 = vector.reduction <or>, %arg0, %arg1 : vector<3xi32> into i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @reduction_xor(%arg0: vector<4xi32>) -> i32 {
+    %0 = vector.reduction <xor>, %arg0 : vector<4xi32> into i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @reduction_xor_acc(%arg0: vector<3xi32>, %arg1: i32) -> i32 {
+    %0 = vector.reduction <xor>, %arg0, %arg1 : vector<3xi32> into i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @reduction_or_bool(%arg0: vector<4xi1>) -> i1 {
+    %0 = vector.reduction <or>, %arg0 : vector<4xi1> into i1
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @reduction_and_bool(%arg0: vector<4xi1>) -> i1 {
+    %0 = vector.reduction <and>, %arg0 : vector<4xi1> into i1
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @reduction_or_bool_acc(%arg0: vector<4xi1>, %arg1: i1) -> i1 {
+    %0 = vector.reduction <or>, %arg0, %arg1 : vector<4xi1> into i1
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @reduction_and_bool_acc(%arg0: vector<4xi1>, %arg1: i1) -> i1 {
+    %0 = vector.reduction <and>, %arg0, %arg1 : vector<4xi1> into i1
+    return %0 : i1
+  }
+}
+
+// -----
 module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [BFloat16DotProductKHR], [SPV_KHR_bfloat16]>, #spirv.resource_limits<>>} {
   func.func @reduction_bf16_addf_mulf(%arg0: vector<4xbf16>, %arg1: vector<4xbf16>) -> bf16 {
     %0 = arith.mulf %arg0, %arg1 : vector<4xbf16>
@@ -548,6 +627,22 @@ module {
   func.func @step_size1() -> vector<1xindex> {
     %0 = vector.step : vector<1xindex>
     return %0 : vector<1xindex>
+  }
+}
+
+// -----
+module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Int8, Shader], []>, #spirv.resource_limits<>>} {
+  func.func @step_i8() -> vector<4xi8> {
+    %0 = vector.step : vector<4xi8>
+    return %0 : vector<4xi8>
+  }
+}
+
+// -----
+module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Int16, Shader], []>, #spirv.resource_limits<>>} {
+  func.func @step_size1_i16() -> vector<1xi16> {
+    %0 = vector.step : vector<1xi16>
+    return %0 : vector<1xi16>
   }
 }
 
@@ -595,6 +690,11 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader
     %c0 = arith.constant 0 : index
     %c1 = arith.constant 1 : index
     vector.store %arg1, %arg0[%c0, %c1] : memref<4x4xf32, #spirv.storage_class<StorageBuffer>>, vector<4xf32>
+    return
+  }
+  func.func @vector_store_index(%arg0: memref<4xindex, #spirv.storage_class<StorageBuffer>>, %arg1: vector<4xindex>) {
+    %c0 = arith.constant 0 : index
+    vector.store %arg1, %arg0[%c0] : memref<4xindex, #spirv.storage_class<StorageBuffer>>, vector<4xindex>
     return
   }
 }

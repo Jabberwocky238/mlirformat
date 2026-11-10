@@ -41,8 +41,9 @@ module {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.param.constant 32 : i32 -> !transform.param<i32>
-      %2 = transform.param.constant 1 : i32 -> !transform.param<i32>
-      %transformed, %loops:2 = transform.structured.fuse %0 tile_sizes [%1, 32] interchange [0, %2] : (!transform.any_op, !transform.param<i32>, !transform.param<i32>) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %2 = transform.param.constant 32 : i32 -> !transform.any_param
+      %3 = transform.param.constant 1 : i32 -> !transform.param<i32>
+      %transformed, %loops:2 = transform.structured.fuse %0 tile_sizes [%1, %2] interchange [0, %3] : (!transform.any_op, !transform.param<i32>, !transform.any_param, !transform.param<i32>) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       transform.yield 
     }
   }
@@ -59,6 +60,84 @@ module {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %transformed, %loops = transform.structured.fuse %0 tile_sizes [32, 32] {use_forall} : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @fuse_unary_packed_tile_sizes(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>) -> tensor<?x?xf32> {
+    %0 = linalg.exp ins(%arg0 : tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    %1 = linalg.add ins(%0, %arg0 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    return %1 : tensor<?x?xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.param.constant 32 : i64 -> !transform.any_param
+      %2 = transform.param.constant 64 : i64 -> !transform.any_param
+      %3 = transform.merge_handles %1, %2 : !transform.any_param
+      %transformed, %loops = transform.structured.fuse %0 tile_sizes *(%3) : (!transform.any_op, !transform.any_param) -> (!transform.any_op, !transform.any_op)
+      %4:2 = transform.split_handle %loops : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @fuse_unary_packed_tile_sizes_forall(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>) -> tensor<?x?xf32> {
+    %0 = linalg.exp ins(%arg0 : tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    %1 = linalg.add ins(%0, %arg0 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    return %1 : tensor<?x?xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.param.constant 32 : i64 -> !transform.any_param
+      %2 = transform.param.constant 64 : i64 -> !transform.any_param
+      %3 = transform.merge_handles %1, %2 : !transform.any_param
+      %transformed, %loops = transform.structured.fuse %0 tile_sizes *(%3) {use_forall} : (!transform.any_op, !transform.any_param) -> (!transform.any_op, !transform.any_op)
+      %4 = transform.split_handle %loops : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @fuse_unary_packed_tile_sizes_multiple_targets(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>) -> tensor<?x?xf32> {
+    %0 = linalg.add ins(%arg0, %arg1 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    %1 = linalg.add ins(%0, %arg0 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    return %1 : tensor<?x?xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.param.constant 32 : i64 -> !transform.any_param
+      %2 = transform.param.constant 64 : i64 -> !transform.any_param
+      %3 = transform.merge_handles %1, %2 : !transform.any_param
+      %transformed, %loops = transform.structured.fuse %0 tile_sizes *(%3) : (!transform.any_op, !transform.any_param) -> (!transform.any_op, !transform.any_op)
+      %4:4 = transform.split_handle %loops : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @fuse_no_tiling_packed_tile_sizes(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xf32>) -> tensor<?x?xf32> {
+    %0 = linalg.exp ins(%arg0 : tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    %1 = linalg.add ins(%0, %arg0 : tensor<?x?xf32>, tensor<?x?xf32>) outs(%arg1 : tensor<?x?xf32>) -> tensor<?x?xf32>
+    return %1 : tensor<?x?xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.param.constant 0 : i64 -> !transform.any_param
+      %2 = transform.merge_handles %1, %1 : !transform.any_param
+      %transformed, %loops = transform.structured.fuse %0 tile_sizes *(%2) : (!transform.any_op, !transform.any_param) -> (!transform.any_op, !transform.any_op)
       transform.yield 
     }
   }

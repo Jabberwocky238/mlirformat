@@ -87,7 +87,9 @@
       "transform.structured.vectorize"(%2#0) <{scalable_sizes = array<i1: false, true>, static_vector_sizes = array<i64: 1, 4>}> : (!transform.any_op) -> ()
       "transform.apply_patterns"(%arg2) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
         "transform.apply_patterns.vector.lower_masked_transfers"() : () -> ()
-        "transform.apply_patterns.vector.lower_multi_reduction"() <{lowering_strategy = 1 : i32}> : () -> ()
+        "transform.apply_patterns.vector.reorder_multi_reduction_dims"() <{lowering_strategy = 1 : i32}> : () -> ()
+        "transform.apply_patterns.vector.multi_reduction_flattening"() <{lowering_strategy = 1 : i32}> : () -> ()
+        "transform.apply_patterns.vector.multi_reduction_unrolling"() <{lowering_strategy = 1 : i32}> : () -> ()
       }) : (!transform.op<"func.func">) -> ()
       "transform.yield"() : () -> ()
     }) : () -> ()

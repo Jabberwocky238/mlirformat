@@ -563,3 +563,84 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @fusion_non_constant_bounds_0(%arg0: memref<?xf32>) {
+    %cst = arith.constant 1.000000e+00 : f32
+    %cst_0 = arith.constant 2.000000e+00 : f32
+    %c0 = arith.constant 0 : index
+    %dim = memref.dim %arg0, %c0 : memref<?xf32>
+    affine.for %arg1 = 0 to %dim {
+      %0 = affine.load %arg0[%arg1] : memref<?xf32>
+      %1 = arith.addf %0, %cst : f32
+      affine.store %1, %arg0[%arg1] : memref<?xf32>
+    }
+    affine.for %arg1 = 0 to %dim {
+      %0 = affine.load %arg0[%arg1] : memref<?xf32>
+      %1 = arith.addf %0, %cst_0 : f32
+      affine.store %1, %arg0[%arg1] : memref<?xf32>
+    }
+    return
+  }
+  func.func @fusion_non_constant_bounds_1(%arg0: index, %arg1: memref<?xf32>, %arg2: f32) {
+    affine.for %arg3 = 0 to %arg0 {
+      affine.store %arg2, %arg1[%arg3] : memref<?xf32>
+    }
+    affine.for %arg3 = 0 to %arg0 {
+      %0 = affine.load %arg1[%arg3] : memref<?xf32>
+    }
+    affine.for %arg3 = 0 to %arg0 {
+      affine.store %arg2, %arg1[%arg3] : memref<?xf32>
+    }
+    affine.for %arg3 = 1 to %arg0 {
+      %0 = affine.load %arg1[%arg3] : memref<?xf32>
+    }
+    return
+  }
+  func.func @high_trip_count(%arg0: memref<1024x4096xf32>, %arg1: memref<8192x4096xf32>) -> memref<1024x8192xf32> {
+    %cst = arith.constant 1.000000e+00 : f32
+    %alloc = memref.alloc() : memref<1024x8192xf32>
+    affine.for %arg2 = 0 to 16 {
+      affine.for %arg3 = 0 to 512 {
+        affine.for %arg4 = 0 to 64 {
+          affine.for %arg5 = 0 to 16 {
+            affine.for %arg6 = 0 to 2048 {
+              %0 = affine.load %arg0[%arg4 + %arg2 * 64, %arg6] : memref<1024x4096xf32>
+              %1 = affine.load %arg1[%arg5 + %arg3 * 16, %arg6] : memref<8192x4096xf32>
+              %2 = affine.load %alloc[%arg4 + %arg2 * 64, %arg5 + %arg3 * 16] : memref<1024x8192xf32>
+              %3 = arith.mulf %0, %1 : f32
+              %4 = arith.addf %2, %3 : f32
+              affine.store %4, %alloc[%arg4 + %arg2 * 64, %arg5 + %arg3 * 16] : memref<1024x8192xf32>
+            }
+          }
+        }
+      }
+      affine.for %arg3 = 0 to 512 {
+        affine.for %arg4 = 0 to 64 {
+          affine.for %arg5 = 0 to 16 {
+            affine.for %arg6 = 0 to 2048 {
+              %0 = affine.load %arg0[%arg4 + %arg2 * 64, %arg6 + 2048] : memref<1024x4096xf32>
+              %1 = affine.load %arg1[%arg5 + %arg3 * 16, %arg6 + 2048] : memref<8192x4096xf32>
+              %2 = affine.load %alloc[%arg4 + %arg2 * 64, %arg5 + %arg3 * 16] : memref<1024x8192xf32>
+              %3 = arith.mulf %0, %1 : f32
+              %4 = arith.addf %2, %3 : f32
+              affine.store %4, %alloc[%arg4 + %arg2 * 64, %arg5 + %arg3 * 16] : memref<1024x8192xf32>
+            }
+          }
+        }
+      }
+    }
+    affine.for %arg2 = 0 to 16 {
+      affine.for %arg3 = 0 to 512 {
+        affine.for %arg4 = 0 to 64 {
+          affine.for %arg5 = 0 to 16 {
+            %0 = affine.load %alloc[%arg4 + %arg2 * 64, %arg5 + %arg3 * 16] : memref<1024x8192xf32>
+            affine.store %0, %alloc[%arg4 + %arg2 * 64, %arg5 + %arg3 * 16] : memref<1024x8192xf32>
+          }
+        }
+      }
+    }
+    return %alloc : memref<1024x8192xf32>
+  }
+}
+

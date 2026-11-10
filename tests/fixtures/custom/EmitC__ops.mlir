@@ -2,17 +2,17 @@ module {
   emitc.include <"test.h">
   emitc.include "test.h"
   func.func @f(%arg0: i32, %arg1: !emitc.opaque<"int32_t">) {
-    %0 = emitc.call_opaque "blah"() : () -> i64
-    emitc.call_opaque "foo"(%0) {args = [0 : index, dense<[0, 1]> : tensor<2xi32>, 0 : index]} : (i64) -> ()
+    %0 = emitc.call_opaque "blah"()  : () -> i64
+    emitc.call_opaque "foo"(%0) <{args = [0 : index, dense<[0, 1]> : tensor<2xi32>, 0 : index]}> : (i64) -> ()
     return
   }
   emitc.declare_func @func
   emitc.func @func(%arg0: i32) {
-    call_opaque "foo"(%arg0) : (i32) -> ()
+    call_opaque "foo"(%arg0)  : (i32) -> ()
     return
   }
   emitc.func @return_i32() -> i32 attributes {specifiers = ["static", "inline"]} {
-    %0 = call_opaque "foo"() : () -> i32
+    %0 = call_opaque "foo"()  : () -> i32
     return %0 : i32
   }
   emitc.func @call() -> i32 {
@@ -33,13 +33,6 @@ module {
     %1 = "emitc.constant"() <{value = 42 : index}> : () -> !emitc.size_t
     %2 = "emitc.constant"() <{value = 42 : index}> : () -> !emitc.ssize_t
     %3 = "emitc.constant"() <{value = 42 : index}> : () -> !emitc.ptrdiff_t
-    return
-  }
-  func.func @a() {
-    %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
-    %1 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
-    %2 = emitc.apply "&"(%0) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
-    %3 = emitc.apply "&"(%1) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
     return
   }
   func.func @add_int(%arg0: i32, %arg1: i32) {
@@ -126,21 +119,21 @@ module {
   }
   func.func @test_if(%arg0: i1, %arg1: f32) {
     emitc.if %arg0 {
-      %0 = call_opaque "func_const"(%arg1) : (f32) -> i32
+      %0 = call_opaque "func_const"(%arg1)  : (f32) -> i32
     }
     return
   }
   func.func @test_if_explicit_yield(%arg0: i1, %arg1: f32) {
     emitc.if %arg0 {
-      %0 = call_opaque "func_const"(%arg1) : (f32) -> i32
+      %0 = call_opaque "func_const"(%arg1)  : (f32) -> i32
     }
     return
   }
   func.func @test_if_else(%arg0: i1, %arg1: f32) {
     emitc.if %arg0 {
-      %0 = call_opaque "func_true"(%arg1) : (f32) -> i32
+      %0 = call_opaque "func_true"(%arg1)  : (f32) -> i32
     } else {
-      %0 = call_opaque "func_false"(%arg1) : (f32) -> i32
+      %0 = call_opaque "func_false"(%arg1)  : (f32) -> i32
     }
     return
   }
@@ -157,7 +150,7 @@ module {
     }
     %2 = emitc.expression %arg0, %arg1, %arg2, %arg3, %arg4, %1 : (i32, i32, i32, f32, f32, i32) -> i32 {
       %3 = add %arg0, %arg1 : (i32, i32) -> i32
-      %4 = call_opaque "bar"(%3, %arg2, %1) : (i32, i32, i32) -> i32
+      %4 = call_opaque "bar"(%3, %arg2, %1)  : (i32, i32, i32) -> i32
       %5 = mul %arg3, %arg4 : (f32, f32) -> f32
       %6 = cast %5 : f32 to i32
       %7 = sub %4, %6 : (i32, i32) -> i32
@@ -174,21 +167,31 @@ module {
     }
     return %0 : i32
   }
+  func.func @test_expression_recurring_operands(%arg0: i32, %arg1: i32) -> i32 {
+    %0 = emitc.expression %arg0, %arg1, %arg0 : (i32, i32, i32) -> i32 {
+    ^bb0(%arg2: i32, %arg3: i32, %arg4: i32):
+      %1 = rem %arg2, %arg3 : (i32, i32) -> i32
+      %2 = add %1, %arg4 : (i32, i32) -> i32
+      %3 = mul %2, %1 : (i32, i32) -> i32
+      yield %3 : i32
+    }
+    return %0 : i32
+  }
   func.func @test_for(%arg0: index, %arg1: index, %arg2: index) {
     emitc.for %arg3 = %arg0 to %arg1 step %arg2 {
-      %0 = call_opaque "func_const"(%arg3) : (index) -> i32
+      %0 = call_opaque "func_const"(%arg3)  : (index) -> i32
     }
     return
   }
   func.func @test_for_explicit_yield(%arg0: index, %arg1: index, %arg2: index) {
     emitc.for %arg3 = %arg0 to %arg1 step %arg2 {
-      %0 = call_opaque "func_const"(%arg3) : (index) -> i32
+      %0 = call_opaque "func_const"(%arg3)  : (index) -> i32
     }
     return
   }
   func.func @test_for_not_index_induction(%arg0: i16, %arg1: i16, %arg2: i16) {
     emitc.for %arg3 = %arg0 to %arg1 step %arg2  : i16 {
-      %0 = call_opaque "func_const"(%arg3) : (i16) -> i32
+      %0 = call_opaque "func_const"(%arg3)  : (i16) -> i32
     }
     return
   }
@@ -240,22 +243,24 @@ module {
     %3 = "emitc.member_of_ptr"(%arg1) <{member = "b"}> : (!emitc.lvalue<!emitc.opaque<"mystruct_ptr">>) -> !emitc.array<2xi32>
     %4 = "emitc.member_of_ptr"(%arg2) <{member = "a"}> : (!emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>) -> !emitc.lvalue<i32>
     %5 = "emitc.member_of_ptr"(%arg2) <{member = "b"}> : (!emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>) -> !emitc.array<2xi32>
+    %6 = emitc.load %arg0 : <!emitc.opaque<"mystruct">>
+    %7 = "emitc.member"(%6) <{member = "a"}> : (!emitc.opaque<"mystruct">) -> i32
     return
   }
   func.func @switch() {
     %0 = "emitc.constant"() <{value = 1 : index}> : () -> !emitc.ptrdiff_t
     emitc.switch %0 : !emitc.ptrdiff_t 
     case 1 {
-      %1 = call_opaque "func_b"() : () -> i32
+      %1 = call_opaque "func_b"()  : () -> i32
       yield
     }
     case 2 {
-      %1 = call_opaque "func_a"() : () -> i32
+      %1 = call_opaque "func_a"()  : () -> i32
       yield
     }
     default {
       %1 = "emitc.constant"() <{value = 4.200000e+01 : f32}> : () -> f32
-      call_opaque "func2"(%1) : (f32) -> ()
+      call_opaque "func2"(%1)  : (f32) -> ()
     }
     return
   }

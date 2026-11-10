@@ -8,15 +8,15 @@ module attributes {gpu.container_module} {
   }
   gpu.module @gpumodule {
     gpu.func @kernel_cluster() kernel attributes {gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 4, 4, 1>} {
-      %cluster_id_x = gpu.cluster_id  x
-      %cluster_id_y = gpu.cluster_id  y
-      %cluster_id_z = gpu.cluster_id  z
-      %cluster_dim_blocks_x = gpu.cluster_dim_blocks  x
-      %cluster_dim_blocks_y = gpu.cluster_dim_blocks  y
-      %cluster_dim_blocks_z = gpu.cluster_dim_blocks  z
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
-      %block_id_z = gpu.block_id  z
+      %cluster_id_x = gpu.cluster_id x
+      %cluster_id_y = gpu.cluster_id y
+      %cluster_id_z = gpu.cluster_id z
+      %cluster_dim_blocks_x = gpu.cluster_dim_blocks x
+      %cluster_dim_blocks_y = gpu.cluster_dim_blocks y
+      %cluster_dim_blocks_z = gpu.cluster_dim_blocks z
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
+      %block_id_z = gpu.block_id z
       %0 = index.casts %cluster_id_x : index to i32
       %1 = index.casts %cluster_id_y : index to i32
       %2 = index.casts %cluster_id_z : index to i32

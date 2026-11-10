@@ -30,8 +30,8 @@ module @relu attributes {gpu.container_module} {
   gpu.module @test_kernel attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Addresses, Int64, Int8, Kernel], []>, api=OpenCL, #spirv.resource_limits<>>} {
     gpu.func @test_relu(%arg0: memref<4x5xf32>, %arg1: memref<4x5xf32>) kernel attributes {gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 4, 5, 1>, spirv.entry_point_abi = #spirv.entry_point_abi<>} {
       %cst = arith.constant 0.000000e+00 : f32
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
       %0 = memref.load %arg0[%block_id_x, %block_id_y] : memref<4x5xf32>
       %1 = arith.cmpf ogt, %0, %cst : f32
       %2 = arith.select %1, %0, %cst : f32

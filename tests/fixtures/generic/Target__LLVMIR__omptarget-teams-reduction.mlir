@@ -23,14 +23,14 @@
     %7 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %8 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     "llvm.store"(%6, %2) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-    %9 = "omp.map.info"(%2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "sum", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %10 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "index_", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%9, %10) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0>}> ({
+    %9 = "omp.map.info"(%2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "sum", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %10 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, name = "index_", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%9, %10) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
       %11 = "llvm.mlir.constant"() <{value = 0 : index}> : () -> i64
       %12 = "llvm.mlir.constant"() <{value = 10000 : index}> : () -> i64
       %13 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
-      "omp.teams"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0>, reduction_byref = array<i1: false>, reduction_syms = [@add_reduction_i32]}> ({
+      "omp.teams"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 1, 0>, reduction_byref = array<i1: false>, reduction_syms = [@add_reduction_i32]}> ({
       ^bb0(%arg2: !llvm.ptr):
         %14 = "llvm.trunc"(%13) <{overflowFlags = 0 : i32}> : (i64) -> i32
         "llvm.br"(%14, %12)[^bb1] : (i32, i64) -> ()

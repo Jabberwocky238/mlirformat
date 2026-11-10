@@ -1,6 +1,6 @@
 module {
   emitc.func @foo(%arg0: !emitc.array<1xf32>) {
-    call_opaque "bar"(%arg0) : (!emitc.array<1xf32>) -> ()
+    call_opaque "bar"(%arg0)  : (!emitc.array<1xf32>) -> ()
     return
   }
 }
@@ -16,6 +16,63 @@ module {
     %5 = add %2, %4 : (f32, f32) -> f32
     %6 = subscript %arg2[%0] : (!emitc.array<1xf32>, !emitc.size_t) -> !emitc.lvalue<f32>
     assign %5 : f32 to %6 : <f32>
+    return
+  }
+}
+
+// -----
+module {
+  emitc.global static const @global_arr : !emitc.array<1xi8> = dense<0>
+  emitc.func @foo() {
+    %0 = get_global @global_arr : !emitc.array<1xi8>
+    return
+  }
+}
+
+// -----
+module {
+  emitc.global static const @global_arr : !emitc.array<1xi8> = dense<0>
+  emitc.global static const @global_arr2 : !emitc.array<1xi8> = dense<0>
+  emitc.func @foo() {
+    %0 = get_global @global_arr : !emitc.array<1xi8>
+    return
+  }
+}
+
+// -----
+module {
+  emitc.global static const @global_arr1 : !emitc.array<1xi8> = dense<0>
+  emitc.global static const @global_arr2 : !emitc.array<1xi8> = dense<0>
+  emitc.global static const @global_arr3 : !emitc.array<1xi8> = dense<0>
+  emitc.func @foo() {
+    %0 = get_global @global_arr1 : !emitc.array<1xi8>
+    return
+  }
+  emitc.func @bar() {
+    %0 = get_global @global_arr2 : !emitc.array<1xi8>
+    return
+  }
+}
+
+// -----
+module {
+  emitc.global static const @global_arr : !emitc.array<1xi8> = dense<0>
+  emitc.func @foo() {
+    %0 = get_global @global_arr : !emitc.array<1xi8>
+    return
+  }
+  emitc.func @bar() {
+    %0 = get_global @global_arr : !emitc.array<1xi8>
+    return
+  }
+}
+
+// -----
+module {
+  emitc.global static const @global_arr : !emitc.array<1xi8> = dense<0>
+  emitc.func @foo() {
+    %0 = get_global @global_arr : !emitc.array<1xi8>
+    %1 = get_global @global_arr : !emitc.array<1xi8>
     return
   }
 }

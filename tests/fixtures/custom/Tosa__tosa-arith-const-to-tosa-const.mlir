@@ -55,14 +55,6 @@ module {
 
 // -----
 module {
-  func.func @rewrite_quant_tensor() -> tensor<2xui8> {
-    %cst = arith.constant dense<[10, 20]> : tensor<2xui8>
-    return %cst : tensor<2xui8>
-  }
-}
-
-// -----
-module {
   func.func @rewrite_quant_uniform_tensor() -> tensor<2x!quant.uniform<i8:f32, 5.000000e-01>> {
     %cst = arith.constant dense<["10", "20"]> : tensor<2x!quant.uniform<i8:f32, 5.000000e-01>>
     return %cst : tensor<2x!quant.uniform<i8:f32, 5.000000e-01>>

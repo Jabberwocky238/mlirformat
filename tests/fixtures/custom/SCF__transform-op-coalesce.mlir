@@ -240,3 +240,31 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @opsinbetween_nested_loops(%arg0: f32) -> f32 {
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %c3 = arith.constant 3 : index
+    %c5 = arith.constant 5 : index
+    %0 = scf.for %arg1 = %c0 to %c3 step %c1 iter_args(%arg2 = %arg0) -> (f32) {
+      %1 = arith.addi %arg1, %c5 : index
+      %2 = arith.muli %1, %c3 : index
+      %3 = scf.for %arg3 = %c0 to %c3 step %c1 iter_args(%arg4 = %arg2) -> (f32) {
+        %4 = "use"(%arg4, %arg1, %arg3, %1, %2) : (f32, index, index, index, index) -> f32
+        scf.yield %4 : f32
+      }
+      scf.yield %3 : f32
+    } {coalesce_nested}
+    return %0 : f32
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["scf.for"]} attributes {coalesce_nested} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.cast %0 : !transform.any_op to !transform.op<"scf.for">
+      %2 = transform.loop.coalesce_nested %1 : (!transform.op<"scf.for">) -> !transform.op<"scf.for">
+      transform.yield 
+    }
+  }
+}
+

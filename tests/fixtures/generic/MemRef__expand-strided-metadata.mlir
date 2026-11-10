@@ -77,9 +77,9 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index, index, index, index, index, index, index, index, index, index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>, sym_name = "simplify_expand_shape"}> ({
-  ^bb0(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index):
-    %0 = "memref.expand_shape"(%arg0, %arg10, %arg11) <{reassociation = [[0, 1, 2, 3], [4, 5, 6, 7]], static_output_shape = array<i64: -9223372036854775808, 7, 8, 9, 10, 2, -9223372036854775808, 3>}> : (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
+  "func.func"() <{function_type = (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>, sym_name = "simplify_expand_shape"}> ({
+  ^bb0(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index):
+    %0 = "memref.expand_shape"(%arg0, %arg1, %arg2) <{reassociation = [[0, 1, 2, 3], [4, 5, 6, 7]], static_output_shape = array<i64: -9223372036854775808, 7, 8, 9, 10, 2, -9223372036854775808, 3>}> : (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
     "func.return"(%0) : (memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -96,10 +96,10 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index, index, index, index, index, index, index, index, index, index) -> (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index), sym_name = "extract_strided_metadata_of_expand_shape_all_dynamic"}> ({
-  ^bb0(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index):
-    %0 = "memref.expand_shape"(%arg0, %arg10, %arg11) <{reassociation = [[0, 1, 2, 3], [4, 5, 6, 7]], static_output_shape = array<i64: -9223372036854775808, 7, 8, 9, 10, 2, -9223372036854775808, 3>}> : (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index) -> memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
-    %1:18 = "memref.extract_strided_metadata"(%0) : (memref<?x7x8x9x10x2x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>) -> (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index)
+  "func.func"() <{function_type = (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index, index, index) -> (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index), sym_name = "extract_strided_metadata_of_expand_shape_all_dynamic"}> ({
+  ^bb0(%arg0: memref<?x?xf32, strided<[?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index):
+    %0 = "memref.expand_shape"(%arg0, %arg1, %arg2, %arg3, %arg4) <{reassociation = [[0, 1, 2, 3], [4, 5, 6, 7]], static_output_shape = array<i64: -9223372036854775808, -9223372036854775808, 8, 9, 10, -9223372036854775808, -9223372036854775808, 3>}> : (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index, index, index) -> memref<?x?x8x9x10x?x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>
+    %1:18 = "memref.extract_strided_metadata"(%0) : (memref<?x?x8x9x10x?x?x3xf32, strided<[?, ?, ?, ?, ?, ?, ?, ?], offset: ?>>) -> (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index)
     "func.return"(%1#0, %1#1, %1#2, %1#3, %1#4, %1#5, %1#6, %1#7, %1#8, %1#9, %1#10, %1#11, %1#12, %1#13, %1#14, %1#15, %1#16, %1#17) : (memref<f32>, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index, index) -> ()
   }) : () -> ()
 }) : () -> ()

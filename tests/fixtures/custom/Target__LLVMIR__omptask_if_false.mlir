@@ -8,5 +8,12 @@ module {
     }
     llvm.return
   }
+  llvm.func @foo_detach_if_false(%arg0: !llvm.ptr {fir.bindc_name = "n"}, %arg1: !llvm.ptr {fir.bindc_name = "ev"}) {
+    %0 = llvm.mlir.constant(false) : i1
+    omp.task depend(taskdependin -> %arg0 : !llvm.ptr) if(%0) detach(%arg1 : !llvm.ptr) {
+      omp.terminator
+    }
+    llvm.return
+  }
 }
 

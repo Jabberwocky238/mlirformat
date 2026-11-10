@@ -361,3 +361,19 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<() -> ()>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2xi64>, tensor<i64>) -> tensor<i64>, sym_name = "rank0_tensor_extract_data_dependent_index"}> ({
+  ^bb0(%arg0: tensor<2xi64>, %arg1: tensor<i64>):
+    %0 = "tensor.empty"() : () -> tensor<i64>
+    %1 = "linalg.generic"(%arg1, %0) <{indexing_maps = [#map, #map], iterator_types = [], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg2: i64, %arg3: i64):
+      %2 = "arith.index_cast"(%arg2) : (i64) -> index
+      %3 = "tensor.extract"(%arg0, %2) : (tensor<2xi64>, index) -> i64
+      "linalg.yield"(%3) : (i64) -> ()
+    }) : (tensor<i64>, tensor<i64>) -> tensor<i64>
+    "func.return"(%1) : (tensor<i64>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

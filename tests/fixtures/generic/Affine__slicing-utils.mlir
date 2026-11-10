@@ -80,3 +80,14 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "graph_region_with_double_cycle"}> ({
+    "test.isolated_graph_region"() ({
+      %0 = "slicing-test-op"(%1, %1) : (i1, i1) -> i1
+      %1 = "slicing-test-op"(%0, %0) : (i1, i1) -> i1
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

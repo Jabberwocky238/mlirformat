@@ -7,6 +7,7 @@ module {
     %4 = "test.data_layout_query"() : () -> index
     %5 = "test.data_layout_query"() : () -> vector<4xi32>
     %6 = "test.data_layout_query"() : () -> vector<[4]xi32>
+    %7 = "test.data_layout_query"() : () -> vector<[16]xi1>
     return
   }
   func.func @no_layout_custom() {

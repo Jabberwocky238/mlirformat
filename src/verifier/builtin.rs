@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 use super::{DialectRules, Invalid, Verifier};
 use crate::affine_expr::{Map, Set};
-use crate::{AffineMap, Attribute, IntegerSet, ShapedKind, Type};
+use crate::{AffineMap, Attribute, IntegerSet, Parser, ShapedKind, Type};
 
 /// The builtin dialect's rules.
 pub(super) struct Builtin;
@@ -140,6 +140,84 @@ impl Keyword {
         matches!(elem, Some(Type::Integer { .. } | Type::Float(_) | Type::Index | Type::Complex(_)))
     }
 
+    /// `dense<T : [..]>` (type-first, `parseDenseElementsAttrTyped`): `T` a statically shaped
+    /// type, elements nested as its shape (or one splat), each converting to its element type
+    /// (`DenseElementTypeInterface::convertFromAttribute`). `None`: not that form (it starts
+    /// with no type), or holds an element type not known here; `Some(false)`: `mlir-opt`
+    /// rejects it.
+    fn dense_typed(inner: &str) -> Option<bool> {
+        let opt = crate::MlirOpt::new();
+        let mut p = Parser::new(inner, &opt);
+        p.ws();
+        if p.rest().starts_with('(') {
+            return None;
+        }
+        let save = p.pos();
+        let Ok(ty) = p.ty() else {
+            p.seek(save);
+            return None;
+        };
+        let Type::Shaped(s) = &ty else { return Some(false) };
+        let Some(dims) = s.shape.as_ref().and_then(|d| d.iter().map(|d| if let crate::Dim::Static(n) = d { Some(*n) } else { None }).collect::<Option<Vec<i64>>>()) else {
+            return Some(false);
+        };
+        let ok = (|| {
+            p.expect(":")?;
+            let mut elems = Vec::new();
+            p.ws();
+            if p.rest().starts_with('[') && !dims.is_empty() {
+                Self::dense_elements(&mut p, &dims, &mut elems)?;
+            } else {
+                elems.push(p.attr()?);
+            }
+            p.ws();
+            if p.rest().is_empty() { Ok(elems) } else { p.err("expected '>' to close dense attribute") }
+        })();
+        let Ok(elems) = ok else { return Some(false) };
+        elems.iter().map(|a| Self::converts(&s.elem, a)).collect::<Option<Vec<bool>>>().map(|ok| ok.into_iter().all(|x| x))
+    }
+
+    /// A type-first `dense`'s elements: `[..]` lists nested as `dims`, each list as long as its
+    /// dimension.
+    fn dense_elements<'a>(p: &mut Parser<'a, '_>, dims: &[i64], out: &mut Vec<Attribute<'a>>) -> crate::R<()> {
+        let Some((&n, inner)) = dims.split_first() else {
+            out.push(p.attr()?);
+            return Ok(());
+        };
+        p.expect("[")?;
+        let mut count = 0;
+        if !p.eat("]") {
+            loop {
+                Self::dense_elements(p, inner, out)?;
+                count += 1;
+                if !p.eat(",") {
+                    break;
+                }
+            }
+            p.expect("]")?;
+        }
+        if count != n {
+            return p.err(alloc::format!("expected {n} elements in dimension, got {count}"));
+        }
+        Ok(())
+    }
+
+    /// `convertFromAttribute` of element type `elem`: an integer (`index`) of exactly that type,
+    /// a float of that type, a complex number as `[re, im]`, a tosa type's, `!test.dense_element`'s
+    /// (any 32-bit integer). `None`: an element type not known here.
+    fn converts(elem: &Type<'_>, a: &Attribute<'_>) -> Option<bool> {
+        Some(match elem {
+            Type::Integer { .. } | Type::Index => matches!(a, Attribute::Int { ty: Some(t), .. } if t == elem),
+            Type::Float(_) => matches!(a, Attribute::Float { ty: Some(t), .. } if t == elem),
+            Type::Complex(e) => match a {
+                Attribute::Array(xs) if xs.len() == 2 => xs.iter().all(|x| Self::converts(e, x) == Some(true)),
+                _ => false,
+            },
+            Type::Extended(e) if e.name == "test.dense_element" => matches!(a, Attribute::Int { ty: Some(t), .. } if t.bit_width() == Some(32)),
+            t => return super::tosa::Tosa::dense_element(t, a),
+        })
+    }
+
     /// Its raw body (`<(d0) -> (d0)>`) as `mlir-opt` would read it.
     fn verify(self, body: &str, ty: Option<&Type<'_>>) -> Result<(), Invalid> {
         let inner = body.trim().strip_prefix('<').and_then(|b| b.strip_suffix('>')).unwrap_or(body);
@@ -151,6 +229,8 @@ impl Keyword {
             Keyword::Dense => match inner.trim().strip_prefix('"').and_then(|h| h.strip_suffix('"')) {
                 Some(hex) if ty.map(Type::element_type).is_some_and(|t| matches!(t, Type::Integer { .. } | Type::Float(_) | Type::Index | Type::Complex(_))) && !Self::dense_hex(hex, ty) => Err(Invalid::DenseHex(body.into())),
                 Some(_) => Ok(()),
+                // Type-first: what the element type's `convertFromAttribute` takes.
+                None if Self::dense_typed(inner) == Some(false) => Err(Invalid::DenseLiteral(body.into())),
                 // A literal of numbers.
                 None if !inner.trim().is_empty() && Self::numeric(ty) && !Self::dense_literal(inner, ty) => Err(Invalid::DenseLiteral(body.into())),
                 None => Ok(()),
@@ -221,7 +301,8 @@ impl Builtin {
             }
             t => t.to_string(),
         };
-        text.chars().filter(|c| !c.is_whitespace()).collect::<String>().replace(",offset:0>", ">")
+        let text = text.chars().filter(|c| !c.is_whitespace()).collect::<String>().replace(",offset:0>", ">");
+        super::quant::Quant::canonical(&text)
     }
 }
 
@@ -235,7 +316,7 @@ impl DialectRules for Builtin {
     /// type (`!llvm.ptr`); no other builtin type.
     fn ty(&self, _v: &Verifier<'_>, t: &Type<'_>) -> Result<(), Invalid> {
         match t {
-            Type::Shaped(s) if s.kind == ShapedKind::Vector && matches!(*s.elem, Type::Shaped(_) | Type::Function(_) | Type::Tuple(_) | Type::NoneType | Type::Complex(_)) => Err(Invalid::VectorElement(s.elem.to_string())),
+            Type::Shaped(s) if s.kind == ShapedKind::Vector && matches!(*s.elem, Type::Shaped(_) | Type::Function(_) | Type::Tuple(_) | Type::NoneType | Type::Token | Type::Complex(_)) => Err(Invalid::VectorElement(s.elem.to_string())),
             _ => Ok(()),
         }
     }
@@ -249,6 +330,8 @@ impl DialectRules for Builtin {
             Attribute::Float { ty: Some(t), .. } if !matches!(t, Type::Float(_)) && !matches!(t, Type::Extended(e) if !e.name.contains('.')) => Err(Invalid::FloatType(a.to_string())),
             // An integer fits its type (`-1 : i0` does not): signless takes either reading.
             Attribute::Int { lit, ty: Some(Type::Integer { signedness, width }) } if !Self::fits(lit, *signedness, *width) => Err(Invalid::IntRange(a.to_string())),
+            // `DenseArrayAttr`: of integers or floats (`array<index: ..>` is not).
+            Attribute::DenseArray { ty, .. } if !matches!(ty, Type::Integer { .. } | Type::Float(_)) => Err(Invalid::DenseArrayType(ty.to_string())),
             // `DenseArrayAttr`: whole bytes per element (`array<tf32: ..>` is not), `i1` aside.
             Attribute::DenseArray { ty, .. } if ty.bit_width().is_some_and(|w| w > 1 && w % 8 != 0) => Err(Invalid::DenseArrayWidth(ty.to_string())),
             _ => Ok(()),

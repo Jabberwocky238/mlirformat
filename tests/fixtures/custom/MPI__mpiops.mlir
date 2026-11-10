@@ -20,11 +20,15 @@ module {
     %4 = mpi.wait(%req) : !mpi.request -> !mpi.retval
     mpi.barrier(%1)
     %5 = mpi.barrier(%1) -> !mpi.retval
-    %6 = mpi.allreduce(%arg0, %arg0, MPI_SUM, %1) : memref<100xf32>, memref<100xf32> -> !mpi.retval
+    %6 = mpi.allgather(%arg0, %arg0, %1) : memref<100xf32>, memref<100xf32> -> !mpi.retval
+    mpi.allgather(%arg0, %arg0, %1) : memref<100xf32>, memref<100xf32>
+    %7 = mpi.allreduce(%arg0, %arg0, MPI_SUM, %1) : memref<100xf32>, memref<100xf32> -> !mpi.retval
     mpi.allreduce(%arg0, %arg0, MPI_SUM, %1) : memref<100xf32>, memref<100xf32>
-    %7 = mpi.finalize : !mpi.retval
-    %8 = mpi.retval_check %retval = <MPI_SUCCESS> : i1
-    %9 = mpi.error_class %0 : !mpi.retval
+    %8 = mpi.reduce_scatter_block(%arg0, %arg0, MPI_SUM, %1) : memref<100xf32>, memref<100xf32> -> !mpi.retval
+    mpi.reduce_scatter_block(%arg0, %arg0, MPI_SUM, %1) : memref<100xf32>, memref<100xf32>
+    %9 = mpi.finalize : !mpi.retval
+    %10 = mpi.retval_check %retval = <MPI_SUCCESS> : i1
+    %11 = mpi.error_class %0 : !mpi.retval
     return
   }
 }

@@ -28,7 +28,13 @@ for m in re.finditer(r'^def (\w+)\s*:\s*I32BitEnumAttrCaseGroup<"(\w+)",\s*\[([^
 enums = []
 for m in re.finditer(r'^def SPIRV_(\w+)Attr\s*:\s*SPIRV_(I32EnumAttr|BitEnumAttr)<\s*"(\w+)",\s*"[^"]*",\s*"(\w+)",\s*\[([^\]]*)\]', src, re.M | re.S):
     _, kind, cpp, mnemonic, members = m.groups()
-    listed = [cases[c] for c in re.findall(r"\w+", members)]
+    # A member is a case's name, or (23.x) the case written inline: `I32EnumAttrCase<"X", 1>`.
+    listed = []
+    for inline, sym, n, ref in re.findall(r'(I32(?:EnumAttrCase|BitEnumAttrCaseBit|BitEnumAttrCaseNone))<"(\w+)"(?:,\s*(\d+))?>|(\w+)', members):
+        if ref:
+            listed.append(cases[ref])
+        else:
+            listed.append((sym, 0 if inline.endswith("None") else (1 << int(n) if inline.endswith("Bit") else int(n))))
     enums.append((mnemonic, cpp, kind == "BitEnumAttr", listed))
 enums.sort()
 

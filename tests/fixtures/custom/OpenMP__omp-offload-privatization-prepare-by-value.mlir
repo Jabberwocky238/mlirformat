@@ -60,10 +60,10 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<!llvm.ptr<270> = dense<32> : vec
     %22 = llvm.sub %21, %4 : i64
     %23 = omp.map.bounds lower_bound(%5 : i64) upper_bound(%22 : i64) extent(%21 : i64) stride(%4 : i64) start_idx(%5 : i64) {stride_in_bytes = true}
     %24 = llvm.getelementptr %3[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.struct<(ptr, i64)>
-    %25 = omp.map.info var_ptr(%3 : !llvm.ptr, i8) map_clauses(implicit, to) capture(ByRef) var_ptr_ptr(%24 : !llvm.ptr) bounds(%23) -> !llvm.ptr
+    %25 = omp.map.info var_ptr(%3 : !llvm.ptr, !llvm.struct<(ptr, i64)>) map_clauses(implicit, to) capture(ByRef) var_ptr_ptr(%24 : !llvm.ptr, i8) bounds(%23) -> !llvm.ptr
     %26 = omp.map.info var_ptr(%3 : !llvm.ptr, !llvm.struct<(ptr, i64)>) map_clauses(to) capture(ByRef) members(%25 : [0] : !llvm.ptr) -> !llvm.ptr
     %27 = omp.map.info var_ptr(%1 : !llvm.ptr, i32) map_clauses(to) capture(ByCopy) -> !llvm.ptr
-    omp.target nowait map_entries(%26 -> %arg1, %27 -> %arg2, %25 -> %arg3 : !llvm.ptr, !llvm.ptr, !llvm.ptr) private(@boxchar_firstprivate %18 -> %arg4 [map_idx=0], @private_eye %1 -> %arg5 [map_idx=1] : !llvm.struct<(ptr, i64)>, !llvm.ptr) {
+    omp.target kernel_type(generic) nowait map_entries(%26 -> %arg1, %27 -> %arg2, %25 -> %arg3 : !llvm.ptr, !llvm.ptr, !llvm.ptr) private(@boxchar_firstprivate %18 -> %arg4 [map_idx=0], @private_eye %1 -> %arg5 [map_idx=1] : !llvm.struct<(ptr, i64)>, !llvm.ptr) {
       omp.terminator
     }
     llvm.return

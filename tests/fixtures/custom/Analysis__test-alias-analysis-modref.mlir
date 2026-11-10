@@ -45,3 +45,35 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @nonaddressable_write(%arg0: memref<2xf32>) attributes {test.ptr = "func"} {
+    %0 = "test.side_effect_op"() {effects = [{effect = "write", test_nonaddressable_resource}], test.ptr = "side_effect_op"} : () -> i32
+    return {test.ptr = "return"}
+  }
+}
+
+// -----
+module {
+  func.func @addressable_write(%arg0: memref<2xf32>) attributes {test.ptr = "func"} {
+    %0 = "test.side_effect_op"() {effects = [{effect = "write"}], test.ptr = "side_effect_op"} : () -> i32
+    return {test.ptr = "return"}
+  }
+}
+
+// -----
+module {
+  func.func @conditional_no_effects(%arg0: memref<2xf32>) attributes {test.ptr = "func"} {
+    %0 = "test.conditional_side_effect_op"() <{has_effects = false}> {test.ptr = "conditional_side_effect_op"} : () -> i32
+    return {test.ptr = "return"}
+  }
+}
+
+// -----
+module {
+  func.func @conditional_all_effects(%arg0: memref<2xf32>) attributes {test.ptr = "func"} {
+    %0 = "test.conditional_side_effect_op"() <{has_effects = true}> {test.ptr = "conditional_side_effect_op"} : () -> i32
+    return {test.ptr = "return"}
+  }
+}
+

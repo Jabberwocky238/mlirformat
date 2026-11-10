@@ -1,0 +1,8 @@
+1	verify	'nvgpu.extf' op result type 'f4E2M1FN' must be wider than operand type 'f8E5M2'
+2	verify	'nvgpu.extf' op result type must be 16, 32, or 64 bitwidth, but got 8
+3	verify	'nvgpu.extf' op expects bf16 or f32 output type when input type is e8m0.
+4	verify	'nvgpu.extf' op expects RN rounding mode, but got #nvvm.fp_rnd_mode<rz>
+5	verify	'nvgpu.extf' op relu is not supported for bf16 destination
+6	verify	'nvgpu.extf' op input and output shapes must match, got 'vector<16xf8E5M2>' and 'vector<8xf16>'
+7	verify	'nvgpu.extf' op input and output must both be scalars or both be vectors, got 'f8E4M3FN' and 'vector<1xf16>'
+8	verify	'nvgpu.extf' op operand #0 must be floating-point or vector of floating-point values, but got 'vector<f8E4M3FN>'

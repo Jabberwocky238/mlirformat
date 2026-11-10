@@ -80,7 +80,7 @@
     %26 = "arith.constant"() <{value = 8 : index}> : () -> index
     %27 = "arith.muli"(%25, %26) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
     %28 = "tensor.empty"() : () -> tensor<7x13xi32>
-    %29 = "linalg.unpack"(%arg12, %28, %27) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, -9223372036854775808>}> : (tensor<1x?x8x?xi32>, tensor<7x13xi32>, index) -> tensor<7x13xi32>
+    %29 = "linalg.unpack"(%arg12, %28, %27) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, -9223372036854775808>}> {operandSegmentSizes = array<i32: 1, 1, 0, 1>} : (tensor<1x?x8x?xi32>, tensor<7x13xi32>, index) -> tensor<7x13xi32>
     "func.return"(%29) : (tensor<7x13xi32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<1x16x8x1xi32>) -> (), sym_name = "print_pack_A", sym_visibility = "private"}> ({

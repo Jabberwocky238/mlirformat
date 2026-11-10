@@ -1,6 +1,6 @@
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (memref<4xf32>, memref<i32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<4xf32>, memref<i32>) -> (), kernel}> ({
     ^bb0(%arg0: memref<4xf32>, %arg1: memref<i32>):
       %0 = "arith.constant"() <{value = 0 : index}> : () -> index
       %1 = "arith.constant"() <{value = 1 : i32}> : () -> i32
@@ -35,7 +35,7 @@
       }, {
       }) : (i1) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [32, 1, 1]>, sym_name = "argmax", workgroup_attributions = 0 : i64} : () -> ()
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [32, 1, 1]>, sym_name = "argmax"} : () -> ()
   }) : () -> ()
 }) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.3, [Shader, Groups, GroupNonUniformArithmetic, GroupNonUniformBallot], [SPV_KHR_storage_buffer_storage_class]>, #spirv.resource_limits<>>} : () -> ()
 

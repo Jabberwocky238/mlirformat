@@ -45,6 +45,19 @@ module {
     }
     return
   }
+  func.func @nested_data_inside_parallel(%arg0: memref<i32>, %arg1: memref<i32>) {
+    %c0_i32 = arith.constant 0 : i32
+    %0 = acc.copyin varPtr(%arg0 : memref<i32>) -> memref<i32>
+    acc.parallel dataOperands(%0 : memref<i32>) {
+      %1 = acc.copyin varPtr(%arg1 : memref<i32>) -> memref<i32>
+      acc.data dataOperands(%1 : memref<i32>) {
+        memref.store %c0_i32, %arg1[] : memref<i32>
+        acc.terminator
+      }
+      acc.yield
+    }
+    return
+  }
   acc.routine @acc_routine_copyout func(@copyout) worker 
   func.func @copyout(%arg0: memref<i32>) attributes {acc.specialized_routine = #acc.specialized_routine<@acc_routine_copyout, <worker>, "copyout">} {
     %0 = acc.copyin varPtr(%arg0 : memref<i32>) -> memref<i32>
@@ -116,6 +129,47 @@ module {
     %0 = acc.create varPtr(%alloca : memref<f32>) -> memref<f32>
     %1 = acc.declare_enter dataOperands(%0 : memref<f32>)
     acc.declare_exit token(%1) dataOperands(%0 : memref<f32>)
+    return
+  }
+  acc.routine @acc_routine_on_device_host func(@fold_on_device_host) seq 
+  func.func @fold_on_device_host() attributes {acc.specialized_routine = #acc.specialized_routine<@acc_routine_on_device_host, <seq>, "fold_on_device_host">} {
+    %c2_i32 = arith.constant 2 : i32
+    %0 = acc.on_device %c2_i32 : i32 -> i1
+    "test.test"(%0) : (i1) -> ()
+    return
+  }
+  acc.routine @acc_routine_on_device_not_host func(@fold_on_device_not_host) seq 
+  func.func @fold_on_device_not_host() attributes {acc.specialized_routine = #acc.specialized_routine<@acc_routine_on_device_not_host, <seq>, "fold_on_device_not_host">} {
+    %c3_i32 = arith.constant 3 : i32
+    %0 = acc.on_device %c3_i32 : i32 -> i1
+    "test.test"(%0) : (i1) -> ()
+    return
+  }
+  func.func @fold_on_device_inside_parallel() {
+    %c2_i32 = arith.constant 2 : i32
+    acc.parallel {
+      %0 = acc.on_device %c2_i32 : i32 -> i1
+      "test.test"(%0) : (i1) -> ()
+      acc.yield
+    }
+    return
+  }
+  func.func @fold_on_device_inside_parallel_alt() {
+    %c4_i32 = arith.constant 4 : i32
+    acc.parallel {
+      %0 = acc.on_device %c4_i32 : i32 -> i1
+      "test.test"(%0) : (i1) -> ()
+      acc.yield
+    }
+    return
+  }
+  func.func @on_device_outside_parallel() {
+    %c2_i32 = arith.constant 2 : i32
+    %0 = acc.on_device %c2_i32 : i32 -> i1
+    "test.test"(%0) : (i1) -> ()
+    acc.parallel {
+      acc.yield
+    }
     return
   }
 }

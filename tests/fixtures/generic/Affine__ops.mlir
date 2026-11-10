@@ -119,30 +119,6 @@
 
 // -----
 #map = affine_map<(d0) -> (d0)>
-#map1 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
-#map2 = affine_map<() -> (0)>
-#map3 = affine_map<()[s0] -> (s0)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (index, index, memref<?xf32>, memref<?x32x?xf32>) -> (), sym_name = "valid_dim_linearize_delinearize"}> ({
-  ^bb0(%arg0: index, %arg1: index, %arg2: memref<?xf32>, %arg3: memref<?x32x?xf32>):
-    "affine.for"(%arg0) <{lowerBoundMap = #map2, operandSegmentSizes = array<i32: 0, 1, 0>, step = 1 : index, upperBoundMap = #map3}> ({
-    ^bb0(%arg4: index):
-      "affine.for"(%arg1) <{lowerBoundMap = #map2, operandSegmentSizes = array<i32: 0, 1, 0>, step = 1 : index, upperBoundMap = #map3}> ({
-      ^bb0(%arg5: index):
-        %0 = "affine.linearize_index"(%arg4, %arg5, %arg0, %arg1) <{disjoint, operandSegmentSizes = array<i32: 2, 2>, static_basis = array<i64: -9223372036854775808, -9223372036854775808>}> : (index, index, index, index) -> index
-        %1:2 = "affine.delinearize_index"(%arg1) <{static_basis = array<i64: 32>}> : (index) -> (index, index)
-        %2 = "affine.load"(%arg2, %0) <{map = #map}> : (memref<?xf32>, index) -> f32
-        "affine.store"(%2, %arg3, %arg4, %1#1, %1#0) <{map = #map1}> : (f32, memref<?x32x?xf32>, index, index, index) -> ()
-        "affine.yield"() : () -> ()
-      }) : (index) -> ()
-      "affine.yield"() : () -> ()
-    }) : (index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0) -> (d0)>
 "builtin.module"() ({
   %0 = "test.foo"() : () -> index
   "test.func"() ({
@@ -266,14 +242,44 @@
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (index, index, index, index) -> index, sym_name = "linearize"}> ({
-  ^bb0(%arg4: index, %arg5: index, %arg6: index, %arg7: index):
-    %1 = "affine.linearize_index"(%arg4, %arg5, %arg6, %arg7) <{disjoint = false, operandSegmentSizes = array<i32: 2, 2>, static_basis = array<i64: -9223372036854775808, -9223372036854775808>}> : (index, index, index, index) -> index
-    "func.return"(%1) : (index) -> ()
+  ^bb0(%arg16: index, %arg17: index, %arg18: index, %arg19: index):
+    %7 = "affine.linearize_index"(%arg16, %arg17, %arg18, %arg19) <{disjoint = false, operandSegmentSizes = array<i32: 2, 2>, static_basis = array<i64: -9223372036854775808, -9223372036854775808>}> : (index, index, index, index) -> index
+    "func.return"(%7) : (index) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, index, index, index) -> index, sym_name = "linearize_mixed"}> ({
-  ^bb0(%arg0: index, %arg1: index, %arg2: index, %arg3: index):
-    %0 = "affine.linearize_index"(%arg0, %arg1, %arg2, %arg3) <{disjoint, operandSegmentSizes = array<i32: 3, 1>, static_basis = array<i64: 2, -9223372036854775808, 3>}> : (index, index, index, index) -> index
-    "func.return"(%0) : (index) -> ()
+  ^bb0(%arg12: index, %arg13: index, %arg14: index, %arg15: index):
+    %6 = "affine.linearize_index"(%arg12, %arg13, %arg14, %arg15) <{disjoint, operandSegmentSizes = array<i32: 3, 1>, static_basis = array<i64: 2, -9223372036854775808, 3>}> : (index, index, index, index) -> index
+    "func.return"(%6) : (index) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<16xindex>) -> (vector<16xindex>, vector<16xindex>), sym_name = "delinearize_vector"}> ({
+  ^bb0(%arg11: vector<16xindex>):
+    %5:2 = "affine.delinearize_index"(%arg11) <{static_basis = array<i64: 4, 8>}> : (vector<16xindex>) -> (vector<16xindex>, vector<16xindex>)
+    "func.return"(%5#0, %5#1) : (vector<16xindex>, vector<16xindex>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<8xindex>) -> (vector<8xindex>, vector<8xindex>, vector<8xindex>), sym_name = "delinearize_vector_3d"}> ({
+  ^bb0(%arg10: vector<8xindex>):
+    %4:3 = "affine.delinearize_index"(%arg10) <{static_basis = array<i64: 2, 3, 4>}> : (vector<8xindex>) -> (vector<8xindex>, vector<8xindex>, vector<8xindex>)
+    "func.return"(%4#0, %4#1, %4#2) : (vector<8xindex>, vector<8xindex>, vector<8xindex>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<4xindex>, index, index) -> (vector<4xindex>, vector<4xindex>), sym_name = "delinearize_vector_dynamic_basis"}> ({
+  ^bb0(%arg7: vector<4xindex>, %arg8: index, %arg9: index):
+    %3:2 = "affine.delinearize_index"(%arg7, %arg8, %arg9) <{static_basis = array<i64: -9223372036854775808, -9223372036854775808>}> : (vector<4xindex>, index, index) -> (vector<4xindex>, vector<4xindex>)
+    "func.return"(%3#0, %3#1) : (vector<4xindex>, vector<4xindex>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<16xindex>, vector<16xindex>) -> vector<16xindex>, sym_name = "linearize_vector"}> ({
+  ^bb0(%arg5: vector<16xindex>, %arg6: vector<16xindex>):
+    %2 = "affine.linearize_index"(%arg5, %arg6) <{disjoint = false, operandSegmentSizes = array<i32: 2, 0>, static_basis = array<i64: 4, 8>}> : (vector<16xindex>, vector<16xindex>) -> vector<16xindex>
+    "func.return"(%2) : (vector<16xindex>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<16xindex>, vector<16xindex>) -> vector<16xindex>, sym_name = "linearize_vector_disjoint"}> ({
+  ^bb0(%arg3: vector<16xindex>, %arg4: vector<16xindex>):
+    %1 = "affine.linearize_index"(%arg3, %arg4) <{disjoint, operandSegmentSizes = array<i32: 2, 0>, static_basis = array<i64: 4, 8>}> : (vector<16xindex>, vector<16xindex>) -> vector<16xindex>
+    "func.return"(%1) : (vector<16xindex>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<8xindex>, vector<8xindex>, vector<8xindex>) -> vector<8xindex>, sym_name = "linearize_vector_3d"}> ({
+  ^bb0(%arg0: vector<8xindex>, %arg1: vector<8xindex>, %arg2: vector<8xindex>):
+    %0 = "affine.linearize_index"(%arg0, %arg1, %arg2) <{disjoint = false, operandSegmentSizes = array<i32: 3, 0>, static_basis = array<i64: 2, 3, 4>}> : (vector<8xindex>, vector<8xindex>, vector<8xindex>) -> vector<8xindex>
+    "func.return"(%0) : (vector<8xindex>) -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -291,7 +297,7 @@
         "affine.yield"() : () -> ()
       }) : (index, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -301,7 +307,7 @@
 #map1 = affine_map<()[s0] -> (s0)>
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "gpu"}> ({
-    "gpu.func"() <{function_type = (memref<?x?xf32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<?x?xf32>) -> (), kernel}> ({
     ^bb0(%arg0: memref<?x?xf32>):
       %0 = "arith.constant"() <{value = 3 : index}> : () -> index
       %1 = "memref.dim"(%arg0, %0) : (memref<?x?xf32>, index) -> index
@@ -319,7 +325,7 @@
         "affine.yield"() : () -> ()
       }) : (index, index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "affine_thread_id", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "affine_thread_id"} : () -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -359,6 +365,54 @@
       }) : (index, index) -> ()
       "affine.yield"() : () -> ()
     }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+#map1 = affine_map<() -> (0)>
+#map2 = affine_map<() -> (100)>
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "parallel_xori_reduce"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<100xi32>
+    %1 = "affine.parallel"() <{lowerBoundsGroups = dense<1> : tensor<1xi32>, lowerBoundsMap = #map1, reductions = [15], steps = [1], upperBoundsGroups = dense<1> : tensor<1xi32>, upperBoundsMap = #map2}> ({
+    ^bb0(%arg0: index):
+      %2 = "affine.load"(%0, %arg0) <{map = #map}> : (memref<100xi32>, index) -> i32
+      "affine.yield"(%2) : (i32) -> ()
+    }) : () -> i32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+#map1 = affine_map<() -> (0)>
+#map2 = affine_map<() -> (100)>
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "parallel_maxnumf_reduce"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<100xf32>
+    %1 = "affine.parallel"() <{lowerBoundsGroups = dense<1> : tensor<1xi32>, lowerBoundsMap = #map1, reductions = [5], steps = [1], upperBoundsGroups = dense<1> : tensor<1xi32>, upperBoundsMap = #map2}> ({
+    ^bb0(%arg0: index):
+      %2 = "affine.load"(%0, %arg0) <{map = #map}> : (memref<100xf32>, index) -> f32
+      "affine.yield"(%2) : (f32) -> ()
+    }) : () -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+#map1 = affine_map<() -> (0)>
+#map2 = affine_map<() -> (100)>
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "parallel_minnumf_reduce"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<100xf32>
+    %1 = "affine.parallel"() <{lowerBoundsGroups = dense<1> : tensor<1xi32>, lowerBoundsMap = #map1, reductions = [9], steps = [1], upperBoundsGroups = dense<1> : tensor<1xi32>, upperBoundsMap = #map2}> ({
+    ^bb0(%arg0: index):
+      %2 = "affine.load"(%0, %arg0) <{map = #map}> : (memref<100xf32>, index) -> f32
+      "affine.yield"(%2) : (f32) -> ()
+    }) : () -> f32
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

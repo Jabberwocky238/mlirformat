@@ -186,11 +186,11 @@ module {
   func.func @kernel_environment_canonicalization(%arg0: i32, %arg1: i32, %arg2: i32) {
     acc.kernel_environment {
     }
-    acc.kernel_environment wait({%arg0 : i32, %arg1 : i32}) {
+    acc.kernel_environment wait(%arg0, %arg1 : i32, i32) {
     }
     acc.kernel_environment wait {
     }
-    acc.kernel_environment wait({%arg2 : i32} [#acc.device_type<nvidia>]) {
+    acc.kernel_environment wait(%arg2 : i32) {
     }
     return
   }

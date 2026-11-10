@@ -153,31 +153,3 @@ module {
   }
 }
 
-// -----
-module {
-  func.func @too_few_tile_size_params() {
-    affine.for %arg0 = 0 to 256 {
-      affine.for %arg1 = 0 to 512 {
-        affine.for %arg2 = 0 to 1024 {
-          "test.foo"(%arg0, %arg1, %arg2) : (index, index, index) -> ()
-        }
-      }
-    }
-    return
-  }
-}
-
-// -----
-module {
-  func.func @invalid_type_for_tile_size_params(%arg0: f32, %arg1: f32, %arg2: f32) {
-    affine.for %arg3 = 0 to 256 {
-      affine.for %arg4 = 0 to 512 {
-        affine.for %arg5 = 0 to 1024 {
-          "test.foo"(%arg3, %arg4, %arg5) : (index, index, index) -> ()
-        }
-      }
-    }
-    return
-  }
-}
-

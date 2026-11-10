@@ -7,9 +7,13 @@
 9	verify	'spirv.AtomicCompareExchangeWeak' op failed to verify that `value` type matches pointee type of `pointer`
 10	verify	'spirv.AtomicCompareExchangeWeak' op failed to verify that `comparator` type matches pointee type of `pointer`
 11	verify	'spirv.AtomicCompareExchangeWeak' op failed to verify that `result` type matches pointee type of `pointer`
-13	verify	'spirv.AtomicExchange' op failed to verify that `value` type matches pointee type of `pointer`
-14	verify	'spirv.AtomicExchange' op failed to verify that `value` type matches pointee type of `pointer`
-17	verify	'spirv.EXT.AtomicFAdd' op failed to verify that `result` type matches pointee type of `pointer`
-18	verify	'spirv.EXT.AtomicFAdd' op failed to verify that `result` type matches pointee type of `pointer`
-19	verify	expected at most one of these four memory constraints to be set: `Acquire`, `Release`,`AcquireRelease` or `SequentiallyConsistent`
-20	verify	'spirv.EXT.AtomicFAdd' op operand #1 must be 16/32/64-bit float, but got 'bf16'
+13	verify	'spirv.AtomicExchange' op operand #1 must be 8/16/32/64-bit integer or 16/32/64-bit float, but got 'bf16'
+14	verify	'spirv.AtomicExchange' op operand #1 must be 8/16/32/64-bit integer or 16/32/64-bit float, but got 'f8E4M3FN'
+15	verify	'spirv.AtomicExchange' op failed to verify that `value` type matches pointee type of `pointer`
+16	verify	'spirv.AtomicExchange' op failed to verify that `value` type matches pointee type of `pointer`
+20	verify	'spirv.AtomicLoad' op failed to verify that `result` type matches pointee type of `pointer`
+24	verify	'spirv.AtomicStore' op failed to verify that `value` type matches pointee type of `pointer`
+27	verify	'spirv.EXT.AtomicFAdd' op failed to verify that `result` type matches pointee type of `pointer`
+28	verify	'spirv.EXT.AtomicFAdd' op failed to verify that `result` type matches pointee type of `pointer`
+29	verify	expected at most one of these four memory constraints to be set: `Acquire`, `Release`,`AcquireRelease` or `SequentiallyConsistent`
+30	verify	'spirv.EXT.AtomicFAdd' op operand #1 must be 16/32/64-bit float, but got 'bf16'

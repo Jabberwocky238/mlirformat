@@ -39,6 +39,11 @@ module {
     %1 = math.ceil %arg1 : f64
     return
   }
+  func.func @sqrt(%arg0: f32, %arg1: f64) {
+    %0 = math.sqrt %arg0 : f32
+    %1 = math.sqrt %arg1 : f64
+    return
+  }
   func.func @exp(%arg0: f32, %arg1: f64) {
     %0 = math.exp %arg0 : f32
     %1 = math.exp %arg1 : f64
@@ -52,6 +57,11 @@ module {
   func.func @round(%arg0: f32, %arg1: f64) {
     %0 = math.round %arg0 : f32
     %1 = math.round %arg1 : f64
+    return
+  }
+  func.func @roundeven(%arg0: f32, %arg1: f64) {
+    %0 = math.roundeven %arg0 : f32
+    %1 = math.roundeven %arg1 : f64
     return
   }
 }

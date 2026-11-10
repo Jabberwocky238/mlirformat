@@ -147,8 +147,11 @@ module {
     %0 = math.trunc %arg0 fastmath<fast> : f32
     %1 = math.powf %arg2, %arg2 fastmath<fast> : vector<4xf32>
     %2 = math.fma %arg3, %arg3, %arg3 : tensor<4x4x?xf32>
-    %3 = math.absf %arg0 fastmath<ninf> : f32
-    %4 = math.fpowi %arg0, %arg1 fastmath<fast> : f32, i32
+    %3 = math.fma %arg0, %arg0, %arg0 to_nearest_even : f32
+    %4 = math.fma %arg0, %arg0, %arg0 downward fastmath<contract> : f32
+    %5 = math.fma %arg2, %arg2, %arg2 toward_zero : vector<4xf32>
+    %6 = math.absf %arg0 fastmath<ninf> : f32
+    %7 = math.fpowi %arg0, %arg1 fastmath<fast> : f32, i32
     return
   }
   func.func @fpclassify(%arg0: f32, %arg1: f64, %arg2: vector<4xf32>, %arg3: tensor<4x?xf32>) {

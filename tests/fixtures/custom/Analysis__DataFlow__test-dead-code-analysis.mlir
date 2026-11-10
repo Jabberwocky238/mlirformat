@@ -125,5 +125,23 @@ module {
   func.func @test_dca_doesnt_crash_2() attributes {symbol = @notexistant} {
     return
   }
+  func.func @test_forall_op_control_flow(%arg0: index) {
+    scf.forall (%arg1) in (%arg0) {
+    } {tag = "test_forall_op_control_flow"}
+    return
+  }
+  func.func @test_for_op_control_flow() {
+    %c1 = arith.constant 1 : index
+    %c5 = arith.constant 5 : index
+    %c6 = arith.constant 6 : index
+    %c7 = arith.constant 7 : index
+    scf.for %arg0 = %c5 to %c5 step %c1 {
+    } {tag = "test_for_op_control_flow_zero"}
+    scf.for %arg0 = %c5 to %c6 step %c1 {
+    } {tag = "test_for_op_control_flow_one"}
+    scf.for %arg0 = %c5 to %c7 step %c1 {
+    } {tag = "test_for_op_control_flow_multi"}
+    return
+  }
 }
 

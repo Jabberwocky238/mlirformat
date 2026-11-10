@@ -7,7 +7,7 @@ module attributes {llvm.target_triple = "x86_64-unknown-linux-gnu", omp.is_gpu =
     omp.parallel private(@_QFFfnEv_private_i32 %1 -> %arg0 : !llvm.ptr) {
       llvm.store %2, %arg0 : i32, !llvm.ptr
       %3 = omp.map.info var_ptr(%arg0 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "v"}
-      omp.target map_entries(%3 -> %arg1 : !llvm.ptr) {
+      omp.target kernel_type(generic) map_entries(%3 -> %arg1 : !llvm.ptr) {
         %4 = llvm.mlir.constant(1 : i32) : i32
         %5 = llvm.load %arg1 : !llvm.ptr -> i32
         %6 = llvm.add %5, %4 : i32

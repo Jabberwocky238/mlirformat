@@ -5,6 +5,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
+pub enum AsmDialect {
+    #[serde(rename = "att")]
+    Att,
+    #[serde(rename = "intel")]
+    Intel,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
+#[serde(crate = "mlirformat::__serde")]
 pub enum AtomicBinOp {
     #[serde(rename = "xchg")]
     Xchg,
@@ -48,6 +57,10 @@ pub enum AtomicBinOp {
     Fmaximum,
     #[serde(rename = "fminimum")]
     Fminimum,
+    #[serde(rename = "fmaximumnum")]
+    Fmaximumnum,
+    #[serde(rename = "fminimumnum")]
+    Fminimumnum,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
@@ -162,6 +175,29 @@ pub enum ICmpPredicate {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
+pub enum RoundingMode {
+    #[serde(rename = "towardzero")]
+    Towardzero,
+    #[serde(rename = "tonearest")]
+    Tonearest,
+    #[serde(rename = "upward")]
+    Upward,
+    #[serde(rename = "downward")]
+    Downward,
+    #[serde(rename = "tonearestaway")]
+    Tonearestaway,
+    #[doc(hidden)]
+    #[serde(rename = "__5")]
+    __5,
+    #[doc(hidden)]
+    #[serde(rename = "__6")]
+    __6,
+    #[serde(rename = "dynamic")]
+    Dynamic,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
+#[serde(crate = "mlirformat::__serde")]
 pub enum UnnamedAddr {
     #[serde(rename = "")]
     V,
@@ -182,9 +218,7 @@ pub enum Visibility {
     Protected,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.acos", results(res))]
+#[mlir::op("llvm.intr.acos", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct ACosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -204,9 +238,7 @@ pub struct AShrOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.asin", results(res))]
+#[mlir::op("llvm.intr.asin", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct ASinOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -215,9 +247,7 @@ pub struct ASinOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.atan2", results(res))]
+#[mlir::op("llvm.intr.atan2", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct ATan2Op<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -228,9 +258,7 @@ pub struct ATan2Op<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.atan", results(res))]
+#[mlir::op("llvm.intr.atan", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct ATanOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -404,6 +432,13 @@ pub struct Annotation<'a> {
     pub res: Type<'a>,
 }
 
+#[mlir::op("llvm.intr.arithmetic.fence", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
+pub struct ArithmeticFenceOp<'a> {
+    #[slot(res, name = "in")]
+    pub in_: Value<'a>,
+    pub res: Type<'a>,
+}
+
 ///
 /// Generic form only (directive `custom<OpBundles>`).
 #[mlir::op("llvm.intr.assume")]
@@ -469,9 +504,7 @@ pub struct AtomicRMWOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.bitreverse", results(res))]
+#[mlir::op("llvm.intr.bitreverse", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct BitReverseOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -549,9 +582,7 @@ pub struct BrOp<'a> {
     pub dest_operands_ty: Vec<Type<'a>>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.bswap", results(res))]
+#[mlir::op("llvm.intr.bswap", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct ByteSwapOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -646,6 +677,25 @@ pub struct CallOp<'a> {
     pub convergent: bool,
     pub no_unwind: bool,
     pub will_return: bool,
+    pub noreturn: bool,
+    pub returns_twice: bool,
+    pub hot: bool,
+    pub cold: bool,
+    pub noduplicate: bool,
+    pub no_caller_saved_registers: bool,
+    pub nocallback: bool,
+    pub modular_format: Option<Attribute<'a>>,
+    pub nobuiltins: Option<Attribute<'a>>,
+    #[attr(dense = "i32")]
+    pub allocsize: Option<Attribute<'a>>,
+    pub optsize: bool,
+    pub minsize: bool,
+    pub builtin: bool,
+    pub nobuiltin: bool,
+    pub save_reg_params: bool,
+    pub zero_call_used_regs: Option<Attribute<'a>>,
+    pub trap_func_name: Option<Attribute<'a>>,
+    pub default_func_attrs: Option<Attribute<'a>>,
     #[attr(dense = "i32")]
     pub op_bundle_sizes: Attribute<'a>,
     pub op_bundle_tags: Option<Attribute<'a>>,
@@ -777,9 +827,76 @@ pub struct ConstantOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.fpext", results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.fadd", format = "$arg_0 `,` $arg_1 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFAddIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.fdiv", format = "$arg_0 `,` $arg_1 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFDivIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.fma", format = "$arg_0 `,` $arg_1 `,` $arg_2 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFMAIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[slot(res)]
+    pub arg_2: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.fmuladd", format = "$arg_0 `,` $arg_1 `,` $arg_2 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFMulAddIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[slot(res)]
+    pub arg_2: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.fmul", format = "$arg_0 `,` $arg_1 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFMulIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.fpext", format = "$arg_0 $fpExceptionBehavior attr-dict `:` type($arg_0) `to` qualified(type($res))", results(res))]
 pub struct ConstrainedFPExtIntr<'a> {
     #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
@@ -789,48 +906,69 @@ pub struct ConstrainedFPExtIntr<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.fptrunc", results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.fptrunc", format = "$arg_0 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0) `to` qualified(type($res))", results(res))]
 pub struct ConstrainedFPTruncIntr<'a> {
     #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
-    pub roundingmode: Attribute<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
     pub arg_0_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.sitofp", results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.frem", format = "$arg_0 `,` $arg_1 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFRemIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.fsub", format = "$arg_0 `,` $arg_1 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0)", results(res))]
+pub struct ConstrainedFSubIntr<'a> {
+    #[slot(res)]
+    pub arg_0: Value<'a>,
+    #[slot(res)]
+    pub arg_1: Value<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
+    #[attr(name = "fpExceptionBehavior", int = "i64")]
+    pub fp_exception_behavior: FPExceptionBehavior,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.experimental.constrained.sitofp", format = "$arg_0 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0) `to` qualified(type($res))", results(res))]
 pub struct ConstrainedSIToFP<'a> {
     #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
-    pub roundingmode: Attribute<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
     pub arg_0_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("llvm.intr.experimental.constrained.uitofp", results(res))]
+#[mlir::op("llvm.intr.experimental.constrained.uitofp", format = "$arg_0 $roundingmode $fpExceptionBehavior attr-dict `:` type($arg_0) `to` qualified(type($res))", results(res))]
 pub struct ConstrainedUIToFP<'a> {
     #[slot(arg_0_ty)]
     pub arg_0: Value<'a>,
-    pub roundingmode: Attribute<'a>,
+    #[attr(int = "i64")]
+    pub roundingmode: RoundingMode,
     #[attr(name = "fpExceptionBehavior", int = "i64")]
     pub fp_exception_behavior: FPExceptionBehavior,
     pub arg_0_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.copysign", results(res))]
+#[mlir::op("llvm.intr.copysign", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct CopySignOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -846,23 +984,19 @@ pub struct CoroAlignOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.begin", results(res))]
+#[mlir::op("llvm.intr.coro.begin", format = "$token `,` $mem attr-dict `:` functional-type($token $mem, $res)", results(res))]
 pub struct CoroBeginOp<'a> {
     #[slot(token_ty)]
     pub token: Value<'a>,
     #[slot(mem_ty)]
     pub mem: Value<'a>,
-    #[dtype(is = "!llvm.token")]
+    #[dtype(is = token)]
     pub token_ty: Type<'a>,
     pub mem_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.end", results(res))]
+#[mlir::op("llvm.intr.coro.end", format = "$handle `,` $unwind `,` $retvals attr-dict `:` functional-type($handle $unwind $retvals, $res)", results(res))]
 pub struct CoroEndOp<'a> {
     #[slot(handle_ty)]
     pub handle: Value<'a>,
@@ -873,28 +1007,24 @@ pub struct CoroEndOp<'a> {
     pub handle_ty: Type<'a>,
     #[dtype(is = i1)]
     pub unwind_ty: Type<'a>,
-    #[dtype(is = "!llvm.token")]
+    #[dtype(is = token)]
     pub retvals_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.free", results(res))]
+#[mlir::op("llvm.intr.coro.free", format = "$id `,` $handle attr-dict `:` functional-type($id $handle, $res)", results(res))]
 pub struct CoroFreeOp<'a> {
     #[slot(id_ty)]
     pub id: Value<'a>,
     #[slot(handle_ty)]
     pub handle: Value<'a>,
-    #[dtype(is = "!llvm.token")]
+    #[dtype(is = token)]
     pub id_ty: Type<'a>,
     pub handle_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.id", results(res))]
+#[mlir::op("llvm.intr.coro.id", format = "$align `,` $promise `,` $coroaddr `,` $fnaddrs attr-dict `:` functional-type($align $promise $coroaddr $fnaddrs, $res)", results(res))]
 pub struct CoroIdOp<'a> {
     #[slot(align_ty)]
     pub align: Value<'a>,
@@ -912,9 +1042,7 @@ pub struct CoroIdOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.promise", results(res))]
+#[mlir::op("llvm.intr.coro.promise", format = "$handle `,` $align `,` $from attr-dict `:` functional-type($handle $align $from, $res)", results(res))]
 pub struct CoroPromiseOp<'a> {
     #[slot(handle_ty)]
     pub handle: Value<'a>,
@@ -937,9 +1065,7 @@ pub struct CoroResumeOp<'a> {
     pub handle_ty: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.coro.save", results(res))]
+#[mlir::op("llvm.intr.coro.save", format = "$handle attr-dict `:` functional-type($handle, $res)", results(res))]
 pub struct CoroSaveOp<'a> {
     #[slot(handle_ty)]
     pub handle: Value<'a>,
@@ -958,16 +1084,14 @@ pub struct CoroSuspendOp<'a> {
     pub save: Value<'a>,
     #[slot(final_ty, name = "final")]
     pub final_: Value<'a>,
-    #[dtype(is = "!llvm.token")]
+    #[dtype(is = token)]
     pub save_ty: Type<'a>,
     #[dtype(is = i1)]
     pub final_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.cos", results(res))]
+#[mlir::op("llvm.intr.cos", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct CosOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -976,9 +1100,7 @@ pub struct CosOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.cosh", results(res))]
+#[mlir::op("llvm.intr.cosh", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct CoshOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1009,9 +1131,7 @@ pub struct CountTrailingZerosOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ctpop", results(res))]
+#[mlir::op("llvm.intr.ctpop", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct CtPopOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1081,9 +1201,7 @@ pub struct DbgValueOp<'a> {
 pub struct DebugTrap<'a> {
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.eh.typeid.for", results(res))]
+#[mlir::op("llvm.intr.eh.typeid.for", format = "$type_info attr-dict `:` functional-type($type_info, $res)", results(res))]
 pub struct EhTypeidForOp<'a> {
     #[slot(type_info_ty)]
     pub type_info: Value<'a>,
@@ -1091,9 +1209,7 @@ pub struct EhTypeidForOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.exp10", results(res))]
+#[mlir::op("llvm.intr.exp10", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct Exp10Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1102,9 +1218,7 @@ pub struct Exp10Op<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.exp2", results(res))]
+#[mlir::op("llvm.intr.exp2", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct Exp2Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1113,9 +1227,7 @@ pub struct Exp2Op<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.exp", results(res))]
+#[mlir::op("llvm.intr.exp", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct ExpOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1169,9 +1281,7 @@ pub struct ExtractValueOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fabs", results(res))]
+#[mlir::op("llvm.intr.fabs", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct FAbsOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1191,9 +1301,7 @@ pub struct FAddOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ceil", results(res))]
+#[mlir::op("llvm.intr.ceil", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct FCeilOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1230,9 +1338,7 @@ pub struct FDivOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.floor", results(res))]
+#[mlir::op("llvm.intr.floor", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct FFloorOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -1241,9 +1347,7 @@ pub struct FFloorOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fma", results(res))]
+#[mlir::op("llvm.intr.fma", format = "`(` $a `,` $b `,` $c `)` attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct FMAOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -1256,9 +1360,7 @@ pub struct FMAOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fmuladd", results(res))]
+#[mlir::op("llvm.intr.fmuladd", format = "`(` $a `,` $b `,` $c `)` attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct FMulAddOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -1291,10 +1393,12 @@ pub struct FNegOp<'a> {
     pub res: Type<'a>,
 }
 
-#[mlir::op("llvm.fpext", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
+#[mlir::op("llvm.fpext", format = "$arg (`fastmath` `` $fastmathFlags^)? attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct FPExtOp<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
+    #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
+    pub fastmath_flags: Option<Attribute<'a>>,
     pub arg_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -1315,10 +1419,12 @@ pub struct FPToUIOp<'a> {
     pub res: Type<'a>,
 }
 
-#[mlir::op("llvm.fptrunc", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
+#[mlir::op("llvm.fptrunc", format = "$arg (`fastmath` `` $fastmathFlags^)? attr-dict `:` type($arg) `to` type($res)", results(res))]
 pub struct FPTruncOp<'a> {
     #[slot(arg_ty)]
     pub arg: Value<'a>,
+    #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
+    pub fastmath_flags: Option<Attribute<'a>>,
     pub arg_ty: Type<'a>,
     pub res: Type<'a>,
 }
@@ -1345,15 +1451,20 @@ pub struct FSubOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.trunc", results(res))]
+#[mlir::op("llvm.intr.trunc", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct FTruncOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
     #[attr(name = "fastmathFlags", dialect = "llvm.fastmath", default = "<none>")]
     pub fastmath_flags: Option<Attribute<'a>>,
     pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.fake.use", format = "$args attr-dict `:` type($args)")]
+pub struct FakeUseOp<'a> {
+    #[slot(args_ty)]
+    pub args: Vec<Value<'a>>,
+    pub args_ty: Vec<Type<'a>>,
 }
 
 #[mlir::op("llvm.fence", format = "(`syncscope` `(` $syncscope^ `)`)? $ordering attr-dict")]
@@ -1363,9 +1474,7 @@ pub struct FenceOp<'a> {
     pub syncscope: Option<Attribute<'a>>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.frexp", results(res))]
+#[mlir::op("llvm.intr.frexp", format = "`(` $val `)` attr-dict `:` functional-type($val, $res)", results(res))]
 pub struct FractionExpOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -1382,9 +1491,7 @@ pub struct FreezeOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fshl", results(res))]
+#[mlir::op("llvm.intr.fshl", format = "`(` $a `,` $b `,` $c `)` attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct FshlOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -1395,9 +1502,7 @@ pub struct FshlOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.fshr", results(res))]
+#[mlir::op("llvm.intr.fshr", format = "`(` $a `,` $b `,` $c `)` attr-dict `:` functional-type($a $b $c, $res)", results(res))]
 pub struct FshrOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -1779,9 +1884,7 @@ pub struct IndirectBrOp<'a> {
 /// If `tail_call_kind` is used, the operation behaves like the specified
 /// tail call kind. The `musttail` kind it's not available for this operation,
 /// since it isn't supported by LLVM's inline asm.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.inline_asm", results(res))]
+#[mlir::op("llvm.inline_asm", format = "(`has_side_effects` $has_side_effects^)? (`is_align_stack` $is_align_stack^)? (`tail_call_kind` `=` $tail_call_kind^)? (`asm_dialect` `=` $asm_dialect^)? (`operand_attrs` `=` $operand_attrs^)? attr-dict $asm_string `,` $constraints $operands `:` functional-type($operands, $res)", results(res))]
 pub struct InlineAsmOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
@@ -1791,7 +1894,8 @@ pub struct InlineAsmOp<'a> {
     pub is_align_stack: bool,
     #[attr(dialect = "llvm.tailcallkind", default = "<none>")]
     pub tail_call_kind: Option<Attribute<'a>>,
-    pub asm_dialect: Option<Attribute<'a>>,
+    #[attr(int = "i64")]
+    pub asm_dialect: Option<AsmDialect>,
     pub operand_attrs: Option<Attribute<'a>>,
     pub operands_ty: Vec<Type<'a>>,
     pub res: Vec<Type<'a>>,
@@ -1945,6 +2049,11 @@ pub struct IsFPClass<'a> {
 /// }
 /// ```
 ///
+/// The `function_entry_count` attribute models function-level `!prof`
+/// entry-count metadata. It stores the entry count, whether the count is real
+/// or synthetic, and any trailing import GUID operands in a single
+/// `#llvm.function_entry_count` attribute.
+///
 /// Generic form only (custom C++ syntax).
 #[mlir::op("llvm.func")]
 pub struct LLVMFuncOp<'a> {
@@ -1964,7 +2073,7 @@ pub struct LLVMFuncOp<'a> {
     pub passthrough: Option<Attribute<'a>>,
     pub arg_attrs: Option<Attribute<'a>>,
     pub res_attrs: Option<Attribute<'a>>,
-    #[attr(int = "i64")]
+    #[attr(dialect = "llvm.function_entry_count")]
     pub function_entry_count: Option<Attribute<'a>>,
     #[attr(dialect = "llvm.memory_effects")]
     pub memory_effects: Option<Attribute<'a>>,
@@ -1993,11 +2102,9 @@ pub struct LLVMFuncOp<'a> {
     pub prefer_vector_width: Option<Attribute<'a>>,
     #[attr(dialect = "llvm.target_features")]
     pub target_features: Option<Attribute<'a>>,
-    pub no_infs_fp_math: Option<Attribute<'a>>,
-    pub no_nans_fp_math: Option<Attribute<'a>>,
     pub no_signed_zeros_fp_math: Option<Attribute<'a>>,
-    pub denormal_fp_math: Option<Attribute<'a>>,
-    pub denormal_fp_math_f32: Option<Attribute<'a>>,
+    #[attr(dialect = "llvm.denormal_fpenv")]
+    pub denormal_fpenv: Option<Attribute<'a>>,
     pub fp_contract: Option<Attribute<'a>>,
     pub instrument_function_entry: Option<Attribute<'a>>,
     pub instrument_function_exit: Option<Attribute<'a>>,
@@ -2006,7 +2113,23 @@ pub struct LLVMFuncOp<'a> {
     pub inline_hint: bool,
     pub no_unwind: bool,
     pub will_return: bool,
+    pub noreturn: bool,
     pub optimize_none: bool,
+    pub returns_twice: bool,
+    pub hot: bool,
+    pub cold: bool,
+    pub noduplicate: bool,
+    pub no_caller_saved_registers: bool,
+    pub nocallback: bool,
+    pub modular_format: Option<Attribute<'a>>,
+    pub nobuiltins: Option<Attribute<'a>>,
+    #[attr(dense = "i32")]
+    pub allocsize: Option<Attribute<'a>>,
+    pub optsize: bool,
+    pub minsize: bool,
+    pub save_reg_params: bool,
+    pub zero_call_used_regs: Option<Attribute<'a>>,
+    pub default_func_attrs: Option<Attribute<'a>>,
     #[attr(dialect = "llvm.vec_type_hint")]
     pub vec_type_hint: Option<Attribute<'a>>,
     #[attr(dense = "i32")]
@@ -2017,6 +2140,7 @@ pub struct LLVMFuncOp<'a> {
     pub intel_reqd_sub_group_size: Option<Attribute<'a>>,
     #[attr(dialect = "llvm.uwtableKind")]
     pub uwtable_kind: Option<Attribute<'a>>,
+    pub use_sample_profile: Option<Attribute<'a>>,
     pub body: Region<'a>,
 }
 
@@ -2082,9 +2206,7 @@ pub struct LinkerOptionsOp<'a> {
     pub options: Attribute<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.llrint", results(res))]
+#[mlir::op("llvm.intr.llrint", format = "`(` $val `)` attr-dict `:` functional-type($val, $res)", results(res))]
 pub struct LlrintOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2092,9 +2214,7 @@ pub struct LlrintOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.llround", results(res))]
+#[mlir::op("llvm.intr.llround", format = "`(` $val `)` attr-dict `:` functional-type($val, $res)", results(res))]
 pub struct LlroundOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2102,9 +2222,7 @@ pub struct LlroundOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ldexp", results(res))]
+#[mlir::op("llvm.intr.ldexp", format = "`(` $val `,` $power `)` attr-dict `:` functional-type($val $power, $res)", results(res))]
 pub struct LoadExpOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2164,9 +2282,7 @@ pub struct LoadOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.log10", results(res))]
+#[mlir::op("llvm.intr.log10", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct Log10Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2175,9 +2291,7 @@ pub struct Log10Op<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.log2", results(res))]
+#[mlir::op("llvm.intr.log2", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct Log2Op<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2186,9 +2300,7 @@ pub struct Log2Op<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.log", results(res))]
+#[mlir::op("llvm.intr.log", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct LogOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2197,9 +2309,7 @@ pub struct LogOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.lrint", results(res))]
+#[mlir::op("llvm.intr.lrint", format = "`(` $val `)` attr-dict `:` functional-type($val, $res)", results(res))]
 pub struct LrintOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2207,9 +2317,7 @@ pub struct LrintOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.lround", results(res))]
+#[mlir::op("llvm.intr.lround", format = "`(` $val `)` attr-dict `:` functional-type($val, $res)", results(res))]
 pub struct LroundOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2246,6 +2354,7 @@ pub struct MaskedStoreOp<'a> {
     pub mask: Value<'a>,
     #[attr(int = "i32")]
     pub alignment: Attribute<'a>,
+    pub nontemporal: bool,
     pub value_ty: Type<'a>,
     pub data_ty: Type<'a>,
     pub mask_ty: Type<'a>,
@@ -2316,9 +2425,7 @@ pub struct MatrixTransposeOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.maxnum", results(res))]
+#[mlir::op("llvm.intr.maxnum", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct MaxNumOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2329,9 +2436,7 @@ pub struct MaxNumOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.maximum", results(res))]
+#[mlir::op("llvm.intr.maximum", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct MaximumOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2455,9 +2560,46 @@ pub struct MemsetOp<'a> {
     pub len_ty: Type<'a>,
 }
 
+/// `llvm.mlir.metadata_as_value`: Wraps an LLVM `metadata` constant so it can be used as an SSA value.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.minnum", results(res))]
+/// Materializes an `!llvm.metadata` SSA value that mirrors LLVM IR's
+/// `llvm::MetadataAsValue`: a wrapper that lifts an arbitrary
+/// `llvm::Metadata` node into the value domain so it can be used as an
+/// operand to instructions that take `metadata` arguments (for example the
+/// constrained floating-point intrinsics or `llvm.read_register`).
+///
+/// The wrapped metadata is described by the `metadata` attribute, which
+/// must be one of the LLVM dialect's metadata-attribute classes:
+///
+/// * `#llvm.md_string<"...">` -> `llvm::MDString`.
+/// * `#llvm.md_const<...>` -> `llvm::ConstantAsMetadata`.
+/// * `#llvm.md_func<@symbol>` -> `llvm::ValueAsMetadata` of a function.
+/// * `#llvm.md_node<...>` -> `llvm::MDNode` over any of the above.
+///
+/// These can be nested arbitrarily to form metadata trees. Lowering to LLVM
+/// IR materialises the corresponding `llvm::Metadata` via the dialect's
+/// metadata-attribute converter and wraps the result with
+/// `llvm::MetadataAsValue::get(ctx, md)`.
+///
+/// Example:
+///
+/// ```mlir
+/// // Rounding-mode operand of a constrained-FP intrinsic:
+/// %rm = llvm.mlir.metadata_as_value #llvm.md_string<"round.tonearest">
+///     : !llvm.metadata
+/// // Named-register metadata for llvm.read_register:
+/// %nr = llvm.mlir.metadata_as_value #llvm.md_node<#llvm.md_string<"sp">>
+///     : !llvm.metadata
+/// ```
+///
+/// Generic form only (result type `res` inferred in C++).
+#[mlir::op("llvm.mlir.metadata_as_value", results(res))]
+pub struct MetadataAsValueOp<'a> {
+    pub metadata: Attribute<'a>,
+    pub res: Type<'a>,
+}
+
+#[mlir::op("llvm.intr.minnum", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct MinNumOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2468,9 +2610,7 @@ pub struct MinNumOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.minimum", results(res))]
+#[mlir::op("llvm.intr.minimum", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct MinimumOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2484,8 +2624,10 @@ pub struct MinimumOp<'a> {
 /// `llvm.module_flags`: Information about module properties
 ///
 /// Represents the equivalent in MLIR for LLVM's `llvm.module.flags` metadata,
-/// which requires a list of metadata triplets. Each triplet entry is described
-/// by a `ModuleFlagAttr`.
+/// which requires a list of metadata triplets (combining kind, name, value),
+/// either specified directly by a `ModuleFlagAttr` or defined by an attribute
+/// implementing `ModuleFlagAttrInterface` (which is used to wrap the details
+/// of metadata combining, provided other verifications, etc.)
 ///
 /// Example:
 /// ```mlir
@@ -2510,9 +2652,45 @@ pub struct MulOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `llvm.named_metadata`: Module-level named metadata
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.nearbyint", results(res))]
+/// Represents an LLVM named metadata node (`llvm::NamedMDNode`). Named
+/// metadata nodes are module-level metadata that associate a name string
+/// with a list of metadata nodes. Each operand must be an `#llvm.md_node`.
+///
+/// Note: cyclic metadata graphs are not supported. Because metadata attributes
+/// are represented as MLIR attributes (which form a tree), there is no way to
+/// express a metadata node that directly or transitively references itself.
+/// LLVM IR permits such cycles (e.g. `!0 = !{!0}`), but they cannot be
+/// represented here and will not round-trip through this op.
+///
+/// Example:
+/// ```mlir
+/// llvm.named_metadata "foo.version" [
+///   #llvm.md_node<#llvm.md_const<2 : i32>,
+///                 #llvm.md_const<9 : i32>,
+///                 #llvm.md_const<0 : i32>
+///   >
+/// ]
+/// llvm.named_metadata "foo.kernel" [
+///   #llvm.md_node<
+///     #llvm.md_func<@my_kernel>,
+///     #llvm.md_node<>,
+///     #llvm.md_node<
+///       #llvm.md_node<#llvm.md_const<0 : i32>,
+///                     #llvm.md_string<"foo.buffer">
+///       >
+///     >
+///   >
+/// ]
+/// ```
+#[mlir::op("llvm.named_metadata", format = "$metadata_name $nodes attr-dict")]
+pub struct NamedMetadataOp<'a> {
+    pub metadata_name: Attribute<'a>,
+    pub nodes: Attribute<'a>,
+}
+
+#[mlir::op("llvm.intr.nearbyint", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct NearbyintOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2529,19 +2707,18 @@ pub struct NoAliasScopeDeclOp<'a> {
 
 /// `llvm.mlir.none`: Defines a value containing an empty token to LLVM type.
 ///
-/// Unlike LLVM IR, MLIR does not have first-class token values. They must be
-/// explicitly created as SSA values using `llvm.mlir.none`. This operation has
-/// no operands or attributes, and returns a none token value of a wrapped LLVM IR
-/// pointer type.
+/// MLIR does not have a way to spell the LLVM IR `none` token literal. This
+/// operation produces a builtin `!token` SSA value that lowers to
+/// `llvm::ConstantTokenNone` in LLVM IR.
 ///
 /// Examples:
 ///
 /// ```mlir
-/// %0 = llvm.mlir.none : !llvm.token
+/// %0 = llvm.mlir.none : !token
 /// ```
 #[mlir::op("llvm.mlir.none", format = "attr-dict `:` type($res)", results(res))]
 pub struct NoneTokenOp<'a> {
-    #[dtype(is = "!llvm.token")]
+    #[dtype(is = token)]
     pub res: Type<'a>,
 }
 
@@ -2575,9 +2752,7 @@ pub struct PoisonOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.powi", results(res))]
+#[mlir::op("llvm.intr.powi", format = "`(` $val `,` $power `)` attr-dict `:` functional-type($val $power, $res)", results(res))]
 pub struct PowIOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2590,9 +2765,7 @@ pub struct PowIOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.pow", results(res))]
+#[mlir::op("llvm.intr.pow", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct PowOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2638,15 +2811,53 @@ pub struct PtrAnnotation<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("llvm.intr.ptrmask", results(res))]
+#[mlir::op("llvm.intr.ptrmask", format = "$ptr `,` $mask attr-dict `:` functional-type($ptr $mask, $res)", results(res))]
 pub struct PtrMaskOp<'a> {
     #[slot(res)]
     pub ptr: Value<'a>,
     #[slot(mask_ty)]
     pub mask: Value<'a>,
     pub mask_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+///
+/// Operation mirroring LLVM's `ptrtoaddr` operation.
+///
+/// This operation casts a pointer (or a vector of pointers) to an integer
+/// (or a vector of integers) without capturing the provenance of the pointer.
+/// Therefore, an integer returned or derived from `llvm.ptrtoaddr` does not
+/// create a legal-to-access pointer when used in `llvm.inttoptr`.
+/// Code that only cares about the address value of a pointer
+/// (e.g. pointer subtraction) should prefer `llvm.ptrtoaddr` over
+/// `llvm.ptrtoint`.
+///
+/// The integer type used as the result type is required to be equal in width
+/// to the pointer type as specified in the data layout.
+/// Use the `llvm-target-to-data-layout` pass to derive an MLIR datalayout from
+/// an LLVM datalayout.
+///
+/// Examples:
+/// ```text
+/// llvm.func @default_64_bit_ptrtoaddr(%arg0 : !llvm.ptr) -> i64 {
+///   %0 = llvm.ptrtoaddr %arg0 : !llvm.ptr to i64
+///   llvm.return i64
+/// }
+///
+/// module attributes { dlti.dl_spec = #dlti.dl_spec<
+///   #dlti.dl_entry<!llvm.ptr, dense<[/*size=*/32, 32, 64]> : vector<3xi64>>
+/// >} {
+///   llvm.func @datalayout_32_bit(%arg0 : !llvm.ptr) -> i32 {
+///     %0 = llvm.ptrtoaddr %arg0 : !llvm.ptr to i32
+///     llvm.return %0 : i32
+///   }
+/// }
+/// ```
+#[mlir::op("llvm.ptrtoaddr", format = "$arg attr-dict `:` type($arg) `to` type($res)", results(res))]
+pub struct PtrToAddrOp<'a> {
+    #[slot(arg_ty)]
+    pub arg: Value<'a>,
+    pub arg_ty: Type<'a>,
     pub res: Type<'a>,
 }
 
@@ -2672,9 +2883,7 @@ pub struct ReturnOp<'a> {
     pub arg_ty: Vec<Type<'a>>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.rint", results(res))]
+#[mlir::op("llvm.intr.rint", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct RintOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2683,9 +2892,7 @@ pub struct RintOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.roundeven", results(res))]
+#[mlir::op("llvm.intr.roundeven", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct RoundEvenOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2694,9 +2901,7 @@ pub struct RoundEvenOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.round", results(res))]
+#[mlir::op("llvm.intr.round", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct RoundOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2705,9 +2910,7 @@ pub struct RoundOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sadd.sat", results(res))]
+#[mlir::op("llvm.intr.sadd.sat", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct SAddSat<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2729,9 +2932,7 @@ pub struct SAddWithOverflowOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.scmp", results(res))]
+#[mlir::op("llvm.intr.scmp", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct SCmpOp<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -2768,9 +2969,7 @@ pub struct SIToFPOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.smax", results(res))]
+#[mlir::op("llvm.intr.smax", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct SMaxOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2779,9 +2978,7 @@ pub struct SMaxOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.smin", results(res))]
+#[mlir::op("llvm.intr.smin", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct SMinOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2819,9 +3016,7 @@ pub struct SSACopyOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sshl.sat", results(res))]
+#[mlir::op("llvm.intr.sshl.sat", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct SSHLSat<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2830,9 +3025,7 @@ pub struct SSHLSat<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ssub.sat", results(res))]
+#[mlir::op("llvm.intr.ssub.sat", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct SSubSat<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -2854,9 +3047,7 @@ pub struct SSubWithOverflowOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.select", results(res))]
+#[mlir::op("llvm.select", format = "$condition `,` $trueValue `,` $falseValue attr-dict `:` type($condition) `,` type($res)", results(res))]
 pub struct SelectOp<'a> {
     #[slot(condition_ty)]
     pub condition: Value<'a>,
@@ -2896,9 +3087,7 @@ pub struct ShuffleVectorOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sin", results(res))]
+#[mlir::op("llvm.intr.sin", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct SinOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2907,9 +3096,7 @@ pub struct SinOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sincos", results(res))]
+#[mlir::op("llvm.intr.sincos", format = "`(` $val `)` attr-dict `:` functional-type($val, $res)", results(res))]
 pub struct SincosOp<'a> {
     #[slot(val_ty)]
     pub val: Value<'a>,
@@ -2919,9 +3106,7 @@ pub struct SincosOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sinh", results(res))]
+#[mlir::op("llvm.intr.sinh", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct SinhOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -2930,9 +3115,7 @@ pub struct SinhOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.sqrt", results(res))]
+#[mlir::op("llvm.intr.sqrt", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct SqrtOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -3046,9 +3229,7 @@ pub struct SwitchOp<'a> {
     pub case_operands_ty: Vec<Type<'a>>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.tan", results(res))]
+#[mlir::op("llvm.intr.tan", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct TanOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -3057,9 +3238,7 @@ pub struct TanOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.tanh", results(res))]
+#[mlir::op("llvm.intr.tanh", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct TanhOp<'a> {
     #[slot(res, name = "in")]
     pub in_: Value<'a>,
@@ -3092,9 +3271,7 @@ pub struct TruncOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.uadd.sat", results(res))]
+#[mlir::op("llvm.intr.uadd.sat", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct UAddSat<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -3124,9 +3301,7 @@ pub struct UBSanTrap<'a> {
     pub failure_kind: Attribute<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ucmp", results(res))]
+#[mlir::op("llvm.intr.ucmp", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct UCmpOp<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -3157,9 +3332,7 @@ pub struct UIToFPOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.umax", results(res))]
+#[mlir::op("llvm.intr.umax", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct UMaxOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -3168,9 +3341,7 @@ pub struct UMaxOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.umin", results(res))]
+#[mlir::op("llvm.intr.umin", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct UMinOp<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -3201,9 +3372,7 @@ pub struct URemOp<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.ushl.sat", results(res))]
+#[mlir::op("llvm.intr.ushl.sat", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct USHLSat<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -3212,9 +3381,7 @@ pub struct USHLSat<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.usub.sat", results(res))]
+#[mlir::op("llvm.intr.usub.sat", format = "`(` $a `,` $b `)` attr-dict `:` functional-type($a $b, $res)", results(res))]
 pub struct USubSat<'a> {
     #[slot(res)]
     pub a: Value<'a>,
@@ -4335,9 +4502,7 @@ pub struct VaArgOp<'a> {
 }
 
 /// `llvm.intr.vacopy`: Copies the current argument position from `src_list` to `dest_list`.
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("llvm.intr.vacopy")]
+#[mlir::op("llvm.intr.vacopy", format = "$src_list `to` $dest_list attr-dict `:` qualified(type($dest_list)) `,` qualified(type($src_list))")]
 pub struct VaCopyOp<'a> {
     #[slot(dest_list_ty)]
     pub dest_list: Value<'a>,
@@ -4568,9 +4733,7 @@ pub struct vector_reduce_fadd<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fmax", results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmax", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct vector_reduce_fmax<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
@@ -4580,9 +4743,7 @@ pub struct vector_reduce_fmax<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fmaximum", results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmaximum", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct vector_reduce_fmaximum<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
@@ -4592,9 +4753,7 @@ pub struct vector_reduce_fmaximum<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fmin", results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fmin", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct vector_reduce_fmin<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
@@ -4604,9 +4763,7 @@ pub struct vector_reduce_fmin<'a> {
     pub res: Type<'a>,
 }
 
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("llvm.intr.vector.reduce.fminimum", results(res))]
+#[mlir::op("llvm.intr.vector.reduce.fminimum", format = "`(` $in `)` attr-dict `:` functional-type($in, $res)", results(res))]
 pub struct vector_reduce_fminimum<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
@@ -4711,7 +4868,7 @@ pub struct vscale<'a> {
 /// The `llvm` dialect.
 #[mlir::dialect(
     "llvm",
-    ops = [ACosOp, AShrOp, ASinOp, ATan2Op, ATanOp, AbsOp, AddOp, AddrSpaceCastOp, AddressOfOp, AliasOp, AllocaOp, AndOp, Annotation, AssumeOp, AtomicCmpXchgOp, AtomicRMWOp, BitReverseOp, BitcastOp, BlockAddressOp, BlockTagOp, BrOp, ByteSwapOp, CallIntrinsicOp, CallOp, ComdatOp, ComdatSelectorOp, CondBrOp, ConstantOp, ConstrainedFPExtIntr, ConstrainedFPTruncIntr, ConstrainedSIToFP, ConstrainedUIToFP, CopySignOp, CoroAlignOp, CoroBeginOp, CoroEndOp, CoroFreeOp, CoroIdOp, CoroPromiseOp, CoroResumeOp, CoroSaveOp, CoroSizeOp, CoroSuspendOp, CosOp, CoshOp, CountLeadingZerosOp, CountTrailingZerosOp, CtPopOp, DSOLocalEquivalentOp, DbgDeclareOp, DbgLabelOp, DbgValueOp, DebugTrap, EhTypeidForOp, Exp10Op, Exp2Op, ExpOp, ExpectOp, ExpectWithProbabilityOp, ExtractElementOp, ExtractValueOp, FAbsOp, FAddOp, FCeilOp, FCmpOp, FDivOp, FFloorOp, FMAOp, FMulAddOp, FMulOp, FNegOp, FPExtOp, FPToSIOp, FPToUIOp, FPTruncOp, FRemOp, FSubOp, FTruncOp, FenceOp, FractionExpOp, FreezeOp, FshlOp, FshrOp, GEPOp, GetActiveLaneMaskOp, GlobalCtorsOp, GlobalDtorsOp, GlobalOp, ICmpOp, IFuncOp, IndirectBrOp, InlineAsmOp, InsertElementOp, InsertValueOp, IntToPtrOp, InvariantEndOp, InvariantStartOp, InvokeOp, IsConstantOp, IsFPClass, LLVMFuncOp, LShrOp, LandingpadOp, LaunderInvariantGroupOp, LifetimeEndOp, LifetimeStartOp, LinkerOptionsOp, LlrintOp, LlroundOp, LoadExpOp, LoadOp, Log10Op, Log2Op, LogOp, LrintOp, LroundOp, MaskedLoadOp, MaskedStoreOp, MatrixColumnMajorLoadOp, MatrixColumnMajorStoreOp, MatrixMultiplyOp, MatrixTransposeOp, MaxNumOp, MaximumOp, MemcpyInlineOp, MemcpyOp, MemmoveOp, MemsetInlineOp, MemsetOp, MinNumOp, MinimumOp, ModuleFlagsOp, MulOp, NearbyintOp, NoAliasScopeDeclOp, NoneTokenOp, OrOp, PoisonOp, PowIOp, PowOp, Prefetch, PtrAnnotation, PtrMaskOp, PtrToIntOp, ResumeOp, ReturnOp, RintOp, RoundEvenOp, RoundOp, SAddSat, SAddWithOverflowOp, SCmpOp, SDivOp, SExtOp, SIToFPOp, SMaxOp, SMinOp, SMulWithOverflowOp, SRemOp, SSACopyOp, SSHLSat, SSubSat, SSubWithOverflowOp, SelectOp, ShlOp, ShuffleVectorOp, SinOp, SincosOp, SinhOp, SqrtOp, StackRestoreOp, StackSaveOp, StepVectorOp, StoreOp, StripInvariantGroupOp, SubOp, SwitchOp, TanOp, TanhOp, ThreadlocalAddressOp, Trap, TruncOp, UAddSat, UAddWithOverflowOp, UBSanTrap, UCmpOp, UDivOp, UIToFPOp, UMaxOp, UMinOp, UMulWithOverflowOp, URemOp, USHLSat, USubSat, USubWithOverflowOp, UndefOp, UnreachableOp, VPAShrOp, VPAddOp, VPAndOp, VPFAddOp, VPFDivOp, VPFMulAddOp, VPFMulOp, VPFNegOp, VPFPExtOp, VPFPToSIOp, VPFPToUIOp, VPFPTruncOp, VPFRemOp, VPFSubOp, VPFmaOp, VPIntToPtrOp, VPLShrOp, VPLoadOp, VPMergeMinOp, VPMulOp, VPOrOp, VPPtrToIntOp, VPReduceAddOp, VPReduceAndOp, VPReduceFAddOp, VPReduceFMaxOp, VPReduceFMinOp, VPReduceFMulOp, VPReduceMulOp, VPReduceOrOp, VPReduceSMaxOp, VPReduceSMinOp, VPReduceUMaxOp, VPReduceUMinOp, VPReduceXorOp, VPSDivOp, VPSExtOp, VPSIToFPOp, VPSMaxOp, VPSMinOp, VPSRemOp, VPSelectMinOp, VPShlOp, VPStoreOp, VPStridedLoadOp, VPStridedStoreOp, VPSubOp, VPTruncOp, VPUDivOp, VPUIToFPOp, VPUMaxOp, VPUMinOp, VPURemOp, VPXorOp, VPZExtOp, VaArgOp, VaCopyOp, VaEndOp, VaStartOp, VarAnnotation, XOrOp, ZExtOp, ZeroOp, masked_compressstore, masked_expandload, masked_gather, masked_scatter, vector_deinterleave2, vector_extract, vector_insert, vector_interleave2, vector_reduce_add, vector_reduce_and, vector_reduce_fadd, vector_reduce_fmax, vector_reduce_fmaximum, vector_reduce_fmin, vector_reduce_fminimum, vector_reduce_fmul, vector_reduce_mul, vector_reduce_or, vector_reduce_smax, vector_reduce_smin, vector_reduce_umax, vector_reduce_umin, vector_reduce_xor, vscale],
+    ops = [ACosOp, AShrOp, ASinOp, ATan2Op, ATanOp, AbsOp, AddOp, AddrSpaceCastOp, AddressOfOp, AliasOp, AllocaOp, AndOp, Annotation, ArithmeticFenceOp, AssumeOp, AtomicCmpXchgOp, AtomicRMWOp, BitReverseOp, BitcastOp, BlockAddressOp, BlockTagOp, BrOp, ByteSwapOp, CallIntrinsicOp, CallOp, ComdatOp, ComdatSelectorOp, CondBrOp, ConstantOp, ConstrainedFAddIntr, ConstrainedFDivIntr, ConstrainedFMAIntr, ConstrainedFMulAddIntr, ConstrainedFMulIntr, ConstrainedFPExtIntr, ConstrainedFPTruncIntr, ConstrainedFRemIntr, ConstrainedFSubIntr, ConstrainedSIToFP, ConstrainedUIToFP, CopySignOp, CoroAlignOp, CoroBeginOp, CoroEndOp, CoroFreeOp, CoroIdOp, CoroPromiseOp, CoroResumeOp, CoroSaveOp, CoroSizeOp, CoroSuspendOp, CosOp, CoshOp, CountLeadingZerosOp, CountTrailingZerosOp, CtPopOp, DSOLocalEquivalentOp, DbgDeclareOp, DbgLabelOp, DbgValueOp, DebugTrap, EhTypeidForOp, Exp10Op, Exp2Op, ExpOp, ExpectOp, ExpectWithProbabilityOp, ExtractElementOp, ExtractValueOp, FAbsOp, FAddOp, FCeilOp, FCmpOp, FDivOp, FFloorOp, FMAOp, FMulAddOp, FMulOp, FNegOp, FPExtOp, FPToSIOp, FPToUIOp, FPTruncOp, FRemOp, FSubOp, FTruncOp, FakeUseOp, FenceOp, FractionExpOp, FreezeOp, FshlOp, FshrOp, GEPOp, GetActiveLaneMaskOp, GlobalCtorsOp, GlobalDtorsOp, GlobalOp, ICmpOp, IFuncOp, IndirectBrOp, InlineAsmOp, InsertElementOp, InsertValueOp, IntToPtrOp, InvariantEndOp, InvariantStartOp, InvokeOp, IsConstantOp, IsFPClass, LLVMFuncOp, LShrOp, LandingpadOp, LaunderInvariantGroupOp, LifetimeEndOp, LifetimeStartOp, LinkerOptionsOp, LlrintOp, LlroundOp, LoadExpOp, LoadOp, Log10Op, Log2Op, LogOp, LrintOp, LroundOp, MaskedLoadOp, MaskedStoreOp, MatrixColumnMajorLoadOp, MatrixColumnMajorStoreOp, MatrixMultiplyOp, MatrixTransposeOp, MaxNumOp, MaximumOp, MemcpyInlineOp, MemcpyOp, MemmoveOp, MemsetInlineOp, MemsetOp, MetadataAsValueOp, MinNumOp, MinimumOp, ModuleFlagsOp, MulOp, NamedMetadataOp, NearbyintOp, NoAliasScopeDeclOp, NoneTokenOp, OrOp, PoisonOp, PowIOp, PowOp, Prefetch, PtrAnnotation, PtrMaskOp, PtrToAddrOp, PtrToIntOp, ResumeOp, ReturnOp, RintOp, RoundEvenOp, RoundOp, SAddSat, SAddWithOverflowOp, SCmpOp, SDivOp, SExtOp, SIToFPOp, SMaxOp, SMinOp, SMulWithOverflowOp, SRemOp, SSACopyOp, SSHLSat, SSubSat, SSubWithOverflowOp, SelectOp, ShlOp, ShuffleVectorOp, SinOp, SincosOp, SinhOp, SqrtOp, StackRestoreOp, StackSaveOp, StepVectorOp, StoreOp, StripInvariantGroupOp, SubOp, SwitchOp, TanOp, TanhOp, ThreadlocalAddressOp, Trap, TruncOp, UAddSat, UAddWithOverflowOp, UBSanTrap, UCmpOp, UDivOp, UIToFPOp, UMaxOp, UMinOp, UMulWithOverflowOp, URemOp, USHLSat, USubSat, USubWithOverflowOp, UndefOp, UnreachableOp, VPAShrOp, VPAddOp, VPAndOp, VPFAddOp, VPFDivOp, VPFMulAddOp, VPFMulOp, VPFNegOp, VPFPExtOp, VPFPToSIOp, VPFPToUIOp, VPFPTruncOp, VPFRemOp, VPFSubOp, VPFmaOp, VPIntToPtrOp, VPLShrOp, VPLoadOp, VPMergeMinOp, VPMulOp, VPOrOp, VPPtrToIntOp, VPReduceAddOp, VPReduceAndOp, VPReduceFAddOp, VPReduceFMaxOp, VPReduceFMinOp, VPReduceFMulOp, VPReduceMulOp, VPReduceOrOp, VPReduceSMaxOp, VPReduceSMinOp, VPReduceUMaxOp, VPReduceUMinOp, VPReduceXorOp, VPSDivOp, VPSExtOp, VPSIToFPOp, VPSMaxOp, VPSMinOp, VPSRemOp, VPSelectMinOp, VPShlOp, VPStoreOp, VPStridedLoadOp, VPStridedStoreOp, VPSubOp, VPTruncOp, VPUDivOp, VPUIToFPOp, VPUMaxOp, VPUMinOp, VPURemOp, VPXorOp, VPZExtOp, VaArgOp, VaCopyOp, VaEndOp, VaStartOp, VarAnnotation, XOrOp, ZExtOp, ZeroOp, masked_compressstore, masked_expandload, masked_gather, masked_scatter, vector_deinterleave2, vector_extract, vector_insert, vector_interleave2, vector_reduce_add, vector_reduce_and, vector_reduce_fadd, vector_reduce_fmax, vector_reduce_fmaximum, vector_reduce_fmin, vector_reduce_fminimum, vector_reduce_fmul, vector_reduce_mul, vector_reduce_or, vector_reduce_smax, vector_reduce_smin, vector_reduce_umax, vector_reduce_umin, vector_reduce_xor, vscale],
     materializer
 )]
 pub struct LlvmDialect;

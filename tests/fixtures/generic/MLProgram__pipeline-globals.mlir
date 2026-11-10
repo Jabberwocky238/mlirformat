@@ -125,6 +125,18 @@
 // -----
 "builtin.module"() ({
   "ml_program.global"() <{is_mutable, sym_name = "global_variable", sym_visibility = "private", type = tensor<4xi32>, value = dense<4> : tensor<4xi32>}> : () -> ()
+  "func.func"() <{function_type = (memref<f32>) -> (), sym_name = "call_with_unresolvable_callee"}> ({
+  ^bb0(%arg0: memref<f32>):
+    %0 = "ml_program.global_load"() <{global = @global_variable}> : () -> tensor<4xi32>
+    "test.call_and_store"(%arg0, %arg0) <{callee = @callee, store_before_call = false}> : (memref<f32>, memref<f32>) -> ()
+    %1 = "ml_program.global_load"() <{global = @global_variable}> : () -> tensor<4xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "ml_program.global"() <{is_mutable, sym_name = "global_variable", sym_visibility = "private", type = tensor<4xi32>, value = dense<4> : tensor<4xi32>}> : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "call_recursive"}> ({
     %0 = "ml_program.global_load"() <{global = @global_variable}> : () -> tensor<4xi32>
     %1 = "unregistered.dummy"(%0) : (tensor<4xi32>) -> tensor<4xi32>

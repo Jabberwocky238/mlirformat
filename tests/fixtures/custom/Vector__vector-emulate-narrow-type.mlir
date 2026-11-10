@@ -147,7 +147,8 @@ module {
 module {
   func.func @vector_store_i8(%arg0: vector<8xi8>, %arg1: index, %arg2: index) {
     %alloc = memref.alloc() : memref<4x8xi8>
-    vector.store %arg0, %alloc[%arg1, %arg2] : memref<4x8xi8>, vector<8xi8>
+    %c0 = arith.constant 0 : index
+    vector.store %arg0, %alloc[%arg1, %c0] : memref<4x8xi8>, vector<8xi8>
     return
   }
 }
@@ -156,7 +157,8 @@ module {
 module {
   func.func @vector_store_i4(%arg0: vector<8xi4>, %arg1: index, %arg2: index) {
     %alloc = memref.alloc() : memref<4x8xi4>
-    vector.store %arg0, %alloc[%arg1, %arg2] : memref<4x8xi4>, vector<8xi4>
+    %c0 = arith.constant 0 : index
+    vector.store %arg0, %alloc[%arg1, %c0] : memref<4x8xi4>, vector<8xi4>
     return
   }
 }
@@ -165,16 +167,8 @@ module {
 module {
   func.func @vector_store_f4(%arg0: vector<8xf4E2M1FN>, %arg1: index, %arg2: index) {
     %alloc = memref.alloc() : memref<4x8xf4E2M1FN>
-    vector.store %arg0, %alloc[%arg1, %arg2] : memref<4x8xf4E2M1FN>, vector<8xf4E2M1FN>
-    return
-  }
-}
-
-// -----
-module {
-  func.func @vector_store_i4_dynamic(%arg0: vector<8xi4>, %arg1: index, %arg2: index, %arg3: index, %arg4: index) {
-    %alloc = memref.alloc(%arg1, %arg2) : memref<?x?xi4>
-    vector.store %arg0, %alloc[%arg3, %arg4] : memref<?x?xi4>, vector<8xi4>
+    %c0 = arith.constant 0 : index
+    vector.store %arg0, %alloc[%arg1, %c0] : memref<4x8xf4E2M1FN>, vector<8xf4E2M1FN>
     return
   }
 }

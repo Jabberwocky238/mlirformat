@@ -35,3 +35,17 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0) -> (d0)>
+#map1 = affine_map<(d0) -> ()>
+module {
+  func.func @scalar_input(%arg0: tensor<128xf32>, %arg1: f32) -> tensor<128xf32> {
+    %0 = linalg.generic {indexing_maps = [#map, #map1, #map], iterator_types = ["parallel"]} ins(%arg0, %arg1 : tensor<128xf32>, f32) outs(%arg0 : tensor<128xf32>) {
+    ^bb0(%in: f32, %in_0: f32, %out: f32):
+      %1 = arith.addf %in_0, %in_0 : f32
+      linalg.yield %1 : f32
+    } -> tensor<128xf32>
+    return %0 : tensor<128xf32>
+  }
+}
+

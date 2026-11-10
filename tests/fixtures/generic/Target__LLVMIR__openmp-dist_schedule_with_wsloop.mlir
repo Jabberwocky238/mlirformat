@@ -4,7 +4,7 @@
     %5 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32
     %6 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
     %7 = "llvm.mlir.constant"() <{value = 64 : i32}> : () -> i32
-    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"(%arg7) <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 1, 0>}> ({
           "omp.wsloop"(%7) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1>, schedule_kind = #omp<schedulekind static>}> ({
@@ -27,7 +27,7 @@
     %2 = "llvm.mlir.constant"() <{value = 1024 : i64}> : () -> i64
     %3 = "llvm.mlir.constant"() <{value = 64 : i64}> : () -> i64
     %4 = "llvm.zext"(%arg0) : (i32) -> i64
-    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"(%2) <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 1, 0>}> ({
           "omp.wsloop"(%3) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1>, schedule_kind = #omp<schedulekind static>}> ({
@@ -52,7 +52,7 @@
     %4 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32
     %5 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
     %6 = "llvm.mlir.constant"() <{value = 1024 : i32}> : () -> i32
-    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"(%6) <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 1, 0>}> ({
           "omp.wsloop"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0>, schedule_kind = #omp<schedulekind static>}> ({
@@ -74,7 +74,7 @@
     %1 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %2 = "llvm.mlir.constant"() <{value = 1024 : i64}> : () -> i64
     %3 = "llvm.zext"(%arg0) : (i32) -> i64
-    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"(%2) <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 1, 0>}> ({
           "omp.wsloop"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0>, schedule_kind = #omp<schedulekind static>}> ({
@@ -99,7 +99,7 @@
     %4 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32
     %5 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
     %6 = "llvm.mlir.constant"() <{value = 64 : i32}> : () -> i32
-    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"() <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
           "omp.wsloop"(%6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1>, schedule_kind = #omp<schedulekind static>}> ({
@@ -121,7 +121,7 @@
     %1 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %2 = "llvm.mlir.constant"() <{value = 64 : i64}> : () -> i64
     %3 = "llvm.zext"(%arg0) : (i32) -> i64
-    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"() <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
           "omp.wsloop"(%2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1>, schedule_kind = #omp<schedulekind static>}> ({
@@ -145,7 +145,7 @@
   ^bb0(%arg4: i32, %arg5: i32, %arg6: i32):
     %3 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32
     %4 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg5, %arg6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"() <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
           "omp.wsloop"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0>, schedule_kind = #omp<schedulekind static>}> ({
@@ -166,7 +166,7 @@
     %0 = "llvm.mlir.constant"() <{value = 0 : i64}> : () -> i64
     %1 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %2 = "llvm.zext"(%arg0) : (i32) -> i64
-    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%arg1, %arg2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
         "omp.distribute"() <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 0, 0>}> ({
           "omp.wsloop"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0>, schedule_kind = #omp<schedulekind static>}> ({

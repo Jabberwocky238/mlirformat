@@ -4,6 +4,10 @@ module {
     %cst_0 = arith.constant 2.200000e+00 : f32
     return %cst, %cst_0 : f8E4M3FN, f32
   }
+  func.func @denormal_f8() -> f8E4M3FN {
+    %cst = arith.constant 1.953130e-03 : f8E4M3FN
+    return %cst : f8E4M3FN
+  }
   func.func @entry() {
     %cst = arith.constant 1.375000e+00 : f8E4M3FN
     %cst_0 = arith.constant 1.400000e+00 : f32
@@ -30,6 +34,11 @@ module {
     vector.print %9 : f4E2M1FN
     %10 = arith.uitofp %c-9_i16 : i16 to f4E2M1FN
     vector.print %10 : f4E2M1FN
+    %11 = call @denormal_f8() : () -> f8E4M3FN
+    %12 = arith.flush_denormals %11 : f8E4M3FN
+    vector.print %12 : f8E4M3FN
+    %13 = arith.flush_denormals %3 : f8E4M3FN
+    vector.print %13 : f8E4M3FN
     return
   }
 }

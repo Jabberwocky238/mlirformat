@@ -1,7 +1,7 @@
 module attributes {gpu.container_module} {
   gpu.module @kernels {
     gpu.func @test_assert(%arg0: i1, %arg1: i1) kernel {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       cf.assert %arg1, "passing assertion"
       gpu.printf "thread %lld: print after passing assertion\0A", %thread_id_x : index
       cf.assert %arg0, "failing assertion"

@@ -191,3 +191,14 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @vector_store_i2_2d_const_nonzero_col(%arg0: vector<4xi2>) {
+    %alloc = memref.alloc() : memref<3x4xi2>
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    vector.store %arg0, %alloc[%c0, %c1] : memref<3x4xi2>, vector<4xi2>
+    return
+  }
+}
+

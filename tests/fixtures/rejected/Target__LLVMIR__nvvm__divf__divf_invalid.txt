@@ -1,0 +1,7 @@
+1	verify	'nvvm.divf' op rounding mode cannot be None for the rounded divide
+2	verify	'nvvm.divf' op FTZ is not supported for f64
+3	verify	'nvvm.divf' op 'approx' and 'full' are mutually exclusive
+4	verify	'nvvm.divf' op 'approx' and 'full' forms are f32-only
+5	verify	'nvvm.divf' op 'approx' and 'full' forms are f32-only
+6	verify	'nvvm.divf' op 'approx' and 'full' forms do not accept a rounding mode
+7	verify	'nvvm.divf' op 'approx' and 'full' forms do not accept a rounding mode

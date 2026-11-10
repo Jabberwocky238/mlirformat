@@ -86,6 +86,38 @@ module {
 
 // -----
 module {
+  func.func @index_castui_nneg(%arg0: i1) {
+    %0 = arith.index_castui %arg0 nneg : i1 to index
+    return
+  }
+}
+
+// -----
+module {
+  func.func @index_castui_nneg_not_set(%arg0: i1) {
+    %0 = arith.index_castui %arg0 : i1 to index
+    return
+  }
+}
+
+// -----
+module {
+  func.func @memref_index_cast(%arg0: memref<3xi32>) -> memref<3xindex> {
+    %0 = arith.index_cast %arg0 : memref<3xi32> to memref<3xindex>
+    return %0 : memref<3xindex>
+  }
+}
+
+// -----
+module {
+  func.func @memref_index_castui(%arg0: memref<3xi32>) -> memref<3xindex> {
+    %0 = arith.index_castui %arg0 : memref<3xi32> to memref<3xindex>
+    return %0 : memref<3xindex>
+  }
+}
+
+// -----
+module {
   func.func @sitofp(%arg0: i32, %arg1: i64) {
     %0 = arith.sitofp %arg0 : i32 to f32
     %1 = arith.sitofp %arg0 : i32 to f64
@@ -234,6 +266,77 @@ module {
 
 // -----
 module {
+  func.func @experimental_constrained_addf(%arg0: f64, %arg1: f64) {
+    %0 = arith.addf %arg0, %arg1 to_nearest_even : f64
+    %1 = arith.addf %arg0, %arg1 downward : f64
+    %2 = arith.addf %arg0, %arg1 upward : f64
+    %3 = arith.addf %arg0, %arg1 toward_zero : f64
+    %4 = arith.addf %arg0, %arg1 to_nearest_away : f64
+    return
+  }
+}
+
+// -----
+module {
+  func.func @experimental_constrained_subf(%arg0: f64, %arg1: f64) {
+    %0 = arith.subf %arg0, %arg1 to_nearest_even : f64
+    %1 = arith.subf %arg0, %arg1 downward : f64
+    return
+  }
+}
+
+// -----
+module {
+  func.func @experimental_constrained_mulf(%arg0: f64, %arg1: f64) {
+    %0 = arith.mulf %arg0, %arg1 upward : f64
+    %1 = arith.mulf %arg0, %arg1 toward_zero : f64
+    return
+  }
+}
+
+// -----
+module {
+  func.func @experimental_constrained_divf(%arg0: f64, %arg1: f64) {
+    %0 = arith.divf %arg0, %arg1 to_nearest_even : f64
+    %1 = arith.divf %arg0, %arg1 to_nearest_away : f64
+    return
+  }
+}
+
+// -----
+module {
+  func.func @constrained_addf_with_fastmath(%arg0: f64, %arg1: f64) {
+    %0 = arith.addf %arg0, %arg1 to_nearest_even fastmath<fast> : f64
+    return
+  }
+}
+
+// -----
+module {
+  func.func @convertf_f16_to_bf16(%arg0: f16) -> bf16 {
+    %0 = arith.convertf %arg0 : f16 to bf16
+    return %0 : bf16
+  }
+}
+
+// -----
+module {
+  func.func @convertf_bf16_to_f16(%arg0: bf16) -> f16 {
+    %0 = arith.convertf %arg0 : bf16 to f16
+    return %0 : f16
+  }
+}
+
+// -----
+module {
+  func.func @convertf_vector(%arg0: vector<2xf16>) -> vector<2xbf16> {
+    %0 = arith.convertf %arg0 : vector<2xf16> to vector<2xbf16>
+    return %0 : vector<2xbf16>
+  }
+}
+
+// -----
+module {
   func.func @integer_extension_and_truncation(%arg0: i3) {
     %0 = arith.extsi %arg0 : i3 to i6
     %1 = arith.extui %arg0 : i3 to i6
@@ -300,6 +403,18 @@ module {
   func.func @addui_extended_vector1d(%arg0: vector<3xi16>, %arg1: vector<3xi16>) -> (vector<3xi16>, vector<3xi1>) {
     %sum, %overflow = arith.addui_extended %arg0, %arg1 : vector<3xi16>, vector<3xi1>
     return %sum, %overflow : vector<3xi16>, vector<3xi1>
+  }
+}
+
+// -----
+module {
+  func.func @subui_extended_scalar(%arg0: i32, %arg1: i32) -> (i32, i1) {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @subui_extended_vector1d(%arg0: vector<3xi16>, %arg1: vector<3xi16>) -> (vector<3xi16>, vector<3xi1>) {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : vector<3xi16>, vector<3xi1>
+    return %diff, %borrow : vector<3xi16>, vector<3xi1>
   }
 }
 
@@ -447,6 +562,24 @@ module {
     %1 = arith.shrui %arg0, %arg1 exact : i32
     %2 = arith.divsi %arg0, %arg1 exact : i32
     %3 = arith.divui %arg0, %arg1 exact : i32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @ops_supporting_nneg(%arg0: i32) {
+    %0 = arith.extui %arg0 nneg : i32 to i64
+    %1 = arith.uitofp %arg0 nneg : i32 to f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @ops_nneg_not_set(%arg0: i32) {
+    %0 = arith.extui %arg0 : i32 to i64
+    %1 = arith.uitofp %arg0 : i32 to f32
     return
   }
 }

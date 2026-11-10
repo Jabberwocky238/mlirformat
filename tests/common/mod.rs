@@ -8,9 +8,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use mlirformat::{Item, MlirOpt, Module, Operation};
+use mlirformat::{Attribute, Item, MlirOpt, Module, Operation, Role};
 
-/// The `mlir-opt` 22.1.8 output for llvm-project's `mlir/test` files, generic and custom form.
+/// The `mlir-opt` 23.1.5 output for llvm-project's `mlir/test` files, generic and custom form.
 pub struct Fixtures;
 
 /// How one op fares against `mlir-opt`.
@@ -211,11 +211,14 @@ impl Fixtures {
         if body.starts_with('"') {
             return Verdict::Generic;
         }
+        // A `DefaultValuedOptionalAttr` at its default: printed by neither, so not read back.
+        let mut plain = op.clone();
+        Elided::optional_defaults(opt, &mut plain);
         match opt.parse_op_in(aliases, &text) {
-            Ok(back) if back == *op || Elided::same(op, &back, aliases) => {}
+            Ok(back) if back == plain || Elided::same(&plain, &back, aliases) => {}
             // ⭐ 报出**第一处不同的字段**，不是光说「往返不一致」—— 这样几百条失败能按
             // 字段归类，一眼看出是同一个毛病还是几种。
-            Ok(back) => return Verdict::Broken(format!("往返不一致 [{}]: {text}", Self::first_diff(op, &back))),
+            Ok(back) => return Verdict::Broken(format!("往返不一致 [{}]: {text}", Self::first_diff(&plain, &back))),
             Err(e) => return Verdict::Broken(format!("{e}: {text}")),
         }
         if !visible || text.contains('\n') {
@@ -237,6 +240,10 @@ impl Fixtures {
         if parent.is_some_and(|par| Self::generic_only(opt, par) && par.regions.iter().flat_map(|r| &r.blocks).any(|b| b.ops.last().is_some_and(|l| core::ptr::eq(l, op)))) {
             return Verdict::Reparsed;
         }
+        // `spirv.SpecConstantOperation wraps "spirv.IAdd"(..)`: C++ prints the wrapped op generic.
+        if parent.is_some_and(|par| par.name == "spirv.SpecConstantOperation") {
+            return Verdict::Reparsed;
+        }
         // Inside its own dialect's regions an op prints without its prefix (`return`).
         let (full, short) = (&*op.name, op.name.split_once('.').map_or(&*op.name, |(_, n)| n));
         let long = if body.starts_with(full) { body.to_string() } else { body.replacen(short, full, 1) };
@@ -254,6 +261,11 @@ pub struct Elided;
 impl Elided {
     /// `op` 及其里面每条 linalg op 都抹一遍。
     pub fn normalize(op: &mut Operation<'_>, aliases: &[(String, String)]) {
+        // 函数的空 `arg_attrs = []` / `res_attrs = []`：自定义形式写不出来，`mlir-opt` 也照样丢
+        // （`function_interface_impl::printFunctionOp` 只印非空字典）。
+        if let Some(Attribute::Dict(props)) = &mut op.properties {
+            props.retain(|a| !(matches!(&*a.name, "arg_attrs" | "res_attrs") && matches!(&a.value, Some(Attribute::Array(xs)) if xs.is_empty())));
+        }
         if op.name.starts_with("linalg.") {
             Self::rename(op);
             Self::expand(op, aliases);
@@ -263,6 +275,26 @@ impl Elided {
             for b in &mut r.blocks {
                 for o in &mut b.ops {
                     Self::normalize(o, aliases);
+                }
+            }
+        }
+    }
+
+    /// `DefaultValuedOptionalAttr` 等于缺省值的属性：`mlir-opt` 不印，读回来就没有了 —— 抹掉
+    /// （`op` 及其里面每条 op）。
+    pub fn optional_defaults(opt: &MlirOpt, op: &mut Operation<'_>) {
+        if let Some(f) = opt.template(&op.name).and_then(|t| (t.format)())
+            && let Some(Attribute::Dict(props)) = &mut op.properties
+        {
+            props.retain(|a| !f.schema.field(&a.name).is_some_and(|fd| matches!(fd.role, Role::Prop { optional: true, .. }) && a.value.as_ref() == fd.default_attr().as_ref()));
+            if props.is_empty() {
+                op.properties = None;
+            }
+        }
+        for r in &mut op.regions {
+            for b in &mut r.blocks {
+                for o in &mut b.ops {
+                    Self::optional_defaults(opt, o);
                 }
             }
         }

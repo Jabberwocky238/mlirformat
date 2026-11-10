@@ -264,19 +264,21 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = () -> (), sym_name = "do_not_fuse_loops_with_memref_defined_in_loop_bodies"}> ({
+  "func.func"() <{function_type = () -> (), sym_name = "do_not_fuse_loops_with_nonfull_alias_defined_in_loop_bodies"}> ({
     %0 = "arith.constant"() <{value = 2 : index}> : () -> index
     %1 = "arith.constant"() <{value = 0 : index}> : () -> index
     %2 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %3 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x2xf32>
-    "scf.parallel"(%1, %1, %0, %0, %2, %2) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    %3 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %4 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x2xf32>
+    "scf.parallel"(%1, %1, %0, %2, %2, %2) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
     ^bb0(%arg2: index, %arg3: index):
+      "memref.store"(%3, %4, %arg2, %arg3) : (f32, memref<2x2xf32>, index, index) -> ()
       "scf.reduce"() : () -> ()
     }) : (index, index, index, index, index, index) -> ()
-    "scf.parallel"(%1, %1, %0, %0, %2, %2) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    "scf.parallel"(%1, %1, %0, %2, %2, %2) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
     ^bb0(%arg0: index, %arg1: index):
-      %4 = "memref.subview"(%3, %1, %1, %0, %0, %2, %2) <{operandSegmentSizes = array<i32: 1, 2, 2, 2>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: -9223372036854775808, -9223372036854775808>, static_strides = array<i64: -9223372036854775808, -9223372036854775808>}> : (memref<2x2xf32>, index, index, index, index, index, index) -> memref<?x?xf32, strided<[?, ?], offset: ?>>
-      %5 = "memref.load"(%4, %arg0, %arg1) : (memref<?x?xf32, strided<[?, ?], offset: ?>>, index, index) -> f32
+      %5 = "memref.subview"(%4, %arg0, %1) <{operandSegmentSizes = array<i32: 1, 2, 0, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 2, 1>, static_strides = array<i64: 1, 1>}> : (memref<2x2xf32>, index, index) -> memref<2x1xf32, strided<[2, 1], offset: ?>>
+      %6 = "memref.load"(%5, %arg0, %arg1) : (memref<2x1xf32, strided<[2, 1], offset: ?>>, index, index) -> f32
       "scf.reduce"() : () -> ()
     }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
@@ -465,6 +467,416 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "fuse_trivial_rank_reducing_subview"}> ({
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %4 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<1x2x2xf32>
+    "scf.parallel"(%0, %0, %2, %2, %1, %1) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg2: index, %arg3: index):
+      "memref.store"(%3, %4, %0, %arg2, %arg3) : (f32, memref<1x2x2xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    %5 = "memref.subview"(%4) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 0, 0, 0>, static_sizes = array<i64: 1, 2, 2>, static_strides = array<i64: 1, 1, 1>}> : (memref<1x2x2xf32>) -> memref<2x2xf32>
+    "scf.parallel"(%0, %0, %2, %2, %1, %1) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg0: index, %arg1: index):
+      %6 = "memref.load"(%5, %arg0, %arg1) : (memref<2x2xf32>, index, index) -> f32
+      "memref.store"(%6, %4, %0, %arg0, %arg1) : (f32, memref<1x2x2xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "memref.dealloc"(%4) : (memref<1x2x2xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "do_not_fuse_nontrivial_subview_offset"}> ({
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %4 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x2x2xf32>
+    "scf.parallel"(%0, %0, %2, %2, %1, %1) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg2: index, %arg3: index):
+      "memref.store"(%3, %4, %0, %arg2, %arg3) : (f32, memref<2x2x2xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    %5 = "memref.subview"(%4) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 1, 0, 0>, static_sizes = array<i64: 1, 2, 2>, static_strides = array<i64: 1, 1, 1>}> : (memref<2x2x2xf32>) -> memref<2x2xf32, strided<[2, 1], offset: 4>>
+    "scf.parallel"(%0, %0, %2, %2, %1, %1) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg0: index, %arg1: index):
+      %6 = "memref.load"(%5, %arg0, %arg1) : (memref<2x2xf32, strided<[2, 1], offset: 4>>, index, index) -> f32
+      "memref.store"(%6, %4, %0, %arg0, %arg1) : (f32, memref<2x2x2xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "memref.dealloc"(%4) : (memref<2x2x2xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x4xf32>) -> (), sym_name = "fuse_vector_load_store"}> ({
+  ^bb0(%arg0: memref<4x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = dense<0.000000e+00> : vector<4xf32>}> : () -> vector<4xf32>
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      "vector.store"(%3, %arg0, %arg2, %0) : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %4 = "vector.load"(%arg0, %arg1, %0) : (memref<4x4xf32>, index, index) -> vector<4xf32>
+      "vector.store"(%4, %arg0, %arg1, %0) : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0 + 1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x4xf32>) -> (), sym_name = "do_not_fuse_vector_different_indices"}> ({
+  ^bb0(%arg0: memref<4x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = dense<0.000000e+00> : vector<4xf32>}> : () -> vector<4xf32>
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      "vector.store"(%3, %arg0, %arg2, %0) : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %4 = "affine.apply"(%arg1) <{map = #map}> : (index) -> index
+      %5 = "vector.load"(%arg0, %4, %0) : (memref<4x4xf32>, index, index) -> vector<4xf32>
+      "vector.store"(%5, %arg0, %arg1, %0) : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x4xf32>) -> (), sym_name = "fuse_vector_transfer_same_indices"}> ({
+  ^bb0(%arg0: memref<4x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "vector.transfer_read"(%arg0, %arg2, %0, %3) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xf32>, index, index, f32) -> vector<4xf32>
+      "vector.transfer_write"(%5, %arg0, %arg2, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %4 = "vector.transfer_read"(%arg0, %arg1, %0, %3) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xf32>, index, index, f32) -> vector<4xf32>
+      "vector.transfer_write"(%4, %arg0, %arg1, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d1)>
+#map1 = affine_map<(d0) -> (d0 + 1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4x4xf32>) -> (), sym_name = "do_not_fuse_vector_transfer_different_indices"}> ({
+  ^bb0(%arg0: memref<4x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %6 = "vector.transfer_read"(%arg0, %arg2, %0, %3) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xf32>, index, index, f32) -> vector<4xf32>
+      "vector.transfer_write"(%6, %arg0, %arg2, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %2, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %4 = "affine.apply"(%arg1) <{map = #map1}> : (index) -> index
+      %5 = "vector.transfer_read"(%arg0, %4, %0, %3) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xf32>, index, index, f32) -> vector<4xf32>
+      "vector.transfer_write"(%5, %arg0, %arg1, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x4xf32>) -> (), sym_name = "fuse_vector_transfer_with_subview"}> ({
+  ^bb0(%arg0: memref<1x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %4 = "arith.constant"() <{value = dense<1.000000e+00> : vector<4xf32>}> : () -> vector<4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg4: index):
+      %8 = "memref.subview"(%arg0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 0, 0>, static_sizes = array<i64: 1, 4>, static_strides = array<i64: 1, 1>}> : (memref<1x4xf32>) -> memref<4xf32>
+      "vector.transfer_write"(%4, %8, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4xf32>, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %5 = "scf.for"(%0, %2, %1, %3) ({
+      ^bb0(%arg2: index, %arg3: f32):
+        %6 = "memref.load"(%arg0, %0, %arg2) : (memref<1x4xf32>, index, index) -> f32
+        %7 = "arith.addf"(%6, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.yield"(%7) : (f32) -> ()
+      }) : (index, index, index, f32) -> f32
+      "memref.store"(%5, %arg0, %0, %0) : (f32, memref<1x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d1)>
+#map1 = affine_map<(d0) -> (d0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x4xf32>) -> (), sym_name = "do_not_fuse_vector_transfer_nontrivial_subview"}> ({
+  ^bb0(%arg0: memref<2x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "vector.transfer_read"(%arg0, %0, %arg2, %2) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<2x4xf32>, index, index, f32) -> vector<1xf32>
+      "vector.transfer_write"(%5, %arg0, %0, %arg2) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<1xf32>, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    %3 = "memref.subview"(%arg0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 1, 0>, static_sizes = array<i64: 1, 4>, static_strides = array<i64: 1, 1>}> : (memref<2x4xf32>) -> memref<4xf32, strided<[1], offset: 4>>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %4 = "vector.transfer_read"(%3, %arg1, %2) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map1}> : (memref<4xf32, strided<[1], offset: 4>>, index, f32) -> vector<1xf32>
+      "vector.transfer_write"(%4, %3, %arg1) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map1}> : (vector<1xf32>, memref<4xf32, strided<[1], offset: 4>>, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x4xf32>) -> (), sym_name = "do_not_fuse_vector_transfer_different_masks"}> ({
+  ^bb0(%arg0: memref<1x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %3 = "vector.create_mask"(%1) : (index) -> vector<1xi1>
+    %4 = "vector.create_mask"(%0) : (index) -> vector<1xi1>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %6 = "vector.transfer_read"(%arg0, %0, %arg2, %2, %3) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 1>, permutation_map = #map}> : (memref<1x4xf32>, index, index, f32, vector<1xi1>) -> vector<1xf32>
+      "vector.transfer_write"(%6, %arg0, %0, %arg2, %3) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 1>, permutation_map = #map}> : (vector<1xf32>, memref<1x4xf32>, index, index, vector<1xi1>) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg1: index):
+      %5 = "vector.transfer_read"(%arg0, %0, %arg1, %2, %4) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 2, 1, 1>, permutation_map = #map}> : (memref<1x4xf32>, index, index, f32, vector<1xi1>) -> vector<1xf32>
+      "vector.transfer_write"(%5, %arg0, %0, %arg1, %4) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 1>, permutation_map = #map}> : (vector<1xf32>, memref<1x4xf32>, index, index, vector<1xi1>) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x4xf32>, memref<1x4xf32>) -> (), sym_name = "fuse_vector_transfer_subview_rank_reducing"}> ({
+  ^bb0(%arg0: memref<1x4xf32>, %arg1: memref<1x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %4 = "arith.constant"() <{value = dense<1.000000e+00> : vector<4xf32>}> : () -> vector<4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg5: index):
+      %8 = "memref.subview"(%arg0, %arg5, %0) <{operandSegmentSizes = array<i32: 1, 2, 0, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 1, 4>, static_strides = array<i64: 1, 1>}> : (memref<1x4xf32>, index, index) -> memref<4xf32, strided<[1], offset: ?>>
+      "vector.transfer_write"(%4, %8, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4xf32, strided<[1], offset: ?>>, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "scf.for"(%0, %2, %1, %3) ({
+      ^bb0(%arg3: index, %arg4: f32):
+        %6 = "memref.load"(%arg0, %arg2, %arg3) : (memref<1x4xf32>, index, index) -> f32
+        %7 = "arith.addf"(%6, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.yield"(%7) : (f32) -> ()
+      }) : (index, index, index, f32) -> f32
+      "memref.store"(%5, %arg1, %arg2, %0) : (f32, memref<1x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x4xf32>, memref<1x4xf32>) -> (), sym_name = "do_not_fuse_vector_transfer_subview_offset"}> ({
+  ^bb0(%arg0: memref<1x4xf32>, %arg1: memref<1x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %4 = "arith.constant"() <{value = dense<1.000000e+00> : vector<4xf32>}> : () -> vector<4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg5: index):
+      %11 = "memref.subview"(%arg0, %arg5, %0) <{operandSegmentSizes = array<i32: 1, 2, 0, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 1, 4>, static_strides = array<i64: 1, 1>}> : (memref<1x4xf32>, index, index) -> memref<4xf32, strided<[1], offset: ?>>
+      "vector.transfer_write"(%4, %11, %0) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map}> : (vector<4xf32>, memref<4xf32, strided<[1], offset: ?>>, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "scf.for"(%0, %2, %1, %3) ({
+      ^bb0(%arg3: index, %arg4: f32):
+        %9 = "memref.load"(%arg0, %arg2, %arg3) : (memref<1x4xf32>, index, index) -> f32
+        %10 = "arith.addf"(%9, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.yield"(%10) : (f32) -> ()
+      }) : (index, index, index, f32) -> f32
+      %6 = "memref.subview"(%arg0, %arg2, %1) <{operandSegmentSizes = array<i32: 1, 2, 0, 0>, static_offsets = array<i64: -9223372036854775808, -9223372036854775808>, static_sizes = array<i64: 1, 3>, static_strides = array<i64: 1, 1>}> : (memref<1x4xf32>, index, index) -> memref<3xf32, strided<[1], offset: ?>>
+      %7 = "memref.load"(%6, %0) : (memref<3xf32, strided<[1], offset: ?>>, index) -> f32
+      %8 = "arith.addf"(%5, %7) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "memref.store"(%8, %arg1, %arg2, %0) : (f32, memref<1x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x4xf32>, memref<1x4xf32>) -> (), sym_name = "fuse_vector_transfer_no_subview"}> ({
+  ^bb0(%arg0: memref<1x4xf32>, %arg1: memref<1x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %4 = "arith.constant"() <{value = dense<2.000000e+00> : vector<4xf32>}> : () -> vector<4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg5: index):
+      "vector.transfer_write"(%4, %arg0, %0, %arg5) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4xf32>, memref<1x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "scf.for"(%0, %2, %1, %3) ({
+      ^bb0(%arg3: index, %arg4: f32):
+        %6 = "memref.load"(%arg0, %0, %arg3) : (memref<1x4xf32>, index, index) -> f32
+        %7 = "arith.addf"(%6, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.yield"(%7) : (f32) -> ()
+      }) : (index, index, index, f32) -> f32
+      "memref.store"(%5, %arg1, %0, %0) : (f32, memref<1x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x4xf32>, memref<2x4xf32>) -> (), sym_name = "fuse_vector_transfer_scalar_load_rank2"}> ({
+  ^bb0(%arg0: memref<2x4xf32>, %arg1: memref<2x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %3 = "arith.constant"() <{value = dense<1.000000e+00> : vector<2x4xf32>}> : () -> vector<2x4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg3: index):
+      "vector.transfer_write"(%3, %arg0, %0, %0) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<2x4xf32>, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %4 = "memref.load"(%arg0, %0, %1) : (memref<2x4xf32>, index, index) -> f32
+      %5 = "memref.load"(%arg0, %1, %2) : (memref<2x4xf32>, index, index) -> f32
+      %6 = "arith.addf"(%4, %5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "memref.store"(%6, %arg1, %0, %0) : (f32, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x4xf32>, memref<2x4xf32>) -> (), sym_name = "fuse_vector_transfer_scalar_load_loop_rank2"}> ({
+  ^bb0(%arg0: memref<2x4xf32>, %arg1: memref<2x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
+    %4 = "arith.constant"() <{value = dense<2.000000e+00> : vector<2x4xf32>}> : () -> vector<2x4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg5: index):
+      "vector.transfer_write"(%4, %arg0, %0, %0) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<2x4xf32>, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "scf.for"(%0, %2, %1, %3) ({
+      ^bb0(%arg3: index, %arg4: f32):
+        %6 = "memref.load"(%arg0, %1, %arg3) : (memref<2x4xf32>, index, index) -> f32
+        %7 = "arith.addf"(%6, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.yield"(%7) : (f32) -> ()
+      }) : (index, index, index, f32) -> f32
+      "memref.store"(%5, %arg1, %0, %0) : (f32, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x4xf32>, memref<2x4xf32>) -> (), sym_name = "fuse_vector_store_scalar_load_rank2"}> ({
+  ^bb0(%arg0: memref<2x4xf32>, %arg1: memref<2x4xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %4 = "arith.constant"() <{value = dense<3.000000e+00> : vector<2x4xf32>}> : () -> vector<2x4xf32>
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg3: index):
+      "vector.store"(%4, %arg0, %0, %0) : (vector<2x4xf32>, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "scf.parallel"(%0, %1, %1) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> ({
+    ^bb0(%arg2: index):
+      %5 = "memref.load"(%arg0, %1, %2) : (memref<2x4xf32>, index, index) -> f32
+      %6 = "memref.load"(%arg0, %0, %3) : (memref<2x4xf32>, index, index) -> f32
+      %7 = "arith.addf"(%5, %6) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "memref.store"(%7, %arg1, %0, %0) : (f32, memref<2x4xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (memref<2x2xf32>, memref<2x2xf32>) -> (f32, f32), sym_name = "fuse_reductions_two"}> ({
   ^bb0(%arg0: memref<2x2xf32>, %arg1: memref<2x2xf32>):
     %0 = "arith.constant"() <{value = 2 : index}> : () -> index
@@ -626,6 +1038,254 @@
       }) : (f32) -> ()
     }) : (index, index, index, index, index, index, f32) -> f32
     "func.return"(%5, %7, %6) : (f32, f32, f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0 * 8 + d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1x64xf32>) -> (), sym_name = "test_fuse_interchanged_loops"}> ({
+  ^bb0(%arg0: memref<1x64xf32>):
+    %0 = "arith.constant"() <{value = 8 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %3 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<1x8x8xf32>
+    %4 = "memref.alloc"() <{alignment = 64 : i64, operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x8x1xf32>
+    "scf.parallel"(%2, %2, %0, %0, %1, %1) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg3: index, %arg4: index):
+      %7 = "memref.load"(%3, %2, %arg3, %arg4) : (memref<1x8x8xf32>, index, index, index) -> f32
+      "memref.store"(%7, %4, %arg4, %arg3, %2) : (f32, memref<8x8x1xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "scf.parallel"(%2, %2, %0, %0, %1, %1) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg1: index, %arg2: index):
+      %5 = "memref.load"(%4, %arg1, %arg2, %2) : (memref<8x8x1xf32>, index, index, index) -> f32
+      %6 = "affine.apply"(%arg1, %arg2) <{map = #map}> : (index, index) -> index
+      "memref.store"(%5, %arg0, %2, %6) : (f32, memref<1x64xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x3x5xf32>) -> (), sym_name = "fuse_three_cycle_permutation"}> ({
+  ^bb0(%arg0: memref<2x3x5xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x3x5xf32>
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x3x5xf32>
+    %2 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %6 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %7 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    "scf.parallel"(%2, %2, %2, %4, %5, %6, %3, %3, %3) <{operandSegmentSizes = array<i32: 3, 3, 3, 0>}> ({
+    ^bb0(%arg4: index, %arg5: index, %arg6: index):
+      %9 = "memref.load"(%0, %arg4, %arg5, %arg6) : (memref<2x3x5xf32>, index, index, index) -> f32
+      %10 = "arith.addf"(%9, %7) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "memref.store"(%10, %1, %arg4, %arg5, %arg6) : (f32, memref<2x3x5xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index, index, index, index) -> ()
+    "scf.parallel"(%2, %2, %2, %6, %4, %5, %3, %3, %3) <{operandSegmentSizes = array<i32: 3, 3, 3, 0>}> ({
+    ^bb0(%arg1: index, %arg2: index, %arg3: index):
+      %8 = "memref.load"(%1, %arg2, %arg3, %arg1) : (memref<2x3x5xf32>, index, index, index) -> f32
+      "memref.store"(%8, %arg0, %arg2, %arg3, %arg1) : (f32, memref<2x3x5xf32>, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index, index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x2x3x3xf32>) -> (), sym_name = "fuse_duplicate_axes_permutation"}> ({
+  ^bb0(%arg0: memref<2x2x3x3xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x2x3x3xf32>
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    "scf.parallel"(%1, %1, %1, %1, %3, %3, %4, %4, %2, %2, %2, %2) <{operandSegmentSizes = array<i32: 4, 4, 4, 0>}> ({
+    ^bb0(%arg5: index, %arg6: index, %arg7: index, %arg8: index):
+      "memref.store"(%5, %0, %arg5, %arg6, %arg7, %arg8) : (f32, memref<2x2x3x3xf32>, index, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index, index, index, index, index, index, index) -> ()
+    "scf.parallel"(%1, %1, %1, %1, %4, %4, %3, %3, %2, %2, %2, %2) <{operandSegmentSizes = array<i32: 4, 4, 4, 0>}> ({
+    ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index):
+      %6 = "memref.load"(%0, %arg4, %arg3, %arg1, %arg2) : (memref<2x2x3x3xf32>, index, index, index, index) -> f32
+      "memref.store"(%6, %arg0, %arg4, %arg3, %arg1, %arg2) : (f32, memref<2x2x3x3xf32>, index, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index, index, index, index, index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x3xf32>, memref<2x3xf32>) -> (f32, f32), sym_name = "fuse_interchanged_reductions"}> ({
+  ^bb0(%arg0: memref<2x3xf32>, %arg1: memref<2x3xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %5 = "arith.constant"() <{value = 2.000000e+00 : f32}> : () -> f32
+    %6 = "scf.parallel"(%0, %0, %2, %3, %1, %1, %4) <{operandSegmentSizes = array<i32: 2, 2, 2, 1>}> ({
+    ^bb0(%arg6: index, %arg7: index):
+      %10 = "memref.load"(%arg0, %arg6, %arg7) : (memref<2x3xf32>, index, index) -> f32
+      "scf.reduce"(%10) ({
+      ^bb0(%arg8: f32, %arg9: f32):
+        %11 = "arith.addf"(%arg8, %arg9) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%11) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, f32) -> f32
+    %7 = "scf.parallel"(%0, %0, %3, %2, %1, %1, %5) <{operandSegmentSizes = array<i32: 2, 2, 2, 1>}> ({
+    ^bb0(%arg2: index, %arg3: index):
+      %8 = "memref.load"(%arg1, %arg3, %arg2) : (memref<2x3xf32>, index, index) -> f32
+      "scf.reduce"(%8) ({
+      ^bb0(%arg4: f32, %arg5: f32):
+        %9 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%9) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, f32) -> f32
+    "func.return"(%6, %7) : (f32, f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x3x5xf32>, memref<2x3x5xf32>) -> (f32, f32), sym_name = "fuse_three_cycle_reductions"}> ({
+  ^bb0(%arg0: memref<2x3x5xf32>, %arg1: memref<2x3x5xf32>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %6 = "arith.constant"() <{value = 2.000000e+00 : f32}> : () -> f32
+    %7 = "scf.parallel"(%0, %0, %0, %2, %3, %4, %1, %1, %1, %5) <{operandSegmentSizes = array<i32: 3, 3, 3, 1>}> ({
+    ^bb0(%arg7: index, %arg8: index, %arg9: index):
+      %11 = "memref.load"(%arg0, %arg7, %arg8, %arg9) : (memref<2x3x5xf32>, index, index, index) -> f32
+      "scf.reduce"(%11) ({
+      ^bb0(%arg10: f32, %arg11: f32):
+        %12 = "arith.addf"(%arg10, %arg11) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%12) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, index, index, index, f32) -> f32
+    %8 = "scf.parallel"(%0, %0, %0, %4, %2, %3, %1, %1, %1, %6) <{operandSegmentSizes = array<i32: 3, 3, 3, 1>}> ({
+    ^bb0(%arg2: index, %arg3: index, %arg4: index):
+      %9 = "memref.load"(%arg1, %arg3, %arg4, %arg2) : (memref<2x3x5xf32>, index, index, index) -> f32
+      "scf.reduce"(%9) ({
+      ^bb0(%arg5: f32, %arg6: f32):
+        %10 = "arith.mulf"(%arg5, %arg6) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%10) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, index, index, index, f32) -> f32
+    "func.return"(%7, %8) : (f32, f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x3x2x3xf32>) -> (), sym_name = "fuse_interleaved_duplicate_axes_permutation"}> ({
+  ^bb0(%arg0: memref<2x3x2x3xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x3x2x3xf32>
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    "scf.parallel"(%1, %1, %1, %1, %3, %4, %3, %4, %2, %2, %2, %2) <{operandSegmentSizes = array<i32: 4, 4, 4, 0>}> ({
+    ^bb0(%arg5: index, %arg6: index, %arg7: index, %arg8: index):
+      "memref.store"(%5, %0, %arg5, %arg6, %arg7, %arg8) : (f32, memref<2x3x2x3xf32>, index, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index, index, index, index, index, index, index) -> ()
+    "scf.parallel"(%1, %1, %1, %1, %4, %3, %4, %3, %2, %2, %2, %2) <{operandSegmentSizes = array<i32: 4, 4, 4, 0>}> ({
+    ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index):
+      %6 = "memref.load"(%0, %arg2, %arg1, %arg4, %arg3) : (memref<2x3x2x3xf32>, index, index, index, index) -> f32
+      "memref.store"(%6, %arg0, %arg2, %arg1, %arg4, %arg3) : (f32, memref<2x3x2x3xf32>, index, index, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index, index, index, index, index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x3xf32>, memref<2x3xf32>) -> f32, sym_name = "permuted_dominance_bail_chain"}> ({
+  ^bb0(%arg0: memref<2x3xf32>, %arg1: memref<2x3xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x3xf32>
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %6 = "scf.parallel"(%1, %1, %3, %4, %2, %2, %5) <{operandSegmentSizes = array<i32: 2, 2, 2, 1>}> ({
+    ^bb0(%arg6: index, %arg7: index):
+      %9 = "memref.load"(%arg0, %arg6, %arg7) : (memref<2x3xf32>, index, index) -> f32
+      "scf.reduce"(%9) ({
+      ^bb0(%arg8: f32, %arg9: f32):
+        %10 = "arith.addf"(%arg8, %arg9) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%10) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, f32) -> f32
+    %7 = "arith.addf"(%6, %5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+    "scf.parallel"(%1, %1, %4, %3, %2, %2) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg4: index, %arg5: index):
+      "memref.store"(%7, %0, %arg5, %arg4) : (f32, memref<2x3xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "scf.parallel"(%1, %1, %3, %4, %2, %2) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg2: index, %arg3: index):
+      %8 = "memref.load"(%0, %arg2, %arg3) : (memref<2x3xf32>, index, index) -> f32
+      "memref.store"(%8, %arg1, %arg2, %arg3) : (f32, memref<2x3xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "func.return"(%7) : (f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x3xf32>, memref<2x3xf32>) -> (f32, f32), sym_name = "fuse_chain_after_interchanged_reduction"}> ({
+  ^bb0(%arg0: memref<2x3xf32>, %arg1: memref<2x3xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x3xf32>
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x3xf32>
+    %2 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %6 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %7 = "arith.constant"() <{value = 2.000000e+00 : f32}> : () -> f32
+    %8 = "scf.parallel"(%2, %2, %4, %5, %3, %3, %6) <{operandSegmentSizes = array<i32: 2, 2, 2, 1>}> ({
+    ^bb0(%arg8: index, %arg9: index):
+      %13 = "memref.load"(%arg0, %arg8, %arg9) : (memref<2x3xf32>, index, index) -> f32
+      "memref.store"(%13, %0, %arg8, %arg9) : (f32, memref<2x3xf32>, index, index) -> ()
+      "scf.reduce"(%13) ({
+      ^bb0(%arg10: f32, %arg11: f32):
+        %14 = "arith.addf"(%arg10, %arg11) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%14) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, f32) -> f32
+    %9 = "scf.parallel"(%2, %2, %5, %4, %3, %3, %7) <{operandSegmentSizes = array<i32: 2, 2, 2, 1>}> ({
+    ^bb0(%arg4: index, %arg5: index):
+      %11 = "memref.load"(%0, %arg5, %arg4) : (memref<2x3xf32>, index, index) -> f32
+      "memref.store"(%11, %1, %arg5, %arg4) : (f32, memref<2x3xf32>, index, index) -> ()
+      "scf.reduce"(%11) ({
+      ^bb0(%arg6: f32, %arg7: f32):
+        %12 = "arith.mulf"(%arg6, %arg7) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+        "scf.reduce.return"(%12) : (f32) -> ()
+      }) : (f32) -> ()
+    }) : (index, index, index, index, index, index, f32) -> f32
+    "scf.parallel"(%2, %2, %4, %5, %3, %3) <{operandSegmentSizes = array<i32: 2, 2, 2, 0>}> ({
+    ^bb0(%arg2: index, %arg3: index):
+      %10 = "memref.load"(%1, %arg2, %arg3) : (memref<2x3xf32>, index, index) -> f32
+      "memref.store"(%10, %arg1, %arg2, %arg3) : (f32, memref<2x3xf32>, index, index) -> ()
+      "scf.reduce"() : () -> ()
+    }) : (index, index, index, index, index, index) -> ()
+    "func.return"(%8, %9) : (f32, f32) -> ()
   }) : () -> ()
 }) : () -> ()
 

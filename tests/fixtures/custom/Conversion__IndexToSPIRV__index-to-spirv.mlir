@@ -1,4 +1,4 @@
-module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Int64], []>, #spirv.resource_limits<>>} {
+module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader, Int64], []>, #spirv.resource_limits<>>} {
   func.func @trivial_ops(%arg0: index, %arg1: index) {
     %0 = index.add %arg0, %arg1
     %1 = index.sub %arg0, %arg1
@@ -70,6 +70,17 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Int64]
     %2 = index.castu %arg0 : i32 to index
     %3 = index.castu %arg1 : i64 to index
     return %0, %1, %2, %3 : index, index, index, index
+  }
+}
+
+// -----
+module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Kernel, Int64], []>, #spirv.resource_limits<>>} {
+  func.func @min_max_ops(%arg0: index, %arg1: index) {
+    %0 = index.maxs %arg0, %arg1
+    %1 = index.maxu %arg0, %arg1
+    %2 = index.mins %arg0, %arg1
+    %3 = index.minu %arg0, %arg1
+    return
   }
 }
 

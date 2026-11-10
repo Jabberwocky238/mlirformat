@@ -1,6 +1,6 @@
 module {
   llvm.func @nvvm_tcgen05_ld_16x64b(%arg0: !llvm.ptr<6>) {
-    %0 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : i32
+    %0 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<1xi32>
     %1 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<2xi32>
     %2 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<4xi32>
     %3 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<8xi32>
@@ -11,7 +11,7 @@ module {
     llvm.return
   }
   llvm.func @nvvm_tcgen05_ld_16x64b_pack(%arg0: !llvm.ptr<6>) {
-    %0 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : i32
+    %0 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<1xi32>
     %1 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<2xi32>
     %2 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<4xi32>
     %3 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x64b>} : vector<8xi32>
@@ -60,7 +60,7 @@ module {
     llvm.return
   }
   llvm.func @nvvm_tcgen05_ld_32x32b(%arg0: !llvm.ptr<6>) {
-    %0 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : i32
+    %0 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<1xi32>
     %1 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<2xi32>
     %2 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<4xi32>
     %3 = nvvm.tcgen05.ld %arg0 {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<8xi32>
@@ -71,7 +71,7 @@ module {
     llvm.return
   }
   llvm.func @nvvm_tcgen05_ld_32x32b_pack(%arg0: !llvm.ptr<6>) {
-    %0 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : i32
+    %0 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<1xi32>
     %1 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<2xi32>
     %2 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<4xi32>
     %3 = nvvm.tcgen05.ld %arg0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>} : vector<8xi32>
@@ -83,7 +83,7 @@ module {
   }
   llvm.func @nvvm_tcgen05_ld_16x32bx2(%arg0: !llvm.ptr<6>) {
     %0 = llvm.mlir.constant(2 : i64) : i64
-    %1 = nvvm.tcgen05.ld %arg0, %0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : i32
+    %1 = nvvm.tcgen05.ld %arg0, %0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<1xi32>
     %2 = nvvm.tcgen05.ld %arg0, %0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<2xi32>
     %3 = nvvm.tcgen05.ld %arg0, %0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<4xi32>
     %4 = nvvm.tcgen05.ld %arg0, %0 {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<8xi32>
@@ -95,7 +95,7 @@ module {
   }
   llvm.func @nvvm_tcgen05_ld_16x32bx2_pack(%arg0: !llvm.ptr<6>) {
     %0 = llvm.mlir.constant(2 : i64) : i64
-    %1 = nvvm.tcgen05.ld %arg0, %0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : i32
+    %1 = nvvm.tcgen05.ld %arg0, %0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<1xi32>
     %2 = nvvm.tcgen05.ld %arg0, %0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<2xi32>
     %3 = nvvm.tcgen05.ld %arg0, %0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<4xi32>
     %4 = nvvm.tcgen05.ld %arg0, %0 pack {shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>} : vector<8xi32>

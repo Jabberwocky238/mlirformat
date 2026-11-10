@@ -16,6 +16,10 @@ module {
     %0 = sparse_tensor.new %arg0 : !llvm.ptr to tensor<20x40xf32, #sparse>
     return %0 : tensor<20x40xf32, #sparse>
   }
+  func.func @sparse_tensor_new_from_tensor(%arg0: tensor<20x40xf32>) -> tensor<20x40xf32, #sparse> {
+    %0 = sparse_tensor.new %arg0 : tensor<20x40xf32> to tensor<20x40xf32, #sparse>
+    return %0 : tensor<20x40xf32, #sparse>
+  }
   func.func @sparse_tensor_convert() -> tensor<20x40xf32> {
     %0 = bufferization.alloc_tensor() : tensor<20x40xf32, #sparse>
     %1 = sparse_tensor.load %0 : tensor<20x40xf32, #sparse>

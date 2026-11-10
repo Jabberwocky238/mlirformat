@@ -197,3 +197,20 @@ module {
   }
 }
 
+// -----
+module {
+  spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [Shader, Linkage], []> {
+    spirv.func @switch_default_only(%arg0: i32) "None" {
+      spirv.mlir.selection {
+        spirv.Switch %arg0 : i32, [
+          default: ^bb1]
+      ^bb1:  // pred: ^bb0
+        spirv.Branch ^bb2
+      ^bb2:  // pred: ^bb1
+        spirv.mlir.merge
+      }
+      spirv.Return
+    }
+  }
+}
+

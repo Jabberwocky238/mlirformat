@@ -1,3 +1,3 @@
-1	verify	'test.mixed_normal_variadic_result' op result #1 must be variadic of tensor of any type values, but got 'f32'
-2	verify	'test.mixed_normal_variadic_result' op result #2 must be tensor of any type values, but got 'f32'
-3	verify	'test.mixed_normal_variadic_result' op result #3 must be variadic of tensor of any type values, but got 'f32'
+1	verify	'test.mixed_normal_variadic_result' op result #1 must be variadic of tensor of any non-token type values, but got 'f32'
+2	verify	'test.mixed_normal_variadic_result' op result #2 must be tensor of any non-token type values, but got 'f32'
+3	verify	'test.mixed_normal_variadic_result' op result #3 must be variadic of tensor of any non-token type values, but got 'f32'

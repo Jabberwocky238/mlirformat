@@ -137,3 +137,10 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @dynamic_tensor_arg(%arg0: tensor<?x2xi8>) {
+    return
+  }
+}
+

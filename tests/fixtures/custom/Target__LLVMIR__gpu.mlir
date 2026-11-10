@@ -48,6 +48,29 @@ module attributes {gpu.container_module} {
 
 // -----
 module attributes {gpu.container_module} {
+  gpu.binary @kernel_module  [#gpu.object<#nvvm.target, "BLOB">]
+  llvm.func @cooperative_no_cluster() {
+    %0 = llvm.mlir.constant(2 : index) : i64
+    %1 = llvm.mlir.constant(3 : index) : i64
+    gpu.launch_func  @kernel_module::@kernel blocks in (%0, %0, %0) threads in (%1, %1, %1) : i64 cooperative 
+    llvm.return
+  }
+}
+
+// -----
+module attributes {gpu.container_module} {
+  gpu.binary @kernel_module  [#gpu.object<#nvvm.target, "BLOB">]
+  llvm.func @cooperative_with_cluster() {
+    %0 = llvm.mlir.constant(1 : index) : i64
+    %1 = llvm.mlir.constant(2 : index) : i64
+    %2 = llvm.mlir.constant(3 : index) : i64
+    gpu.launch_func  @kernel_module::@kernel clusters in (%0, %0, %0) blocks in (%1, %1, %1) threads in (%2, %2, %2) : i64 cooperative 
+    llvm.return
+  }
+}
+
+// -----
+module attributes {gpu.container_module} {
   gpu.binary @cuda_device_mod  [#gpu.object<#nvvm.target, properties = {section = "__nv_rel_fatbin"}, "BLOB">]
 }
 

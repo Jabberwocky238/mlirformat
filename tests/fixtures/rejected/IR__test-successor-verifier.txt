@@ -1,0 +1,2 @@
+2	verify	'test.fallthrough_br' op successor #0 ('target') failed to verify constraint: the fallthrough block (the block immediately following the op's block)
+3	verify	'test.fallthrough_br' op successor #1 ('forwardTargets') failed to verify constraint: a forward block (a block listed after the op's block)

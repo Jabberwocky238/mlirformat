@@ -23,6 +23,8 @@
     "llvm.intr.memcpy"(%14, %arg4, %15) <{isVolatile = false}> : (!llvm.ptr, !llvm.ptr, i32) -> ()
     %16 = "llvm.mlir.constant"() <{value = 24 : i32}> : () -> i32
     "llvm.intr.memcpy"(%11, %arg5, %16) <{isVolatile = false}> : (!llvm.ptr, !llvm.ptr, i32) -> ()
+    "llvm.br"()[^bb1] : () -> ()
+  ^bb1:  // pred: ^bb0
     %17 = "llvm.getelementptr"(%14) <{elem_type = !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 0>}> : (!llvm.ptr) -> !llvm.ptr
     %18 = "llvm.load"(%17) <{ordering = 0 : i64}> : (!llvm.ptr) -> !llvm.ptr
     %19 = "llvm.getelementptr"(%11) <{elem_type = !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 0>}> : (!llvm.ptr) -> !llvm.ptr
@@ -44,9 +46,9 @@
     %1 = "llvm.alloca"(%0) <{elem_type = i1}> : (i64) -> !llvm.ptr<5>
     %2 = "llvm.addrspacecast"(%1) : (!llvm.ptr<5>) -> !llvm.ptr
     %3 = "llvm.getelementptr"(%2) <{elem_type = !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 0>}> : (!llvm.ptr) -> !llvm.ptr
-    %4 = "omp.map.info"(%2, %3) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from|implicit>, name = "", operandSegmentSizes = array<i32: 1, 1, 0, 0>, partial_map = false, var_type = f32}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
-    %5 = "omp.map.info"(%2, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|always|implicit>, members_index = [[0]], name = "scalar_alloc", operandSegmentSizes = array<i32: 1, 0, 1, 0>, partial_map = false, var_type = !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
-    "omp.target"(%5) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0>}> ({
+    %4 = "omp.map.info"(%2, %3) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from|implicit>, name = "", operandSegmentSizes = array<i32: 1, 1, 0, 0>, partial_map = false, var_ptr_ptr_type = f32, var_ptr_type = !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
+    %5 = "omp.map.info"(%2, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|always|implicit>, members_index = [[0]], name = "scalar_alloc", operandSegmentSizes = array<i32: 1, 0, 1, 0>, partial_map = false, var_ptr_type = !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
+    "omp.target"(%5) <{kernel_type = #omp<kernel_type(spmd)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr):
       %6 = "llvm.mlir.constant"() <{value = 1000 : i32}> : () -> i32
       %7 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
@@ -59,9 +61,9 @@
           }) : (i32, i32, i32) -> ()
         }) : (!llvm.ptr) -> ()
         "omp.terminator"() : () -> ()
-      }) : () -> ()
+      }) {omp.combined} : () -> ()
       "omp.terminator"() : () -> ()
-    }) : (!llvm.ptr) -> ()
+    }) {omp.combined} : (!llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 : ui64, "dlti.global_memory_space" = 1 : ui64>, llvm.target_triple = "amdgcn-amd-amdhsa", omp.is_gpu = true, omp.is_target_device = true} : () -> ()

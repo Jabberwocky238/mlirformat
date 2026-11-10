@@ -6,7 +6,7 @@
   ^bb0(%arg1: vector<4x8xi8>, %arg2: vector<[4]x8xi8>, %arg3: vector<4x[4]xi32>):
     %1 = "arith.extui"(%arg1) : (vector<4x8xi8>) -> vector<4x8xi32>
     %2 = "arith.extui"(%arg2) : (vector<[4]x8xi8>) -> vector<[4]x8xi32>
-    %3 = "vector.contract"(%1, %2, %arg3) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
+    %3 = "vector.contract"(%1, %2, %arg3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x8xi32>, vector<[4]x8xi32>, vector<4x[4]xi32>) -> vector<4x[4]xi32>
     "func.return"(%3) : (vector<4x[4]xi32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

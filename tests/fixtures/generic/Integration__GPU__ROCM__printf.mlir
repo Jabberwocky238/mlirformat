@@ -1,10 +1,10 @@
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = () -> ()}> ({
+    "gpu.func"() <{function_type = () -> (), kernel}> ({
       %2 = "gpu.thread_id"() <{dimension = #gpu<dim x>}> : () -> index
       "gpu.printf"(%2) <{format = "Hello from %d\0A"}> : (index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "hello", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "hello"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
     %0 = "arith.constant"() <{value = 2 : index}> : () -> index

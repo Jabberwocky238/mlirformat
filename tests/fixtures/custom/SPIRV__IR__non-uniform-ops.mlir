@@ -48,6 +48,31 @@ module {
 // -----
 // -----
 // -----
+// -----
+// -----
+module {
+}
+
+// -----
+module {
+  func.func @group_non_uniform_broadcast_first_scalar(%arg0: f32) -> f32 {
+    %0 = spirv.GroupNonUniformBroadcastFirst <Subgroup> %arg0 : f32
+    return %0 : f32
+  }
+}
+
+// -----
+module {
+  func.func @group_non_uniform_broadcast_first_vector(%arg0: vector<4xf32>) -> vector<4xf32> {
+    %0 = spirv.GroupNonUniformBroadcastFirst <Subgroup> %arg0 : vector<4xf32>
+    return %0 : vector<4xf32>
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
 module {
   func.func @group_non_uniform_elect() -> i1 {
     %0 = spirv.GroupNonUniformElect <Workgroup> : i1
@@ -157,6 +182,8 @@ module {
 // -----
 // -----
 // -----
+// -----
+// -----
 module {
   func.func @group_non_uniform_shuffle1(%arg0: f32, %arg1: i32) -> f32 {
     %0 = spirv.GroupNonUniformShuffleXor <Subgroup> %arg0, %arg1 : f32, i32
@@ -168,6 +195,8 @@ module {
   }
 }
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -185,6 +214,8 @@ module {
 // -----
 // -----
 // -----
+// -----
+// -----
 module {
   func.func @group_non_uniform_shuffle1(%arg0: f32, %arg1: i32) -> f32 {
     %0 = spirv.GroupNonUniformShuffleDown <Subgroup> %arg0, %arg1 : f32, i32
@@ -196,6 +227,8 @@ module {
   }
 }
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -328,21 +361,35 @@ module {
 // -----
 module {
   func.func @group_non_uniform_quad_swap(%arg0: f32) -> f32 {
-    %cst0_i32 = spirv.Constant 0 : i32
-    %0 = spirv.GroupNonUniformQuadSwap <Subgroup> %arg0 %cst0_i32 : f32, i32
-    return %0 : f32
+    %0 = spirv.GroupNonUniformQuadSwap <Subgroup> <Horizontal> %arg0 : f32
+    %1 = spirv.GroupNonUniformQuadSwap <Subgroup> <Vertical> %0 : f32
+    %2 = spirv.GroupNonUniformQuadSwap <Subgroup> <Diagonal> %1 : f32
+    return %2 : f32
   }
 }
 
 // -----
 module {
   func.func @group_non_uniform_quad_swap(%arg0: vector<4xf32>) -> vector<4xf32> {
-    %cst0_i32 = spirv.Constant 0 : i32
-    %0 = spirv.GroupNonUniformQuadSwap <Subgroup> %arg0 %cst0_i32 : vector<4xf32>, i32
+    %0 = spirv.GroupNonUniformQuadSwap <Subgroup> <Horizontal> %arg0 : vector<4xf32>
     return %0 : vector<4xf32>
   }
 }
 
+// -----
+// -----
+// -----
+// -----
+module {
+  func.func @group_non_uniform_ballot_bit_count(%arg0: vector<4xi32>) -> i32 {
+    %0 = spirv.GroupNonUniformBallotBitCount <Subgroup> <Reduce> %arg0 : vector<4xi32> -> i32
+    return %0 : i32
+  }
+}
+
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----

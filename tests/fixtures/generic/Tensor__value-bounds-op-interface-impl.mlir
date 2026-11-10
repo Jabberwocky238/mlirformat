@@ -1,26 +1,7 @@
 "builtin.module"() ({
-  "func.func"() <{function_type = () -> index, sym_name = "unknown_op"}> ({
-    %0 = "test.foo"() : () -> tensor<?x?xf32>
-    %1 = "test.reify_bound"(%0) <{dim = 0 : i64, type = "EQ"}> : (tensor<?x?xf32>) -> index
-    "func.return"(%1) : (index) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<10xf32>) -> index, sym_name = "cast"}> ({
   ^bb0(%arg0: tensor<10xf32>):
     %0 = "tensor.cast"(%arg0) : (tensor<10xf32>) -> tensor<?xf32>
-    %1 = "test.reify_bound"(%0) <{dim = 0 : i64, type = "EQ"}> : (tensor<?xf32>) -> index
-    "func.return"(%1) : (index) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<*xf32>) -> index, sym_name = "cast_unranked"}> ({
-  ^bb0(%arg0: tensor<*xf32>):
-    %0 = "tensor.cast"(%arg0) : (tensor<*xf32>) -> tensor<?xf32>
     %1 = "test.reify_bound"(%0) <{dim = 0 : i64, type = "EQ"}> : (tensor<?xf32>) -> index
     "func.return"(%1) : (index) -> ()
   }) : () -> ()
@@ -34,17 +15,6 @@
     %1 = "tensor.dim"(%arg0, %0) : (tensor<?xf32>, index) -> index
     %2 = "test.reify_bound"(%1) <{type = "EQ"}> : (index) -> index
     "func.return"(%2) : (index) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?xf32>, index) -> (), sym_name = "dim_all_positive"}> ({
-  ^bb0(%arg0: tensor<?xf32>, %arg1: index):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "tensor.dim"(%arg0, %arg1) : (tensor<?xf32>, index) -> index
-    "test.compare"(%1, %0) <{cmp = "GE"}> : (index, index) -> ()
-    "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -75,16 +45,6 @@
   ^bb0(%arg0: tensor<?xf32>):
     %0 = "tensor.extract_slice"(%arg0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 2>, static_sizes = array<i64: 5>, static_strides = array<i64: 1>}> : (tensor<?xf32>) -> tensor<5xf32>
     %1 = "test.reify_bound"(%0) <{dim = 0 : i64, type = "EQ"}> : (tensor<5xf32>) -> index
-    "func.return"(%1) : (index) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?xf32>, index) -> index, sym_name = "extract_slice_dynamic_constant"}> ({
-  ^bb0(%arg0: tensor<?xf32>, %arg1: index):
-    %0 = "tensor.extract_slice"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 0, 1, 0>, static_offsets = array<i64: 2>, static_sizes = array<i64: -9223372036854775808>, static_strides = array<i64: 1>}> : (tensor<?xf32>, index) -> tensor<?xf32>
-    %1 = "test.reify_bound"(%0) <{constant, dim = 0 : i64, type = "EQ"}> : (tensor<?xf32>) -> index
     "func.return"(%1) : (index) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -141,56 +101,6 @@
     %0 = "tensor.rank"(%arg0) : (tensor<5xf32>) -> index
     %1 = "test.reify_bound"(%0) <{type = "EQ"}> : (index) -> index
     "func.return"(%1) : (index) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?xf32>) -> (), sym_name = "dynamic_dims_are_equal"}> ({
-  ^bb0(%arg0: tensor<?xf32>):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "tensor.dim"(%arg0, %0) : (tensor<?xf32>, index) -> index
-    %2 = "tensor.dim"(%arg0, %0) : (tensor<?xf32>, index) -> index
-    "test.compare"(%1, %2) <{cmp = "EQ"}> : (index, index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?xf32>) -> (), sym_name = "dynamic_dims_are_different"}> ({
-  ^bb0(%arg0: tensor<?xf32>):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %2 = "tensor.dim"(%arg0, %0) : (tensor<?xf32>, index) -> index
-    %3 = "arith.addi"(%2, %1) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    "test.compare"(%2, %3) <{cmp = "EQ"}> : (index, index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?xf32>) -> (), sym_name = "dynamic_dims_are_maybe_equal_1"}> ({
-  ^bb0(%arg0: tensor<?xf32>):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "arith.constant"() <{value = 5 : index}> : () -> index
-    %2 = "tensor.dim"(%arg0, %0) : (tensor<?xf32>, index) -> index
-    "test.compare"(%2, %1) <{cmp = "EQ"}> : (index, index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?x?xf32>) -> (), sym_name = "dynamic_dims_are_maybe_equal_2"}> ({
-  ^bb0(%arg0: tensor<?x?xf32>):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %2 = "tensor.dim"(%arg0, %0) : (tensor<?x?xf32>, index) -> index
-    %3 = "tensor.dim"(%arg0, %1) : (tensor<?x?xf32>, index) -> index
-    "test.compare"(%2, %3) <{cmp = "EQ"}> : (index, index) -> ()
-    "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 

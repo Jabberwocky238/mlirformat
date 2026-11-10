@@ -1,43 +1,58 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (f32) -> vector<2xf32>, sym_name = "broadcast_vec1d_from_scalar"}> ({
-  ^bb0(%arg12: f32):
-    %12 = "vector.broadcast"(%arg12) : (f32) -> vector<2xf32>
-    "func.return"(%12) : (vector<2xf32>) -> ()
+  ^bb0(%arg15: f32):
+    %15 = "vector.broadcast"(%arg15) : (f32) -> vector<2xf32>
+    "func.return"(%15) : (vector<2xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (f32) -> vector<2x3xf32>, sym_name = "broadcast_vec2d_from_scalar"}> ({
-  ^bb0(%arg11: f32):
-    %11 = "vector.broadcast"(%arg11) : (f32) -> vector<2x3xf32>
-    "func.return"(%11) : (vector<2x3xf32>) -> ()
+  ^bb0(%arg14: f32):
+    %14 = "vector.broadcast"(%arg14) : (f32) -> vector<2x3xf32>
+    "func.return"(%14) : (vector<2x3xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (f32) -> vector<2x3x4xf32>, sym_name = "broadcast_vec3d_from_scalar"}> ({
-  ^bb0(%arg10: f32):
-    %10 = "vector.broadcast"(%arg10) : (f32) -> vector<2x3x4xf32>
-    "func.return"(%10) : (vector<2x3x4xf32>) -> ()
+  ^bb0(%arg13: f32):
+    %13 = "vector.broadcast"(%arg13) : (f32) -> vector<2x3x4xf32>
+    "func.return"(%13) : (vector<2x3x4xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<2xf32>) -> vector<2xf32>, sym_name = "broadcast_vec1d_from_vec1d"}> ({
-  ^bb0(%arg9: vector<2xf32>):
-    %9 = "vector.broadcast"(%arg9) : (vector<2xf32>) -> vector<2xf32>
-    "func.return"(%9) : (vector<2xf32>) -> ()
+  ^bb0(%arg12: vector<2xf32>):
+    %12 = "vector.broadcast"(%arg12) : (vector<2xf32>) -> vector<2xf32>
+    "func.return"(%12) : (vector<2xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<2xf32>) -> vector<3x2xf32>, sym_name = "broadcast_vec2d_from_vec1d"}> ({
-  ^bb0(%arg8: vector<2xf32>):
-    %8 = "vector.broadcast"(%arg8) : (vector<2xf32>) -> vector<3x2xf32>
-    "func.return"(%8) : (vector<3x2xf32>) -> ()
+  ^bb0(%arg11: vector<2xf32>):
+    %11 = "vector.broadcast"(%arg11) : (vector<2xf32>) -> vector<3x2xf32>
+    "func.return"(%11) : (vector<3x2xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<2xf32>) -> vector<4x3x2xf32>, sym_name = "broadcast_vec3d_from_vec1d"}> ({
-  ^bb0(%arg7: vector<2xf32>):
-    %7 = "vector.broadcast"(%arg7) : (vector<2xf32>) -> vector<4x3x2xf32>
-    "func.return"(%7) : (vector<4x3x2xf32>) -> ()
+  ^bb0(%arg10: vector<2xf32>):
+    %10 = "vector.broadcast"(%arg10) : (vector<2xf32>) -> vector<4x3x2xf32>
+    "func.return"(%10) : (vector<4x3x2xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<3x2xf32>) -> vector<4x3x2xf32>, sym_name = "broadcast_vec3d_from_vec2d"}> ({
-  ^bb0(%arg6: vector<3x2xf32>):
-    %6 = "vector.broadcast"(%arg6) : (vector<3x2xf32>) -> vector<4x3x2xf32>
-    "func.return"(%6) : (vector<4x3x2xf32>) -> ()
+  ^bb0(%arg9: vector<3x2xf32>):
+    %9 = "vector.broadcast"(%arg9) : (vector<3x2xf32>) -> vector<4x3x2xf32>
+    "func.return"(%9) : (vector<4x3x2xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<1xf32>) -> vector<4xf32>, sym_name = "broadcast_stretch"}> ({
-  ^bb0(%arg5: vector<1xf32>):
-    %5 = "vector.broadcast"(%arg5) : (vector<1xf32>) -> vector<4xf32>
-    "func.return"(%5) : (vector<4xf32>) -> ()
+  ^bb0(%arg8: vector<1xf32>):
+    %8 = "vector.broadcast"(%arg8) : (vector<1xf32>) -> vector<4xf32>
+    "func.return"(%8) : (vector<4xf32>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<1xf32>) -> vector<16x1xf32>, sym_name = "broadcast_vec2d_from_vec1d_single_element"}> ({
+  ^bb0(%arg7: vector<1xf32>):
+    %7 = "vector.broadcast"(%arg7) : (vector<1xf32>) -> vector<16x1xf32>
+    "func.return"(%7) : (vector<16x1xf32>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<1x1xf32>) -> vector<4x3xf32>, sym_name = "broadcast_vec2d_from_vec2d_single_element"}> ({
+  ^bb0(%arg6: vector<1x1xf32>):
+    %6 = "vector.broadcast"(%arg6) : (vector<1x1xf32>) -> vector<4x3xf32>
+    "func.return"(%6) : (vector<4x3xf32>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<[1]xf32>) -> vector<4x[1]xf32>, sym_name = "broadcast_vec2d_from_vec1d_unit_scalable_dim"}> ({
+  ^bb0(%arg5: vector<[1]xf32>):
+    %5 = "vector.broadcast"(%arg5) : (vector<[1]xf32>) -> vector<4x[1]xf32>
+    "func.return"(%5) : (vector<4x[1]xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<1x4xf32>) -> vector<3x4xf32>, sym_name = "broadcast_stretch_at_start"}> ({
   ^bb0(%arg4: vector<1x4xf32>):

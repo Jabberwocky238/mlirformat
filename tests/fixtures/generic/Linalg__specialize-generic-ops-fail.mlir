@@ -38,3 +38,18 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0) -> (d0)>
+#map1 = affine_map<(d0) -> ()>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<128xf32>, f32) -> tensor<128xf32>, sym_name = "scalar_input"}> ({
+  ^bb0(%arg0: tensor<128xf32>, %arg1: f32):
+    %0 = "linalg.generic"(%arg0, %arg1, %arg0) <{indexing_maps = [#map, #map1, #map], iterator_types = [#linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 2, 1>}> ({
+    ^bb0(%arg2: f32, %arg3: f32, %arg4: f32):
+      %1 = "arith.addf"(%arg3, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%1) : (f32) -> ()
+    }) : (tensor<128xf32>, f32, tensor<128xf32>) -> tensor<128xf32>
+    "func.return"(%0) : (tensor<128xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

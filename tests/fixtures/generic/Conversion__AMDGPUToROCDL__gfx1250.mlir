@@ -46,19 +46,19 @@
 // -----
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (index, memref<8xi32, 1>, memref<8xi32, 3>) -> !amdgpu.tdm_base<i32>, sym_name = "make_dma_base"}> ({
-  ^bb0(%arg0: index, %arg1: memref<8xi32, 1>, %arg2: memref<8xi32, 3>):
-    %0 = "amdgpu.make_dma_base"(%arg1, %arg0, %arg2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<8xi32, 1>, index, memref<8xi32, 3>, index) -> !amdgpu.tdm_base<i32>
+  "func.func"() <{function_type = (index, memref<8xi32, #gpu.address_space<global>>, memref<8xi32, #gpu.address_space<workgroup>>) -> !amdgpu.tdm_base<i32>, sym_name = "make_dma_base"}> ({
+  ^bb0(%arg0: index, %arg1: memref<8xi32, #gpu.address_space<global>>, %arg2: memref<8xi32, #gpu.address_space<workgroup>>):
+    %0 = "amdgpu.make_dma_base"(%arg1, %arg0, %arg2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<8xi32, #gpu.address_space<global>>, index, memref<8xi32, #gpu.address_space<workgroup>>, index) -> !amdgpu.tdm_base<i32>
     "func.return"(%0) : (!amdgpu.tdm_base<i32>) -> ()
   }) : () -> ()
 }) : () -> ()
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (index, memref<8xi32, 1>, memref<8xi32, 3>) -> (!amdgpu.tdm_gather_base<i32, i16>, !amdgpu.tdm_gather_base<i32, i32>), sym_name = "make_gather_dma_base"}> ({
-  ^bb0(%arg0: index, %arg1: memref<8xi32, 1>, %arg2: memref<8xi32, 3>):
-    %0 = "amdgpu.make_gather_dma_base"(%arg1, %arg0, %arg2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<8xi32, 1>, index, memref<8xi32, 3>, index) -> !amdgpu.tdm_gather_base<i32, i16>
-    %1 = "amdgpu.make_gather_dma_base"(%arg1, %arg0, %arg2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<8xi32, 1>, index, memref<8xi32, 3>, index) -> !amdgpu.tdm_gather_base<i32, i32>
+  "func.func"() <{function_type = (index, memref<8xi32, #gpu.address_space<global>>, memref<8xi32, #gpu.address_space<workgroup>>) -> (!amdgpu.tdm_gather_base<i32, i16>, !amdgpu.tdm_gather_base<i32, i32>), sym_name = "make_gather_dma_base"}> ({
+  ^bb0(%arg0: index, %arg1: memref<8xi32, #gpu.address_space<global>>, %arg2: memref<8xi32, #gpu.address_space<workgroup>>):
+    %0 = "amdgpu.make_gather_dma_base"(%arg1, %arg0, %arg2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<8xi32, #gpu.address_space<global>>, index, memref<8xi32, #gpu.address_space<workgroup>>, index) -> !amdgpu.tdm_gather_base<i32, i16>
+    %1 = "amdgpu.make_gather_dma_base"(%arg1, %arg0, %arg2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<8xi32, #gpu.address_space<global>>, index, memref<8xi32, #gpu.address_space<workgroup>>, index) -> !amdgpu.tdm_gather_base<i32, i32>
     "func.return"(%0, %1) : (!amdgpu.tdm_gather_base<i32, i16>, !amdgpu.tdm_gather_base<i32, i32>) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -74,9 +74,9 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (!amdgpu.tdm_base<i32>, memref<8xi32, 3>, index) -> !amdgpu.tdm_descriptor, sym_name = "make_dma_descriptor_atomic_barrier"}> ({
-  ^bb0(%arg0: !amdgpu.tdm_base<i32>, %arg1: memref<8xi32, 3>, %arg2: index):
-    %0 = "amdgpu.make_dma_descriptor"(%arg0, %arg1, %arg2) <{global_static_sizes = array<i64: 128, 64>, global_static_strides = array<i64: 64, 1>, operandSegmentSizes = array<i32: 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0>, shared_static_sizes = array<i64: 128, 64>}> : (!amdgpu.tdm_base<i32>, memref<8xi32, 3>, index) -> !amdgpu.tdm_descriptor
+  "func.func"() <{function_type = (!amdgpu.tdm_base<i32>, memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, index) -> !amdgpu.tdm_descriptor, sym_name = "make_dma_descriptor_atomic_barrier"}> ({
+  ^bb0(%arg0: !amdgpu.tdm_base<i32>, %arg1: memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg2: index):
+    %0 = "amdgpu.make_dma_descriptor"(%arg0, %arg1, %arg2) <{global_static_sizes = array<i64: 128, 64>, global_static_strides = array<i64: 64, 1>, operandSegmentSizes = array<i32: 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0>, shared_static_sizes = array<i64: 128, 64>}> : (!amdgpu.tdm_base<i32>, memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, index) -> !amdgpu.tdm_descriptor
     "func.return"(%0) : (!amdgpu.tdm_descriptor) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -120,28 +120,131 @@
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (!amdgpu.tdm_base<i32>, vector<16xi1>, i1) -> !amdgpu.tdm_descriptor, sym_name = "make_dma_descriptor_workgroup_mask"}> ({
-  ^bb0(%arg2: !amdgpu.tdm_base<i32>, %arg3: vector<16xi1>, %arg4: i1):
-    %0 = "amdgpu.make_dma_descriptor"(%arg2, %arg3, %arg4) <{global_static_sizes = array<i64: 128, 64>, global_static_strides = array<i64: 64, 1>, operandSegmentSizes = array<i32: 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0>, shared_static_sizes = array<i64: 128, 64>}> : (!amdgpu.tdm_base<i32>, vector<16xi1>, i1) -> !amdgpu.tdm_descriptor
-    "func.return"(%0) : (!amdgpu.tdm_descriptor) -> ()
+  ^bb0(%arg14: !amdgpu.tdm_base<i32>, %arg15: vector<16xi1>, %arg16: i1):
+    %7 = "amdgpu.make_dma_descriptor"(%arg14, %arg15, %arg16) <{global_static_sizes = array<i64: 128, 64>, global_static_strides = array<i64: 64, 1>, operandSegmentSizes = array<i32: 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0>, shared_static_sizes = array<i64: 128, 64>}> : (!amdgpu.tdm_base<i32>, vector<16xi1>, i1) -> !amdgpu.tdm_descriptor
+    "func.return"(%7) : (!amdgpu.tdm_descriptor) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (!amdgpu.tdm_descriptor) -> (), sym_name = "tensor_load_to_lds"}> ({
-  ^bb0(%arg1: !amdgpu.tdm_descriptor):
-    "amdgpu.tensor_load_to_lds"(%arg1) : (!amdgpu.tdm_descriptor) -> ()
+  ^bb0(%arg13: !amdgpu.tdm_descriptor):
+    "amdgpu.tensor_load_to_lds"(%arg13) : (!amdgpu.tdm_descriptor) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (!amdgpu.tdm_descriptor) -> (), sym_name = "tensor_store_from_lds"}> ({
-  ^bb0(%arg0: !amdgpu.tdm_descriptor):
-    "amdgpu.tensor_store_from_lds"(%arg0) : (!amdgpu.tdm_descriptor) -> ()
+  ^bb0(%arg12: !amdgpu.tdm_descriptor):
+    "amdgpu.tensor_store_from_lds"(%arg12) : (!amdgpu.tdm_descriptor) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!amdgpu.tdm_gather_base<i32, i16>, vector<13xi16>) -> !amdgpu.tdm_descriptor, sym_name = "make_gather_dma_descriptor"}> ({
+  ^bb0(%arg10: !amdgpu.tdm_gather_base<i32, i16>, %arg11: vector<13xi16>):
+    %6 = "amdgpu.make_gather_dma_descriptor"(%arg10, %arg11) <{global_static_sizes = array<i64: 128, 64>, global_static_strides = array<i64: 64, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>, shared_static_sizes = array<i64: 128, 64>}> : (!amdgpu.tdm_gather_base<i32, i16>, vector<13xi16>) -> !amdgpu.tdm_descriptor
+    "func.return"(%6) : (!amdgpu.tdm_descriptor) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i32) -> (), sym_name = "ds_barrier_init"}> ({
+  ^bb0(%arg8: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg9: i32):
+    "amdgpu.ds_barrier_init"(%arg8, %arg9) : (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i32) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) -> !amdgpu.ds_barrier_state, sym_name = "ds_barrier_poll_state"}> ({
+  ^bb0(%arg7: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>):
+    %5 = "amdgpu.ds_barrier_poll_state"(%arg7) : (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) -> !amdgpu.ds_barrier_state
+    "func.return"(%5) : (!amdgpu.ds_barrier_state) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) -> (), sym_name = "ds_async_barrier_arrive"}> ({
+  ^bb0(%arg6: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>):
+    "amdgpu.ds_async_barrier_arrive"(%arg6) : (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i64) -> !amdgpu.ds_barrier_state, sym_name = "ds_barrier_arrive"}> ({
+  ^bb0(%arg4: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg5: i64):
+    %4 = "amdgpu.ds_barrier_arrive"(%arg4, %arg5) : (memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i64) -> !amdgpu.ds_barrier_state
+    "func.return"(%4) : (!amdgpu.ds_barrier_state) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!amdgpu.ds_barrier_state) -> i32, sym_name = "ds_barrier_state_phase"}> ({
+  ^bb0(%arg3: !amdgpu.ds_barrier_state):
+    %3 = "amdgpu.ds_barrier_state_phase"(%arg3) : (!amdgpu.ds_barrier_state) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!amdgpu.ds_barrier_state) -> i32, sym_name = "ds_barrier_state_pending_count"}> ({
+  ^bb0(%arg2: !amdgpu.ds_barrier_state):
+    %2 = "amdgpu.ds_barrier_state_pending_count"(%arg2) : (!amdgpu.ds_barrier_state) -> i32
+    "func.return"(%2) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!amdgpu.ds_barrier_state) -> i32, sym_name = "ds_barrier_state_init_count"}> ({
+  ^bb0(%arg1: !amdgpu.ds_barrier_state):
+    %1 = "amdgpu.ds_barrier_state_init_count"(%arg1) : (!amdgpu.ds_barrier_state) -> i32
+    "func.return"(%1) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (!amdgpu.ds_barrier_state) -> i1, sym_name = "ds_barrier_state_phase_parity"}> ({
+  ^bb0(%arg0: !amdgpu.ds_barrier_state):
+    %0 = "amdgpu.ds_barrier_state_phase_parity"(%arg0) : (!amdgpu.ds_barrier_state) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x72xf32, #gpu.address_space<global>>) -> (), sym_name = "global_load_async_to_lds_b32"}> ({
+  ^bb0(%arg0: memref<128x72xf32, #gpu.address_space<global>>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 12 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 32 : index}> : () -> index
+    %3 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<64x64xf32, #gpu.address_space<workgroup>>
+    "amdgpu.global_load_async_to_lds"(%arg0, %1, %0, %3, %2, %0) <{operandSegmentSizes = array<i32: 1, 2, 1, 2, 0>, transferType = f32}> : (memref<128x72xf32, #gpu.address_space<global>>, index, index, memref<64x64xf32, #gpu.address_space<workgroup>>, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (!amdgpu.tdm_gather_base<i32, i16>, vector<13xi16>) -> !amdgpu.tdm_descriptor, sym_name = "make_gather_dma_descriptor"}> ({
-  ^bb0(%arg0: !amdgpu.tdm_gather_base<i32, i16>, %arg1: vector<13xi16>):
-    %0 = "amdgpu.make_gather_dma_descriptor"(%arg0, %arg1) <{global_static_sizes = array<i64: 128, 64>, global_static_strides = array<i64: 64, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>, shared_static_sizes = array<i64: 128, 64>}> : (!amdgpu.tdm_gather_base<i32, i16>, vector<13xi16>) -> !amdgpu.tdm_descriptor
-    "func.return"(%0) : (!amdgpu.tdm_descriptor) -> ()
+  "func.func"() <{function_type = (memref<128x72xi8, #gpu.address_space<global>>) -> (), sym_name = "global_load_async_to_lds_b8"}> ({
+  ^bb0(%arg0: memref<128x72xi8, #gpu.address_space<global>>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<64x64xi8, #gpu.address_space<workgroup>>
+    "amdgpu.global_load_async_to_lds"(%arg0, %0, %0, %1, %0, %0) <{operandSegmentSizes = array<i32: 1, 2, 1, 2, 0>, transferType = i8}> : (memref<128x72xi8, #gpu.address_space<global>>, index, index, memref<64x64xi8, #gpu.address_space<workgroup>>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x72xf32, #gpu.address_space<global>>) -> (), sym_name = "global_load_async_to_lds_b64"}> ({
+  ^bb0(%arg0: memref<128x72xf32, #gpu.address_space<global>>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<64x64xf32, #gpu.address_space<workgroup>>
+    "amdgpu.global_load_async_to_lds"(%arg0, %0, %0, %1, %0, %0) <{operandSegmentSizes = array<i32: 1, 2, 1, 2, 0>, transferType = vector<2xf32>}> : (memref<128x72xf32, #gpu.address_space<global>>, index, index, memref<64x64xf32, #gpu.address_space<workgroup>>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x72xf32, #gpu.address_space<global>>) -> (), sym_name = "global_load_async_to_lds_b128"}> ({
+  ^bb0(%arg0: memref<128x72xf32, #gpu.address_space<global>>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<64x64xf32, #gpu.address_space<workgroup>>
+    "amdgpu.global_load_async_to_lds"(%arg0, %0, %0, %1, %0, %0) <{operandSegmentSizes = array<i32: 1, 2, 1, 2, 0>, transferType = vector<4xf32>}> : (memref<128x72xf32, #gpu.address_space<global>>, index, index, memref<64x64xf32, #gpu.address_space<workgroup>>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<512xi32, #gpu.address_space<global>>, index, index) -> (), sym_name = "global_load_async_to_lds_dynamic_indices"}> ({
+  ^bb0(%arg0: memref<512xi32, #gpu.address_space<global>>, %arg1: index, %arg2: index):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<256xi32, #gpu.address_space<workgroup>>
+    "amdgpu.global_load_async_to_lds"(%arg0, %arg1, %0, %arg2) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 0>, transferType = i32}> : (memref<512xi32, #gpu.address_space<global>>, index, memref<256xi32, #gpu.address_space<workgroup>>, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x72xf32, #gpu.address_space<global>>, i1) -> (), sym_name = "global_load_async_to_lds_b128_masked"}> ({
+  ^bb0(%arg0: memref<128x72xf32, #gpu.address_space<global>>, %arg1: i1):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<64x64xf32, #gpu.address_space<workgroup>>
+    "amdgpu.global_load_async_to_lds"(%arg0, %0, %0, %1, %0, %0, %arg1) <{operandSegmentSizes = array<i32: 1, 2, 1, 2, 1>, transferType = vector<4xf32>}> : (memref<128x72xf32, #gpu.address_space<global>>, index, index, memref<64x64xf32, #gpu.address_space<workgroup>>, index, index, i1) -> ()
+    "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 

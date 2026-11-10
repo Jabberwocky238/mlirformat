@@ -83,6 +83,16 @@ module {
 
 // -----
 module {
+  func.func @fold_rank_reducing_subview_1x8x1x3_to_1x8x3_drop_middle_unit_dim(%arg0: memref<?x?x?x?xf32, strided<[?, ?, ?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index) -> f32 {
+    %c0 = arith.constant 0 : index
+    %subview = memref.subview %arg0[0, 0, 0, 0] [1, 8, 1, 3] [1, 1, 1, 1] : memref<?x?x?x?xf32, strided<[?, ?, ?, ?], offset: ?>> to memref<1x8x3xf32, strided<[?, ?, ?], offset: ?>>
+    %0 = memref.load %subview[%c0, %arg1, %arg2] : memref<1x8x3xf32, strided<[?, ?, ?], offset: ?>>
+    return %0 : f32
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_transfer_read_with_rank_reduced_subview(%arg0: memref<?x?x?xf32, strided<[?, ?, ?], offset: ?>>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index) -> vector<4xf32> {
     %cst = arith.constant 0.000000e+00 : f32
     %subview = memref.subview %arg0[0, %arg1, %arg2] [1, %arg3, %arg4] [1, 1, 1] : memref<?x?x?xf32, strided<[?, ?, ?], offset: ?>> to memref<?x?xf32, strided<[?, ?], offset: ?>>
@@ -214,6 +224,24 @@ module {
 
 // -----
 module {
+  func.func @subview_of_subview_no_unit_stride(%arg0: memref<8x8xf32, strided<[8, 1]>>) -> memref<2x2xf32, strided<[32, 4], offset: 27>> {
+    %subview = memref.subview %arg0[1, 1] [4, 4] [2, 2] : memref<8x8xf32, strided<[8, 1]>> to memref<4x4xf32, strided<[16, 2], offset: 9>>
+    %subview_0 = memref.subview %subview[1, 1] [2, 2] [2, 2] : memref<4x4xf32, strided<[16, 2], offset: 9>> to memref<2x2xf32, strided<[32, 4], offset: 27>>
+    return %subview_0 : memref<2x2xf32, strided<[32, 4], offset: 27>>
+  }
+}
+
+// -----
+module {
+  func.func @subview_of_subview_rank_reducing_no_unit_stride(%arg0: memref<8x8xf32, strided<[8, 1]>>) -> memref<2xf32, strided<[4], offset: 27>> {
+    %subview = memref.subview %arg0[1, 1] [4, 4] [2, 2] : memref<8x8xf32, strided<[8, 1]>> to memref<4x4xf32, strided<[16, 2], offset: 9>>
+    %subview_0 = memref.subview %subview[1, 1] [1, 2] [2, 2] : memref<4x4xf32, strided<[16, 2], offset: 9>> to memref<2xf32, strided<[4], offset: 27>>
+    return %subview_0 : memref<2xf32, strided<[4], offset: 27>>
+  }
+}
+
+// -----
+module {
   func.func @fold_load_keep_nontemporal(%arg0: memref<12x32xf32>, %arg1: index, %arg2: index, %arg3: index, %arg4: index) -> f32 {
     %subview = memref.subview %arg0[%arg1, %arg2] [4, 4] [2, 3] : memref<12x32xf32> to memref<4x4xf32, strided<[64, 3], offset: ?>>
     %0 = memref.load %subview[%arg3, %arg4] {nontemporal = true} : memref<4x4xf32, strided<[64, 3], offset: ?>>
@@ -226,6 +254,15 @@ module {
   func.func @fold_store_keep_nontemporal(%arg0: memref<12x32xf32>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: f32) {
     %subview = memref.subview %arg0[%arg1, %arg2] [4, 4] [2, 3] : memref<12x32xf32> to memref<4x4xf32, strided<[64, 3], offset: ?>>
     memref.store %arg5, %subview[%arg3, %arg4] {nontemporal = true} : memref<4x4xf32, strided<[64, 3], offset: ?>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_prefetch_expand_shape(%arg0: memref<32xf32>, %arg1: index, %arg2: index) {
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    memref.prefetch %expand_shape[%arg1, %arg2], read, locality<2>, data : memref<4x8xf32>
     return
   }
 }
@@ -268,55 +305,6 @@ module {
 
 // -----
 module {
-  func.func @fold_nvgpu_device_async_copy_zero_sub_idx(%arg0: memref<2x128x768xf16>, %arg1: index, %arg2: index, %arg3: index) {
-    %c0 = arith.constant 0 : index
-    %alloc = memref.alloc() : memref<5x1x64x64xf16, #gpu.address_space<workgroup>>
-    %subview = memref.subview %arg0[%arg1, %arg2, %arg3] [1, 1, 8] [1, 1, 1] : memref<2x128x768xf16> to memref<1x8xf16, strided<[98304, 1], offset: ?>>
-    %0 = nvgpu.device_async_copy %subview[%c0, %c0], %alloc[%c0, %c0, %c0, %c0], 8 {bypassL1} : memref<1x8xf16, strided<[98304, 1], offset: ?>> to memref<5x1x64x64xf16, #gpu.address_space<workgroup>>
-    return
-  }
-}
-
-// -----
-module {
-  func.func @fold_src_nvgpu_device_async_copy(%arg0: memref<2x128x768xf16>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index) {
-    %c0 = arith.constant 0 : index
-    %alloc = memref.alloc() : memref<5x1x64x64xf16, #gpu.address_space<workgroup>>
-    %subview = memref.subview %arg0[%arg1, %arg2, %arg3] [1, 1, 8] [1, 1, 1] : memref<2x128x768xf16> to memref<1x8xf16, strided<[98304, 1], offset: ?>>
-    %0 = nvgpu.device_async_copy %subview[%arg4, %arg5], %alloc[%c0, %c0, %c0, %c0], 8 {bypassL1} : memref<1x8xf16, strided<[98304, 1], offset: ?>> to memref<5x1x64x64xf16, #gpu.address_space<workgroup>>
-    return
-  }
-}
-
-// -----
-module {
-  func.func @fold_src_fold_dest_nvgpu_device_async_copy(%arg0: memref<2x128x768xf16>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index) {
-    %c0 = arith.constant 0 : index
-    %alloc = memref.alloc() : memref<5x1x64x64xf16, #gpu.address_space<workgroup>>
-    %subview = memref.subview %arg0[%arg1, %arg2, %arg3] [1, 1, 8] [1, 1, 1] : memref<2x128x768xf16> to memref<1x8xf16, strided<[98304, 1], offset: ?>>
-    %subview_0 = memref.subview %alloc[%arg6, %arg7, %arg8, %arg9] [1, 1, 1, 8] [1, 1, 1, 1] : memref<5x1x64x64xf16, #gpu.address_space<workgroup>> to memref<1x8xf16, strided<[4096, 1], offset: ?>, #gpu.address_space<workgroup>>
-    %0 = nvgpu.device_async_copy %subview[%arg4, %arg5], %subview_0[%arg10, %arg11], 8 {bypassL1} : memref<1x8xf16, strided<[98304, 1], offset: ?>> to memref<1x8xf16, strided<[4096, 1], offset: ?>, #gpu.address_space<workgroup>>
-    return
-  }
-}
-
-// -----
-#map = affine_map<()[s0] -> (-s0 + 4)>
-#map1 = affine_map<()[s0] -> (-s0 + 32)>
-module {
-  func.func @test_ldmatrix(%arg0: memref<4x32x32xf16, 3>, %arg1: index, %arg2: index, %arg3: index) -> vector<4x2xf16> {
-    %c0 = arith.constant 0 : index
-    %0 = affine.apply #map()[%arg1]
-    %1 = affine.apply #map1()[%arg2]
-    %2 = affine.apply #map1()[%arg3]
-    %subview = memref.subview %arg0[%arg1, %arg2, %arg3] [%0, %1, %2] [1, 1, 1] : memref<4x32x32xf16, 3> to memref<?x?x?xf16, strided<[1024, 32, 1], offset: ?>, 3>
-    %3 = nvgpu.ldmatrix %subview[%c0, %c0, %c0] {numTiles = 4 : i32, transpose = false} : memref<?x?x?xf16, strided<[1024, 32, 1], offset: ?>, 3> -> vector<4x2xf16>
-    return %3 : vector<4x2xf16>
-  }
-}
-
-// -----
-module {
   func.func @fold_vector_load_subview(%arg0: memref<24x64xf32>, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index) -> vector<12x32xf32> {
     %subview = memref.subview %arg0[%arg1, %arg2] [%arg3, %arg4] [1, 1] : memref<24x64xf32> to memref<?x?xf32, strided<[64, 1], offset: ?>>
     %0 = vector.load %subview[%arg5, %arg5] : memref<?x?xf32, strided<[64, 1], offset: ?>>, vector<12x32xf32>
@@ -326,10 +314,28 @@ module {
 
 // -----
 module {
+  func.func @fold_scalar_equivalent_vector_load_subview(%arg0: memref<16xf32>, %arg1: index, %arg2: index) -> vector<1xf32> {
+    %subview = memref.subview %arg0[%arg1] [4] [2] : memref<16xf32> to memref<4xf32, strided<[2], offset: ?>>
+    %0 = vector.load %subview[%arg2] : memref<4xf32, strided<[2], offset: ?>>, vector<1xf32>
+    return %0 : vector<1xf32>
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_maskedload_subview(%arg0: memref<12x32xf32>, %arg1: index, %arg2: index, %arg3: vector<32xi1>, %arg4: vector<32xf32>) -> vector<32xf32> {
     %subview = memref.subview %arg0[%arg1, %arg2] [1, 1] [1, 1] : memref<12x32xf32> to memref<f32, strided<[], offset: ?>>
     %0 = vector.maskedload %subview[], %arg3, %arg4 : memref<f32, strided<[], offset: ?>>, vector<32xi1>, vector<32xf32> into vector<32xf32>
     return %0 : vector<32xf32>
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_vector_maskedload_subview_high_rank_vector(%arg0: memref<8xf32>, %arg1: index, %arg2: vector<2x2x2xi1>, %arg3: vector<2x2x2xf32>) -> vector<2x2x2xf32> {
+    %subview = memref.subview %arg0[%arg1] [1] [1] : memref<8xf32> to memref<1xf32, strided<[1], offset: ?>>
+    %0 = vector.maskedload %subview[%arg1], %arg2, %arg3 : memref<1xf32, strided<[1], offset: ?>>, vector<2x2x2xi1>, vector<2x2x2xf32> into vector<2x2x2xf32>
+    return %0 : vector<2x2x2xf32>
   }
 }
 
@@ -363,6 +369,26 @@ module {
 
 // -----
 module {
+  func.func @fold_vector_load_expand_shape_leading_unit(%arg0: memref<32xf32>, %arg1: index) -> vector<1x8xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    %0 = vector.load %expand_shape[%arg1, %c0] : memref<4x8xf32>, vector<1x8xf32>
+    return %0 : vector<1x8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @fold_vector_load_expand_shape_all_unit(%arg0: memref<f32>) -> vector<1xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [] output_shape [1] : memref<f32> into memref<1xf32>
+    %0 = vector.load %expand_shape[%c0] : memref<1xf32>, vector<1xf32>
+    return %0 : vector<1xf32>
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_maskedload_expand_shape(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<8xi1>, %arg3: vector<8xf32>) -> vector<8xf32> {
     %c0 = arith.constant 0 : index
     %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
@@ -373,10 +399,60 @@ module {
 
 // -----
 module {
+  func.func @fold_vector_maskedload_expand_shape_leading_unit(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<1x8xi1>, %arg3: vector<1x8xf32>) -> vector<1x8xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    %0 = vector.maskedload %expand_shape[%arg1, %c0], %arg2, %arg3 : memref<4x8xf32>, vector<1x8xi1>, vector<1x8xf32> into vector<1x8xf32>
+    return %0 : vector<1x8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @negative_fold_vector_maskedload_expand_shape_all_unit(%arg0: memref<f32>, %arg1: vector<1xi1>, %arg2: vector<1xf32>) -> vector<1xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [] output_shape [1] : memref<f32> into memref<1xf32>
+    %0 = vector.maskedload %expand_shape[%c0], %arg1, %arg2 : memref<1xf32>, vector<1xi1>, vector<1xf32> into vector<1xf32>
+    return %0 : vector<1xf32>
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_vector_maskedload_expand_shape_high_rank_vector(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<2x2x2xi1>, %arg3: vector<2x2x2xf32>) -> vector<2x2x2xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    %0 = vector.maskedload %expand_shape[%arg1, %c0], %arg2, %arg3 : memref<4x8xf32>, vector<2x2x2xi1>, vector<2x2x2xf32> into vector<2x2x2xf32>
+    return %0 : vector<2x2x2xf32>
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_store_expand_shape(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<8xf32>) {
     %c0 = arith.constant 0 : index
     %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
     vector.store %arg2, %expand_shape[%arg1, %c0] {nontemporal = true} : memref<4x8xf32>, vector<8xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_vector_store_expand_shape_leading_unit(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<1x8xf32>) {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    vector.store %arg2, %expand_shape[%arg1, %c0] : memref<4x8xf32>, vector<1x8xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_vector_store_expand_shape_all_unit(%arg0: memref<f32>, %arg1: vector<1xf32>) {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [] output_shape [1] : memref<f32> into memref<1xf32>
+    vector.store %arg1, %expand_shape[%c0] : memref<1xf32>, vector<1xf32>
     return
   }
 }
@@ -393,12 +469,96 @@ module {
 
 // -----
 module {
+  func.func @fold_vector_maskedstore_expand_shape_leading_unit(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<1x8xi1>, %arg3: vector<1x8xf32>) {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    vector.maskedstore %expand_shape[%arg1, %c0], %arg2, %arg3 : memref<4x8xf32>, vector<1x8xi1>, vector<1x8xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_vector_maskedstore_expand_shape_all_unit(%arg0: memref<f32>, %arg1: vector<1xi1>, %arg2: vector<1xf32>) {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [] output_shape [1] : memref<f32> into memref<1xf32>
+    vector.maskedstore %expand_shape[%c0], %arg1, %arg2 : memref<1xf32>, vector<1xi1>, vector<1xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_vector_expandload_expand_shape(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<8xi1>, %arg3: vector<8xf32>) -> vector<8xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    %0 = vector.expandload %expand_shape[%arg1, %c0], %arg2, %arg3 : memref<4x8xf32>, vector<8xi1>, vector<8xf32> into vector<8xf32>
+    return %0 : vector<8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_vector_expandload_expand_shape_all_unit(%arg0: memref<f32>, %arg1: vector<1xi1>, %arg2: vector<1xf32>) -> vector<1xf32> {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [] output_shape [1] : memref<f32> into memref<1xf32>
+    %0 = vector.expandload %expand_shape[%c0], %arg1, %arg2 : memref<1xf32>, vector<1xi1>, vector<1xf32> into vector<1xf32>
+    return %0 : vector<1xf32>
+  }
+}
+
+// -----
+module {
+  func.func @fold_vector_compressstore_expand_shape(%arg0: memref<32xf32>, %arg1: index, %arg2: vector<8xi1>, %arg3: vector<8xf32>) {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    vector.compressstore %expand_shape[%arg1, %c0], %arg2, %arg3 : memref<4x8xf32>, vector<8xi1>, vector<8xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @negative_fold_vector_compressstore_expand_shape_all_unit(%arg0: memref<f32>, %arg1: vector<1xi1>, %arg2: vector<1xf32>) {
+    %c0 = arith.constant 0 : index
+    %expand_shape = memref.expand_shape %arg0 [] output_shape [1] : memref<f32> into memref<1xf32>
+    vector.compressstore %expand_shape[%c0], %arg1, %arg2 : memref<1xf32>, vector<1xi1>, vector<1xf32>
+    return
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_transfer_read_expand_shape(%arg0: memref<32xf32>, %arg1: index) -> vector<8xf32> {
     %c0 = arith.constant 0 : index
     %0 = ub.poison : f32
     %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
     %1 = vector.transfer_read %expand_shape[%arg1, %c0], %0 {in_bounds = [true]} : memref<4x8xf32>, vector<8xf32>
     return %1 : vector<8xf32>
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2, d3) -> (d1, d3)>
+module {
+  func.func @fold_vector_transfer_read_expand_shape_non_identity(%arg0: memref<32x32xf32>, %arg1: index, %arg2: index) -> vector<8x8xf32> {
+    %c0 = arith.constant 0 : index
+    %0 = ub.poison : f32
+    %expand_shape = memref.expand_shape %arg0 [[0, 1], [2, 3]] output_shape [4, 8, 4, 8] : memref<32x32xf32> into memref<4x8x4x8xf32>
+    %1 = vector.transfer_read %expand_shape[%arg1, %c0, %arg2, %c0], %0 {in_bounds = [true, true], permutation_map = #map} : memref<4x8x4x8xf32>, vector<8x8xf32>
+    return %1 : vector<8x8xf32>
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1, d2, d3) -> (d0, d3)>
+module {
+  func.func @fold_vector_transfer_read_expand_shape_non_identity_non_contiguous(%arg0: memref<32x32xf32>, %arg1: index, %arg2: index) -> vector<8x8xf32> {
+    %c0 = arith.constant 0 : index
+    %0 = ub.poison : f32
+    %expand_shape = memref.expand_shape %arg0 [[0, 1], [2, 3]] output_shape [4, 8, 4, 8] : memref<32x32xf32> into memref<4x8x4x8xf32>
+    %1 = vector.transfer_read %expand_shape[%arg1, %c0, %arg2, %c0], %0 {in_bounds = [true, true], permutation_map = #map} : memref<4x8x4x8xf32>, vector<8x8xf32>
+    return %1 : vector<8x8xf32>
   }
 }
 
@@ -427,6 +587,15 @@ module {
 
 // -----
 module {
+  func.func @fold_memref_load_collapse_shape(%arg0: memref<4x8xf32>, %arg1: index) -> f32 {
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<4x8xf32> into memref<32xf32>
+    %0 = memref.load %collapse_shape[%arg1] {nontemporal = true} : memref<32xf32>
+    return %0 : f32
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_load_collapse_shape(%arg0: memref<4x8xf32>, %arg1: index) -> vector<8xf32> {
     %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<4x8xf32> into memref<32xf32>
     %0 = vector.load %collapse_shape[%arg1] {nontemporal = true} : memref<32xf32>, vector<8xf32>
@@ -445,6 +614,15 @@ module {
 
 // -----
 module {
+  func.func @fold_memref_store_collapse_shape(%arg0: memref<4x8xf32>, %arg1: index, %arg2: f32) {
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<4x8xf32> into memref<32xf32>
+    memref.store %arg2, %collapse_shape[%arg1] {nontemporal = true} : memref<32xf32>
+    return
+  }
+}
+
+// -----
+module {
   func.func @fold_vector_store_collapse_shape(%arg0: memref<4x8xf32>, %arg1: index, %arg2: vector<8xf32>) {
     %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<4x8xf32> into memref<32xf32>
     vector.store %arg2, %collapse_shape[%arg1] {nontemporal = true} : memref<32xf32>, vector<8xf32>
@@ -457,6 +635,94 @@ module {
   func.func @fold_vector_maskedstore_collapse_shape(%arg0: memref<4x8xf32>, %arg1: index, %arg2: vector<8xi1>, %arg3: vector<8xf32>) {
     %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<4x8xf32> into memref<32xf32>
     vector.maskedstore %collapse_shape[%arg1], %arg2, %arg3 : memref<32xf32>, vector<8xi1>, vector<8xf32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_collapse_shape_transfer_read(%arg0: memref<4x4x8xf32>, %arg1: index) -> vector<4x8xf32> {
+    %c0 = arith.constant 0 : index
+    %0 = ub.poison : f32
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1], [2]] : memref<4x4x8xf32> into memref<16x8xf32>
+    %1 = vector.transfer_read %collapse_shape[%arg1, %c0], %0 {in_bounds = [true, true]} : memref<16x8xf32>, vector<4x8xf32>
+    return %1 : vector<4x8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @fold_collapse_shape_transfer_read(%arg0: memref<4x4x8xf32>, %arg1: index) -> vector<8xf32> {
+    %c0 = arith.constant 0 : index
+    %0 = ub.poison : f32
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1], [2]] : memref<4x4x8xf32> into memref<16x8xf32>
+    %1 = vector.transfer_read %collapse_shape[%arg1, %c0], %0 {in_bounds = [true]} : memref<16x8xf32>, vector<8xf32>
+    return %1 : vector<8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @fold_dma_start_subview_src(%arg0: memref<128x64xf32>, %arg1: memref<32xf32, 1>, %arg2: memref<1xi32>, %arg3: index, %arg4: index) {
+    %c0 = arith.constant 0 : index
+    %c32 = arith.constant 32 : index
+    %subview = memref.subview %arg0[%arg3, %arg4] [32, 32] [1, 1] : memref<128x64xf32> to memref<32x32xf32, strided<[64, 1], offset: ?>>
+    memref.dma_start %subview[%c0, %c0], %arg1[%c0], %c32, %arg2[%c0] : memref<32x32xf32, strided<[64, 1], offset: ?>>, memref<32xf32, 1>, memref<1xi32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_dma_start_subview_dst(%arg0: memref<32xf32>, %arg1: memref<128x64xf32, 1>, %arg2: memref<1xi32>, %arg3: index, %arg4: index) {
+    %c0 = arith.constant 0 : index
+    %c32 = arith.constant 32 : index
+    %subview = memref.subview %arg1[%arg3, %arg4] [32, 32] [1, 1] : memref<128x64xf32, 1> to memref<32x32xf32, strided<[64, 1], offset: ?>, 1>
+    memref.dma_start %arg0[%c0], %subview[%c0, %c0], %c32, %arg2[%c0] : memref<32xf32>, memref<32x32xf32, strided<[64, 1], offset: ?>, 1>, memref<1xi32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_dma_start_expand_shape_src(%arg0: memref<32xf32>, %arg1: memref<8xf32, 1>, %arg2: memref<1xi32>, %arg3: index) {
+    %c0 = arith.constant 0 : index
+    %c8 = arith.constant 8 : index
+    %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, 8] : memref<32xf32> into memref<4x8xf32>
+    memref.dma_start %expand_shape[%arg3, %c0], %arg1[%c0], %c8, %arg2[%c0] : memref<4x8xf32>, memref<8xf32, 1>, memref<1xi32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_dma_start_expand_shape_dst(%arg0: memref<8xf32>, %arg1: memref<32xf32, 1>, %arg2: memref<1xi32>, %arg3: index) {
+    %c0 = arith.constant 0 : index
+    %c8 = arith.constant 8 : index
+    %expand_shape = memref.expand_shape %arg1 [[0, 1]] output_shape [4, 8] : memref<32xf32, 1> into memref<4x8xf32, 1>
+    memref.dma_start %arg0[%c0], %expand_shape[%arg3, %c0], %c8, %arg2[%c0] : memref<8xf32>, memref<4x8xf32, 1>, memref<1xi32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_dma_start_collapse_shape_src(%arg0: memref<4x8xf32>, %arg1: memref<8xf32, 1>, %arg2: memref<1xi32>, %arg3: index) {
+    %c0 = arith.constant 0 : index
+    %c8 = arith.constant 8 : index
+    %collapse_shape = memref.collapse_shape %arg0 [[0, 1]] : memref<4x8xf32> into memref<32xf32>
+    memref.dma_start %collapse_shape[%arg3], %arg1[%c0], %c8, %arg2[%c0] : memref<32xf32>, memref<8xf32, 1>, memref<1xi32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fold_dma_start_collapse_shape_dst(%arg0: memref<8xf32>, %arg1: memref<4x8xf32, 1>, %arg2: memref<1xi32>, %arg3: index) {
+    %c0 = arith.constant 0 : index
+    %c8 = arith.constant 8 : index
+    %collapse_shape = memref.collapse_shape %arg1 [[0, 1]] : memref<4x8xf32, 1> into memref<32xf32, 1>
+    memref.dma_start %arg0[%c0], %collapse_shape[%arg3], %c8, %arg2[%c0] : memref<8xf32>, memref<32xf32, 1>, memref<1xi32>
     return
   }
 }

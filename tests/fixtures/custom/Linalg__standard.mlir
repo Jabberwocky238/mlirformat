@@ -20,24 +20,3 @@ module {
   }
 }
 
-// -----
-#map = affine_map<(d0, d1) -> (d0, d1)>
-#map1 = affine_map<(d0, d1) -> (d0)>
-module {
-  func.func @func(%arg0: tensor<?x?xf32>, %arg1: tensor<?xf32>) {
-    %0 = linalg.generic {indexing_maps = [#map, #map1], iterator_types = ["parallel", "reduction"]} ins(%arg0 : tensor<?x?xf32>) outs(%arg1 : tensor<?xf32>) {
-    ^bb0(%in: f32, %out: f32):
-      linalg.yield %in : f32
-    } -> tensor<?xf32>
-    return
-  }
-}
-
-// -----
-module {
-  func.func @func(%arg0: tensor<4x8xf32>, %arg1: tensor<4x8xf32>) -> tensor<4x8xf32> {
-    %0 = linalg.copy ins(%arg0 : tensor<4x8xf32>) outs(%arg1 : tensor<4x8xf32>) -> tensor<4x8xf32>
-    return %0 : tensor<4x8xf32>
-  }
-}
-

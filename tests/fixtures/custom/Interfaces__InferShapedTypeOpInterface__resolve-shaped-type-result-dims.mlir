@@ -97,3 +97,13 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @test_unreifiable_result_shapes_no_stray_ops(%arg0: tensor<?x?xf32>) -> index {
+    %c1 = arith.constant 1 : index
+    %0 = "test.unreifiable_result_shapes"(%arg0) : (tensor<?x?xf32>) -> tensor<?x?xf32>
+    %dim = tensor.dim %0, %c1 : tensor<?x?xf32>
+    return %dim : index
+  }
+}
+

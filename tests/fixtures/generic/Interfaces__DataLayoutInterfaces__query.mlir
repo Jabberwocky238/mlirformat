@@ -7,6 +7,7 @@
     %27 = "test.data_layout_query"() : () -> index
     %28 = "test.data_layout_query"() : () -> vector<4xi32>
     %29 = "test.data_layout_query"() : () -> vector<[4]xi32>
+    %30 = "test.data_layout_query"() : () -> vector<[16]xi1>
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "no_layout_custom"}> ({

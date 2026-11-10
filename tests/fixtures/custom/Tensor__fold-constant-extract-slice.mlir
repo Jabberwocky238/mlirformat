@@ -24,3 +24,12 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @slice_constant_dense_element_type() -> tensor<2x!test.dense_element> {
+    %cst = arith.constant dense<tensor<4x!test.dense_element> : [10 : i32, 9 : i32, 8 : i32, 7 : i32]>
+    %extracted_slice = tensor.extract_slice %cst[1] [2] [1] : tensor<4x!test.dense_element> to tensor<2x!test.dense_element>
+    return %extracted_slice : tensor<2x!test.dense_element>
+  }
+}
+

@@ -128,3 +128,16 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "memref.global"() <{initial_value = dense<0.000000e+00> : tensor<f32>, sym_name = "global_in_compute_region", type = memref<f32>}> : () -> ()
+  "func.func"() <{function_type = () -> (), sym_name = "test_scalar_in_compute_region"}> ({
+    "acc.compute_region"() <{operandSegmentSizes = array<i32: 0, 0, 0>, origin = "acc.parallel"}> ({
+      %0 = "memref.get_global"() <{name = @global_in_compute_region}> : () -> memref<f32>
+      %1 = "memref.load"(%0) : (memref<f32>) -> f32
+      "acc.yield"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

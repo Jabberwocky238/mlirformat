@@ -1,7 +1,7 @@
 module {
   func.func @TestSingleConversion() {
     %0 = "test.cast"() : () -> i64
-    "test.return"(%0) : (i64) -> ()
+    "test.return"() : () -> ()
   }
   func.func @TestLingeringConversion() -> i64 {
     %0 = "test.cast"() : () -> i64

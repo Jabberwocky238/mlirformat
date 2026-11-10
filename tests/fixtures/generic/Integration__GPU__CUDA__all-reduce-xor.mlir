@@ -43,7 +43,7 @@
       }) : (i32) -> i32
       "memref.store"(%23, %1, %arg0) : (i32, memref<2xi32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%21) <{callee = @printMemrefI32}> : (memref<*xi32>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

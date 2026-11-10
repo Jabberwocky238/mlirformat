@@ -1,5 +1,5 @@
 module {
-  func.func @vector_load_2d_i8_negative(%arg0: index, %arg1: index) -> vector<2x4xi8> {
+  func.func @negative_vector_load_2d_i8(%arg0: index, %arg1: index) -> vector<2x4xi8> {
     %alloc = memref.alloc() : memref<3x4xi8>
     %0 = vector.load %alloc[%arg0, %arg1] : memref<3x4xi8>, vector<2x4xi8>
     return %0 : vector<2x4xi8>
@@ -8,7 +8,7 @@ module {
 
 // -----
 module {
-  func.func @vector_transfer_read_2d_i4_negative(%arg0: index, %arg1: index) -> vector<2x8xi4> {
+  func.func @negative_vector_transfer_read_2d_i4(%arg0: index, %arg1: index) -> vector<2x8xi4> {
     %c0_i4 = arith.constant 0 : i4
     %alloc = memref.alloc() : memref<3x8xi4>
     %0 = vector.transfer_read %alloc[%arg0, %arg1], %c0_i4 {in_bounds = [true, true]} : memref<3x8xi4>, vector<2x8xi4>
@@ -18,7 +18,7 @@ module {
 
 // -----
 module {
-  func.func @vector_maskedload_2d_i8_negative(%arg0: index, %arg1: index, %arg2: index, %arg3: vector<2x4xi8>) -> vector<2x4xi8> {
+  func.func @negative_vector_maskedload_2d_i8(%arg0: index, %arg1: index, %arg2: index, %arg3: vector<2x4xi8>) -> vector<2x4xi8> {
     %alloc = memref.alloc() : memref<3x4xi8>
     %0 = vector.create_mask %arg2, %arg2 : vector<2x4xi1>
     %1 = vector.maskedload %alloc[%arg0, %arg1], %0, %arg3 : memref<3x4xi8>, vector<2x4xi1>, vector<2x4xi8> into vector<2x4xi8>
@@ -28,7 +28,16 @@ module {
 
 // -----
 module {
-  func.func @vector_extract_maskedload_2d_i4_negative(%arg0: index) -> vector<8x8x16xi4> {
+  func.func @negative_vector_maskedload_i8_block_arg_mask(%arg0: memref<?xi8>, %arg1: vector<8xi1>, %arg2: vector<8xi8>) -> vector<8xi8> {
+    %c0 = arith.constant 0 : index
+    %0 = vector.maskedload %arg0[%c0], %arg1, %arg2 : memref<?xi8>, vector<8xi1>, vector<8xi8> into vector<8xi8>
+    return %0 : vector<8xi8>
+  }
+}
+
+// -----
+module {
+  func.func @negative_vector_extract_maskedload_2d_i4(%arg0: index) -> vector<8x8x16xi4> {
     %alloc = memref.alloc() : memref<8x8x16xi4>
     %c0 = arith.constant 0 : index
     %c16 = arith.constant 16 : index
@@ -45,7 +54,7 @@ module {
 
 // -----
 module {
-  func.func @vector_store_2d_i8_negative(%arg0: vector<2x8xi8>, %arg1: index, %arg2: index) {
+  func.func @negative_vector_store_2d_i8(%arg0: vector<2x8xi8>, %arg1: index, %arg2: index) {
     %alloc = memref.alloc() : memref<4x8xi8>
     vector.store %arg0, %alloc[%arg1, %arg2] : memref<4x8xi8>, vector<2x8xi8>
     return
@@ -54,10 +63,19 @@ module {
 
 // -----
 module {
-  func.func @vector_maskedstore_2d_i8_negative(%arg0: index, %arg1: index, %arg2: index, %arg3: vector<2x8xi8>) {
+  func.func @negative_vector_maskedstore_2d_i8(%arg0: index, %arg1: index, %arg2: index, %arg3: vector<2x8xi8>) {
     %alloc = memref.alloc() : memref<3x8xi8>
     %0 = vector.create_mask %arg2, %arg2 : vector<2x8xi1>
     vector.maskedstore %alloc[%arg0, %arg1], %0, %arg3 : memref<3x8xi8>, vector<2x8xi1>, vector<2x8xi8>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @negative_vector_maskedstore_i8_block_arg_mask(%arg0: memref<?xi8>, %arg1: vector<8xi1>, %arg2: vector<8xi8>) {
+    %c0 = arith.constant 0 : index
+    vector.maskedstore %arg0[%c0], %arg1, %arg2 : memref<?xi8>, vector<8xi1>, vector<8xi8>
     return
   }
 }

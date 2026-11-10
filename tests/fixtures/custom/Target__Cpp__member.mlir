@@ -15,6 +15,7 @@ module {
     %8 = "emitc.member"(%0) <{member = "d"}> : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.array<2xi32>
     %9 = emitc.subscript %8[%arg2] : (!emitc.array<2xi32>, index) -> !emitc.lvalue<i32>
     emitc.assign %arg1 : i32 to %9 : <i32>
+    %10 = "emitc.member"(%arg0) <{member = "a"}> : (!emitc.opaque<"mystruct">) -> i32
     return
   }
   func.func @member_of_pointer(%arg0: !emitc.ptr<!emitc.opaque<"mystruct">>, %arg1: i32, %arg2: index) {

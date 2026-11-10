@@ -5,10 +5,10 @@
     "func.return"() : () -> ()
   }) : () -> ()
   "gpu.module"() <{sym_name = "kernels_1"}> ({
-    "gpu.func"() <{function_type = () -> ()}> ({
+    "gpu.func"() <{function_type = () -> (), kernel}> ({
       %0 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "builtin_workgroup_id_x", workgroup_attributions = 0 : i64} : () -> ()
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "builtin_workgroup_id_x"} : () -> ()
   }) : () -> ()
 }) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader], []>, #spirv.resource_limits<>>} : () -> ()
 

@@ -38,7 +38,7 @@
   "func.func"() <{function_type = (tensor<2x?x4x?xi32>, index) -> tensor<7x12xi32>, sym_name = "unpack_main", sym_visibility = "private"}> ({
   ^bb0(%arg0: tensor<2x?x4x?xi32>, %arg1: index):
     %0 = "tensor.empty"() : () -> tensor<7x12xi32>
-    %1 = "linalg.unpack"(%arg0, %0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 4, -9223372036854775808>}> : (tensor<2x?x4x?xi32>, tensor<7x12xi32>, index) -> tensor<7x12xi32>
+    %1 = "linalg.unpack"(%arg0, %0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 4, -9223372036854775808>}> {operandSegmentSizes = array<i32: 1, 1, 0, 1>} : (tensor<2x?x4x?xi32>, tensor<7x12xi32>, index) -> tensor<7x12xi32>
     "func.return"(%1) : (tensor<7x12xi32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<*xi32>) -> (), sym_name = "printMemrefI32", sym_visibility = "private"}> ({

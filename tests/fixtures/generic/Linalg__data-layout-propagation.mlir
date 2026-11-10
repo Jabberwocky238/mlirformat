@@ -221,7 +221,7 @@
   "func.func"() <{function_type = (tensor<12x2x56x56x32xf32>) -> tensor<12x56x56x64xf32>, sym_name = "unpack_on_output"}> ({
   ^bb0(%arg0: tensor<12x2x56x56x32xf32>):
     %0 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
     %2 = "linalg.generic"(%1) <{indexing_maps = [#map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 0, 1>}> ({
     ^bb0(%arg1: f32):
       %3 = "arith.addf"(%arg1, %arg1) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
@@ -237,7 +237,7 @@
   "func.func"() <{function_type = (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>, sym_name = "unpack_on_input"}> ({
   ^bb0(%arg0: tensor<12x2x56x56x32xf32>, %arg1: tensor<12x56x56x64xf32>):
     %0 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
     %2 = "linalg.generic"(%1, %arg1) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
     ^bb0(%arg2: f32, %arg3: f32):
       %3 = "arith.addf"(%arg2, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
@@ -253,7 +253,7 @@
   "func.func"() <{function_type = (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf16>) -> tensor<12x56x56x64xf16>, sym_name = "unpack_element_type_change_no_use"}> ({
   ^bb0(%arg0: tensor<12x2x56x56x32xf32>, %arg1: tensor<12x56x56x64xf16>):
     %0 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
     %2 = "linalg.generic"(%1, %arg1) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
     ^bb0(%arg2: f32, %arg3: f16):
       %3 = "arith.truncf"(%arg2) : (f32) -> f16
@@ -270,7 +270,7 @@
   ^bb0(%arg0: tensor<12x2x56x56x32xf32>):
     %0 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
     %1 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
-    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
+    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<12x2x56x56x32xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
     %3 = "linalg.generic"(%2, %0) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
     ^bb0(%arg1: f32, %arg2: f32):
       %4 = "arith.addf"(%arg1, %arg1) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
@@ -286,7 +286,7 @@
   ^bb0(%arg0: tensor<1x2x56x56x32xf32>):
     %0 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
     %1 = "tensor.empty"() : () -> tensor<1x56x56x64xf32>
-    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<1x2x56x56x32xf32>, tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
+    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x2x56x56x32xf32>, tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
     %3 = "tensor.pad"(%2) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_high = array<i64: 0, 1, 1, 0>, static_low = array<i64: 0, 1, 1, 0>}> ({
     ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index):
       "tensor.yield"(%0) : (f32) -> ()
@@ -301,7 +301,7 @@
   ^bb0(%arg0: tensor<1x2x56x56x32xf32>):
     %0 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
     %1 = "tensor.empty"() : () -> tensor<1x56x56x64xf32>
-    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<1x2x56x56x32xf32>, tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
+    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x2x56x56x32xf32>, tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
     %3 = "tensor.pad"(%2) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_high = array<i64: 0, 1, 1, 0>, static_low = array<i64: 1, 1, 1, 0>}> ({
     ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index):
       "tensor.yield"(%0) : (f32) -> ()
@@ -316,7 +316,7 @@
   ^bb0(%arg0: tensor<1x2x56x56x32xf32>):
     %0 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
     %1 = "tensor.empty"() : () -> tensor<1x56x56x64xf32>
-    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> : (tensor<1x2x56x56x32xf32>, tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
+    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x2x56x56x32xf32>, tensor<1x56x56x64xf32>) -> tensor<1x56x56x64xf32>
     %3 = "tensor.pad"(%2) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_high = array<i64: 0, 1, 1, 1>, static_low = array<i64: 0, 1, 1, 1>}> ({
     ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index):
       "tensor.yield"(%0) : (f32) -> ()
@@ -426,7 +426,7 @@
   ^bb0(%arg0: tensor<12x64x56x56xf32>):
     %0 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
     %1 = "tensor.empty"() : () -> tensor<12x56x56x64xf32>
-    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64>}> : (tensor<12x64x56x56xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
+    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<12x64x56x56xf32>, tensor<12x56x56x64xf32>) -> tensor<12x56x56x64xf32>
     %3 = "linalg.generic"(%2, %0) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
     ^bb0(%arg1: f32, %arg2: f32):
       %4 = "arith.addf"(%arg1, %arg1) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
@@ -483,7 +483,7 @@
   ^bb0(%arg0: tensor<1x1x1080x1920x16xi32>, %arg1: tensor<2x2xi32>):
     %0 = "tensor.empty"() : () -> tensor<16x540x960xi32>
     %1 = "tensor.empty"() : () -> tensor<1x16x1080x1920xi32>
-    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 1>, static_inner_tiles = array<i64: 16>}> : (tensor<1x1x1080x1920x16xi32>, tensor<1x16x1080x1920xi32>) -> tensor<1x16x1080x1920xi32>
+    %2 = "linalg.unpack"(%arg0, %1) <{inner_dims_pos = array<i64: 1>, static_inner_tiles = array<i64: 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x1080x1920x16xi32>, tensor<1x16x1080x1920xi32>) -> tensor<1x16x1080x1920xi32>
     %3 = "linalg.generic"(%2, %arg1, %0) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 2, 1>}> ({
     ^bb0(%arg2: i32, %arg3: i32, %arg4: i32):
       %4 = "arith.maxui"(%arg2, %arg3) : (i32, i32) -> i32
@@ -611,7 +611,7 @@
   ^bb0(%arg0: tensor<32x60xf32>):
     %0 = "arith.constant"() <{value = 3.000000e+00 : f32}> : () -> f32
     %1 = "tensor.empty"() : () -> tensor<4x2x8x4x8xf32>
-    %2 = "tensor.expand_shape"(%arg0) <{reassociation = [[0, 1], [2]], static_output_shape = array<i64: 4, 8, 64>}> : (tensor<32x60xf32>) -> tensor<4x8x60xf32>
+    %2 = "tensor.expand_shape"(%arg0) <{reassociation = [[0, 1], [2]], static_output_shape = array<i64: 4, 8, 60>}> : (tensor<32x60xf32>) -> tensor<4x8x60xf32>
     %3 = "linalg.pack"(%2, %1, %0) <{inner_dims_pos = array<i64: 1, 2>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, static_inner_tiles = array<i64: 4, 8>}> : (tensor<4x8x60xf32>, tensor<4x2x8x4x8xf32>, f32) -> tensor<4x2x8x4x8xf32>
     "func.return"(%3) : (tensor<4x2x8x4x8xf32>) -> ()
   }) : () -> ()
@@ -711,7 +711,7 @@
   "func.func"() <{function_type = (tensor<?x32x8x8xf32>, index, index) -> tensor<?x256x256xf32>, sym_name = "push_down_unpack_through_expand"}> ({
   ^bb0(%arg0: tensor<?x32x8x8xf32>, %arg1: index, %arg2: index):
     %0 = "tensor.empty"(%arg1) : (index) -> tensor<?x256xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> : (tensor<?x32x8x8xf32>, tensor<?x256xf32>) -> tensor<?x256xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<?x32x8x8xf32>, tensor<?x256xf32>) -> tensor<?x256xf32>
     %2 = "tensor.expand_shape"(%1, %arg2) <{reassociation = [[0, 1], [2]], static_output_shape = array<i64: -9223372036854775808, 256, 256>}> : (tensor<?x256xf32>, index) -> tensor<?x256x256xf32>
     "func.return"(%2) : (tensor<?x256x256xf32>) -> ()
   }) : () -> ()
@@ -722,7 +722,7 @@
   "func.func"() <{function_type = (tensor<?x32x8x8xf32>, index, index) -> tensor<?x256x256xf32>, sym_name = "push_down_unpack_through_expand_empty_outer_dims_perm"}> ({
   ^bb0(%arg0: tensor<?x32x8x8xf32>, %arg1: index, %arg2: index):
     %0 = "tensor.empty"(%arg1) : (index) -> tensor<?x256xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> : (tensor<?x32x8x8xf32>, tensor<?x256xf32>) -> tensor<?x256xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<?x32x8x8xf32>, tensor<?x256xf32>) -> tensor<?x256xf32>
     %2 = "tensor.expand_shape"(%1, %arg2) <{reassociation = [[0, 1], [2]], static_output_shape = array<i64: -9223372036854775808, 256, 256>}> : (tensor<?x256xf32>, index) -> tensor<?x256x256xf32>
     "func.return"(%2) : (tensor<?x256x256xf32>) -> ()
   }) : () -> ()
@@ -733,7 +733,7 @@
   "func.func"() <{function_type = (tensor<4x32x384x8x8xf32>) -> tensor<4x12x256x256xf32>, sym_name = "push_down_permuted_unpack_through_expand"}> ({
   ^bb0(%arg0: tensor<4x32x384x8x8xf32>):
     %0 = "tensor.empty"() : () -> tensor<4x3072x256xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 2, 1>, outer_dims_perm = array<i64: 0, 2, 1>, static_inner_tiles = array<i64: 8, 8>}> : (tensor<4x32x384x8x8xf32>, tensor<4x3072x256xf32>) -> tensor<4x3072x256xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 2, 1>, outer_dims_perm = array<i64: 0, 2, 1>, static_inner_tiles = array<i64: 8, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<4x32x384x8x8xf32>, tensor<4x3072x256xf32>) -> tensor<4x3072x256xf32>
     %2 = "tensor.expand_shape"(%1) <{reassociation = [[0], [1, 2], [3]], static_output_shape = array<i64: 4, 12, 256, 256>}> : (tensor<4x3072x256xf32>) -> tensor<4x12x256x256xf32>
     "func.return"(%2) : (tensor<4x12x256x256xf32>) -> ()
   }) : () -> ()
@@ -744,7 +744,7 @@
   "func.func"() <{function_type = (tensor<6x32x8x8xf32>) -> tensor<3x16x1x256xf32>, sym_name = "push_down_unpack_through_unit_expand"}> ({
   ^bb0(%arg0: tensor<6x32x8x8xf32>):
     %0 = "tensor.empty"() : () -> tensor<48x256xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> : (tensor<6x32x8x8xf32>, tensor<48x256xf32>) -> tensor<48x256xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<6x32x8x8xf32>, tensor<48x256xf32>) -> tensor<48x256xf32>
     %2 = "tensor.expand_shape"(%1) <{reassociation = [[0, 1, 2], [3]], static_output_shape = array<i64: 3, 16, 1, 256>}> : (tensor<48x256xf32>) -> tensor<3x16x1x256xf32>
     "func.return"(%2) : (tensor<3x16x1x256xf32>) -> ()
   }) : () -> ()
@@ -755,7 +755,7 @@
   "func.func"() <{function_type = (tensor<?x32x8xf32>, index, index) -> tensor<?x256x256xf32>, sym_name = "push_down_unpack_through_expand_on_outer_dims"}> ({
   ^bb0(%arg0: tensor<?x32x8xf32>, %arg1: index, %arg2: index):
     %0 = "tensor.empty"(%arg1) : (index) -> tensor<?x256xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8>}> : (tensor<?x32x8xf32>, tensor<?x256xf32>) -> tensor<?x256xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<?x32x8xf32>, tensor<?x256xf32>) -> tensor<?x256xf32>
     %2 = "tensor.expand_shape"(%1, %arg2) <{reassociation = [[0, 1], [2]], static_output_shape = array<i64: -9223372036854775808, 256, 256>}> : (tensor<?x256xf32>, index) -> tensor<?x256x256xf32>
     "func.return"(%2) : (tensor<?x256x256xf32>) -> ()
   }) : () -> ()
@@ -766,7 +766,7 @@
   "func.func"() <{function_type = (tensor<384x32x8x8xf32>) -> tensor<256x12x256xf32>, sym_name = "no_push_down_unpack_through_non_divisible_expand"}> ({
   ^bb0(%arg0: tensor<384x32x8x8xf32>):
     %0 = "tensor.empty"() : () -> tensor<3072x256xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> : (tensor<384x32x8x8xf32>, tensor<3072x256xf32>) -> tensor<3072x256xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<384x32x8x8xf32>, tensor<3072x256xf32>) -> tensor<3072x256xf32>
     %2 = "tensor.expand_shape"(%1) <{reassociation = [[0, 1], [2]], static_output_shape = array<i64: 256, 12, 256>}> : (tensor<3072x256xf32>) -> tensor<256x12x256xf32>
     "func.return"(%2) : (tensor<256x12x256xf32>) -> ()
   }) : () -> ()
@@ -777,7 +777,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<8x8x4x8xf32>, tensor<?x64xf32>, tensor<?x64xbf16>) -> tensor<?x64xbf16>, sym_name = "push_unpack_in_padded_domain_foldable"}> ({
   ^bb0(%arg0: tensor<8x8x4x8xf32>, %arg1: tensor<?x64xf32>, %arg2: tensor<?x64xbf16>):
-    %0 = "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 4, 8>}> : (tensor<8x8x4x8xf32>, tensor<?x64xf32>) -> tensor<?x64xf32>
+    %0 = "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 4, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<8x8x4x8xf32>, tensor<?x64xf32>) -> tensor<?x64xf32>
     %1 = "linalg.generic"(%0, %arg2) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
     ^bb0(%arg3: f32, %arg4: bf16):
       %2 = "arith.truncf"(%arg3) : (f32) -> bf16
@@ -792,7 +792,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<8x8x4x8xf32>, tensor<?x64xf32>) -> tensor<?x64xf32>, sym_name = "push_unpack_in_padded_domain_out_used"}> ({
   ^bb0(%arg0: tensor<8x8x4x8xf32>, %arg1: tensor<?x64xf32>):
-    %0 = "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 4, 8>}> : (tensor<8x8x4x8xf32>, tensor<?x64xf32>) -> tensor<?x64xf32>
+    %0 = "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 4, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<8x8x4x8xf32>, tensor<?x64xf32>) -> tensor<?x64xf32>
     %1 = "linalg.generic"(%0, %arg1) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
     ^bb0(%arg2: f32, %arg3: f32):
       %2 = "arith.addf"(%arg2, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
@@ -808,7 +808,7 @@
   "func.func"() <{function_type = (tensor<1x4x16x16xf32>, tensor<8x64xf32>, tensor<8x64xf32>) -> tensor<8x64xf32>, sym_name = "push_unpack_in_padded_domain_multiple_inputs"}> ({
   ^bb0(%arg0: tensor<1x4x16x16xf32>, %arg1: tensor<8x64xf32>, %arg2: tensor<8x64xf32>):
     %0 = "tensor.empty"() : () -> tensor<8x64xf32>
-    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 16, 16>}> : (tensor<1x4x16x16xf32>, tensor<8x64xf32>) -> tensor<8x64xf32>
+    %1 = "linalg.unpack"(%arg0, %0) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 16, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x4x16x16xf32>, tensor<8x64xf32>) -> tensor<8x64xf32>
     %2 = "linalg.generic"(%arg1, %1, %arg2) <{indexing_maps = [#map, #map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 2, 1>}> ({
     ^bb0(%arg3: f32, %arg4: f32, %arg5: f32):
       %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32

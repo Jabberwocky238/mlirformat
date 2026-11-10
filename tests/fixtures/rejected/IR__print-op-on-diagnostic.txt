@@ -1,2 +1,0 @@
-0	verify	invalid to use 'test.invalid_attr'
-1	verify	operand #0 does not dominate this use

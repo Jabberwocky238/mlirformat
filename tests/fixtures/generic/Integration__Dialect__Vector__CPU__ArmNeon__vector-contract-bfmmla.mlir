@@ -22,7 +22,7 @@
     %23 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x4xbf16>
     "vector.transfer_write"(%22, %23, %13, %13) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4x4xbf16>, memref<4x4xbf16>, index, index) -> ()
     %24 = "vector.transfer_read"(%23, %13, %13, %15) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xbf16>, index, index, bf16) -> vector<4x4xbf16>
-    %25 = "vector.contract"(%21, %24, %18) <{indexing_maps = [#map1, #map2, #map3], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<4x4xbf16>, vector<4x4xf32>) -> vector<4x4xf32>
+    %25 = "vector.contract"(%21, %24, %18) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map1, #map2, #map3], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<4x4xbf16>, vector<4x4xf32>) -> vector<4x4xf32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(BFMMLA):\0A"}> : () -> ()
     %26 = "vector.extract"(%25) <{static_position = array<i64: 0>}> : (vector<4x4xf32>) -> vector<4xf32>
     %27 = "vector.extract"(%25) <{static_position = array<i64: 1>}> : (vector<4x4xf32>) -> vector<4xf32>
@@ -50,7 +50,7 @@
     %10 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x4xbf16>
     "vector.transfer_write"(%9, %10, %0, %0) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4x4xbf16>, memref<4x4xbf16>, index, index) -> ()
     %11 = "vector.transfer_read"(%10, %0, %0, %2) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xbf16>, index, index, bf16) -> vector<4x4xbf16>
-    %12 = "vector.contract"(%8, %11, %5) <{indexing_maps = [#map5, #map, #map6], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4xbf16>, vector<4x4xbf16>, vector<4xf32>) -> vector<4xf32>
+    %12 = "vector.contract"(%8, %11, %5) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map5, #map, #map6], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4xbf16>, vector<4x4xbf16>, vector<4xf32>) -> vector<4xf32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(BFMMLA, vecmat):\0A"}> : () -> ()
     "vector.print"(%12) <{punctuation = #vector.punctuation<newline>}> : (vector<4xf32>) -> ()
     "func.return"() : () -> ()

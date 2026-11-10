@@ -154,3 +154,11 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x2xi8>) -> (), sym_name = "dynamic_tensor_arg"}> ({
+  ^bb0(%arg0: tensor<?x2xi8>):
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

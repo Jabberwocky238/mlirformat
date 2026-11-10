@@ -724,6 +724,7 @@ impl Display for Type<'_> {
             Self::Float(k) => k.fmt(f),
             Self::Index => f.write_str("index"),
             Self::NoneType => f.write_str("none"),
+            Self::Token => f.write_str("token"),
             Self::Complex(t) => write!(f, "complex<{t}>"),
             Self::Tuple(ts) => write!(f, "tuple<{}>", Sep(ts, ", ")),
             Self::Function(ft) => ft.fmt(f),
@@ -1123,7 +1124,7 @@ static_fields! {
 static_fields! {
     @enum
     Piece { Text(x), Region(x) }
-    Type { Integer { signedness, width }, Float(x), Index, NoneType, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }
+    Type { Integer { signedness, width }, Float(x), Index, NoneType, Token, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }
     Attribute {
         Unit, Bool(x), Int { lit, ty }, Float { lit, ty }, Str { lit, ty }, Type(x), Array(x), Dict(x),
         SymbolRef(x), DenseArray { ty, values }, Builtin { name, body, ty }, Extended { ext, ty }
@@ -1227,7 +1228,7 @@ reborrow_fields! {
 reborrow_fields! {
     @enum
     Piece { Text(x), Region(x) }
-    Type { Integer { signedness, width }, Float(x), Index, NoneType, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }
+    Type { Integer { signedness, width }, Float(x), Index, NoneType, Token, Complex(x), Tuple(x), Function(x), Shaped(x), Extended(x) }
     Attribute {
         Unit, Bool(x), Int { lit, ty }, Float { lit, ty }, Str { lit, ty }, Type(x), Array(x), Dict(x),
         SymbolRef(x), DenseArray { ty, values }, Builtin { name, body, ty }, Extended { ext, ty }
@@ -1250,6 +1251,7 @@ impl Type<'_> {
             Type::Float(k) => Type::Float(*k),
             Type::Index => Type::Index,
             Type::NoneType => Type::NoneType,
+            Type::Token => Type::Token,
             Type::Complex(e) => Type::Complex(e.owned().into()),
             Type::Tuple(ts) => Type::Tuple(ts.iter().map(Type::owned).collect()),
             Type::Function(f) => Type::Function(FunctionType { inputs: f.inputs.iter().map(Type::owned).collect(), results: f.results.iter().map(Type::owned).collect() }),
@@ -1612,7 +1614,8 @@ impl Format<'_> {
                 }
                 // Its clauses in their declared order, each when present.
                 Elem::OiList(clauses) => self.write(clauses, v, s, p)?,
-                Elem::Var(n) => {
+                Elem::Var(n) | Elem::QVar(n) => {
+                    let qualified = matches!(e, Elem::QVar(_));
                     let f = self.field(n)?;
                     if !matches!(f.role, Role::Prop { unit: true, .. }) {
                         s.elem(p).map_err(io)?;
@@ -1644,15 +1647,15 @@ impl Format<'_> {
                                 (Shape::Case(case), _) => p.write_str(case).map_err(io)?,
                                 // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).
                                 (Shape::Number, Some(a)) => write!(p, "{}", Untyped(a)).map_err(io)?,
+                                (_, Some(a @ Attribute::Extended { .. })) if qualified => write!(p, "{a}").map_err(io)?,
                                 (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
-                                // `#gpu<dim x>` ⇒ ` x`: the attribute's own printer puts a space before
-                                // its case, so `mlir-opt` shows two (`gpu.thread_id  x`).
+                                // `#gpu<dim x>` ⇒ `x` (`gpu.thread_id x`).
                                 (_, Some(Attribute::Extended { ext, .. }))
                                     if let Some((ns, m)) = f.keyword_dialect()
                                         && ext.name == ns
                                         && let Some(case) = ext.body.as_deref().and_then(|b| b.strip_prefix('<')?.strip_prefix(m)?.strip_prefix(' ')?.strip_suffix('>')) =>
                                 {
-                                    write!(p, " {case}").map_err(io)?
+                                    p.write_str(case).map_err(io)?
                                 }
                                 // A dense array prints as a list: `[30, 70]`.
                                 (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(values, ", ")).map_err(io)?,
@@ -1732,8 +1735,17 @@ impl Format<'_> {
                 }
                 Elem::FnType(a, b) => {
                     s.elem(p).map_err(io)?;
-                    let sig = Signature(Self::shown_types(self.type_var(a)?, v)?, Self::shown_types(self.type_var(b)?, v)?);
-                    write!(p, "{sig}").map_err(io)?;
+                    let side = |names: &[&str]| -> Result<Vec<Type<'_>>, Error> {
+                        let mut out = Vec::new();
+                        for n in names {
+                            let f = self.type_var(n)?;
+                            let ts = Self::shown_types(f, v)?;
+                            let k = self.shared_count(n, f, |g| v.values(g).map_or(1, <[_]>::len));
+                            out.extend(if k > 1 { ts.iter().cycle().take(k).cloned().collect() } else { ts.to_vec() });
+                        }
+                        Ok(out)
+                    };
+                    write!(p, "{}", Signature(&side(a)?, &side(b)?)).map_err(io)?;
                 }
                 Elem::AttrDict(keyword) => {
                     let spelled = self.spelled();

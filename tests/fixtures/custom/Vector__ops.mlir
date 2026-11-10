@@ -561,6 +561,9 @@ module {
   func.func @step() {
     %0 = vector.step : vector<2xindex>
     %1 = vector.step : vector<[4]xindex>
+    %2 = vector.step : vector<2xi32>
+    %3 = vector.step : vector<8xi8>
+    %4 = vector.step : vector<[4]xi16>
     return
   }
   func.func @scatter_tensor(%arg0: tensor<16x16xf32>, %arg1: vector<16xi32>, %arg2: vector<16xi1>, %arg3: vector<16xf32>) -> tensor<16x16xf32> {

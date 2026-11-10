@@ -10,6 +10,14 @@ module {
   llvm.mlir.global internal @i32_global_addr_space(62 : i32) {addr_space = 7 : i32} : i32
   llvm.mlir.global internal @float_global(0.000000e+00 : f32) {addr_space = 0 : i32} : f32
   llvm.mlir.global internal @float_global_array(dense<-5.000000e+00> : vector<1xf32>) {addr_space = 0 : i32} : !llvm.array<1 x f32>
+  llvm.mlir.global internal @splat_float_global_array(dense<4.200000e+01> : tensor<4xf32>) {addr_space = 0 : i32} : !llvm.array<4 x f32>
+  llvm.mlir.global internal @splat_double_global_array(dense<4.200000e+01> : tensor<3xf64>) {addr_space = 0 : i32} : !llvm.array<3 x f64>
+  llvm.mlir.global internal @splat_neg_float_global_array(dense<-1.350000e+01> : tensor<4xf32>) {addr_space = 0 : i32} : !llvm.array<4 x f32>
+  llvm.mlir.global internal @splat_neg_double_global_array(dense<-1.350000e+01> : tensor<3xf64>) {addr_space = 0 : i32} : !llvm.array<3 x f64>
+  llvm.mlir.global internal @splat_half_global_array(dense<4.200000e+01> : tensor<4xf16>) {addr_space = 0 : i32} : !llvm.array<4 x f16>
+  llvm.mlir.global internal @splat_bfloat_global_array(dense<4.200000e+01> : tensor<3xbf16>) {addr_space = 0 : i32} : !llvm.array<3 x bf16>
+  llvm.mlir.global internal @splat_neg_half_global_array(dense<-1.350000e+01> : tensor<4xf16>) {addr_space = 0 : i32} : !llvm.array<4 x f16>
+  llvm.mlir.global internal @splat_neg_bfloat_global_array(dense<-1.350000e+01> : tensor<3xbf16>) {addr_space = 0 : i32} : !llvm.array<3 x bf16>
   llvm.mlir.global internal constant @string_const("foobar") {addr_space = 0 : i32}
   llvm.mlir.global internal @int_global_undef() {addr_space = 0 : i32} : i64
   llvm.mlir.global internal @externally_initialized_global(0 : i32) {addr_space = 0 : i32, externally_initialized} : i32
@@ -590,6 +598,23 @@ module {
   llvm.func @returnedattr_decl(!llvm.ptr {llvm.returned}) -> !llvm.ptr
   llvm.func @alignstackattr_decl(!llvm.ptr {llvm.alignstack = 32 : i64})
   llvm.func @writeonlyattr_decl(!llvm.ptr {llvm.writeonly})
+  llvm.func @writableattr(%arg0: !llvm.ptr {llvm.writable}) {
+    llvm.return
+  }
+  llvm.func @writableattr_decl(!llvm.ptr {llvm.writable})
+  llvm.func @deadonunwindattr(%arg0: !llvm.ptr {llvm.dead_on_unwind}) {
+    llvm.return
+  }
+  llvm.func @deadonunwindattr_decl(!llvm.ptr {llvm.dead_on_unwind})
+  llvm.func @deadonreturnattr(%arg0: !llvm.ptr {llvm.dead_on_return = 8 : i64}) {
+    llvm.return
+  }
+  llvm.func @deadonreturnattr_decl(!llvm.ptr {llvm.dead_on_return = 8 : i64})
+  llvm.func @nofpclassattr(%arg0: f32 {llvm.nofpclass = 519 : i64}) {
+    llvm.return
+  }
+  llvm.func @nofpclassattr_decl(f32 {llvm.nofpclass = 519 : i64})
+  llvm.func @nofpclassattr_ret_decl() -> (f32 {llvm.nofpclass = 519 : i64})
   llvm.func @alignattr_ret_decl() -> (!llvm.ptr {llvm.align = 4 : i64})
   llvm.func @noaliasattr_ret_decl() -> (!llvm.ptr {llvm.noalias})
   llvm.func @noundefattr_ret_decl() -> (!llvm.ptr {llvm.noundef})
@@ -614,6 +639,14 @@ module {
     %0 = llvm.inttoptr %arg0 : i32 to !llvm.ptr
     %1 = llvm.ptrtoint %0 : !llvm.ptr to i32
     llvm.return %1 : i32
+  }
+  llvm.func @addrpointerconversion_scalar(%arg0: !llvm.ptr) -> i64 {
+    %0 = llvm.ptrtoaddr %arg0 : !llvm.ptr to i64
+    llvm.return %0 : i64
+  }
+  llvm.func @addrpointerconversion_vector(%arg0: vector<3x!llvm.ptr>) -> vector<3xi64> {
+    %0 = llvm.ptrtoaddr %arg0 : vector<3x!llvm.ptr> to vector<3xi64>
+    llvm.return %0 : vector<3xi64>
   }
   llvm.func @fpconversion(%arg0: i32) -> i32 {
     %0 = llvm.sitofp %arg0 : i32 to f32
@@ -918,7 +951,35 @@ module {
 
 // -----
 module {
-  llvm.func @functionEntryCount() attributes {function_entry_count = 4242 : i64} {
+  llvm.func @functionEntryCount() attributes {function_entry_count = #llvm.function_entry_count<entry_count = 4242>} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @syntheticFunctionEntryCount() attributes {function_entry_count = #llvm.function_entry_count<entry_count = 7, count_type = synthetic>} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @syntheticFunctionEntryCountWithImports() attributes {function_entry_count = #llvm.function_entry_count<entry_count = 7, count_type = synthetic, imports = 1234, 4, 1234>} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @functionEntryCountWithImports() attributes {function_entry_count = #llvm.function_entry_count<entry_count = 7, imports = 1234, 4, 18446744073709551615, 1234>} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @functionEntryCountNegativeCount() attributes {function_entry_count = #llvm.function_entry_count<entry_count = 18446744073709551615>} {
     llvm.return
   }
 }
@@ -1143,6 +1204,8 @@ module {
     %24 = llvm.intr.vector.reduce.fminimum(%arg1) {fastmathFlags = #llvm.fastmath<nnan>} : (vector<2xf32>) -> f32
     %25 = llvm.mlir.constant(true) : i1
     %26 = llvm.select %25, %arg0, %20 {fastmathFlags = #llvm.fastmath<contract>} : i1, f32
+    %27 = llvm.fpext %arg0 fastmath<nnan> : f32 to f64
+    %28 = llvm.fptrunc %arg0 fastmath<fast> : f32 to f16
     llvm.return
   }
 }
@@ -1426,6 +1489,256 @@ module {
 
 // -----
 module {
+  llvm.func @noreturn() attributes {noreturn} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @returnstwice() attributes {returns_twice} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @hot() attributes {hot} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @cold() attributes {cold} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @noduplicate() attributes {noduplicate} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @no_caller_saved_registers() attributes {no_caller_saved_registers} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @nocallback() attributes {nocallback} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @modular_format(%arg0: i32) attributes {modular_format = "ident,1,1,foo,bar"} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @no_builtins_all() attributes {nobuiltins = []} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @no_builtins_2() attributes {nobuiltins = ["asdf", "defg"]} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @no_builtins_call_all() {
+    llvm.call @f() {nobuiltins = []} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @no_builtins_call_2() {
+    llvm.call @f() {nobuiltins = ["asdf", "defg"]} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @allocsize_1(%arg0: i32, %arg1: i32) attributes {allocsize = array<i32: 1>} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @allocsize_2(%arg0: i32, %arg1: i32) attributes {allocsize = array<i32: 0, 1>} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f(i32, i32)
+  llvm.func @allocsize_call_1() {
+    %0 = llvm.mlir.constant(0 : i32) : i32
+    llvm.call @f(%0, %0) {allocsize = array<i32: 1>} : (i32, i32) -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f(i32, i32)
+  llvm.func @allocsize_call_2() {
+    %0 = llvm.mlir.constant(0 : i32) : i32
+    llvm.call @f(%0, %0) {allocsize = array<i32: 1, 0>} : (i32, i32) -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @minsize() attributes {minsize} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @minsize_call() {
+    llvm.call @f() {minsize} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @optsize() attributes {optsize} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @optsize_call() {
+    llvm.call @f() {optsize} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @save_reg_params() attributes {save_reg_params} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @save_reg_params_call() {
+    llvm.call @f() {save_reg_params} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @zero_call_used_regs_1() attributes {zero_call_used_regs = "skip"} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @zero_call_used_regs_2() attributes {zero_call_used_regs = "all"} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @zero_call_used_regs_call_1() {
+    llvm.call @f() {zero_call_used_regs = "used_gpr_all"} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @zero_call_used_regs_call_2() {
+    llvm.call @f() {zero_call_used_regs = "used"} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @trap_func_name_call() {
+    llvm.call @f() {trap_func_name = "whatever"} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @default_func_attrs() attributes {default_func_attrs = {justKey, key = "value"}} {
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @default_func_attrs_call() {
+    llvm.call @f() {default_func_attrs = {justKey, key = "value"}} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @builtin_call() {
+    llvm.call @f() {builtin} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @nobuiltin_call() {
+    llvm.call @f() {nobuiltin} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
   llvm.func @f()
   llvm.func @convergent_call() {
     llvm.call @f() {convergent} : () -> ()
@@ -1447,6 +1760,15 @@ module {
   llvm.func @f()
   llvm.func @willreturn_call() {
     llvm.call @f() {will_return} : () -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @f()
+  llvm.func @noreturn_call() {
+    llvm.call @f() {noreturn} : () -> ()
     llvm.return
   }
 }
@@ -1578,6 +1900,11 @@ module {
 }
 
 // -----
+module {
+  llvm.module_flags [#llvm.mlir.module_flag<error, "riscv-isa", ["rv64i2p1", "m2p0"]>]
+}
+
+// -----
 module attributes {llvm.dependent_libraries = ["foo", "bar"]} {
 }
 
@@ -1668,5 +1995,12 @@ module {
 // -----
 module {
   llvm.mlir.global external @target_specific_attrs_combined(2 : i32) {addr_space = 0 : i32, alignment = 4 : i64, section = "mysection", target_specific_attrs = ["norecurse", ["bss-section", "my_bss.1"]]} : i32
+}
+
+// -----
+module {
+  llvm.func @byte_type(%arg0: !llvm.byte<8>) -> !llvm.byte<8> {
+    llvm.return %arg0 : !llvm.byte<8>
+  }
 }
 

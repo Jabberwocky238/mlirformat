@@ -1,6 +1,6 @@
 "builtin.module"() <{sym_name = "gemm"}> ({
   "gpu.module"() <{sym_name = "kernel"}> ({
-    "gpu.func"() <{function_type = (!llvm.ptr<1>, !llvm.ptr<1>, !llvm.ptr<1>) -> ()}> ({
+    "gpu.func"() <{function_type = (!llvm.ptr<1>, !llvm.ptr<1>, !llvm.ptr<1>) -> (), kernel}> ({
     ^bb0(%arg9: !llvm.ptr<1>, %arg10: !llvm.ptr<1>, %arg11: !llvm.ptr<1>):
       %33 = "arith.constant"() <{value = 32 : i32}> : () -> i32
       %34 = "arith.constant"() <{value = 8 : i32}> : () -> i32
@@ -22,7 +22,7 @@
       %50 = "vector.bitcast"(%49) : (vector<8xf32>) -> vector<8xi32>
       "xevm.blockstore2d"(%arg11, %44, %45, %46, %36, %37, %50) <{elem_size_in_bits = 32 : i32, tile_height = 8 : i32, tile_width = 16 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "block_dpas", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "block_dpas"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (memref<8x16xf16>, memref<16x16xf16>, memref<8x16xf32>) -> memref<8x16xf32>, sym_name = "test"}> ({
   ^bb0(%arg6: memref<8x16xf16>, %arg7: memref<16x16xf16>, %arg8: memref<8x16xf32>):

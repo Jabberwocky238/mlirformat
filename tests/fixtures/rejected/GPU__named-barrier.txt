@@ -1,0 +1,1 @@
+6	verify	'gpu.barrier' op named barriers require workgroup scope

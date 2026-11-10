@@ -41,7 +41,7 @@ enum Kind {
     Slot(Ident),
     /// `(rule, argument)`: `i1`, `i1 = x`, `of = x`；`is` 的写法另走 [`Marked::fixed`]。
     DType(Option<(String, Option<Ident>)>, Option<String>),
-    Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String>, symbol: bool, bits: Option<String> },
+    Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String>, symbol: bool, bits: Option<String>, optional: bool },
     Region,
     Successor,
 }
@@ -100,7 +100,7 @@ impl Marked {
         let mut fixed: Option<String> = None;
         for a in &f.attrs {
             let Some(marker) = ["slot", "dtype", "attr", "region", "successor"].into_iter().find(|m| a.path().is_ident(m)) else { continue };
-            let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense, mut symbol, mut bits, mut strip) = (None, None, None, None, None, None, false, None, None);
+            let (mut ty_var, mut rule, mut int, mut dialect, mut default, mut dense, mut symbol, mut bits, mut strip, mut optional) = (None, None, None, None, None, None, false, None, None, false);
             if !matches!(a.meta, Meta::Path(_)) {
                 a.parse_nested_meta(|m| {
                     let key = m.path.get_ident().map(Ident::to_string).unwrap_or_default();
@@ -124,6 +124,8 @@ impl Marked {
                         ("attr", "default") => default = Some(value(&m)?),
                         ("attr", "dense") => dense = Some(value(&m)?),
                         ("attr", "symbol") => symbol = true,
+                        // `DefaultValuedOptionalAttr`: the default only elides it when printed.
+                        ("attr", "optional") => optional = true,
                         ("attr", "bits") => bits = Some(value(&m)?),
                         _ => return Err(m.error(format!("unknown `#[{marker}(...)]` option"))),
                     }
@@ -133,7 +135,7 @@ impl Marked {
             let kind = match marker {
                 "slot" => Kind::Slot(ty_var.ok_or_else(|| Error::new_spanned(a, "`#[slot(T)]` needs its type variable"))?),
                 "dtype" => Kind::DType(rule, strip),
-                "attr" => Kind::Prop { int, dialect, default, dense, symbol, bits },
+                "attr" => Kind::Prop { int, dialect, default, dense, symbol, bits, optional },
                 "region" => Kind::Region,
                 _ => Kind::Successor,
             };
@@ -150,7 +152,7 @@ impl Marked {
                 Some("Type") => Kind::DType(None, None),
                 Some("Region") => Kind::Region,
                 Some("Value") => return Err(Error::new_spanned(&ident, "an operand needs #[slot(T)]: its type variable")),
-                _ => Kind::Prop { int: None, dialect: None, default: None, dense: None, symbol: false, bits: None },
+                _ => Kind::Prop { int: None, dialect: None, default: None, dense: None, symbol: false, bits: None, optional: false },
             },
         };
         let seg = last_segment(&f.ty);
@@ -203,9 +205,9 @@ impl OpArgs {
                     let strip = s(strip);
                     quote!(Type { result: #result, infer: #infer, strip: #strip })
                 }
-                Kind::Prop { int, dialect, default, dense, symbol, bits } => {
+                Kind::Prop { int, dialect, default, dense, symbol, bits, optional } => {
                     let (unit, int, dialect, default, dense, bits) = (m.unit, s(int), s(dialect), s(default), s(dense), s(bits));
-                    quote!(Prop { unit: #unit, int: #int, dialect: #dialect, default: #default, dense: #dense, symbol: #symbol, bits: #bits })
+                    quote!(Prop { unit: #unit, int: #int, dialect: #dialect, default: #default, dense: #dense, symbol: #symbol, bits: #bits, optional: #optional })
                 }
                 Kind::Region => quote!(Region),
                 Kind::Successor => quote!(Successor),

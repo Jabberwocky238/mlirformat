@@ -110,6 +110,16 @@ module {
 
 // -----
 module {
+  func.func @contiguous_inner_most_with_mask(%arg0: memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, %arg1: vector<1x8x1xi1>) -> vector<1x8x1xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0, %c0], %cst, %arg1 {in_bounds = [true, true, true]} : memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, vector<1x8x1xf32>
+    return %0 : vector<1x8x1xf32>
+  }
+}
+
+// -----
+module {
   func.func @negative_non_unit_inner_vec_dim(%arg0: memref<4x1xf32>) -> vector<4x8xf32> {
     %c0 = arith.constant 0 : index
     %cst = arith.constant 0.000000e+00 : f32
@@ -234,6 +244,15 @@ module {
     %cst = arith.constant 0.000000e+00 : f32
     %subview = memref.subview %arg0[%arg1, 0, 0] [40, 1, 1] [1, 1, 1] : memref<1000x1x1xf32> to memref<40x1x1xf32, strided<[1, 1, 1], offset: ?>>
     vector.transfer_write %arg3, %subview[%arg2, %c0, %c0] {in_bounds = [true, true, true]} : vector<[4]x1x1xf32>, memref<40x1x1xf32, strided<[1, 1, 1], offset: ?>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @contiguous_inner_most_with_mask(%arg0: memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>, %arg1: vector<1x8x1xf32>, %arg2: vector<1x8x1xi1>) {
+    %c0 = arith.constant 0 : index
+    vector.transfer_write %arg1, %arg0[%c0, %c0, %c0, %c0], %arg2 {in_bounds = [true, true, true]} : vector<1x8x1xf32>, memref<1x1x8x1xf32, strided<[3072, 8, 1, 1], offset: ?>>
     return
   }
 }

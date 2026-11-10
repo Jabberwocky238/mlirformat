@@ -2,7 +2,7 @@
 #di_basic_type1 = #llvm.di_basic_type<tag = DW_TAG_base_type, name = "integer", sizeInBits = 32, encoding = DW_ATE_signed>
 #di_file = #llvm.di_file<"target.f90" in "">
 #di_null_type = #llvm.di_null_type
-#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_Fortran95, file = #di_file, isOptimized = false, emissionKind = Full>
+#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_Fortran95, file = #di_file, emissionKind = Full>
 #di_composite_type = #llvm.di_composite_type<tag = DW_TAG_array_type, baseType = #di_basic_type1, elements = #llvm.di_subrange<count = 10 : i64>>
 #di_subroutine_type = #llvm.di_subroutine_type<callingConvention = DW_CC_program, types = #di_null_type>
 #di_global_variable = #llvm.di_global_variable<scope = #di_compile_unit, name = "arr", linkageName = "_QFEarr", file = #di_file, line = 4, type = #di_composite_type, isDefined = true>
@@ -18,16 +18,11 @@
     %2 = "llvm.alloca"(%0) <{elem_type = i32}> : (i64) -> !llvm.ptr<5>
     %3 = "llvm.addrspacecast"(%1) : (!llvm.ptr<5>) -> !llvm.ptr
     %4 = "llvm.addrspacecast"(%2) : (!llvm.ptr<5>) -> !llvm.ptr
-    %5 = "llvm.mlir.constant"() <{value = 9 : index}> : () -> i64
-    %6 = "llvm.mlir.constant"() <{value = 0 : index}> : () -> i64
-    %7 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
-    %8 = "llvm.mlir.constant"() <{value = 10 : index}> : () -> i64
-    %9 = "llvm.mlir.addressof"() <{global_name = @_QFEarr}> : () -> !llvm.ptr
-    %10 = "omp.map.info"(%3) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = f32}> : (!llvm.ptr) -> !llvm.ptr
-    %11 = "omp.map.bounds"(%6, %5, %8, %7, %7) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %12 = "omp.map.info"(%9, %11) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    %13 = "omp.map.info"(%4) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%10, %12, %13) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0>}> ({
+    %5 = "llvm.mlir.addressof"() <{global_name = @_QFEarr}> : () -> !llvm.ptr
+    %6 = "omp.map.info"(%3) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = f32}> : (!llvm.ptr) -> !llvm.ptr
+    %7 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.array<10 x i32>}> : (!llvm.ptr) -> !llvm.ptr
+    %8 = "omp.map.info"(%4) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags implicit>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%6, %7, %8) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: !llvm.ptr):
       "llvm.intr.dbg.declare"(%arg0) <{locationExpr = #llvm.di_expression<>, varInfo = #di_local_variable}> : (!llvm.ptr) -> ()
       "llvm.intr.dbg.declare"(%arg1) <{locationExpr = #llvm.di_expression<>, varInfo = #di_local_variable1}> : (!llvm.ptr) -> ()

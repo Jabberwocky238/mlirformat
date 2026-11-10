@@ -64,7 +64,7 @@
 
 // -----
 "builtin.module"() ({
-  "memref.global"() <{initial_value = dense<0.000000e+00> : tensor<10xf32>, sym_name = "memref_global_with_declare", type = memref<10xf32>}> {acc.declare = #acc.declare<dataClause =  acc_copyin>} : () -> ()
+  "memref.global"() <{initial_value = dense<0.000000e+00> : tensor<10xf32>, sym_name = "memref_global_with_declare", type = memref<10xf32>}> {acc.declare = #acc.declare<dataClause = acc_copyin>} : () -> ()
   "func.func"() <{function_type = (memref<10xf32>) -> (), sym_name = "use_memref", sym_visibility = "private"}> ({
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "test_memref_get_global_sink"}> ({
@@ -79,7 +79,7 @@
 
 // -----
 "builtin.module"() ({
-  "memref.global"() <{initial_value = dense<0.000000e+00> : tensor<2x5xf32>, sym_name = "memref_global_reinterpret", type = memref<2x5xf32>}> {acc.declare = #acc.declare<dataClause =  acc_copyin>} : () -> ()
+  "memref.global"() <{initial_value = dense<0.000000e+00> : tensor<2x5xf32>, sym_name = "memref_global_reinterpret", type = memref<2x5xf32>}> {acc.declare = #acc.declare<dataClause = acc_copyin>} : () -> ()
   "func.func"() <{function_type = (memref<10xf32>) -> (), sym_name = "use_memref_1d", sym_visibility = "private"}> ({
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "test_memref_reinterpret_cast_sink"}> ({
@@ -149,7 +149,7 @@
     ^bb0(%arg0: index, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index):
       "func.call"(%1) <{callee = @use_index}> : (index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -166,7 +166,7 @@
     ^bb0(%arg0: index, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index):
       "func.call"(%1) <{callee = @use_index}> : (index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

@@ -49,7 +49,7 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "cancel_taskgroup", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr):
     "omp.taskgroup"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> ({
-      "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 1, 0>, private_syms = [@i32_priv]}> ({
+      "omp.task"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0>, private_syms = [@i32_priv]}> ({
       ^bb0(%arg1: !llvm.ptr):
         "omp.cancel"() <{cancel_directive = #omp<cancellationconstructtype taskgroup>}> : () -> ()
         "llvm.call"(%arg1) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @do_something, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> ()

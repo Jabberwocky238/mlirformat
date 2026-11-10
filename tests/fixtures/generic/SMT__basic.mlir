@@ -10,25 +10,26 @@
     %14 = "smt.declare_fun"() {smt.some_attr} : () -> !smt.int
     %15 = "smt.declare_fun"() {smt.some_attr} : () -> !smt.sort<"uninterpreted_sort">
     %16 = "smt.declare_fun"() {smt.some_attr} : () -> !smt.func<(!smt.int, !smt.bool) !smt.bool>
-    %17 = "smt.constant"() <{value = true}> {smt.some_attr} : () -> !smt.bool
-    %18 = "smt.constant"() <{value = false}> {smt.some_attr} : () -> !smt.bool
+    %17 = "smt.declare_fun"() {smt.some_attr} : () -> !smt.func<() !smt.bool>
+    %18 = "smt.constant"() <{value = true}> {smt.some_attr} : () -> !smt.bool
+    %19 = "smt.constant"() <{value = false}> {smt.some_attr} : () -> !smt.bool
     "smt.assert"(%12) {smt.some_attr} : (!smt.bool) -> ()
     "smt.reset"() {smt.some_attr} : () -> ()
     "smt.push"() <{count = 1 : i32}> {smt.some_attr} : () -> ()
     "smt.pop"() <{count = 1 : i32}> {smt.some_attr} : () -> ()
-    %19:2 = "smt.solver"(%arg16) ({
+    %20:2 = "smt.solver"(%arg16) ({
     ^bb0(%arg17: i8):
-      %31 = "smt.check"() ({
-        %34 = "arith.constant"() <{value = 1 : i32}> : () -> i32
+      %33 = "smt.check"() ({
+        %36 = "arith.constant"() <{value = 1 : i32}> : () -> i32
+        "smt.yield"(%36) : (i32) -> ()
+      }, {
+        %35 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+        "smt.yield"(%35) : (i32) -> ()
+      }, {
+        %34 = "arith.constant"() <{value = -1 : i32}> : () -> i32
         "smt.yield"(%34) : (i32) -> ()
-      }, {
-        %33 = "arith.constant"() <{value = 0 : i32}> : () -> i32
-        "smt.yield"(%33) : (i32) -> ()
-      }, {
-        %32 = "arith.constant"() <{value = -1 : i32}> : () -> i32
-        "smt.yield"(%32) : (i32) -> ()
       }) {smt.some_attr} : () -> i32
-      "smt.yield"(%arg17, %31) : (i8, i32) -> ()
+      "smt.yield"(%arg17, %33) : (i8, i32) -> ()
     }) {smt.some_attr} : (i8) -> (i8, i32)
     "smt.solver"() ({
       "smt.yield"() : () -> ()
@@ -44,17 +45,18 @@
     }, {
       "smt.yield"() : () -> ()
     }) : () -> ()
-    %20 = "smt.eq"(%13, %13) {smt.some_attr} : (!smt.bv<32>, !smt.bv<32>) -> !smt.bool
-    %21 = "smt.distinct"(%13, %13) {smt.some_attr} : (!smt.bv<32>, !smt.bv<32>) -> !smt.bool
-    %22 = "smt.eq"(%12, %12, %12) : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
-    %23 = "smt.distinct"(%12, %12, %12) : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
-    %24 = "smt.ite"(%12, %13, %13) {smt.some_attr} : (!smt.bool, !smt.bv<32>, !smt.bv<32>) -> !smt.bv<32>
-    %25 = "smt.not"(%12) {smt.some_attr} : (!smt.bool) -> !smt.bool
-    %26 = "smt.and"(%12, %12, %12) {smt.some_attr} : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
-    %27 = "smt.or"(%12, %12, %12) {smt.some_attr} : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
-    %28 = "smt.xor"(%12, %12, %12) {smt.some_attr} : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
-    %29 = "smt.implies"(%12, %12) {smt.some_attr} : (!smt.bool, !smt.bool) -> !smt.bool
-    %30 = "smt.apply_func"(%16, %14, %12) {smt.some_attr} : (!smt.func<(!smt.int, !smt.bool) !smt.bool>, !smt.int, !smt.bool) -> !smt.bool
+    %21 = "smt.eq"(%13, %13) {smt.some_attr} : (!smt.bv<32>, !smt.bv<32>) -> !smt.bool
+    %22 = "smt.distinct"(%13, %13) {smt.some_attr} : (!smt.bv<32>, !smt.bv<32>) -> !smt.bool
+    %23 = "smt.eq"(%12, %12, %12) : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
+    %24 = "smt.distinct"(%12, %12, %12) : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
+    %25 = "smt.ite"(%12, %13, %13) {smt.some_attr} : (!smt.bool, !smt.bv<32>, !smt.bv<32>) -> !smt.bv<32>
+    %26 = "smt.not"(%12) {smt.some_attr} : (!smt.bool) -> !smt.bool
+    %27 = "smt.and"(%12, %12, %12) {smt.some_attr} : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
+    %28 = "smt.or"(%12, %12, %12) {smt.some_attr} : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
+    %29 = "smt.xor"(%12, %12, %12) {smt.some_attr} : (!smt.bool, !smt.bool, !smt.bool) -> !smt.bool
+    %30 = "smt.implies"(%12, %12) {smt.some_attr} : (!smt.bool, !smt.bool) -> !smt.bool
+    %31 = "smt.apply_func"(%16, %14, %12) {smt.some_attr} : (!smt.func<(!smt.int, !smt.bool) !smt.bool>, !smt.int, !smt.bool) -> !smt.bool
+    %32 = "smt.apply_func"(%17) {smt.some_attr} : (!smt.func<() !smt.bool>) -> !smt.bool
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "quantifiers"}> ({

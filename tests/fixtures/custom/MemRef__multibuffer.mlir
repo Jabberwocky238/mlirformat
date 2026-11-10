@@ -71,3 +71,76 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+module {
+  func.func @multi_buffer_expand_shape(%arg0: memref<1024x1024xf32>) {
+    %alloc = memref.alloc() : memref<4x128xf32>
+    %c1024 = arith.constant 1024 : index
+    %c1 = arith.constant 1 : index
+    %c3 = arith.constant 3 : index
+    scf.for %arg1 = %c1 to %c1024 step %c3 {
+      %subview = memref.subview %arg0[%arg1, 0] [4, 128] [1, 1] : memref<1024x1024xf32> to memref<4x128xf32, #map>
+      memref.copy %subview, %alloc : memref<4x128xf32, #map> to memref<4x128xf32>
+      %expand_shape = memref.expand_shape %alloc [[0, 1], [2, 3]] output_shape [2, 2, 64, 2] : memref<4x128xf32> into memref<2x2x64x2xf32>
+      "some_use"(%expand_shape) : (memref<2x2x64x2xf32>) -> ()
+    }
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+module {
+  func.func @multi_buffer_collapse_shape(%arg0: memref<1024x1024xf32>) {
+    %alloc = memref.alloc() : memref<4x128xf32>
+    %c1024 = arith.constant 1024 : index
+    %c1 = arith.constant 1 : index
+    %c3 = arith.constant 3 : index
+    scf.for %arg1 = %c1 to %c1024 step %c3 {
+      %subview = memref.subview %arg0[%arg1, 0] [4, 128] [1, 1] : memref<1024x1024xf32> to memref<4x128xf32, #map>
+      memref.copy %subview, %alloc : memref<4x128xf32, #map> to memref<4x128xf32>
+      %collapse_shape = memref.collapse_shape %alloc [[0, 1]] : memref<4x128xf32> into memref<512xf32>
+      "some_use"(%collapse_shape) : (memref<512xf32>) -> ()
+    }
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+module {
+  func.func @multi_buffer_cast(%arg0: memref<1024x1024xf32>) {
+    %alloc = memref.alloc() : memref<4x128xf32>
+    %c1024 = arith.constant 1024 : index
+    %c1 = arith.constant 1 : index
+    %c3 = arith.constant 3 : index
+    scf.for %arg1 = %c1 to %c1024 step %c3 {
+      %subview = memref.subview %arg0[%arg1, 0] [4, 128] [1, 1] : memref<1024x1024xf32> to memref<4x128xf32, #map>
+      memref.copy %subview, %alloc : memref<4x128xf32, #map> to memref<4x128xf32>
+      %cast = memref.cast %alloc : memref<4x128xf32> to memref<?x128xf32>
+      "some_use"(%cast) : (memref<?x128xf32>) -> ()
+    }
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+module {
+  func.func @multi_buffer_chained_view_ops(%arg0: memref<1024x1024xf32>) {
+    %alloc = memref.alloc() : memref<4x128xf32>
+    %c1024 = arith.constant 1024 : index
+    %c1 = arith.constant 1 : index
+    %c3 = arith.constant 3 : index
+    scf.for %arg1 = %c1 to %c1024 step %c3 {
+      %subview = memref.subview %arg0[%arg1, 0] [4, 128] [1, 1] : memref<1024x1024xf32> to memref<4x128xf32, #map>
+      memref.copy %subview, %alloc : memref<4x128xf32, #map> to memref<4x128xf32>
+      %expand_shape = memref.expand_shape %alloc [[0, 1], [2, 3]] output_shape [2, 2, 64, 2] : memref<4x128xf32> into memref<2x2x64x2xf32>
+      %cast = memref.cast %expand_shape : memref<2x2x64x2xf32> to memref<?x2x64x2xf32>
+      "some_use"(%cast) : (memref<?x2x64x2xf32>) -> ()
+    }
+    return
+  }
+}
+

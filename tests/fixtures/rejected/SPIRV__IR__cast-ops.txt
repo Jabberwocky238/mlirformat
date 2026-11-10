@@ -3,17 +3,23 @@
 3	verify	'spirv.Bitcast' op mismatch in result type bitwidth 96 and operand type bitwidth 64
 4	verify	unhandled bit cast conversion from pointer type to non-pointer type
 5	verify	unhandled bit cast conversion from non-pointer type to pointer type
-26	verify	'spirv.FConvert' op expected the different bit widths for operand type and result type, but provided 'f32' and 'f32'
-33	verify	pointer must point to the Workgroup, CrossWorkgroup, or Function Storage Class
-34	verify	result type must be of storage class Generic
-35	verify	'spirv.PtrCastToGeneric' op pointer operand's pointee type must have the same as the op result type, but found 'f32' vs 'vector<2xi32>'
-37	verify	pointer type must be of storage class Generic
-38	verify	result must point to the Workgroup, CrossWorkgroup, or Function Storage Class
-39	verify	'spirv.GenericCastToPtr' op pointer operand's pointee type must have the same as the op result type, but found 'f32' vs 'vector<2xi32>'
-41	verify	pointer type must be of storage class Generic
-42	verify	result must point to the Workgroup, CrossWorkgroup, or Function Storage Class
-43	verify	'spirv.GenericCastToPtrExplicit' op pointer operand's pointee type must have the same as the op result type, but found 'f32' vs 'vector<2xi32>'
-46	verify	operand must be a physical pointer
-47	verify	operand must be a physical pointer
-50	verify	result must be a physical pointer
-51	verify	result must be a physical pointer
+6	verify	cooperative matrix dimensions must match
+7	verify	cooperative matrix scope must match
+8	verify	cooperative matrix use must match
+9	verify	'spirv.Bitcast' op mismatch in result and operand type bitwidth
+10	verify	unhandled bit cast conversion from cooperative matrix type to non-cooperative matrix type
+31	verify	'spirv.FConvert' op expected the different bit widths for operand type and result type, but provided 'f32' and 'f32'
+38	verify	pointer must point to the Workgroup, CrossWorkgroup, or Function Storage Class
+39	verify	result type must be of storage class Generic
+40	verify	'spirv.PtrCastToGeneric' op pointer operand's pointee type must have the same as the op result type, but found 'f32' vs 'vector<2xi32>'
+42	verify	pointer type must be of storage class Generic
+43	verify	result must point to the Workgroup, CrossWorkgroup, or Function Storage Class
+44	verify	'spirv.GenericCastToPtr' op pointer operand's pointee type must have the same as the op result type, but found 'f32' vs 'vector<2xi32>'
+46	verify	pointer type must be of storage class Generic
+47	verify	result must point to the Workgroup, CrossWorkgroup, or Function Storage Class
+48	verify	'spirv.GenericCastToPtrExplicit' op pointer operand's pointee type must have the same as the op result type, but found 'f32' vs 'vector<2xi32>'
+51	verify	operand must be a physical pointer
+52	verify	operand must be a physical pointer
+55	verify	result must be a physical pointer
+56	verify	result must be a physical pointer
+57	verify	operand must be a scalar type of unsigned integer

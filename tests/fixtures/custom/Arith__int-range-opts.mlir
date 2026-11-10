@@ -125,3 +125,31 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @no_miscompile_block_arg_address_reuse(%arg0: i1) {
+    %false = arith.constant false
+    %c4_i64 = arith.constant 4 : i64
+    %c99_i64 = arith.constant 99 : i64
+    cf.cond_br %false, ^bb1, ^bb2
+  ^bb1:  // pred: ^bb0
+    cf.br ^bb3(%c4_i64, %c99_i64 : i64, i64)
+  ^bb2:  // pred: ^bb0
+    cf.br ^bb3(%c4_i64, %c99_i64 : i64, i64)
+  ^bb3(%0: i64, %1: i64):  // 2 preds: ^bb1, ^bb2
+    "test.use"(%0) : (i64) -> ()
+    cf.br ^bb4
+  ^bb4:  // pred: ^bb3
+    cf.cond_br %arg0, ^bb5, ^bb6
+  ^bb5:  // pred: ^bb4
+    %c333_i64 = arith.constant 333 : i64
+    cf.br ^bb7(%c333_i64 : i64)
+  ^bb6:  // pred: ^bb4
+    %c444_i64 = arith.constant 444 : i64
+    cf.br ^bb7(%c444_i64 : i64)
+  ^bb7(%2: i64):  // 2 preds: ^bb5, ^bb6
+    vector.print %2 : i64
+    return
+  }
+}
+

@@ -15,7 +15,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       "transform.structured.vectorize"(%0) <{scalable_sizes = array<i1: false, false, false, false>, static_vector_sizes = array<i64: 1, 8, 4, 1>}> : (!transform.any_op) -> ()
       "transform.yield"() : () -> ()
     }) : () -> ()
@@ -40,7 +40,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       "transform.structured.vectorize"(%0) <{scalable_sizes = array<i1: false, false, true, false>, static_vector_sizes = array<i64: 1, 8, 4, 1>}> : (!transform.any_op) -> ()
       "transform.yield"() : () -> ()
     }) : () -> ()
@@ -65,7 +65,7 @@
   "builtin.module"() ({
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc"]}> : (!transform.any_op) -> !transform.any_op
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       "transform.structured.vectorize"(%0) <{scalable_sizes = array<i1: false, false, true, false>, static_vector_sizes = array<i64: 3, 2, 4, 2>}> : (!transform.any_op) -> ()
       "transform.yield"() : () -> ()
     }) : () -> ()

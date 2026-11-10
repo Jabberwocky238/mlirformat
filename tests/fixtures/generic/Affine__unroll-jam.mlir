@@ -44,7 +44,7 @@
         "affine.yield"() : () -> ()
       }) : () -> ()
       "gpu.return"() : () -> ()
-    }) {sym_name = "unroll_jam_imperfect_nest", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "unroll_jam_imperfect_nest"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> (), sym_name = "loop_nest_unknown_count_1"}> ({
   ^bb0(%arg55: index):

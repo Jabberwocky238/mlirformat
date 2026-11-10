@@ -6,14 +6,14 @@
     %3 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %4 = "llvm.alloca"(%3) <{elem_type = !llvm.struct<(f32, array<10 x i32>, struct<(f32, i32)>, i32)>}> : (i64) -> !llvm.ptr
     %5 = "llvm.getelementptr"(%4) <{elem_type = !llvm.struct<(f32, array<10 x i32>, struct<(f32, i32)>, i32)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 3>}> : (!llvm.ptr) -> !llvm.ptr
-    %6 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %6 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
     %7 = "llvm.getelementptr"(%4) <{elem_type = !llvm.struct<(f32, array<10 x i32>, struct<(f32, i32)>, i32)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 2, 1>}> : (!llvm.ptr) -> !llvm.ptr
-    %8 = "omp.map.info"(%7) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %8 = "omp.map.info"(%7) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
     %9 = "llvm.getelementptr"(%4) <{elem_type = !llvm.struct<(f32, array<10 x i32>, struct<(f32, i32)>, i32)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 1>}> : (!llvm.ptr) -> !llvm.ptr
     %10 = "omp.map.bounds"(%2, %1, %0, %2, %2) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %11 = "omp.map.info"(%9, %10) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    %12 = "omp.map.info"(%4, %6, %8, %11) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, members_index = [[3], [2, 1], [1]], operandSegmentSizes = array<i32: 1, 0, 3, 0>, partial_map = true, var_type = !llvm.struct<(f32, array<10 x i32>, struct<(f32, i32)>, i32)>}> : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.ptr
-    "omp.target"(%6, %8, %11, %12) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0>}> ({
+    %11 = "omp.map.info"(%9, %10) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    %12 = "omp.map.info"(%4, %6, %8, %11) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, members_index = [[3], [2, 1], [1]], operandSegmentSizes = array<i32: 1, 0, 3, 0>, partial_map = true, var_ptr_type = !llvm.struct<(f32, array<10 x i32>, struct<(f32, i32)>, i32)>}> : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.ptr
+    "omp.target"(%6, %8, %11, %12) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: !llvm.ptr, %arg3: !llvm.ptr):
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()

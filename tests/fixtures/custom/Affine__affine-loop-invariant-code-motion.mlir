@@ -586,3 +586,44 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @hoist_pure_from_zero_trip_count_loop(%arg0: i32, %arg1: i32) -> i32 {
+    %alloc = memref.alloc() : memref<1xi32>
+    affine.for %arg2 = 0 to 0 {
+      %1 = arith.addi %arg0, %arg1 : i32
+      affine.store %1, %alloc[0] : memref<1xi32>
+    }
+    %0 = affine.load %alloc[0] : memref<1xi32>
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @no_hoist_from_zero_trip_count_loop(%arg0: i32) -> i32 {
+    %alloc = memref.alloc() : memref<1xi32>
+    %c42_i32 = arith.constant 42 : i32
+    affine.store %c42_i32, %alloc[0] : memref<1xi32>
+    affine.for %arg1 = 0 to 0 {
+      affine.store %arg0, %alloc[0] : memref<1xi32>
+    }
+    %0 = affine.load %alloc[0] : memref<1xi32>
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @unknown_trip_count_store_not_hoisted(%arg0: i32, %arg1: index) -> i32 {
+    %alloc = memref.alloc() : memref<1xi32>
+    %c42_i32 = arith.constant 42 : i32
+    affine.store %c42_i32, %alloc[0] : memref<1xi32>
+    affine.for %arg2 = 0 to %arg1 {
+      affine.store %arg0, %alloc[0] : memref<1xi32>
+    }
+    %0 = affine.load %alloc[0] : memref<1xi32>
+    return %0 : i32
+  }
+}
+

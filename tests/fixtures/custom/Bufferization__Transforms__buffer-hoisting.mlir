@@ -440,5 +440,12 @@ module {
     test.copy(%0, %arg5) : (memref<?xf32>, memref<?xf32>)
     return
   }
+  func.func @unreachable_alloc(%arg0: f32) {
+    %c0 = arith.constant 0 : index
+    return
+  ^bb1(%0: i32):  // no predecessors
+    %alloc = memref.alloc() : memref<10xf32>
+    return
+  }
 }
 

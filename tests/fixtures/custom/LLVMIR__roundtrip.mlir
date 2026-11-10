@@ -49,7 +49,27 @@ module {
     llvm.call @baz() {convergent} : () -> ()
     llvm.call @baz() {no_unwind} : () -> ()
     llvm.call @baz() {will_return} : () -> ()
+    llvm.call @baz() {noreturn} : () -> ()
+    llvm.call @baz() {returns_twice} : () -> ()
+    llvm.call @baz() {hot} : () -> ()
+    llvm.call @baz() {cold} : () -> ()
+    llvm.call @baz() {noduplicate} : () -> ()
+    llvm.call @baz() {no_caller_saved_registers} : () -> ()
+    llvm.call @baz() {nocallback} : () -> ()
+    llvm.call @baz() {modular_format = "format str"} : () -> ()
     llvm.call @baz() {memory = #llvm.memory_effects<other = none, argMem = read, inaccessibleMem = write, errnoMem = none, targetMem0 = none, targetMem1 = none>} : () -> ()
+    llvm.call @baz() {nobuiltins = []} : () -> ()
+    llvm.call @baz() {nobuiltins = ["asdf", "defg"]} : () -> ()
+    llvm.call @baz() {allocsize = array<i32: 5>} : () -> ()
+    llvm.call @baz() {allocsize = array<i32: 3, 5>} : () -> ()
+    llvm.call @baz() {minsize} : () -> ()
+    llvm.call @baz() {optsize} : () -> ()
+    llvm.call @baz() {builtin} : () -> ()
+    llvm.call @baz() {nobuiltin} : () -> ()
+    llvm.call @baz() {save_reg_params} : () -> ()
+    llvm.call @baz() {zero_call_used_regs = "all"} : () -> ()
+    llvm.call @baz() {zero_call_used_regs = "thing"} : () -> ()
+    llvm.call @baz() {default_func_attrs = {justKey, key = "value"}} : () -> ()
     llvm.br ^bb1
   ^bb1:  // pred: ^bb0
     llvm.cond_br %7, ^bb2, ^bb3
@@ -78,15 +98,18 @@ module {
     %38 = llvm.select %7, %0, %1 : i1, i32
     %39 = llvm.inttoptr %arg0 : i32 to !llvm.ptr
     %40 = llvm.ptrtoint %39 : !llvm.ptr to i32
-    %41 = llvm.fpext %arg1 : f32 to f80
-    %42 = llvm.fpext %arg1 : f32 to f128
-    %43 = llvm.fneg %arg1 : f32
-    %44 = llvm.intr.sin(%arg1) : (f32) -> f32
-    %45 = llvm.intr.pow(%arg1, %arg1) : (f32, f32) -> f32
-    %46 = llvm.intr.powi(%arg1, %arg0) : (f32, i32) -> f32
-    %47 = llvm.intr.bitreverse(%arg0) : (i32) -> i32
-    %48 = llvm.intr.ctpop(%arg0) : (i32) -> i32
-    %49 = llvm.intr.round(%arg1) : (f32) -> f32
+    %41 = llvm.ptrtoaddr %39 : !llvm.ptr to i64
+    %42 = llvm.mlir.poison : vector<3x!llvm.ptr>
+    %43 = llvm.ptrtoaddr %42 : vector<3x!llvm.ptr> to vector<3xi64>
+    %44 = llvm.fpext %arg1 : f32 to f80
+    %45 = llvm.fpext %arg1 : f32 to f128
+    %46 = llvm.fneg %arg1 : f32
+    %47 = llvm.intr.sin(%arg1) : (f32) -> f32
+    %48 = llvm.intr.pow(%arg1, %arg1) : (f32, f32) -> f32
+    %49 = llvm.intr.powi(%arg1, %arg0) : (f32, i32) -> f32
+    %50 = llvm.intr.bitreverse(%arg0) : (i32) -> i32
+    %51 = llvm.intr.ctpop(%arg0) : (i32) -> i32
+    %52 = llvm.intr.round(%arg1) : (f32) -> f32
     "llvm.intr.memcpy"(%arg2, %arg3, %arg0) <{isVolatile = false}> : (!llvm.ptr, !llvm.ptr, i32) -> ()
     "llvm.intr.memcpy"(%arg2, %arg3, %arg0) <{isVolatile = false}> : (!llvm.ptr, !llvm.ptr, i32) -> ()
     "llvm.intr.memcpy.inline"(%arg2, %arg3) <{isVolatile = false, len = 10 : i64}> : (!llvm.ptr, !llvm.ptr) -> ()
@@ -144,6 +167,13 @@ module {
     %9 = llvm.fptoui %7 : f32 to i32
     %10 = llvm.addrspacecast %arg4 : !llvm.ptr to !llvm.ptr<2>
     %11 = llvm.bitcast %arg1 : i64 to f64
+    %12 = llvm.bitcast %arg1 : i64 to !llvm.byte<64>
+    %13 = llvm.bitcast %12 : !llvm.byte<64> to i64
+    %14 = llvm.bitcast %arg1 : i64 to !llvm.byte<8>
+    %15 = llvm.bitcast %12 : !llvm.byte<64> to i32
+    %16 = llvm.bitcast %12 : !llvm.byte<64> to !llvm.byte<8>
+    %17 = llvm.bitcast %12 : !llvm.byte<64> to !llvm.ptr
+    %18 = llvm.bitcast %arg4 : !llvm.ptr to !llvm.byte<8>
     llvm.return
   }
   func.func @nneg_casts(%arg0: i32, %arg1: i64, %arg2: vector<4xi32>, %arg3: vector<4xi64>, %arg4: !llvm.ptr) {
@@ -221,6 +251,7 @@ module {
     %0 = llvm.atomicrmw fadd %arg0, %arg1 monotonic : !llvm.ptr, f32
     %1 = llvm.atomicrmw volatile fsub %arg0, %arg1 syncscope("singlethread") monotonic {alignment = 16 : i64} : !llvm.ptr, f32
     %2 = llvm.atomicrmw fmin %arg0, %arg2 monotonic : !llvm.ptr, vector<2xf16>
+    %3 = llvm.atomicrmw fminimumnum %arg0, %arg1 monotonic : !llvm.ptr, f32
     llvm.return
   }
   func.func @cmpxchg(%arg0: !llvm.ptr, %arg1: i32, %arg2: i32) {
@@ -356,6 +387,34 @@ module {
   }
   llvm.func @experimental_noalias_scope_with_string_id() {
     llvm.intr.experimental.noalias.scope.decl #alias_scope1
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fadd(%arg0: f32, %arg1: f32) {
+    %0 = llvm.intr.experimental.constrained.fadd %arg0, %arg1 towardzero ignore : f32
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fsub(%arg0: f32, %arg1: f32) {
+    %0 = llvm.intr.experimental.constrained.fsub %arg0, %arg1 towardzero ignore : f32
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fmul(%arg0: f32, %arg1: f32) {
+    %0 = llvm.intr.experimental.constrained.fmul %arg0, %arg1 towardzero ignore : f32
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fdiv(%arg0: f32, %arg1: f32) {
+    %0 = llvm.intr.experimental.constrained.fdiv %arg0, %arg1 towardzero ignore : f32
+    llvm.return
+  }
+  llvm.func @experimental_constrained_frem(%arg0: f32, %arg1: f32) {
+    %0 = llvm.intr.experimental.constrained.frem %arg0, %arg1 towardzero ignore : f32
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fma(%arg0: f32, %arg1: f32, %arg2: f32) {
+    %0 = llvm.intr.experimental.constrained.fma %arg0, %arg1, %arg2 towardzero ignore : f32
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fmuladd(%arg0: f32, %arg1: f32, %arg2: f32) {
+    %0 = llvm.intr.experimental.constrained.fmuladd %arg0, %arg1, %arg2 towardzero ignore : f32
     llvm.return
   }
   llvm.func @experimental_constrained_fptrunc(%arg0: f64) {
@@ -500,6 +559,19 @@ module {
     %0 = llvm.call_intrinsic "llvm.riscv.sha256sig0"(%arg0) ["adazdazd"()] {constant} : (i32 {llvm.signext}) -> i32
     llvm.return %0 : i32
   }
+  llvm.func @constrained_fp_metadata(%arg0: f32, %arg1: f32) -> f32 {
+    %0 = llvm.mlir.metadata_as_value #llvm.md_string<"round.tonearest">
+    %1 = llvm.mlir.metadata_as_value #llvm.md_string<"fpexcept.strict">
+    %2 = llvm.call_intrinsic "llvm.experimental.constrained.fadd.f32"(%arg0, %arg1, %0, %1) : (f32, f32, !llvm.metadata, !llvm.metadata) -> f32
+    llvm.return %2 : f32
+  }
+  llvm.func @metadata_as_value_shapes() {
+    %0 = llvm.mlir.metadata_as_value #llvm.md_string<"sp">
+    %1 = llvm.mlir.metadata_as_value #llvm.md_const<42 : i32>
+    %2 = llvm.mlir.metadata_as_value #llvm.md_func<@md_kernel>
+    %3 = llvm.mlir.metadata_as_value #llvm.md_node<#llvm.md_string<"sp">>
+    llvm.return
+  }
   llvm.mlir.global private @blockaddr_global() {addr_space = 0 : i32, dso_local} : !llvm.ptr {
     %0 = llvm.blockaddress <function = @blockaddr_fn, tag = <id = 0>> : !llvm.ptr
     llvm.return %0 : !llvm.ptr
@@ -521,5 +593,11 @@ module {
     %1 = llvm.alloca %0 x !llvm.struct<"bucket<string, double, '\\b'>::Iterator", (ptr, i64, i64)> {alignment = 8 : i64} : (i32) -> !llvm.ptr
     llvm.return
   }
+  llvm.func @md_kernel() {
+    llvm.return
+  }
+  llvm.named_metadata "foo.version" [#llvm.md_node<#llvm.md_const<1 : i32>, #llvm.md_const<0 : i32>, #llvm.md_const<0 : i32>>]
+  llvm.named_metadata "foo.language" [#llvm.md_node<#llvm.md_string<"Bar">, #llvm.md_const<1 : i32>, #llvm.md_const<2 : i32>>]
+  llvm.named_metadata "foo.kernel" [#llvm.md_node<#llvm.md_func<@md_kernel>, #llvm.md_node<>, #llvm.md_node<#llvm.md_const<0 : i32>, #llvm.md_string<"foo.buffer">>>]
 }
 

@@ -178,3 +178,48 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "test_device_data_in_parallel"}> ({
+    %0 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<10xf32, #gpu.address_space<global>>
+    "acc.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %2 = "memref.load"(%0, %1) : (memref<10xf32, #gpu.address_space<global>>, index) -> f32
+      "acc.yield"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "memref.global"() <{sym_name = "device_global", type = memref<10xf32, #gpu.address_space<global>>}> : () -> ()
+  "func.func"() <{function_type = () -> (), sym_name = "test_device_global_in_parallel"}> ({
+    %0 = "memref.get_global"() <{name = @device_global}> : () -> memref<10xf32, #gpu.address_space<global>>
+    "acc.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %2 = "memref.load"(%0, %1) : (memref<10xf32, #gpu.address_space<global>>, index) -> f32
+      "acc.yield"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?xi8>) -> (), sym_name = "test_declare_deviceptr_arg_in_parallel"}> ({
+  ^bb0(%arg0: memref<?xi8>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "memref.view"(%arg0, %0) {acc.declare = #acc.declare<dataClause = acc_deviceptr>} : (memref<?xi8>, index) -> memref<10xf32>
+    %2 = "acc.deviceptr"(%1) <{dataClause = #acc<data_clause acc_deviceptr>, implicit = false, modifiers = #acc<data_clause_modifier none>, name = "arg0", operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = f32}> : (memref<10xf32>) -> memref<10xf32>
+    %3 = "acc.declare_enter"(%2) : (memref<10xf32>) -> !acc.declare_token
+    "acc.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      %4 = "arith.constant"() <{value = 0 : index}> : () -> index
+      %5 = "memref.load"(%arg0, %4) : (memref<?xi8>, index) -> i8
+      "acc.yield"() : () -> ()
+    }) : () -> ()
+    "acc.declare_exit"(%3, %2) <{operandSegmentSizes = array<i32: 1, 1>}> : (!acc.declare_token, memref<10xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

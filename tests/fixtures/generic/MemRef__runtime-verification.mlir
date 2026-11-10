@@ -6,3 +6,12 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1xf32>, index) -> (), sym_name = "subview"}> ({
+  ^bb0(%arg0: memref<1xf32>, %arg1: index):
+    %0 = "memref.subview"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: 1>, static_strides = array<i64: 1>}> : (memref<1xf32>, index) -> memref<1xf32, strided<[1], offset: ?>>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

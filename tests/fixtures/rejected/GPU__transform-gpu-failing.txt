@@ -1,1 +1,0 @@
-13	verify	'transform.gpu.map_forall_to_blocks' op transform requires empty or size-3 grid_dims

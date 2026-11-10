@@ -13,3 +13,11 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<4xf32>, memref<4x4xf32>) -> (), sym_name = "test_memref_types"}> ({
+  ^bb0(%arg0: memref<4xf32>, %arg1: memref<4x4xf32>):
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

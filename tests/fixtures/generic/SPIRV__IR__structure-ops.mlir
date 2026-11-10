@@ -38,10 +38,15 @@
     %11 = "spirv.Constant"() <{value = dense<4.200000e+00> : !spirv.coopmatrix<16x16xf32, Subgroup, MatrixAcc>}> : () -> !spirv.coopmatrix<16x16xf32, Subgroup, MatrixAcc>
     %12 = "spirv.Constant"() <{value = dense<0> : !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>}> : () -> !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>
     %13 = "spirv.Constant"() <{value = dense<4> : !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>}> : () -> !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>
+    %14 = "spirv.Constant"() <{value = [1 : i32, 2.000000e+00 : f32]}> : () -> !spirv.struct<(i32, f32)>
+    %15 = "spirv.Constant"() <{value = [1 : i32, [dense<2> : vector<2xi32>]]}> : () -> !spirv.struct<(i32, !spirv.array<1 x vector<2xi32>>)>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -101,6 +106,24 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
+"builtin.module"() ({
+  "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>}> ({
+    "spirv.SpecConstant"() <{default_value = 3 : i32, sym_name = "x"}> : () -> ()
+    "spirv.SpecConstant"() <{default_value = 4 : i32, sym_name = "y"}> : () -> ()
+    "spirv.SpecConstant"() <{default_value = 5 : i32, sym_name = "z"}> : () -> ()
+    "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = () -> (), sym_name = "do_nothing"}> ({
+      "spirv.Return"() : () -> ()
+    }) : () -> ()
+    "spirv.EntryPoint"() <{execution_model = #spirv.execution_model<GLCompute>, fn = @do_nothing, interface = []}> : () -> ()
+    "spirv.ExecutionModeId"() <{execution_mode = #spirv.execution_mode<LocalSizeHintId>, fn = @do_nothing, values = [@x, @y, @z]}> : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
 // -----
 // -----
 "builtin.module"() ({
@@ -195,6 +218,27 @@
 // -----
 // -----
 // -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>}> ({
+    "spirv.GlobalVariable"() <{sym_name = "var0", type = !spirv.ptr<!spirv.ptr<f32, PhysicalStorageBuffer>, Private>}> {aliased_pointer} : () -> ()
+    "spirv.GlobalVariable"() <{sym_name = "var1", type = !spirv.ptr<!spirv.ptr<f32, PhysicalStorageBuffer>, Private>}> {restrict_pointer} : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>}> ({
+    "spirv.GlobalVariable"() <{sym_name = "var0", type = !spirv.ptr<!spirv.array<4 x !spirv.ptr<f32, PhysicalStorageBuffer>>, Private>}> {aliased_pointer} : () -> ()
+    "spirv.GlobalVariable"() <{sym_name = "var1", type = !spirv.ptr<!spirv.array<4 x !spirv.ptr<f32, PhysicalStorageBuffer>>, Private>}> {restrict_pointer} : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
 // -----
 // -----
 // -----
@@ -334,6 +378,30 @@
 // -----
 // -----
 // -----
+"builtin.module"() ({
+  "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>}> ({
+    "spirv.SpecConstant"() <{default_value = 1.500000e+00 : f32, sym_name = "sc1"}> : () -> ()
+    "spirv.SpecConstant"() <{default_value = 2.500000e+00 : f32, sym_name = "sc2"}> : () -> ()
+    "spirv.SpecConstantComposite"() <{constituents = [@sc1, @sc2], sym_name = "scc_inner", type = !spirv.array<2 x f32>}> : () -> ()
+    "spirv.SpecConstantComposite"() <{constituents = [@scc_inner, @scc_inner], sym_name = "scc_nested", type = !spirv.array<2 x !spirv.array<2 x f32>>}> : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>}> ({
+    "spirv.SpecConstant"() <{default_value = 1 : i32, sym_name = "sc1"}> : () -> ()
+    "spirv.SpecConstant"() <{default_value = 2.500000e+00 : f32, sym_name = "sc2"}> : () -> ()
+    "spirv.SpecConstant"() <{default_value = 3.500000e+00 : f32, sym_name = "sc3"}> : () -> ()
+    "spirv.SpecConstantComposite"() <{constituents = [@sc2, @sc3], sym_name = "scc_vec", type = vector<2xf32>}> : () -> ()
+    "spirv.SpecConstantComposite"() <{constituents = [@sc1, @scc_vec], sym_name = "scc_struct", type = !spirv.struct<(i32, vector<2xf32>)>}> : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -369,6 +437,7 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
 // -----
 // -----
 // -----

@@ -99,9 +99,7 @@ pub struct CollapseShapeOp<'a> {
 /// %0 = tensor.concat dim(1) %0, %1, %2 :
 ///     (tensor<3x?xf32>, tensor<3x2xf32>, tensor<3x?xf32) -> tensor<3x10xf32>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("tensor.concat", results(result))]
+#[mlir::op("tensor.concat", format = "`dim` `(` $dim `)` $inputs attr-dict `:` functional-type($inputs, $result)", results(result))]
 pub struct ConcatOp<'a> {
     #[slot(inputs_ty)]
     pub inputs: Vec<Value<'a>>,
@@ -177,16 +175,17 @@ pub struct EmptyOp<'a> {
 /// `src`.
 ///
 /// A reassociation is defined as a continuous grouping of dimensions and is
-/// represented with an array of DenseI64ArrayAttr attribute.  The reassociation
+/// represented with an array of DenseI64ArrayAttr attribute. The reassociation
 /// maps applied to the result tensor with the higher rank must result in the
 /// operand tensor with the smaller rank.
 ///
 /// The representation for the output shape supports a partially-static
 /// specification via attributes specified through the `static_output_shape`
-/// argument.  A special sentinel value `ShapedType::kDynamic` encodes that the
-/// corresponding entry has a dynamic value.  There must be exactly as many SSA
-/// inputs in `output_shape` as there are `ShapedType::kDynamic` entries in
-/// `static_output_shape`.
+/// argument. A special sentinel value `ShapedType::kDynamic` encodes that the
+/// corresponding entry has a dynamic value. Both the number of SSA inputs in
+/// `output_shape` and the number of `ShapedType::kDynamic` entries in
+/// `static_output_shape` match the number of dynamic dimensions in the result
+/// type.
 ///
 /// Example:
 ///
@@ -440,9 +439,7 @@ pub struct FromElementsOp<'a> {
 ///     %out = memref.gather %source[%indices] gather_dims([1]) :
 ///       (memref<4x4xf32>, memref<?x 1xindex>) -> memref<? x memref<4x1xf32>>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("tensor.gather", results(result))]
+#[mlir::op("tensor.gather", format = "$source `[` $indices `]` `gather_dims` `(` $gather_dims `)` (`unique` $unique^)? attr-dict `:` functional-type($source $indices, $result)", results(result))]
 pub struct GatherOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -843,9 +840,7 @@ pub struct RankOp<'a> {
 /// %dst = tensor.reshape %src(%shape)
 ///          : (tensor<*xf32>, tensor<?xi32>) -> tensor<*xf32>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("tensor.reshape", results(result))]
+#[mlir::op("tensor.reshape", format = "$source `(` $shape `)` attr-dict `:` functional-type($source $shape, $result)", results(result))]
 pub struct ReshapeOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -954,9 +949,7 @@ pub struct ReshapeOp<'a> {
 ///       memref<? x memref<4xf32>>
 ///     some_side_effecting_op_writing_into %v, ...: memref<? x memref<4xf32>>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("tensor.scatter", results(result))]
+#[mlir::op("tensor.scatter", format = "$source `into` $dest `[` $indices `]` `scatter_dims` `(` $scatter_dims `)` (`unique` $unique^)? attr-dict `:` functional-type($source $dest $indices, $result)", results(result))]
 pub struct ScatterOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,

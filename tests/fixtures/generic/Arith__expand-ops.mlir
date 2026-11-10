@@ -215,18 +215,18 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (f16, f8E5M2FNUZ) -> f4E2M1FN, sym_name = "invalid_scaling_truncf_to_f4E2M1FN"}> ({
-  ^bb0(%arg0: f16, %arg1: f8E5M2FNUZ):
-    %0 = "arith.scaling_truncf"(%arg0, %arg1) : (f16, f8E5M2FNUZ) -> f4E2M1FN
-    "func.return"(%0) : (f4E2M1FN) -> ()
+  "func.func"() <{function_type = (f8E8M0FNU) -> f32, sym_name = "extf_f8E8M0FNU_to_f32"}> ({
+  ^bb0(%arg0: f8E8M0FNU):
+    %0 = "arith.extf"(%arg0) : (f8E8M0FNU) -> f32
+    "func.return"(%0) : (f32) -> ()
   }) : () -> ()
 }) : () -> ()
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (f8E8M0FNU) -> f32, sym_name = "extf_f8E8M0FNU_to_f32"}> ({
+  "func.func"() <{function_type = (f8E8M0FNU) -> f32, sym_name = "extf_f8E8M0FNU_to_f32_no_nan"}> ({
   ^bb0(%arg0: f8E8M0FNU):
-    %0 = "arith.extf"(%arg0) : (f8E8M0FNU) -> f32
+    %0 = "arith.extf"(%arg0) <{fastmath = #arith.fastmath<nnan>}> : (f8E8M0FNU) -> f32
     "func.return"(%0) : (f32) -> ()
   }) : () -> ()
 }) : () -> ()
@@ -281,15 +281,6 @@
   "func.func"() <{function_type = (f4E2M1FN, f16) -> f32, sym_name = "scaling_extf_to_f32_using_f16_scales"}> ({
   ^bb0(%arg0: f4E2M1FN, %arg1: f16):
     %0 = "arith.scaling_extf"(%arg0, %arg1) : (f4E2M1FN, f16) -> f32
-    "func.return"(%0) : (f32) -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (f4E2M1FN, f8E5M2FNUZ) -> f32, sym_name = "invalid_scaling_extf_to_f32"}> ({
-  ^bb0(%arg0: f4E2M1FN, %arg1: f8E5M2FNUZ):
-    %0 = "arith.scaling_extf"(%arg0, %arg1) : (f4E2M1FN, f8E5M2FNUZ) -> f32
     "func.return"(%0) : (f32) -> ()
   }) : () -> ()
 }) : () -> ()

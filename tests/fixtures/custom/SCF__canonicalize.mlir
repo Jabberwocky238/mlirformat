@@ -464,6 +464,23 @@ module {
 
 // -----
 module {
+  func.func @remove_while_zero_iteration_loop() -> i64 {
+    %0 = "test.init"() : () -> i32
+    %false = arith.constant false
+    %1 = scf.while (%arg0 = %0) : (i32) -> i64 {
+      %2 = "test.before"(%arg0) : (i32) -> i64
+      scf.condition(%false) %2 : i64
+    } do {
+    ^bb0(%arg0: i64):
+      %2 = "test.before"(%arg0) : (i64) -> i32
+      scf.yield %2 : i32
+    }
+    return %1 : i64
+  }
+}
+
+// -----
+module {
   func.func @remove_zero_iteration_loop_vals(%arg0: index) {
     %c2 = arith.constant 2 : index
     %0 = "test.init"() : () -> i32
@@ -646,6 +663,27 @@ module {
       scf.yield %1 : index
     }
     return %0 : index
+  }
+}
+
+// -----
+module {
+  func.func @cond_prop_then(%arg0: i1) {
+    scf.if %arg0 {
+      "test.use"(%arg0) : (i1) -> ()
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @cond_prop_else(%arg0: i1) {
+    scf.if %arg0 {
+    } else {
+      "test.use"(%arg0) : (i1) -> ()
+    }
+    return
   }
 }
 
@@ -1467,7 +1505,7 @@ module {
   func.func @scf_for_all_step_size_0() {
     %c0 = arith.constant 0 : index
     scf.forall (%arg0, %arg1) = (0, 4) to (1, 5) step (%c0, 8) {
-      vector.print %c0 : index
+      vector.print %arg0 : index
     }
     return
   }
@@ -1512,6 +1550,23 @@ module {
       scf.yield %arg7, %arg8, %arg7 : i32, i32, i32
     }
     return %0#0, %0#1, %0#2 : i32, i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @fold_tensor_cast_into_forall_non_sequential_writes(%arg0: tensor<8x32xf32>, %arg1: tensor<8x32xf32>) -> (tensor<?x32xf32>, tensor<?x32xf32>) {
+    %c8 = arith.constant 8 : index
+    %c32 = arith.constant 32 : index
+    %0 = tensor.empty(%c32) : tensor<?x32xf32>
+    %1:2 = scf.forall (%arg2) in (4) shared_outs(%arg3 = %0, %arg4 = %0) -> (tensor<?x32xf32>, tensor<?x32xf32>) {
+      %2 = arith.muli %c8, %arg2 : index
+      scf.forall.in_parallel {
+        tensor.parallel_insert_slice %arg0 into %arg4[%2, 0] [8, 32] [1, 1] : tensor<8x32xf32> into tensor<?x32xf32>
+        tensor.parallel_insert_slice %arg1 into %arg3[%2, 0] [8, 32] [1, 1] : tensor<8x32xf32> into tensor<?x32xf32>
+      }
+    }
+    return %1#0, %1#1 : tensor<?x32xf32>, tensor<?x32xf32>
   }
 }
 

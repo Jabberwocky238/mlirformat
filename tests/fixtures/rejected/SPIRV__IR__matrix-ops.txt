@@ -1,17 +1,21 @@
-1	verify	'spirv.MatrixTimesScalar' op input matrix components' type and scaling value must have the same type
-2	verify	'spirv.MatrixTimesScalar' op input matrix components' type and scaling value must have the same type
-3	verify	input matrix rows count must be equal to output matrix columns count
-4	verify	input matrix rows count must be equal to output matrix columns count
-5	verify	input and output matrices must have the same component type
-6	verify	right and result matrices must have equal columns' count
-7	verify	left and result matrices must have equal rows' count
-8	verify	left matrix columns' count must be equal to the right matrix rows' count
-9	verify	right and result matrices' component type must be the same
-10	verify	left and result matrices' component type must be the same
+1	verify	'spirv.MatrixTimesScalar' op failed to verify that all of {matrix, scalar} have same element type
+2	verify	'spirv.MatrixTimesScalar' op failed to verify that all of {matrix, scalar} have same element type
+3	verify	'spirv.Transpose' op failed to verify that matrix rows count matches result columns count
+4	verify	'spirv.Transpose' op failed to verify that matrix rows count matches result columns count
+5	verify	'spirv.Transpose' op failed to verify that all of {matrix, result} have same element type
+6	verify	'spirv.MatrixTimesMatrix' op failed to verify that rightmatrix columns count matches result columns count
+7	verify	'spirv.MatrixTimesMatrix' op failed to verify that leftmatrix rows count matches result rows count
+8	verify	'spirv.MatrixTimesMatrix' op failed to verify that leftmatrix columns count matches rightmatrix rows count
+9	verify	'spirv.MatrixTimesMatrix' op failed to verify that all of {leftmatrix, rightmatrix, result} have same element type
+10	verify	'spirv.MatrixTimesMatrix' op failed to verify that all of {leftmatrix, rightmatrix, result} have same element type
 11	verify	'spirv.MatrixTimesVector' op failed to verify that all of {vector, result} have same element type
-12	verify	'spirv.MatrixTimesVector' op result size (4) must match the matrix rows (3)
-13	verify	'spirv.MatrixTimesVector' op matrix columns (4) must match vector operand size (3)
-14	verify	'spirv.VectorTimesMatrix' op number of components in vector must equal the number of components in each column in matrix
-15	verify	'spirv.VectorTimesMatrix' op number of columns in matrix must equal the number of components in result
-16	verify	'spirv.VectorTimesMatrix' op failed to verify that all of {vector, result} have same element type
-17	verify	'spirv.VectorTimesMatrix' op matrix must be a matrix with the same component type as the component type in result
+12	verify	'spirv.MatrixTimesVector' op failed to verify that all of {matrix, result} have same element type
+13	verify	'spirv.MatrixTimesVector' op failed to verify that matrix rows count matches result elements count
+14	verify	'spirv.MatrixTimesVector' op failed to verify that matrix columns count matches vector elements count
+15	verify	'spirv.VectorTimesMatrix' op failed to verify that matrix rows count matches vector elements count
+16	verify	'spirv.VectorTimesMatrix' op failed to verify that matrix columns count matches result elements count
+17	verify	'spirv.VectorTimesMatrix' op failed to verify that all of {vector, result} have same element type
+18	verify	'spirv.VectorTimesMatrix' op failed to verify that all of {matrix, result} have same element type
+19	verify	'spirv.OuterProduct' op failed to verify that all of {vector1, vector2, result} have same element type
+20	verify	'spirv.OuterProduct' op failed to verify that result rows count matches vector1 elements count
+21	verify	'spirv.OuterProduct' op failed to verify that result columns count matches vector2 elements count

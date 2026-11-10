@@ -397,69 +397,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (memref<?xf32>, memref<?xf32>) -> (), sym_name = "invalid_schedule"}> ({
-  ^bb0(%arg0: memref<?xf32>, %arg1: memref<?xf32>):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %3 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
-    "scf.for"(%0, %2, %1) ({
-    ^bb0(%arg2: index):
-      %4 = "memref.load"(%arg0, %arg2) {__test_pipelining_op_order__ = 2 : i64, __test_pipelining_stage__ = 0 : i64} : (memref<?xf32>, index) -> f32
-      %5 = "arith.addf"(%4, %3) <{fastmath = #arith.fastmath<none>}> {__test_pipelining_op_order__ = 0 : i64, __test_pipelining_stage__ = 2 : i64} : (f32, f32) -> f32
-      "memref.store"(%5, %arg1, %arg2) {__test_pipelining_op_order__ = 1 : i64, __test_pipelining_stage__ = 1 : i64} : (f32, memref<?xf32>, index) -> ()
-      "scf.yield"() : () -> ()
-    }) {__test_pipelining_loop__} : (index, index, index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (memref<?xf32>, memref<?xf32>) -> (), sym_name = "invalid_schedule2"}> ({
-  ^bb0(%arg0: memref<?xf32>, %arg1: memref<?xf32>):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %3 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
-    %4 = "scf.for"(%0, %2, %1, %0) ({
-    ^bb0(%arg2: index, %arg3: index):
-      %5 = "memref.load"(%arg0, %arg3) {__test_pipelining_op_order__ = 0 : i64, __test_pipelining_stage__ = 0 : i64} : (memref<?xf32>, index) -> f32
-      %6 = "arith.addi"(%arg3, %1) <{overflowFlags = #arith.overflow<none>}> {__test_pipelining_op_order__ = 1 : i64, __test_pipelining_stage__ = 1 : i64} : (index, index) -> index
-      "memref.store"(%5, %arg1, %arg3) {__test_pipelining_op_order__ = 2 : i64, __test_pipelining_stage__ = 2 : i64} : (f32, memref<?xf32>, index) -> ()
-      "scf.yield"(%6) : (index) -> ()
-    }) {__test_pipelining_loop__} : (index, index, index, index) -> index
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (memref<?xf32>, memref<?xf32>, index) -> (), sym_name = "invalid_schedule3"}> ({
-  ^bb0(%arg0: memref<?xf32>, %arg1: memref<?xf32>, %arg2: index):
-    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %2 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %3 = "scf.for"(%0, %2, %1, %0) ({
-    ^bb0(%arg3: index, %arg4: index):
-      %4 = "arith.cmpi"(%arg2, %2) <{predicate = 2 : i64}> {__test_pipelining_op_order__ = 0 : i64, __test_pipelining_stage__ = 0 : i64} : (index, index) -> i1
-      %5 = "scf.if"(%4) ({
-        %8 = "arith.addi"(%arg4, %1) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-        "scf.yield"(%8) : (index) -> ()
-      }, {
-        "scf.yield"(%arg4) : (index) -> ()
-      }) {__test_pipelining_op_order__ = 1 : i64, __test_pipelining_stage__ = 0 : i64} : (i1) -> index
-      %6 = "memref.load"(%arg0, %5) {__test_pipelining_op_order__ = 2 : i64, __test_pipelining_stage__ = 0 : i64} : (memref<?xf32>, index) -> f32
-      %7 = "arith.addi"(%5, %1) <{overflowFlags = #arith.overflow<none>}> {__test_pipelining_op_order__ = 3 : i64, __test_pipelining_stage__ = 1 : i64} : (index, index) -> index
-      "memref.store"(%6, %arg1, %5) {__test_pipelining_op_order__ = 4 : i64, __test_pipelining_stage__ = 2 : i64} : (f32, memref<?xf32>, index) -> ()
-      "scf.yield"(%7) : (index) -> ()
-    }) {__test_pipelining_loop__} : (index, index, index, index) -> index
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = (memref<?xf32>, memref<?xf32>) -> (), sym_name = "invalid_loop_step"}> ({
   ^bb0(%arg0: memref<?xf32>, %arg1: memref<?xf32>):
     %0 = "arith.constant"() <{value = 0 : index}> : () -> index

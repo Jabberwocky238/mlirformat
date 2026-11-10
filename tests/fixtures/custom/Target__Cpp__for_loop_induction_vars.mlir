@@ -13,7 +13,7 @@ module {
     }
     emitc.for %arg0 = %0 to %1 step %2 {
       for %arg1 = %0 to %1 step %2 {
-        %5 = call_opaque "f"() : () -> i32
+        %5 = call_opaque "f"()  : () -> i32
       }
     }
     return
@@ -36,7 +36,7 @@ module {
                           for %arg11 = %0 to %1 step %2 {
                             for %arg12 = %0 to %1 step %2 {
                               for %arg13 = %0 to %1 step %2 {
-                                %3 = call_opaque "f"() : () -> i32
+                                %3 = call_opaque "f"()  : () -> i32
                               }
                             }
                           }

@@ -24,13 +24,13 @@
   "func.func"() <{function_type = (tensor<256x256xf32>) -> tensor<256x256xf32>, sym_name = "unpack_empty"}> ({
   ^bb0(%arg4: tensor<256x256xf32>):
     %5 = "tensor.empty"() : () -> tensor<8x8x32x32xf32>
-    %6 = "linalg.unpack"(%5, %arg4) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 32>}> : (tensor<8x8x32x32xf32>, tensor<256x256xf32>) -> tensor<256x256xf32>
+    %6 = "linalg.unpack"(%5, %arg4) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<8x8x32x32xf32>, tensor<256x256xf32>) -> tensor<256x256xf32>
     "func.return"(%6) : (tensor<256x256xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<?x?xf32>, index, index) -> tensor<?x?xf32>, sym_name = "unpack_empty_dynamic"}> ({
   ^bb0(%arg1: tensor<?x?xf32>, %arg2: index, %arg3: index):
     %3 = "tensor.empty"(%arg2, %arg3) : (index, index) -> tensor<?x?x32x32xf32>
-    %4 = "linalg.unpack"(%3, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 32>}> : (tensor<?x?x32x32xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
+    %4 = "linalg.unpack"(%3, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<?x?x32x32xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
     "func.return"(%4) : (tensor<?x?xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<8x8x32x32xf32>) -> tensor<8x8x32x32xf32>, sym_name = "pack_padded_empty"}> ({

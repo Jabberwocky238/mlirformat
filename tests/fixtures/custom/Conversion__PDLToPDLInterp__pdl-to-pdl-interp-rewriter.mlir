@@ -170,3 +170,11 @@ module @range_op {
   }
 }
 
+// -----
+module @named_pattern {
+  pdl.pattern @my_pattern : benefit(1) {
+    %0 = operation "foo.op" 
+    rewrite %0 with "rewriter"
+  }
+}
+

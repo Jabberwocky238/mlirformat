@@ -6,16 +6,16 @@ module @gemm attributes {gpu.container_module} {
       %c64_i32_0 = arith.constant 64 : i32
       %c0_i32 = arith.constant 0 : i32
       %c0_i32_1 = arith.constant 0 : i32
-      %0 = xevm.blockload2d %arg0, %c64_i32, %c8_i32, %c64_i32_0, %c0_i32, %c0_i32_1 <{elem_size_in_bits = 32 : i32, pack_register = false, tile_height = 8 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi32>
+      %0 = xevm.blockload2d %arg0, %c64_i32, %c8_i32, %c64_i32_0, %c0_i32, %c0_i32_1 <{cache_control = #xevm.load_cache_control<L1c_L2c_L3c>, elem_size_in_bits = 32 : i32, pack_register = false, tile_height = 8 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi32>
       %1 = vector.bitcast %0 : vector<8xi32> to vector<8xf32>
       %c0 = arith.constant 0 : index
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %2 = arith.index_cast %thread_id_x : index to i64
       %3 = llvm.trunc %2 : i64 to i32
       %4 = arith.sitofp %3 : i32 to f32
       %5 = vector.insert %4, %1 [%c0] : f32 into vector<8xf32>
       %6 = vector.bitcast %5 : vector<8xf32> to vector<8xi32>
-      xevm.blockstore2d %arg1, %c64_i32, %c8_i32, %c64_i32_0, %c0_i32, %c0_i32_1, %6 <{elem_size_in_bits = 32 : i32, tile_height = 8 : i32, tile_width = 16 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>)
+      xevm.blockstore2d %arg1, %c64_i32, %c8_i32, %c64_i32_0, %c0_i32, %c0_i32_1, %6 <{cache_control = #xevm.store_cache_control<L1wt_L2uc_L3wb>, elem_size_in_bits = 32 : i32, tile_height = 8 : i32, tile_width = 16 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>)
       gpu.return
     }
   }

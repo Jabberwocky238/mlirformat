@@ -12,7 +12,7 @@
     }) : () -> ()
     "irdl.operation"() <{sym_name = "any"}> ({
       %0 = "irdl.any"() : () -> !irdl.attribute
-      "irdl.results"(%0) <{names = ["foo"], variadicity = #irdl<variadicity_array[ single]>}> : (!irdl.attribute) -> ()
+      "irdl.results"(%0) <{names = ["foo"], variadicity = #irdl<variadicity_array[single]>}> : (!irdl.attribute) -> ()
     }) : () -> ()
   }) : () -> ()
 }) : () -> ()

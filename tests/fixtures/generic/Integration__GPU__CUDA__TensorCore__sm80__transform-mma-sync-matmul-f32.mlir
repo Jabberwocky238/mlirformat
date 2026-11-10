@@ -72,7 +72,7 @@
         "linalg.yield"(%16) : (f32) -> ()
       }) : (memref<16x4xf32>, memref<4x8xf32>, memref<16x8xf32>) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%14) <{callee = @printMemrefF32}> : (memref<*xf32>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

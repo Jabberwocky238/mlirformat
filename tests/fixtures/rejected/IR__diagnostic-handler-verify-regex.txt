@@ -1,1 +1,0 @@
-2	verify	'func.return' op has 0 operands, but enclosing function (@foo) returns 1

@@ -209,3 +209,26 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+#map1 = affine_map<(d0, d1) -> (d0 + d1)>
+module {
+  func.func @masked_contiguous_extract_rank_reducing_mask(%arg0: tensor<16xf32>, %arg1: tensor<1x3xf32>, %arg2: index) -> tensor<1x3xf32> {
+    %0 = linalg.generic {indexing_maps = [#map], iterator_types = ["parallel", "parallel"]} outs(%arg1 : tensor<1x3xf32>) {
+    ^bb0(%out: f32):
+      %1 = linalg.index 1 : index
+      %2 = affine.apply #map1(%1, %arg2)
+      %extracted = tensor.extract %arg0[%2] : tensor<16xf32>
+      linalg.yield %extracted : f32
+    } -> tensor<1x3xf32>
+    return %0 : tensor<1x3xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      transform.structured.vectorize %0 vector_sizes [1, 4] {vectorize_nd_extract} : !transform.any_op
+      transform.yield 
+    }
+  }
+}
+

@@ -3,6 +3,21 @@
 
 use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
+#[serde(crate = "mlirformat::__serde")]
+pub enum RoundingMode {
+    #[serde(rename = "to_nearest_even")]
+    ToNearestEven,
+    #[serde(rename = "downward")]
+    Downward,
+    #[serde(rename = "upward")]
+    Upward,
+    #[serde(rename = "toward_zero")]
+    TowardZero,
+    #[serde(rename = "to_nearest_away")]
+    ToNearestAway,
+}
+
 /// `math.absf`: floating point absolute-value operation
 ///
 /// The `absf` operation computes the absolute value. It takes one operand of
@@ -275,8 +290,9 @@ pub struct CeilOp<'a> {
 ///
 /// The semantics of the operation are described by:
 /// ```text
-///   clampf(value, min, max) = maxf(minf(value, min), max)
+///   clampf(value, min, max) = maxf(minf(value, max), min)
 /// ```
+/// If `min > max` the resulting value is poison.
 ///
 /// Example:
 ///
@@ -535,7 +551,7 @@ pub struct ExpOp<'a> {
 /// The operation is elementwise for non-scalars, e.g.:
 ///
 /// ```mlir
-/// %v = math.fpowi %base, %power : vector<2xf32>, vector<2xi32
+/// %v = math.fpowi %base, %power : vector<2xf32>, vector<2xi32>
 /// ```
 ///
 /// The result is a vector of:
@@ -594,13 +610,17 @@ pub struct FloorOp<'a> {
 /// ```mlir
 /// // Scalar fused multiply-add: d = a*b + c
 /// %d = math.fma %a, %b, %c : f64
+///
+/// // With an explicit IEEE-754 rounding mode.
+/// %e = math.fma %a, %b, %c to_nearest_even : f64
 /// ```
 ///
 /// The semantics of the operation correspond to those of the `llvm.fma`
-/// [intrinsic](https://llvm.org/docs/LangRef.html#llvm-fma-intrinsic). In the
-/// particular case of lowering to LLVM, this is guaranteed to lower
-/// to the `llvm.fma.*` intrinsic.
-#[mlir::op("math.fma", format = "$a `,` $b `,` $c (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+/// [intrinsic](https://llvm.org/docs/LangRef.html#llvm-fma-intrinsic). When
+/// no rounding mode is set, lowering to LLVM is guaranteed to produce the
+/// `llvm.fma.*` intrinsic. When a rounding mode is set, the LLVM lowering
+/// instead produces `llvm.experimental.constrained.fma`.
+#[mlir::op("math.fma", format = "$a `,` $b `,` $c ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct FmaOp<'a> {
     #[slot(result)]
     pub a: Value<'a>,
@@ -610,6 +630,8 @@ pub struct FmaOp<'a> {
     pub c: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
     pub result: Type<'a>,
 }
 

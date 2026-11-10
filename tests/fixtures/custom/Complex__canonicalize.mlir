@@ -159,35 +159,65 @@ module {
     %1 = arith.bitcast %0 : i64 to f64
     return %1 : f64
   }
-  func.func @div_one_f16(%arg0: f16, %arg1: f16) -> complex<f16> {
-    %0 = complex.create %arg0, %arg1 : complex<f16>
-    %cst = complex.constant [1.000000e+00 : f16, 0.000000e+00 : f16] : complex<f16>
-    %1 = complex.div %0, %cst : complex<f16>
-    return %1 : complex<f16>
+  func.func @div_one_f16() -> complex<f16> {
+    %cst = complex.constant [1.000000e+00 : f16, 2.000000e+00 : f16] : complex<f16>
+    %cst_0 = complex.constant [1.000000e+00 : f16, 0.000000e+00 : f16] : complex<f16>
+    %0 = complex.div %cst, %cst_0 : complex<f16>
+    return %0 : complex<f16>
   }
-  func.func @div_one_f32(%arg0: f32, %arg1: f32) -> complex<f32> {
+  func.func @div_one_f32() -> complex<f32> {
+    %cst = complex.constant [1.000000e+00 : f32, 2.000000e+00 : f32] : complex<f32>
+    %cst_0 = complex.constant [1.000000e+00 : f32, 0.000000e+00 : f32] : complex<f32>
+    %0 = complex.div %cst, %cst_0 : complex<f32>
+    return %0 : complex<f32>
+  }
+  func.func @div_one_f64() -> complex<f64> {
+    %cst = complex.constant [1.000000e+00, 2.000000e+00] : complex<f64>
+    %cst_0 = complex.constant [1.000000e+00, 0.000000e+00] : complex<f64>
+    %0 = complex.div %cst, %cst_0 : complex<f64>
+    return %0 : complex<f64>
+  }
+  func.func @div_one_f80() -> complex<f80> {
+    %cst = complex.constant [1.000000e+00 : f80, 2.000000e+00 : f80] : complex<f80>
+    %cst_0 = complex.constant [1.000000e+00 : f80, 0.000000e+00 : f80] : complex<f80>
+    %0 = complex.div %cst, %cst_0 : complex<f80>
+    return %0 : complex<f80>
+  }
+  func.func @div_one_f128() -> complex<f128> {
+    %cst = complex.constant [1.000000e+00 : f128, 2.000000e+00 : f128] : complex<f128>
+    %cst_0 = complex.constant [1.000000e+00 : f128, 0.000000e+00 : f128] : complex<f128>
+    %0 = complex.div %cst, %cst_0 : complex<f128>
+    return %0 : complex<f128>
+  }
+  func.func @div_op_with_rhs_has_nan_real() -> complex<f32> {
+    %cst = complex.constant [0x7FFFFFFF : f32, 1.000000e+00 : f32] : complex<f32>
+    %cst_0 = complex.constant [1.000000e+00 : f32, 0.000000e+00 : f32] : complex<f32>
+    %0 = complex.div %cst, %cst_0 : complex<f32>
+    return %0 : complex<f32>
+  }
+  func.func @div_op_with_rhs_has_nan_imag() -> complex<f32> {
+    %cst = complex.constant [1.000000e+00 : f32, 0x7FFFFFFF : f32] : complex<f32>
+    %cst_0 = complex.constant [1.000000e+00 : f32, 0.000000e+00 : f32] : complex<f32>
+    %0 = complex.div %cst, %cst_0 : complex<f32>
+    return %0 : complex<f32>
+  }
+  func.func @div_op_with_rhs_has_nan_real_imag() -> complex<f32> {
+    %cst = complex.constant [0x7FFFFFFF : f32, 0x7FFFFFFF : f32] : complex<f32>
+    %cst_0 = complex.constant [1.000000e+00 : f32, 0.000000e+00 : f32] : complex<f32>
+    %0 = complex.div %cst, %cst_0 : complex<f32>
+    return %0 : complex<f32>
+  }
+  func.func @div_op_non_constant_lhs_with_fast_math(%arg0: f32, %arg1: f32) -> complex<f32> {
+    %0 = complex.create %arg0, %arg1 : complex<f32>
+    %cst = complex.constant [1.000000e+00 : f32, 0.000000e+00 : f32] : complex<f32>
+    %1 = complex.div %0, %cst fastmath<nnan> : complex<f32>
+    return %1 : complex<f32>
+  }
+  func.func @div_op_non_constant_lhs_without_fast_math(%arg0: f32, %arg1: f32) -> complex<f32> {
     %0 = complex.create %arg0, %arg1 : complex<f32>
     %cst = complex.constant [1.000000e+00 : f32, 0.000000e+00 : f32] : complex<f32>
     %1 = complex.div %0, %cst : complex<f32>
     return %1 : complex<f32>
-  }
-  func.func @div_one_f64(%arg0: f64, %arg1: f64) -> complex<f64> {
-    %0 = complex.create %arg0, %arg1 : complex<f64>
-    %cst = complex.constant [1.000000e+00, 0.000000e+00] : complex<f64>
-    %1 = complex.div %0, %cst : complex<f64>
-    return %1 : complex<f64>
-  }
-  func.func @div_one_f80(%arg0: f80, %arg1: f80) -> complex<f80> {
-    %0 = complex.create %arg0, %arg1 : complex<f80>
-    %cst = complex.constant [1.000000e+00 : f80, 0.000000e+00 : f80] : complex<f80>
-    %1 = complex.div %0, %cst : complex<f80>
-    return %1 : complex<f80>
-  }
-  func.func @div_one_f128(%arg0: f128, %arg1: f128) -> complex<f128> {
-    %0 = complex.create %arg0, %arg1 : complex<f128>
-    %cst = complex.constant [1.000000e+00 : f128, 0.000000e+00 : f128] : complex<f128>
-    %1 = complex.div %0, %cst : complex<f128>
-    return %1 : complex<f128>
   }
 }
 

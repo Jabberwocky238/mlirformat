@@ -1,0 +1,23 @@
+module {
+  spirv.module Logical OpenCL requires #spirv.vce<v1.2, [Kernel, Addresses, Linkage], []> {
+    spirv.SpecConstant @sc_align = 16 : i32
+    spirv.GlobalVariable @var {alignment_id = @sc_align} : !spirv.ptr<f32, CrossWorkgroup>
+  }
+}
+
+// -----
+module {
+  spirv.module Logical OpenCL requires #spirv.vce<v1.2, [Kernel, Addresses, Linkage], []> {
+    spirv.SpecConstant @sc_offset = 1024 : i32
+    spirv.GlobalVariable @var {max_byte_offset_id = @sc_offset} : !spirv.ptr<f32, CrossWorkgroup>
+  }
+}
+
+// -----
+module {
+  spirv.module Logical GLSL450 requires #spirv.vce<v1.4, [Shader, Linkage], [SPV_GOOGLE_hlsl_functionality1]> {
+    spirv.GlobalVariable @counter bind(0, 1) : !spirv.ptr<!spirv.struct<(!spirv.array<1 x i32, stride=4> [0])>, StorageBuffer>
+    spirv.GlobalVariable @var bind(0, 0) {counter_buffer = @counter} : !spirv.ptr<!spirv.struct<(!spirv.array<4 x f32, stride=4> [0])>, StorageBuffer>
+  }
+}
+

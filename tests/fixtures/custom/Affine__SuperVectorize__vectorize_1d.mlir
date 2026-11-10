@@ -445,3 +445,15 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @index_const_inside_loop(%arg0: memref<1x8xi32>) {
+    affine.for %arg1 = 0 to 8 {
+      %c0_i32 = arith.constant 0 : i32
+      %c0 = arith.constant 0 : index
+      affine.store %c0_i32, %arg0[%c0, %arg1] : memref<1x8xi32>
+    }
+    return
+  }
+}
+

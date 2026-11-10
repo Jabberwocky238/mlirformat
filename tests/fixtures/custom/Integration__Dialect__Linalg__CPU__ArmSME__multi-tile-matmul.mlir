@@ -21,21 +21,19 @@ module {
     return
   }
   module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.consumed}) {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.matmul"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %tiled_linalg_op, %loops:3 = transform.structured.tile_using_for %0 tile_sizes [[8], [8], 4] : (!transform.any_op) -> (!transform.any_op, !transform.op<"scf.for">, !transform.op<"scf.for">, !transform.op<"scf.for">)
-      transform.structured.vectorize %tiled_linalg_op vector_sizes [[8], [8], 4] : !transform.any_op
-      %1 = transform.bufferization.one_shot_bufferize %arg0 {bufferize_function_boundaries = true} : (!transform.any_op) -> !transform.any_op
-      %2 = transform.structured.match ops{["func.func"]} in %1 : (!transform.any_op) -> !transform.any_op
-      transform.apply_patterns to %2 {
+      transform.structured.vectorize %tiled_linalg_op vector_sizes [[8], [8], 4] {create_named_contraction} : !transform.any_op
+      transform.apply_patterns to %loops#2 {
         transform.apply_patterns.vector.lower_masked_transfers
+      } : !transform.op<"scf.for">
+      transform.apply_licm to %loops#2 : !transform.op<"scf.for">
+      transform.loop.hoist_loop_invariant_subsets %loops#2 : !transform.op<"scf.for">
+      transform.apply_patterns to %1 {
         transform.apply_patterns.vector.transfer_permutation_patterns
-        transform.apply_patterns.vector.reduction_to_contract
-      } : !transform.any_op
-      transform.apply_patterns to %2 {
         transform.apply_patterns.vector.lower_contraction
-        transform.apply_patterns.vector.lower_masks
-        transform.apply_patterns.vector.rank_reducing_subview_patterns
       } : !transform.any_op
       transform.yield 
     }

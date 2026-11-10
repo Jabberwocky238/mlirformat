@@ -1,6 +1,6 @@
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (memref<i32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<i32>) -> (), kernel}> ({
     ^bb0(%arg0: memref<i32>):
       %7 = "arith.constant"() <{value = 0 : i32}> : () -> i32
       %8 = "arith.constant"() <{value = 1 : i32}> : () -> i32
@@ -14,7 +14,7 @@
         "scf.yield"() : () -> ()
       }) : () -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "kernel", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "kernel"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
     %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32

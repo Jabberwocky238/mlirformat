@@ -1,4 +1,62 @@
 "builtin.module"() ({
+  "func.func"() <{function_type = (vector<2xi1>) -> i1, sym_name = "any_vector2"}> ({
+  ^bb0(%arg0: vector<2xi1>):
+    %0 = "spirv.Any"(%arg0) : (vector<2xi1>) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<3xi1>) -> i1, sym_name = "any_vector3"}> ({
+  ^bb0(%arg0: vector<3xi1>):
+    %0 = "spirv.Any"(%arg0) : (vector<3xi1>) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xi1>) -> i1, sym_name = "any_vector4"}> ({
+  ^bb0(%arg0: vector<4xi1>):
+    %0 = "spirv.Any"(%arg0) : (vector<4xi1>) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<2xi1>) -> i1, sym_name = "all_vector2"}> ({
+  ^bb0(%arg0: vector<2xi1>):
+    %0 = "spirv.All"(%arg0) : (vector<2xi1>) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<3xi1>) -> i1, sym_name = "all_vector3"}> ({
+  ^bb0(%arg0: vector<3xi1>):
+    %0 = "spirv.All"(%arg0) : (vector<3xi1>) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xi1>) -> i1, sym_name = "all_vector4"}> ({
+  ^bb0(%arg0: vector<4xi1>):
+    %0 = "spirv.All"(%arg0) : (vector<4xi1>) -> i1
+    "func.return"(%0) : (i1) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (i32, i32) -> i1, sym_name = "iequal_scalar"}> ({
   ^bb0(%arg0: i32, %arg1: i32):
     %0 = "spirv.IEqual"(%arg0, %arg1) : (i32, i32) -> i1
@@ -55,13 +113,27 @@
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (f32) -> i1, sym_name = "isnan_scalar"}> ({
-  ^bb0(%arg6: f32):
-    %4 = "spirv.IsNan"(%arg6) : (f32) -> i1
-    "func.return"(%4) : (i1) -> ()
+  ^bb0(%arg1: f32):
+    %1 = "spirv.IsNan"(%arg1) : (f32) -> i1
+    "func.return"(%1) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<2xf32>) -> vector<2xi1>, sym_name = "isnan_vector"}> ({
+  ^bb0(%arg0: vector<2xf32>):
+    %0 = "spirv.IsNan"(%arg0) : (vector<2xf32>) -> vector<2xi1>
+    "func.return"(%0) : (vector<2xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> i1, sym_name = "isnormal_scalar"}> ({
+  ^bb0(%arg6: f32):
+    %4 = "spirv.IsNormal"(%arg6) : (f32) -> i1
+    "func.return"(%4) : (i1) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<2xf32>) -> vector<2xi1>, sym_name = "isnormal_vector"}> ({
   ^bb0(%arg5: vector<2xf32>):
-    %3 = "spirv.IsNan"(%arg5) : (vector<2xf32>) -> vector<2xi1>
+    %3 = "spirv.IsNormal"(%arg5) : (vector<2xf32>) -> vector<2xi1>
     "func.return"(%3) : (vector<2xi1>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1, i1, i1) -> (), sym_name = "logicalBinary"}> ({
@@ -102,52 +174,67 @@
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (i1) -> (), sym_name = "select_op_bool"}> ({
-  ^bb0(%arg6: i1):
-    %18 = "spirv.Constant"() <{value = true}> : () -> i1
-    %19 = "spirv.Constant"() <{value = false}> : () -> i1
-    %20 = "spirv.Select"(%arg6, %18, %19) : (i1, i1, i1) -> i1
+  ^bb0(%arg15: i1):
+    %21 = "spirv.Constant"() <{value = true}> : () -> i1
+    %22 = "spirv.Constant"() <{value = false}> : () -> i1
+    %23 = "spirv.Select"(%arg15, %21, %22) : (i1, i1, i1) -> i1
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1) -> (), sym_name = "select_op_int"}> ({
-  ^bb0(%arg5: i1):
-    %15 = "spirv.Constant"() <{value = 2 : i32}> : () -> i32
-    %16 = "spirv.Constant"() <{value = 3 : i32}> : () -> i32
-    %17 = "spirv.Select"(%arg5, %15, %16) : (i1, i32, i32) -> i32
+  ^bb0(%arg14: i1):
+    %18 = "spirv.Constant"() <{value = 2 : i32}> : () -> i32
+    %19 = "spirv.Constant"() <{value = 3 : i32}> : () -> i32
+    %20 = "spirv.Select"(%arg14, %18, %19) : (i1, i32, i32) -> i32
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1) -> (), sym_name = "select_op_float"}> ({
-  ^bb0(%arg4: i1):
-    %12 = "spirv.Constant"() <{value = 2.000000e+00 : f32}> : () -> f32
-    %13 = "spirv.Constant"() <{value = 3.000000e+00 : f32}> : () -> f32
-    %14 = "spirv.Select"(%arg4, %12, %13) : (i1, f32, f32) -> f32
+  ^bb0(%arg13: i1):
+    %15 = "spirv.Constant"() <{value = 2.000000e+00 : f32}> : () -> f32
+    %16 = "spirv.Constant"() <{value = 3.000000e+00 : f32}> : () -> f32
+    %17 = "spirv.Select"(%arg13, %15, %16) : (i1, f32, f32) -> f32
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1) -> (), sym_name = "select_op_bfloat16"}> ({
-  ^bb0(%arg3: i1):
-    %9 = "spirv.Constant"() <{value = 2.000000e+00 : bf16}> : () -> bf16
-    %10 = "spirv.Constant"() <{value = 3.000000e+00 : bf16}> : () -> bf16
-    %11 = "spirv.Select"(%arg3, %9, %10) : (i1, bf16, bf16) -> bf16
+  ^bb0(%arg12: i1):
+    %12 = "spirv.Constant"() <{value = 2.000000e+00 : bf16}> : () -> bf16
+    %13 = "spirv.Constant"() <{value = 3.000000e+00 : bf16}> : () -> bf16
+    %14 = "spirv.Select"(%arg12, %12, %13) : (i1, bf16, bf16) -> bf16
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1) -> (), sym_name = "select_op_ptr"}> ({
-  ^bb0(%arg2: i1):
-    %6 = "spirv.Variable"() <{storage_class = #spirv.storage_class<Function>}> : () -> !spirv.ptr<f32, Function>
-    %7 = "spirv.Variable"() <{storage_class = #spirv.storage_class<Function>}> : () -> !spirv.ptr<f32, Function>
-    %8 = "spirv.Select"(%arg2, %6, %7) : (i1, !spirv.ptr<f32, Function>, !spirv.ptr<f32, Function>) -> !spirv.ptr<f32, Function>
+  ^bb0(%arg11: i1):
+    %9 = "spirv.Variable"() <{storage_class = #spirv.storage_class<Function>}> : () -> !spirv.ptr<f32, Function>
+    %10 = "spirv.Variable"() <{storage_class = #spirv.storage_class<Function>}> : () -> !spirv.ptr<f32, Function>
+    %11 = "spirv.Select"(%arg11, %9, %10) : (i1, !spirv.ptr<f32, Function>, !spirv.ptr<f32, Function>) -> !spirv.ptr<f32, Function>
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1) -> (), sym_name = "select_op_vec"}> ({
-  ^bb0(%arg1: i1):
-    %3 = "spirv.Constant"() <{value = dense<[2.000000e+00, 3.000000e+00, 4.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
-    %4 = "spirv.Constant"() <{value = dense<[5.000000e+00, 6.000000e+00, 7.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
-    %5 = "spirv.Select"(%arg1, %3, %4) : (i1, vector<3xf32>, vector<3xf32>) -> vector<3xf32>
+  ^bb0(%arg10: i1):
+    %6 = "spirv.Constant"() <{value = dense<[2.000000e+00, 3.000000e+00, 4.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
+    %7 = "spirv.Constant"() <{value = dense<[5.000000e+00, 6.000000e+00, 7.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
+    %8 = "spirv.Select"(%arg10, %6, %7) : (i1, vector<3xf32>, vector<3xf32>) -> vector<3xf32>
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (vector<3xi1>) -> (), sym_name = "select_op_vec_condn_vec"}> ({
-  ^bb0(%arg0: vector<3xi1>):
-    %0 = "spirv.Constant"() <{value = dense<[2.000000e+00, 3.000000e+00, 4.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
-    %1 = "spirv.Constant"() <{value = dense<[5.000000e+00, 6.000000e+00, 7.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
-    %2 = "spirv.Select"(%arg0, %0, %1) : (vector<3xi1>, vector<3xf32>, vector<3xf32>) -> vector<3xf32>
+  ^bb0(%arg9: vector<3xi1>):
+    %3 = "spirv.Constant"() <{value = dense<[2.000000e+00, 3.000000e+00, 4.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
+    %4 = "spirv.Constant"() <{value = dense<[5.000000e+00, 6.000000e+00, 7.000000e+00]> : vector<3xf32>}> : () -> vector<3xf32>
+    %5 = "spirv.Select"(%arg9, %3, %4) : (vector<3xi1>, vector<3xf32>, vector<3xf32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i1, !spirv.array<4 x i32>, !spirv.array<4 x i32>) -> (), sym_name = "select_op_array"}> ({
+  ^bb0(%arg6: i1, %arg7: !spirv.array<4 x i32>, %arg8: !spirv.array<4 x i32>):
+    %2 = "spirv.Select"(%arg6, %arg7, %arg8) : (i1, !spirv.array<4 x i32>, !spirv.array<4 x i32>) -> !spirv.array<4 x i32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i1, !spirv.struct<(i32, i32)>, !spirv.struct<(i32, i32)>) -> (), sym_name = "select_op_struct"}> ({
+  ^bb0(%arg3: i1, %arg4: !spirv.struct<(i32, i32)>, %arg5: !spirv.struct<(i32, i32)>):
+    %1 = "spirv.Select"(%arg3, %arg4, %arg5) : (i1, !spirv.struct<(i32, i32)>, !spirv.struct<(i32, i32)>) -> !spirv.struct<(i32, i32)>
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i1, !spirv.matrix<4 x vector<3xf32>>, !spirv.matrix<4 x vector<3xf32>>) -> (), sym_name = "select_op_matrix"}> ({
+  ^bb0(%arg0: i1, %arg1: !spirv.matrix<4 x vector<3xf32>>, %arg2: !spirv.matrix<4 x vector<3xf32>>):
+    %0 = "spirv.Select"(%arg0, %arg1, %arg2) : (i1, !spirv.matrix<4 x vector<3xf32>>, !spirv.matrix<4 x vector<3xf32>>) -> !spirv.matrix<4 x vector<3xf32>>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

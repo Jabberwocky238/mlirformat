@@ -47,7 +47,7 @@ module {
 
 // -----
 module {
-  llvm.func internal fastcc @callee() -> i32 attributes {dso_local, function_entry_count = 42 : i64} {
+  llvm.func internal fastcc @callee() -> i32 attributes {dso_local} {
     %0 = llvm.mlir.constant(42 : i32) : i32
     llvm.return %0 : i32
   }
@@ -369,6 +369,32 @@ module {
 
 // -----
 module {
+  llvm.func @byval_aligned_arg(%arg0: !llvm.ptr {llvm.align = 16 : i64, llvm.byval = i32}) {
+    llvm.return
+  }
+  llvm.func @test_byval_memcpy_alignment(%arg0: !llvm.ptr) {
+    llvm.call @byval_aligned_arg(%arg0) : (!llvm.ptr) -> ()
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @byval_in_parallel(%arg0: !llvm.ptr {llvm.byval = f32}) {
+    llvm.return
+  }
+  llvm.func @test_byval_in_parallel_region(%arg0: !llvm.ptr) {
+    %c0 = arith.constant 0 : index
+    test.alloca_scope_region {
+      llvm.call @byval_in_parallel(%arg0) : (!llvm.ptr) -> ()
+      test.region_yield %c0 : index
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
   llvm.func @ignored_attrs(%arg0: !llvm.ptr {llvm.alignstack = 32 : i64, llvm.inreg, llvm.nocapture, llvm.nofree, llvm.nonnull, llvm.noundef, llvm.preallocated = i32, llvm.returned, llvm.writeonly}, %arg1: i32 {llvm.zeroext}) -> (!llvm.ptr {llvm.inreg, llvm.nonnull, llvm.noundef}) {
     llvm.return %arg0 : !llvm.ptr
   }
@@ -468,6 +494,30 @@ module {
   func.func @llvm_ret(%arg0: i32) -> i32 {
     %0 = call @func(%arg0) : (i32) -> i32
     return %0 : i32
+  }
+}
+
+// -----
+module {
+  llvm.func @callee_malformed_terminator() -> i64 attributes {llvm.emit_c_interface} {
+    "test.foo"() : () -> ()
+  }
+  llvm.func @caller_malformed_terminator() -> i64 attributes {llvm.emit_c_interface} {
+    %0 = llvm.call @callee_malformed_terminator() : () -> i64
+    llvm.return %0 : i64
+  }
+}
+
+// -----
+module {
+  llvm.func @callee_cf_br_terminator(%arg0: i64) -> i64 {
+    cf.br ^bb1(%arg0 : i64)
+  ^bb1(%0: i64):  // pred: ^bb0
+    llvm.return %0 : i64
+  }
+  llvm.func @caller_cf_br_terminator(%arg0: i64) -> i64 {
+    %0 = llvm.call @callee_cf_br_terminator(%arg0) : (i64) -> i64
+    llvm.return %0 : i64
   }
 }
 

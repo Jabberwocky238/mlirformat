@@ -84,3 +84,18 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "aliased_func", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.mlir.alias"() <{alias_type = !llvm.ptr, linkage = #llvm.linkage<external>, sym_name = "func_alias", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.addressof"() <{global_name = @aliased_func}> : () -> !llvm.ptr
+    "llvm.return"(%0) : (!llvm.ptr) -> ()
+  }) {addr_space = 0 : i32} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "caller", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @func_alias, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

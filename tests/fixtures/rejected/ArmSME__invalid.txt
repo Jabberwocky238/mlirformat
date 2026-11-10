@@ -11,12 +11,12 @@
 11	parse	use of value '%pad' expects different type than prior uses: 'f64' vs 'f32'
 12	parse	use of value '%mask' expects different type than prior uses: 'vector<[2]x[2]xi1>' vs 'vector<[4]x[4]xi1>'
 13	verify	'arm_sme.tile_load' op failed to verify that both `padding` and `mask` should be provided or neither
-14	verify	'arm_sme.tile_load' op operand #0 must be 2D memref of any type values, but got 'memref<?xf64>'
+14	verify	'arm_sme.tile_load' op operand #0 must be 2D memref of any non-token type values, but got 'memref<?xf64>'
 15	verify	'arm_sme.tile_load' op failed to verify that all of {result, base} have same element type
 16	verify	'arm_sme.load_tile_slice' op failed to verify that `mask` has i1 element type and the shape is a slice of `result`
 17	verify	'arm_sme.load_tile_slice' op failed to verify that all of {tile, base} have same element type
 18	parse	use of value '%mask' expects different type than prior uses: 'vector<[16]x[16]xi1>' vs 'vector<[1]x[1]xi1>'
-19	verify	'arm_sme.tile_store' op operand #1 must be 2D memref of any type values, but got 'memref<?xi8>'
+19	verify	'arm_sme.tile_store' op operand #1 must be 2D memref of any non-token type values, but got 'memref<?xi8>'
 20	verify	'arm_sme.tile_store' op failed to verify that all of {valueToStore, base} have same element type
 21	verify	'arm_sme.store_tile_slice' op failed to verify that `mask` has i1 element type and the shape is a slice of `tile`
 22	verify	'arm_sme.store_tile_slice' op failed to verify that all of {tile, base} have same element type

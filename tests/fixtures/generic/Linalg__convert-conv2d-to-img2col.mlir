@@ -2,56 +2,6 @@
 #map1 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d4, d5, d6, d3)>
 #map2 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d0, d1, d2, d3)>
 "builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?x?x?x?xf32>, tensor<3x3x4x16xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>, sym_name = "conv_non_static"}> ({
-  ^bb0(%arg1: tensor<?x?x?x?xf32>, %arg2: tensor<3x3x4x16xf32>, %arg3: tensor<?x?x?x?xf32>):
-    %2 = "linalg.conv_2d_nhwc_hwcf"(%arg1, %arg2, %arg3) <{dilations = dense<1> : tensor<2xi64>, operandSegmentSizes = array<i32: 2, 1>, strides = dense<1> : tensor<2xi64>}> ({
-    ^bb0(%arg4: f32, %arg5: f32, %arg6: f32):
-      %3 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %4 = "arith.addf"(%arg6, %3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%4) : (f32) -> ()
-    }) {linalg.memoized_indexing_maps = [#map, #map1, #map2]} : (tensor<?x?x?x?xf32>, tensor<3x3x4x16xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
-    "func.return"(%2) : (tensor<?x?x?x?xf32>) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.conv_2d_nhwc_hwcf"]}> : (!transform.any_op) -> !transform.any_op
-      %1:2 = "transform.structured.convert_conv2d_to_img2col"(%0) : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d0, d1 + d4, d2 + d5, d6)>
-#map1 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d3, d4, d5, d6)>
-#map2 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d0, d1, d2, d3)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (memref<1x16x16x4xf32>, memref<16x3x3x4xf32>, memref<1x14x14x16xf32>) -> (), sym_name = "negative_conv_memref"}> ({
-  ^bb0(%arg1: memref<1x16x16x4xf32>, %arg2: memref<16x3x3x4xf32>, %arg3: memref<1x14x14x16xf32>):
-    "linalg.conv_2d_nhwc_fhwc"(%arg1, %arg2, %arg3) <{dilations = dense<1> : memref<2xi64>, operandSegmentSizes = array<i32: 2, 1>, strides = dense<1> : memref<2xi64>}> ({
-    ^bb0(%arg4: f32, %arg5: f32, %arg6: f32):
-      %2 = "arith.mulf"(%arg4, %arg5) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      %3 = "arith.addf"(%arg6, %2) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
-      "linalg.yield"(%3) : (f32) -> ()
-    }) {linalg.memoized_indexing_maps = [#map, #map1, #map2]} : (memref<1x16x16x4xf32>, memref<16x3x3x4xf32>, memref<1x14x14x16xf32>) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.conv_2d_nhwc_fhwc"]}> : (!transform.any_op) -> !transform.any_op
-      %1:2 = "transform.structured.convert_conv2d_to_img2col"(%0) : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d0, d1 + d4, d2 + d5, d6)>
-#map1 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d4, d5, d6, d3)>
-#map2 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d0, d1, d2, d3)>
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x16x16x4xf32>, tensor<3x3x4x16xf32>, tensor<1x14x14x16xf32>) -> tensor<1x14x14x16xf32>, sym_name = "conv_16433136"}> ({
   ^bb0(%arg1: tensor<1x16x16x4xf32>, %arg2: tensor<3x3x4x16xf32>, %arg3: tensor<1x14x14x16xf32>):
     %2 = "linalg.conv_2d_nhwc_hwcf"(%arg1, %arg2, %arg3) <{dilations = dense<1> : tensor<2xi64>, operandSegmentSizes = array<i32: 2, 1>, strides = dense<1> : tensor<2xi64>}> ({

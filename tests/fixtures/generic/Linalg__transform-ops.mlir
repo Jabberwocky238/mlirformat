@@ -1,13 +1,30 @@
 "builtin.module"() ({
   "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg11: !transform.any_op):
+    %16:3 = "transform.structured.tile_using_for"(%arg11) <{scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 2, 0, 3>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+    "transform.yield"() : () -> ()
+  }) : () -> ()
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg10: !transform.any_op):
+    %14:3 = "transform.structured.tile_using_for"(%arg10) <{interchange = array<i64: 2, 1>, scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 2, 0, 3>}> {test_attr1 = 1 : i64, test_attr2} : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+    %15:3 = "transform.structured.tile_using_for"(%14#0) <{scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 0, 5, 3>}> {test_attr3 = 1 : i64, test_attr4} : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+    "transform.yield"() : () -> ()
+  }) : () -> ()
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg9: !transform.any_op):
+    %13:3 = "transform.structured.tile_using_for"(%arg9) <{inner_tile_alignments = array<i64: 2, 1>, scalable_sizes = array<i1: false, false>, static_sizes = array<i64: 8, 4>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+    "transform.yield"() : () -> ()
+  }) : () -> ()
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
   ^bb0(%arg8: !transform.any_op):
-    %11:3 = "transform.structured.tile_using_for"(%arg8) <{scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 2, 0, 3>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+    %12:2 = "transform.structured.fuse"(%arg8) <{inner_tile_alignments = array<i64: 1, 0>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 8>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
     "transform.yield"() : () -> ()
   }) : () -> ()
   "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
   ^bb0(%arg7: !transform.any_op):
-    %9:3 = "transform.structured.tile_using_for"(%arg7) <{interchange = array<i64: 2, 1>, scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 2, 0, 3>}> {test_attr1 = 1 : i64, test_attr2} : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
-    %10:3 = "transform.structured.tile_using_for"(%9#0) <{scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 0, 5, 3>}> {test_attr3 = 1 : i64, test_attr4} : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+    %9 = "transform.structured.match"(%arg7) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+    %10 = "transform.structured.match"(%arg7) <{ops = ["tensor.empty"]}> : (!transform.any_op) -> !transform.any_op
+    %11:2 = "transform.structured.fuse_into_containing_op"(%9, %10) <{inner_tile_alignments = array<i64: 2, 2>}> : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op)
     "transform.yield"() : () -> ()
   }) : () -> ()
   "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({

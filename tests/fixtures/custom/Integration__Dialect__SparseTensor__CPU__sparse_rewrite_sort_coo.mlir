@@ -58,7 +58,7 @@ module {
     call @storeValuesToStrided(%subview_1, %c2_i32, %c4_i32, %c9_i32, %c7_i32, %c9_i32) : (memref<?xi32, strided<[4], offset: ?>>, i32, i32, i32, i32, i32) -> ()
     call @storeValuesToStrided(%subview_2, %c6_i32, %c10_i32, %c8_i32, %c9_i32, %c7_i32) : (memref<?xi32, strided<[4], offset: ?>>, i32, i32, i32, i32, i32) -> ()
     call @storeValuesTo(%cast_4, %c5_i32, %c7_i32, %c4_i32, %c9_i32, %c7_i32) : (memref<?xi32>, i32, i32, i32, i32, i32) -> ()
-    sparse_tensor.sort  quick_sort %c5, %cast jointly %cast_4 {ny = 1 : index, perm_map = #map} : memref<?xi32> jointly memref<?xi32>
+    sparse_tensor.sort quick_sort %c5, %cast jointly %cast_4 {ny = 1 : index, perm_map = #map} : memref<?xi32> jointly memref<?xi32>
     %0 = vector.transfer_read %subview_0[%c0], %c100_i32 : memref<?xi32, strided<[4], offset: ?>>, vector<5xi32>
     vector.print %0 : vector<5xi32>
     %1 = vector.transfer_read %subview_1[%c0], %c100_i32 : memref<?xi32, strided<[4], offset: ?>>, vector<5xi32>
@@ -74,7 +74,7 @@ module {
     call @storeValuesToStrided(%subview_1, %c2_i32, %c4_i32, %c9_i32, %c7_i32, %c9_i32) : (memref<?xi32, strided<[4], offset: ?>>, i32, i32, i32, i32, i32) -> ()
     call @storeValuesToStrided(%subview_2, %c6_i32, %c10_i32, %c8_i32, %c9_i32, %c7_i32) : (memref<?xi32, strided<[4], offset: ?>>, i32, i32, i32, i32, i32) -> ()
     call @storeValuesTo(%cast_4, %c5_i32, %c7_i32, %c4_i32, %c9_i32, %c7_i32) : (memref<?xi32>, i32, i32, i32, i32, i32) -> ()
-    sparse_tensor.sort  insertion_sort_stable %c5, %cast jointly %cast_4 {ny = 1 : index, perm_map = #map} : memref<?xi32> jointly memref<?xi32>
+    sparse_tensor.sort insertion_sort_stable %c5, %cast jointly %cast_4 {ny = 1 : index, perm_map = #map} : memref<?xi32> jointly memref<?xi32>
     %5 = vector.transfer_read %subview_0[%c0], %c100_i32 : memref<?xi32, strided<[4], offset: ?>>, vector<5xi32>
     vector.print %5 : vector<5xi32>
     %6 = vector.transfer_read %subview_1[%c0], %c100_i32 : memref<?xi32, strided<[4], offset: ?>>, vector<5xi32>
@@ -90,7 +90,7 @@ module {
     call @storeValuesToStrided(%subview_1, %c2_i32, %c4_i32, %c9_i32, %c7_i32, %c9_i32) : (memref<?xi32, strided<[4], offset: ?>>, i32, i32, i32, i32, i32) -> ()
     call @storeValuesToStrided(%subview_2, %c6_i32, %c10_i32, %c8_i32, %c9_i32, %c7_i32) : (memref<?xi32, strided<[4], offset: ?>>, i32, i32, i32, i32, i32) -> ()
     call @storeValuesTo(%cast_4, %c5_i32, %c7_i32, %c4_i32, %c9_i32, %c7_i32) : (memref<?xi32>, i32, i32, i32, i32, i32) -> ()
-    sparse_tensor.sort  heap_sort %c5, %cast jointly %cast_4 {ny = 1 : index, perm_map = #map} : memref<?xi32> jointly memref<?xi32>
+    sparse_tensor.sort heap_sort %c5, %cast jointly %cast_4 {ny = 1 : index, perm_map = #map} : memref<?xi32> jointly memref<?xi32>
     %10 = vector.transfer_read %subview_0[%c0], %c100_i32 : memref<?xi32, strided<[4], offset: ?>>, vector<5xi32>
     vector.print %10 : vector<5xi32>
     %11 = vector.transfer_read %subview_1[%c0], %c100_i32 : memref<?xi32, strided<[4], offset: ?>>, vector<5xi32>

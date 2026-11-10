@@ -340,3 +340,18 @@ module {
   }
 }
 
+// -----
+#map = affine_map<() -> ()>
+module {
+  func.func @rank0_tensor_extract_data_dependent_index(%arg0: tensor<2xi64>, %arg1: tensor<i64>) -> tensor<i64> {
+    %0 = tensor.empty() : tensor<i64>
+    %1 = linalg.generic {indexing_maps = [#map, #map], iterator_types = []} ins(%arg1 : tensor<i64>) outs(%0 : tensor<i64>) {
+    ^bb0(%in: i64, %out: i64):
+      %2 = arith.index_cast %in : i64 to index
+      %extracted = tensor.extract %arg0[%2] : tensor<2xi64>
+      linalg.yield %extracted : i64
+    } -> tensor<i64>
+    return %1 : tensor<i64>
+  }
+}
+

@@ -75,18 +75,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (index) -> (), sym_name = "unknown_bound"}> ({
-  ^bb0(%arg0: index):
-    %0 = "vector.vscale"() : () -> index
-    %1 = "arith.muli"(%0, %arg0) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    %2 = "test.reify_bound"(%1) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
-    "test.some_use"(%2) : (index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = () -> (), sym_name = "duplicate_vscale_values"}> ({
     %0 = "arith.constant"() <{value = 4 : index}> : () -> index
     %1 = "vector.vscale"() : () -> index
@@ -136,32 +124,6 @@
       "test.some_use"(%6) : (index) -> ()
       "scf.yield"() : () -> ()
     }) : (index, index, index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<()[s0] -> (s0 * s0)>
-"builtin.module"() ({
-  "func.func"() <{function_type = () -> (), sym_name = "unsupported_semi_affine"}> ({
-    %0 = "vector.vscale"() : () -> index
-    %1 = "affine.apply"(%0) <{map = #map}> : (index) -> index
-    %2 = "test.reify_bound"(%1) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
-    "test.some_use"(%2) : (index) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-#map = affine_map<()[s0] -> (1000 mod s0)>
-"builtin.module"() ({
-  "func.func"() <{function_type = () -> (), sym_name = "unsupported_negative_mod"}> ({
-    %0 = "arith.constant"() <{value = -1 : index}> : () -> index
-    %1 = "vector.vscale"() : () -> index
-    %2 = "arith.muli"(%1, %0) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    %3 = "affine.apply"(%2) <{map = #map}> : (index) -> index
-    %4 = "test.reify_bound"(%3) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
-    "test.some_use"(%4) : (index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

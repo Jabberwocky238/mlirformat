@@ -24,7 +24,7 @@
     %8 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     %9 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64
     "llvm.store"(%7, %1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-    "omp.teams"(%1) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0>, reduction_byref = array<i1: false>, reduction_syms = [@add_reduction_i32]}> ({
+    "omp.teams"(%1) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 1, 0>, reduction_byref = array<i1: false>, reduction_syms = [@add_reduction_i32]}> ({
     ^bb0(%arg0: !llvm.ptr):
       %10 = "llvm.trunc"(%6) <{overflowFlags = 0 : i32}> : (i64) -> i32
       "llvm.br"(%10, %5)[^bb1] : (i32, i64) -> ()

@@ -4,7 +4,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (vector<4x4xbf16>, vector<[4]x4xbf16>, vector<4x[4]xf32>) -> vector<4x[4]xf32>, sym_name = "test_vector_contract_to_bfmmla"}> ({
   ^bb0(%arg1: vector<4x4xbf16>, %arg2: vector<[4]x4xbf16>, %arg3: vector<4x[4]xf32>):
-    %1 = "vector.contract"(%arg1, %arg2, %arg3) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<[4]x4xbf16>, vector<4x[4]xf32>) -> vector<4x[4]xf32>
+    %1 = "vector.contract"(%arg1, %arg2, %arg3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<[4]x4xbf16>, vector<4x[4]xf32>) -> vector<4x[4]xf32>
     "func.return"(%1) : (vector<4x[4]xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

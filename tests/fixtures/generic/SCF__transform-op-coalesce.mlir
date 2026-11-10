@@ -296,3 +296,35 @@
   }) {transform.with_named_sequence} : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> f32, sym_name = "opsinbetween_nested_loops"}> ({
+  ^bb0(%arg1: f32):
+    %3 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %4 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %5 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %6 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %7 = "scf.for"(%3, %5, %4, %arg1) ({
+    ^bb0(%arg2: index, %arg3: f32):
+      %8 = "arith.addi"(%arg2, %6) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %9 = "arith.muli"(%8, %5) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      %10 = "scf.for"(%3, %5, %4, %arg3) ({
+      ^bb0(%arg4: index, %arg5: f32):
+        %11 = "use"(%arg5, %arg2, %arg4, %8, %9) : (f32, index, index, index, index) -> f32
+        "scf.yield"(%11) : (f32) -> ()
+      }) : (index, index, index, f32) -> f32
+      "scf.yield"(%10) : (f32) -> ()
+    }) {coalesce_nested} : (index, index, index, f32) -> f32
+    "func.return"(%7) : (f32) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{op_attrs = {coalesce_nested}, ops = ["scf.for"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.cast"(%0) : (!transform.any_op) -> !transform.op<"scf.for">
+      %2 = "transform.loop.coalesce_nested"(%1) : (!transform.op<"scf.for">) -> !transform.op<"scf.for">
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+

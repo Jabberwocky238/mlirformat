@@ -2,8 +2,8 @@
 
 MLIR text ⇄ IR ⇄ typed Rust ops.
 
-MLIR behavior follows **MLIR 22.1.8** (llvm-project `llvmorg-22.1.8`): the textual format, the
-dialects and their assembly formats are checked against `mlir-opt` 22.1.8.
+MLIR behavior follows **MLIR 23.1.5** (llvm-project `llvmorg-23.1.5`): the textual format, the
+dialects and their assembly formats are checked against `mlir-opt` 23.1.5.
 
 ## Install
 
@@ -91,7 +91,7 @@ position; the hidden `__N` variants filling gaps take none) — `CmpIPredicate::
 
 Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `bufferization`,
 `builtin`, `cf`, `complex`, `emitc`, `func`, `gpu`, `index`, `linalg`, `llvm`, `math`, `memref`,
-`pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`; the CPUs' `x86vector`, `amx`, `arm_neon`,
+`pdl`, `scf`, `shape`, `tensor`, `tosa`, `ub`, `vector`; the CPUs' `x86` (AVX-512, AVX10 and AMX, one dialect since MLIR 23), `arm_neon`,
 `arm_sve` and `arm_sme`; the GPU vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`;
 `spirv`. `arith`, `builtin`, `cf`, `complex`,
 `func`, `index`, `math` and `ub` are written by hand; the rest are generated from ODS by
@@ -106,7 +106,7 @@ over the generated one so the generated files stay as `mlirformat tblgen` wrote 
 `mlir-opt` does not print a named op's region, so reading one rebuilds it as the op's region
 builder does, with the ODS defaults of the ops it makes). An op
 whose ODS syntax the format engine cannot express stays on the generic form, which is still valid
-MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 22.1.8 and counts the rest.
+MLIR — `tests/dialects.rs` checks every custom form against `mlir-opt` 23.1.5 and counts the rest.
 
 ### Custom directives
 
@@ -201,7 +201,7 @@ printed in runs into strings of their own, joined in order. Either gives exactly
 op and a `#[mlir::dialect]` struct listing them, with the dialect's traits from its `Dialect` record.
 Each struct's doc comment is the op's ODS `summary` and `description` (Markdown kept; a code block
 without a language or an indented one becomes `text`, so none is a doctest), so `cargo doc` on a
-crate holding generated dialects documents every op as its `.td` does. TableGen itself is built in: a port of LLVM 22.1.8's front end
+crate holding generated dialects documents every op as its `.td` does. TableGen itself is built in: a port of LLVM 23.1.5's front end (its `let append` / `let prepend` included; `!sort` and `!switch`, which no MLIR `.td` uses, are not)
 resolves the records in process (no LLVM build needed; only the `.td` sources, e.g. `mlir/include`).
 `--dump-json` prints those records exactly as `llvm-tblgen --dump-json` does (checked byte for byte on
 every MLIR dialect `.td` that `llvm-tblgen` accepts on its own). Several `.td` files are generated in parallel. The generated files also compile in
@@ -212,7 +212,7 @@ mlirformat tblgen $LLVM/mlir/include/mlir/Dialect/Arith/IR/ArithOps.td \
     -I $LLVM/mlir/include -o src/dialects
 ```
 
-`td/` is llvm-project 22.1.8's `mlir/include`, cut down to what the built-in dialects include:
+`td/` is llvm-project 23.1.5's `mlir/include`, cut down to what the built-in dialects include:
 the upstream `.td` files, unchanged, at their own paths; `-I td` is the root their
 `include "mlir/..."` lines read from. A dialect whose ops upstream splits over several files is one
 `--dialect <namespace>` run over those files (`linalg`: `LinalgOps.td`, `LinalgStructuredOps.td`,
@@ -227,7 +227,7 @@ mlirformat tblgen --dialect linalg $D/LinalgOps.td $D/LinalgStructuredOps.td $D/
 ```
 
 `scripts/regen-dialects.sh` regenerates every one of them. `LinalgNamedStructuredOps.yamlgen.td`
-is the one file a 22.1.8 build generates (from the OpDSL YAML) rather than keeps in the source tree;
+is the one file a 23.1.5 build generates (from the OpDSL YAML) rather than keeps in the source tree;
 `td/` holds it too.
 
 ## Performance

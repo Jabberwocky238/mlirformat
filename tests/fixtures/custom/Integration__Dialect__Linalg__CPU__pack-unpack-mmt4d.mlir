@@ -55,7 +55,7 @@ module {
       %4 = transform.structured.match ops{["linalg.pack"]} in %2 : (!transform.op<"func.func">) -> !transform.op<"linalg.pack">
       %pad_op, %expand_shape_op, %transpose_op = transform.structured.lower_pack %4 : (!transform.op<"linalg.pack">) -> (!transform.op<"tensor.pad">, !transform.op<"tensor.expand_shape">, !transform.op<"linalg.transpose">)
       %5 = transform.structured.match ops{["linalg.unpack"]} in %2 : (!transform.op<"func.func">) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op_2, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %5 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op_2, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %5 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       transform.yield 
     }
     transform.named_sequence @match_mmt4d(%arg0: !transform.any_op {transform.readonly}) -> !transform.any_op {

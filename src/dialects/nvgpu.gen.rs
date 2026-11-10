@@ -133,6 +133,37 @@ pub struct DeviceAsyncWaitOp<'a> {
     pub async_dependencies_ty: Type<'a>,
 }
 
+/// `nvgpu.extf`: Extend floating-point to wider floating-point
+///
+/// Extend a floating-point value to a wider floating-point type.
+/// Destination must be strictly wider than source.
+///
+/// Supported paths:
+///   f4 (f4E2M1FN) -> f16, bf16
+///   f6 (f6E2M3FN, f6E3M2FN) -> f16, bf16
+///   f8 (f8E4M3FN, f8E5M2, f8E8M0FNU) -> f16, bf16
+///   f16 -> f32
+///   bf16 -> f32
+///
+/// Example:
+/// ```mlir
+/// %r = nvgpu.extf %in : vector<8xf8E4M3FN> to vector<8xf16>
+/// %r = nvgpu.extf %in : vector<8xf6E3M2FN> to vector<8xf16>
+/// %r = nvgpu.extf %in : vector<4xf8E5M2> to vector<4xf32>
+/// %r = nvgpu.extf %in : f8E4M3FN to f32
+/// ```
+#[mlir::op("nvgpu.extf", format = "$in attr-dict `:` type($in) `to` type($out)", results(out))]
+pub struct ExtfOp<'a> {
+    #[slot(in_ty, name = "in")]
+    pub in_: Value<'a>,
+    #[attr(dialect = "nvvm.fp_rnd_mode", default = "<rn>")]
+    pub rnd: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    pub in_ty: Type<'a>,
+    pub out: Type<'a>,
+}
+
 ///
 /// The `nvgpu.ldmatrix` op represents loading a matrix fragment from
 /// memory to registers. The source and result type must be compatible
@@ -327,7 +358,7 @@ pub struct MBarrierInitOp<'a> {
 
 /// `nvgpu.mbarrier.test.wait`: Checks if the `nvgpu.mbarrier` has completed its current phase.
 ///
-/// Checks whether the mbarrier object has completed the phase. It is is a
+/// Checks whether the mbarrier object has completed the phase. It is a
 /// non-blocking instruction which tests for the completion of the phase.
 ///
 /// Example:
@@ -354,7 +385,7 @@ pub struct MBarrierTestWaitOp<'a> {
 
 /// `nvgpu.mbarrier.try_wait.parity`: Waits for the `nvgpu.mbarrier` to complete its current phase.
 ///
-/// Checks whether the mbarrier object has completed the phase. It is is a
+/// Checks whether the mbarrier object has completed the phase. It is a
 /// potentially blocking instruction which tests for the completion of the
 /// phase. Suspended thread resumes execution when the specified phase completes
 /// OR before the phase completes following a system-dependent time limit.
@@ -475,13 +506,16 @@ pub struct MmaSyncOp<'a> {
 /// Currently, only the `approx` rounding mode and `ftz` are supported, and only for the `f32` type.
 ///
 /// The input and output must be of the same vector type and shape.
-#[mlir::op("nvgpu.rcp", format = "$in `{` `rounding` `=` $rounding (`,` `ftz` $ftz^)? `}` attr-dict `:` type($out)", results(out))]
+#[mlir::op("nvgpu.rcp", format = "$in attr-dict `:` type($out)", results(out))]
 pub struct RcpOp<'a> {
     #[slot(out, name = "in")]
     pub in_: Value<'a>,
-    #[attr(dialect = "nvgpu<rcp_rounding_mode", default = "approx")]
+    #[attr(dialect = "nvvm.fp_rnd_mode", default = "<none>")]
     pub rounding: Option<Attribute<'a>>,
-    pub ftz: bool,
+    #[attr(default = "false")]
+    pub approx: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
     pub out: Type<'a>,
 }
 
@@ -605,6 +639,48 @@ pub struct TmaPrefetchOp<'a> {
     pub predicate_ty: Type<'a>,
 }
 
+/// `nvgpu.truncf`: Truncate floating-point to narrower floating-point
+///
+/// Truncate a floating-point value to a smaller floating-point type.
+/// Destination must be strictly narrower than source.
+///
+/// Supported paths:
+///   f16  -> f8 (f8E4M3FN, f8E5M2, f8E8M0FNU), f6 (f6E2M3FN, f6E3M2FN),
+///           f4 (f4E2M1FN)
+///   bf16 -> f8 (f8E4M3FN, f8E5M2, f8E8M0FNU), f6 (f6E2M3FN, f6E3M2FN),
+///           f4 (f4E2M1FN)
+///   f32  -> f16, bf16, f8 (f8E4M3FN, f8E5M2, f8E8M0FNU),
+///           f6 (f6E2M3FN, f6E3M2FN), f4 (f4E2M1FN)
+///   f64  -> f32, f16, bf16
+///
+/// The `random_bits` operand enables stochastic rounding (RS mode) for
+/// f32->f16/bf16 conversions; when provided, `rnd` must be RS.
+///
+/// Example:
+/// ```mlir
+/// %r = nvgpu.truncf %in : vector<8xf32> to vector<8xf8E4M3FN>
+/// %r = nvgpu.truncf %in : vector<8xf32> to vector<8xf6E2M3FN>
+/// %r = nvgpu.truncf %in : f32 to f16
+/// %r = nvgpu.truncf %in : vector<2x4xf16> to vector<2x4xf8E5M2>
+/// ```
+#[mlir::op("nvgpu.truncf", format = "$in (`,` $random_bits^)? attr-dict `:` type($in) `to` type($out)", results(out))]
+pub struct TruncfOp<'a> {
+    #[slot(in_ty, name = "in")]
+    pub in_: Value<'a>,
+    #[slot(random_bits_ty)]
+    pub random_bits: Vec<Value<'a>>,
+    #[attr(dialect = "nvvm.fp_rnd_mode", default = "<rn>")]
+    pub rnd: Option<Attribute<'a>>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<satfinite>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    pub in_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub random_bits_ty: Type<'a>,
+    pub out: Type<'a>,
+}
+
 /// `nvgpu.warpgroup.generate.descriptor`: Generate a warpgroup matrix descriptor
 ///
 /// This Op builds a `nvgpu.warpgroup.descriptor` that is used by
@@ -671,7 +747,7 @@ pub struct WarpgroupMmaOp<'a> {
     pub descriptor_b: Value<'a>,
     #[slot(matrix_c_ty, name = "matrixC")]
     pub matrix_c: Value<'a>,
-    #[attr(name = "waitGroup", int = "i64")]
+    #[attr(name = "waitGroup", int = "i64", default = "1", optional)]
     pub wait_group: Option<Attribute<'a>>,
     #[attr(name = "transposeA")]
     pub transpose_a: bool,
@@ -709,6 +785,7 @@ pub struct WarpgroupMmaStoreOp<'a> {
 /// The `nvgpu` dialect.
 #[mlir::dialect(
     "nvgpu",
-    ops = [DeviceAsyncCopyOp, DeviceAsyncCreateGroupOp, DeviceAsyncWaitOp, LdMatrixOp, MBarrierArriveExpectTxOp, MBarrierArriveNoCompleteOp, MBarrierArriveOp, MBarrierCreateOp, MBarrierGetOp, MBarrierInitOp, MBarrierTestWaitOp, MBarrierTryWaitParityOp, MmaSparseSyncOp, MmaSyncOp, RcpOp, TmaAsyncLoadOp, TmaAsyncStoreOp, TmaCreateDescriptorOp, TmaFenceOp, TmaPrefetchOp, WarpgroupGenerateDescriptorOp, WarpgroupMmaInitAccumulatorOp, WarpgroupMmaOp, WarpgroupMmaStoreOp]
+    ops = [DeviceAsyncCopyOp, DeviceAsyncCreateGroupOp, DeviceAsyncWaitOp, ExtfOp, LdMatrixOp, MBarrierArriveExpectTxOp, MBarrierArriveNoCompleteOp, MBarrierArriveOp, MBarrierCreateOp, MBarrierGetOp, MBarrierInitOp, MBarrierTestWaitOp, MBarrierTryWaitParityOp, MmaSparseSyncOp, MmaSyncOp, RcpOp, TmaAsyncLoadOp, TmaAsyncStoreOp, TmaCreateDescriptorOp, TmaFenceOp, TmaPrefetchOp, TruncfOp, WarpgroupGenerateDescriptorOp, WarpgroupMmaInitAccumulatorOp, WarpgroupMmaOp, WarpgroupMmaStoreOp],
+    dependents = ["nvvm"]
 )]
 pub struct NvgpuDialect;

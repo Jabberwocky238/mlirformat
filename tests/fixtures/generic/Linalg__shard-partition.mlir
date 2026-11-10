@@ -79,6 +79,30 @@
 }) : () -> ()
 
 // -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+#map1 = affine_map<(d0, d1) -> (d0)>
+"builtin.module"() ({
+  "shard.grid"() <{shape = array<i64: 3>, sym_name = "grid_1d"}> : () -> ()
+  "func.func"() <{function_type = (tensor<4x6xi8>, tensor<4xi8>) -> tensor<4xi8>, sym_name = "generic_1d_grid_static_tensors_andi_reduction_iterator_sharding"}> ({
+  ^bb0(%arg0: tensor<4x6xi8>, %arg1: tensor<4xi8>):
+    %0 = "shard.sharding"() <{grid = @grid_1d, operandSegmentSizes = array<i32: 0, 0>, split_axes = #shard<axisarray[[], [0]]>, static_halo_sizes = array<i64>, static_sharded_dims_offsets = array<i64>}> : () -> !shard.sharding
+    %1 = "shard.shard"(%arg0, %0) : (tensor<4x6xi8>, !shard.sharding) -> tensor<4x6xi8>
+    %2 = "shard.shard"(%1, %0) <{annotate_for_users}> : (tensor<4x6xi8>, !shard.sharding) -> tensor<4x6xi8>
+    %3 = "shard.sharding"() <{grid = @grid_1d, operandSegmentSizes = array<i32: 0, 0>, split_axes = #shard<axisarray[[]]>, static_halo_sizes = array<i64>, static_sharded_dims_offsets = array<i64>}> : () -> !shard.sharding
+    %4 = "shard.shard"(%arg1, %3) : (tensor<4xi8>, !shard.sharding) -> tensor<4xi8>
+    %5 = "shard.shard"(%4, %3) <{annotate_for_users}> : (tensor<4xi8>, !shard.sharding) -> tensor<4xi8>
+    %6 = "linalg.generic"(%2, %5) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg2: i8, %arg3: i8):
+      %9 = "arith.andi"(%arg2, %arg3) : (i8, i8) -> i8
+      "linalg.yield"(%9) : (i8) -> ()
+    }) : (tensor<4x6xi8>, tensor<4xi8>) -> tensor<4xi8>
+    %7 = "shard.shard"(%6, %3) : (tensor<4xi8>, !shard.sharding) -> tensor<4xi8>
+    %8 = "shard.shard"(%7, %3) <{annotate_for_users}> : (tensor<4xi8>, !shard.sharding) -> tensor<4xi8>
+    "func.return"(%8) : (tensor<4xi8>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
 #map = affine_map<(d0, d1, d2) -> (d0, d2)>
 #map1 = affine_map<(d0, d1, d2) -> (d2, d1)>
 #map2 = affine_map<(d0, d1, d2) -> (d0, d1)>

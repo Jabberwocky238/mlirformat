@@ -58,3 +58,27 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @delinearize_vector(%arg0: vector<4xindex>) -> (vector<4xindex>, vector<4xindex>) {
+    %0:2 = affine.delinearize_index %arg0 into (4, 8) : vector<4xindex>, vector<4xindex>
+    return %0#0, %0#1 : vector<4xindex>, vector<4xindex>
+  }
+}
+
+// -----
+module {
+  func.func @linearize_vector(%arg0: vector<4xindex>, %arg1: vector<4xindex>) -> vector<4xindex> {
+    %0 = affine.linearize_index [%arg0, %arg1] by (4, 8) : vector<4xindex>
+    return %0 : vector<4xindex>
+  }
+}
+
+// -----
+module {
+  func.func @delinearize_vector_dynamic(%arg0: vector<4xindex>, %arg1: index) -> (vector<4xindex>, vector<4xindex>) {
+    %0:2 = affine.delinearize_index %arg0 into (4, %arg1) : vector<4xindex>, vector<4xindex>
+    return %0#0, %0#1 : vector<4xindex>, vector<4xindex>
+  }
+}
+

@@ -104,3 +104,14 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x?xf32>) -> index, sym_name = "test_unreifiable_result_shapes_no_stray_ops"}> ({
+  ^bb0(%arg0: tensor<?x?xf32>):
+    %0 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %1 = "test.unreifiable_result_shapes"(%arg0) : (tensor<?x?xf32>) -> tensor<?x?xf32>
+    %2 = "tensor.dim"(%1, %0) : (tensor<?x?xf32>, index) -> index
+    "func.return"(%2) : (index) -> ()
+  }) : () -> ()
+}) : () -> ()
+

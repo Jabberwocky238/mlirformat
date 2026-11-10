@@ -9,6 +9,10 @@ module {
       %0 = spirv.GroupNonUniformBroadcast <Subgroup> %arg0, %cst1_i32 : f32, i32
       spirv.ReturnValue %0 : f32
     }
+    spirv.func @group_non_uniform_broadcast_first(%arg0: f32) -> f32 "None" {
+      %0 = spirv.GroupNonUniformBroadcastFirst <Subgroup> %arg0 : f32
+      spirv.ReturnValue %0 : f32
+    }
     spirv.func @group_non_uniform_elect() -> i1 "None" {
       %0 = spirv.GroupNonUniformElect <Workgroup> : i1
       spirv.ReturnValue %0 : i1
@@ -87,13 +91,11 @@ module {
       spirv.ReturnValue %0 : i1
     }
     spirv.func @group_non_uniform_quad_swap_vec(%arg0: vector<4xf32>) -> vector<4xf32> "None" {
-      %cst0_i32 = spirv.Constant 0 : i32
-      %0 = spirv.GroupNonUniformQuadSwap <Subgroup> %arg0 %cst0_i32 : vector<4xf32>, i32
+      %0 = spirv.GroupNonUniformQuadSwap <Subgroup> <Vertical> %arg0 : vector<4xf32>
       spirv.ReturnValue %0 : vector<4xf32>
     }
     spirv.func @group_non_uniform_quad_swap_scalar(%arg0: f32) -> f32 "None" {
-      %cst0_i32 = spirv.Constant 0 : i32
-      %0 = spirv.GroupNonUniformQuadSwap <Subgroup> %arg0 %cst0_i32 : f32, i32
+      %0 = spirv.GroupNonUniformQuadSwap <Subgroup> <Horizontal> %arg0 : f32
       spirv.ReturnValue %0 : f32
     }
   }

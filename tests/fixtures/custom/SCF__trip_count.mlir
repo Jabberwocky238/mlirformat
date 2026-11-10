@@ -580,3 +580,94 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @trip_count_i8_unsigned_full_range(%arg0: i32, %arg1: i32) -> i32 {
+    %c0_i8 = arith.constant 0 : i8
+    %c-1_i8 = arith.constant -1 : i8
+    %c1_i8 = arith.constant 1 : i8
+    %0 = scf.for unsigned %arg2 = %c0_i8 to %c-1_i8 step %c1_i8 iter_args(%arg3 = %arg0) -> (i32)  : i8 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @trip_count_i8_unsigned_partial_range(%arg0: i32, %arg1: i32) -> i32 {
+    %c0_i8 = arith.constant 0 : i8
+    %c-56_i8 = arith.constant -56 : i8
+    %c1_i8 = arith.constant 1 : i8
+    %0 = scf.for unsigned %arg2 = %c0_i8 to %c-56_i8 step %c1_i8 iter_args(%arg3 = %arg0) -> (i32)  : i8 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @trip_count_i8_unsigned_high_range(%arg0: i32, %arg1: i32) -> i32 {
+    %c-56_i8 = arith.constant -56 : i8
+    %c-1_i8 = arith.constant -1 : i8
+    %c1_i8 = arith.constant 1 : i8
+    %0 = scf.for unsigned %arg2 = %c-56_i8 to %c-1_i8 step %c1_i8 iter_args(%arg3 = %arg0) -> (i32)  : i8 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @trip_count_i8_signed_crossing_zero(%arg0: i32, %arg1: i32) -> i32 {
+    %c-128_i32 = arith.constant -128 : i32
+    %c127_i32 = arith.constant 127 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %0 = scf.for %arg2 = %c-128_i32 to %c127_i32 step %c1_i32 iter_args(%arg3 = %arg0) -> (i32)  : i32 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @trip_count_i8_signed_overflow_fix(%arg0: i32, %arg1: i32) -> i32 {
+    %c-128_i8 = arith.constant -128 : i8
+    %c127_i8 = arith.constant 127 : i8
+    %c1_i8 = arith.constant 1 : i8
+    %0 = scf.for %arg2 = %c-128_i8 to %c127_i8 step %c1_i8 iter_args(%arg3 = %arg0) -> (i32)  : i8 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @trip_count_i16_unsigned_full_range(%arg0: i32, %arg1: i32) -> i32 {
+    %c0_i16 = arith.constant 0 : i16
+    %c-1_i16 = arith.constant -1 : i16
+    %c1_i16 = arith.constant 1 : i16
+    %0 = scf.for unsigned %arg2 = %c0_i16 to %c-1_i16 step %c1_i16 iter_args(%arg3 = %arg0) -> (i32)  : i16 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @trip_count_i8_unsigned_step_2(%arg0: i32, %arg1: i32) -> i32 {
+    %c0_i8 = arith.constant 0 : i8
+    %c-1_i8 = arith.constant -1 : i8
+    %c2_i8 = arith.constant 2 : i8
+    %0 = scf.for unsigned %arg2 = %c0_i8 to %c-1_i8 step %c2_i8 iter_args(%arg3 = %arg0) -> (i32)  : i8 {
+      scf.yield %arg1 : i32
+    }
+    return %0 : i32
+  }
+}
+

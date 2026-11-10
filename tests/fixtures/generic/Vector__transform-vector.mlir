@@ -28,7 +28,9 @@
         "transform.apply_patterns.vector.transfer_permutation_patterns"() : () -> ()
       }) : (!transform.any_op) -> ()
       "transform.apply_patterns"(%5) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
-        "transform.apply_patterns.vector.lower_multi_reduction"() <{lowering_strategy = 0 : i32}> : () -> ()
+        "transform.apply_patterns.vector.reorder_multi_reduction_dims"() <{lowering_strategy = 0 : i32}> : () -> ()
+        "transform.apply_patterns.vector.multi_reduction_flattening"() <{lowering_strategy = 0 : i32}> : () -> ()
+        "transform.apply_patterns.vector.multi_reduction_unrolling"() <{lowering_strategy = 0 : i32}> : () -> ()
       }) : (!transform.any_op) -> ()
       "transform.apply_patterns"(%5) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
         "transform.apply_patterns.vector.split_transfer_full_partial"() <{split_transfer_strategy = 2 : i32}> : () -> ()
@@ -59,7 +61,7 @@
   ^bb0(%arg1: vector<64x64xf16>, %arg2: vector<64x64xf16>, %arg3: vector<64x64xf32>):
     %1 = "arith.extf"(%arg1) : (vector<64x64xf16>) -> vector<64x64xf32>
     %2 = "arith.extf"(%arg2) : (vector<64x64xf16>) -> vector<64x64xf32>
-    %3 = "vector.contract"(%1, %2, %arg3) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<64x64xf32>, vector<64x64xf32>, vector<64x64xf32>) -> vector<64x64xf32>
+    %3 = "vector.contract"(%1, %2, %arg3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<64x64xf32>, vector<64x64xf32>, vector<64x64xf32>) -> vector<64x64xf32>
     "func.return"(%3) : (vector<64x64xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

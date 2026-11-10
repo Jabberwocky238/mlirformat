@@ -640,6 +640,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(match id {
             "index" => Type::Index,
             "none" => Type::NoneType,
+            "token" => Type::Token,
             "complex" => {
                 self.expect("<")?;
                 let t = self.ty()?;
@@ -1347,6 +1348,13 @@ impl Attribute<'_> {
     pub fn type_of(&self) -> Option<Type<'static>> {
         let ty = match self {
             Attribute::Bool(_) => return Some(Type::I1),
+            // Type-first (`dense<tensor<2x!t> : [..]>`): the type is the body's.
+            Attribute::Builtin { name, body, ty: None } if name == "dense" => {
+                let opt = MlirOpt::new();
+                let mut p = Parser::new(body, &opt);
+                let t = p.expect("<").and_then(|()| p.ty()).ok().filter(|_| p.eat(":"))?;
+                return Some(t.into_static());
+            }
             Attribute::Int { ty, .. } | Attribute::Float { ty, .. } | Attribute::Str { ty, .. } | Attribute::Builtin { ty, .. } | Attribute::Extended { ty, .. } => ty.as_ref()?,
             _ => return None,
         };
@@ -2084,6 +2092,7 @@ impl<'a> Operation<'a> {
             let ty = f.ty;
             let a = match props.iter().position(|p| p.name == f.name) {
                 Some(i) => Some(props.remove(i).value.as_ref().map_or(Cow::Owned(Attribute::Unit), Cow::Borrowed)),
+                None if matches!(f.role, Role::Prop { optional: true, .. }) => None,
                 None => f.default_attr().map(Cow::Owned),
             };
             match (a, ty) {
@@ -2295,7 +2304,7 @@ impl Format<'_> {
                         }
                     }
                 }
-                Elem::Var(n) => {
+                Elem::Var(n) | Elem::QVar(n) => {
                     let f = field(p, n)?;
                     let c = match f.role {
                         Role::Operand { .. } if f.variadic => {
@@ -2361,7 +2370,18 @@ impl Format<'_> {
                         }
                         Role::Prop { dialect: Some(_), .. } if let Some((ns, m)) = f.keyword_dialect() => {
                             p.ws();
-                            let body = Some(Cow::Owned(format!("<{m} {}>", p.ident()?)));
+                            // A bit enum's cases joined by `|` (`valu|all_vmem`), or `kw = case`
+                            // (`src_etype = f16`).
+                            let mut case = String::from(p.ident()?);
+                            if p.eat("=") {
+                                case.push_str(" = ");
+                                case.push_str(p.ident()?);
+                            }
+                            while p.eat("|") {
+                                case.push('|');
+                                case.push_str(p.ident()?);
+                            }
+                            let body = Some(Cow::Owned(format!("<{m} {case}>")));
                             Got::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body, params: Vec::new() }, ty: None })
                         }
                         Role::Prop { dialect: Some(d), .. } => {
@@ -2457,10 +2477,9 @@ impl Format<'_> {
                     r.bind(var.name, ts);
                 }
                 Elem::FnType(a, b) => {
-                    let (a, b) = (ty_var(p, a)?, ty_var(p, b)?);
                     let ty = p.fn_ty()?;
-                    r.bind(a.name, ty.inputs);
-                    r.bind(b.name, ty.results);
+                    self.bind_side(a, ty.inputs, r, p)?;
+                    self.bind_side(b, ty.results, r, p)?;
                 }
                 Elem::AttrDict(keyword) => {
                     let spelled = self.spelled();
@@ -2483,6 +2502,35 @@ impl Format<'_> {
                     }
                 }
             }
+        }
+        Ok(())
+    }
+
+    /// One side of a `functional-type(..)`: `ts` dealt to `names` in order, one type each, the
+    /// rest to the one of variable length (a variadic type variable, or a variadic operand
+    /// group sharing one type).
+    fn bind_side<'a>(&self, names: &[&str], ts: Vec<Type<'a>>, r: &mut Slots<'a>, p: &Parser<'a, '_>) -> R<()> {
+        let vars = names.iter().map(|n| self.type_var(n).copied().or_else(|e| p.err(e.0))).collect::<R<Vec<Field>>>()?;
+        let open = |(n, v): (&&str, &Field)| v.variadic || self.schema.field(n).is_some_and(|f| f.variadic && matches!(f.role, Role::Operand { .. }));
+        let opens = names.iter().zip(&vars).filter(|x| open(*x)).count();
+        if opens > 1 || (opens == 0 && ts.len() != names.len()) || ts.len() + opens < names.len() {
+            return p.err(format!("expected {} types in the function type", names.len()));
+        }
+        let mut ts = ts.into_iter();
+        let rest = ts.len() + opens - names.len();
+        for (n, v) in names.iter().zip(&vars) {
+            let take = if open((n, v)) { rest } else { 1 };
+            let mine: Vec<Type<'a>> = ts.by_ref().take(take).collect();
+            // A variadic group sharing one type: the first of them stands for all.
+            let mine = if !v.variadic && mine.len() > 1 {
+                if mine.iter().any(|t| *t != mine[0]) {
+                    return p.err(format!("`${n}`: the types differ"));
+                }
+                mine[..1].to_vec()
+            } else {
+                mine
+            };
+            r.bind(v.name, mine);
         }
         Ok(())
     }
@@ -2510,7 +2558,7 @@ impl Format<'_> {
     fn absent<'a>(&self, anchor: &str, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
         // Every variadic operand the group spells is empty, not only its anchor
         // (`arm_sme.tile_load`'s `(`,` $padding `,` $mask^)?`: `padding` too).
-        let vars = elems.iter().filter_map(|e| if let Elem::Var(n) = e { Some(*n) } else { None });
+        let vars = elems.iter().filter_map(|e| if let Elem::Var(n) | Elem::QVar(n) = e { Some(*n) } else { None });
         for name in core::iter::once(anchor).chain(vars) {
             if let Ok(f) = self.field(name)
                 && let Role::Operand { ty } = f.role
@@ -2549,7 +2597,7 @@ impl Format<'_> {
         // An empty literal only suppresses a space; it is not syntax, so it cannot decide a group.
         let hit = match elems.iter().find(|e| !matches!(e, Elem::Lit(l) if l.trim().is_empty())) {
             Some(Elem::Lit(l)) => p.eat_lit(l),
-            Some(Elem::Var(n)) => match self.field(n)?.role {
+            Some(Elem::Var(n) | Elem::QVar(n)) => match self.field(n)?.role {
                 Role::Prop { bits: Some(_), .. } => self.field(n)?.bit_enum().is_some_and(|e| {
                     p.ws();
                     if e.mnemonic.is_empty() { p.ident().is_ok_and(|w| e.value(w).is_some()) } else { p.rest().starts_with(e.mnemonic) }
@@ -2587,7 +2635,7 @@ impl Format<'_> {
     /// inferred.
     fn complete<'a>(&self, r: &mut Slots<'a>, results: usize) -> Result<Vec<(&'static str, Vec<Type<'a>>)>, Error> {
         let mut types = Vec::new();
-        for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
+        for f in self.schema.of_role(|r| matches!(r, Role::Prop { optional: false, .. })) {
             if r.get(f).is_none()
                 && let Some(d) = f.default_attr()
             {

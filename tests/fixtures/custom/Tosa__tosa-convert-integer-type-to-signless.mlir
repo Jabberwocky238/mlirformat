@@ -54,6 +54,30 @@ module {
 
 // -----
 module {
+  func.func @test_unsigned_const_data_i16() -> tensor<5xui16> {
+    %0 = "tosa.const"() <{values = dense<[65535, 65534, 0, 1, 32768]> : tensor<5xui16>}> : () -> tensor<5xui16>
+    return %0 : tensor<5xui16>
+  }
+}
+
+// -----
+module {
+  func.func @test_unsigned_const_data_i32() -> tensor<5xui32> {
+    %0 = "tosa.const"() <{values = dense<[4294967295, 4294967294, 0, 1, 2147483648]> : tensor<5xui32>}> : () -> tensor<5xui32>
+    return %0 : tensor<5xui32>
+  }
+}
+
+// -----
+module {
+  func.func @test_unsigned_const_data_i48() -> tensor<5xui48> {
+    %0 = "tosa.const"() <{values = dense<[281474976710655, 281474976710654, 0, 1, 140737488355328]> : tensor<5xui48>}> : () -> tensor<5xui48>
+    return %0 : tensor<5xui48>
+  }
+}
+
+// -----
+module {
   func.func @test_no_change(%arg0: tensor<13x21x3xi8>) -> tensor<13x21x3xi8> {
     %0 = tosa.reverse %arg0 {axis = 0 : i32} : (tensor<13x21x3xi8>) -> tensor<13x21x3xi8>
     return %0 : tensor<13x21x3xi8>

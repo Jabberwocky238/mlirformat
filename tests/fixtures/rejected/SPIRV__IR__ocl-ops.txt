@@ -1,12 +1,39 @@
-1	verify	'spirv.CL.exp' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
-2	verify	'spirv.CL.exp' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<5xf32>'
+1	verify	'spirv.CL.exp' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+2	verify	'spirv.CL.exp' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xf32>'
 3	parse	expected ':'
 4	parse	expected non-function type
-6	verify	'spirv.CL.fabs' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'i32'
-7	verify	'spirv.CL.fabs' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16, but got 'vector<5xf32>'
+6	verify	'spirv.CL.exp2' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+7	verify	'spirv.CL.exp2' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xf32>'
 8	parse	expected ':'
 9	parse	expected non-function type
-11	verify	'spirv.CL.s_abs' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'f32'
-12	verify	'spirv.CL.s_abs' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16, but got 'vector<5xi32>'
+11	verify	'spirv.CL.exp10' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+12	verify	'spirv.CL.exp10' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xf32>'
 13	parse	expected ':'
 14	parse	expected non-function type
+16	verify	'spirv.CL.log2' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+17	verify	'spirv.CL.log2' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xf32>'
+18	parse	expected ':'
+19	parse	expected non-function type
+21	verify	'spirv.CL.log10' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+22	verify	'spirv.CL.log10' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xf32>'
+23	parse	expected ':'
+24	parse	expected non-function type
+26	verify	'spirv.CL.fabs' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+27	verify	'spirv.CL.fabs' op operand #0 must be 16/32/64-bit float or fixed-length vector of 16/32/64-bit float values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xf32>'
+28	parse	expected ':'
+29	parse	expected non-function type
+31	verify	'spirv.CL.s_abs' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'f32'
+32	verify	'spirv.CL.s_abs' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xi32>'
+33	parse	expected ':'
+34	parse	expected non-function type
+36	verify	'spirv.CL.clz' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'f32'
+37	verify	'spirv.CL.clz' op operand #0 must be 8/16/32/64-bit integer or fixed-length vector of 8/16/32/64-bit integer values of length 2/3/4/8/16 of ranks 1, but got 'vector<5xi32>'
+38	parse	expected ':'
+39	parse	expected non-function type
+74	verify	'spirv.CL.ldexp' op operands must both be scalars or vectors
+75	verify	'spirv.CL.ldexp' op operands must both be scalars or vectors
+76	verify	'spirv.CL.ldexp' op operands must have the same number of elements
+79	verify	'spirv.CL.pown' op operands must both be scalars or vectors
+80	verify	'spirv.CL.pown' op operands must have the same number of elements
+83	verify	'spirv.CL.rootn' op operands must both be scalars or vectors
+84	verify	'spirv.CL.rootn' op operands must have the same number of elements

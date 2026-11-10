@@ -51,7 +51,7 @@ enum Seen {
 
 /// Ops that upstream defines in C++ rather than in ODS, so `mlirformat tblgen` cannot see them:
 /// `affine.dma_start` / `affine.dma_wait` are `AffineDmaStartOp` / `AffineDmaWaitOp` in
-/// `mlir/Dialect/Affine/IR/AffineOps.h` (LLVM 22.1.8). `shape.print` / `shape.unknown_shape` are
+/// `mlir/Dialect/Affine/IR/AffineOps.h` (LLVM 23.1.5). `shape.print` / `shape.unknown_shape` are
 /// defined nowhere: `mlir/test/Dialect/Shape/ops.mlir` writes them in generic form, unregistered.
 const NOT_IN_ODS: &[&str] = &["affine.dma_start", "affine.dma_wait", "shape.print", "shape.unknown_shape"];
 

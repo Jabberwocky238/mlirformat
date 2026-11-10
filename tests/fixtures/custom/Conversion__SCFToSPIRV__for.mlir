@@ -33,5 +33,25 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader
     memref.store %0#1, %arg1[%c42] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
     return
   }
+  func.func @loop_unroll(%arg0: memref<10xf32, #spirv.storage_class<StorageBuffer>>, %arg1: memref<10xf32, #spirv.storage_class<StorageBuffer>>) {
+    %c0 = arith.constant 0 : index
+    %c10 = arith.constant 10 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg2 = %c0 to %c10 step %c1 {
+      %0 = memref.load %arg0[%arg2] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
+      memref.store %0, %arg1[%arg2] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
+    } {spirv.loop_control = #spirv.loop_control<Unroll>}
+    return
+  }
+  func.func @loop_dont_unroll(%arg0: memref<10xf32, #spirv.storage_class<StorageBuffer>>, %arg1: memref<10xf32, #spirv.storage_class<StorageBuffer>>) {
+    %c0 = arith.constant 0 : index
+    %c10 = arith.constant 10 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg2 = %c0 to %c10 step %c1 {
+      %0 = memref.load %arg0[%arg2] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
+      memref.store %0, %arg1[%arg2] : memref<10xf32, #spirv.storage_class<StorageBuffer>>
+    } {spirv.loop_control = #spirv.loop_control<DontUnroll>}
+    return
+  }
 }
 

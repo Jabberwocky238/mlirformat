@@ -33,6 +33,14 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Int8, 
     %sum, %overflow = arith.addui_extended %arg0, %arg1 : vector<4xi32>, vector<4xi1>
     return %sum, %overflow : vector<4xi32>, vector<4xi1>
   }
+  func.func @int32_scalar_subui_extended(%arg0: i32, %arg1: i32) -> (i32, i1) {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @int32_vector_subui_extended(%arg0: vector<4xi32>, %arg1: vector<4xi32>) -> (vector<4xi32>, vector<4xi1>) {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : vector<4xi32>, vector<4xi1>
+    return %diff, %borrow : vector<4xi32>, vector<4xi1>
+  }
   func.func @int32_scalar_mulsi_extended(%arg0: i32, %arg1: i32) -> (i32, i32) {
     %low, %high = arith.mulsi_extended %arg0, %arg1 : i32
     return %low, %high : i32, i32
@@ -111,6 +119,18 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [], []>
     %2 = arith.xori %arg0, %arg1 : vector<4xi1>
     return
   }
+  func.func @bool_arith_scalar(%arg0: i1, %arg1: i1) {
+    %0 = arith.addi %arg0, %arg1 : i1
+    %1 = arith.subi %arg0, %arg1 : i1
+    %2 = arith.muli %arg0, %arg1 : i1
+    return
+  }
+  func.func @bool_arith_vector(%arg0: vector<4xi1>, %arg1: vector<4xi1>) {
+    %0 = arith.addi %arg0, %arg1 : vector<4xi1>
+    %1 = arith.subi %arg0, %arg1 : vector<4xi1>
+    %2 = arith.muli %arg0, %arg1 : vector<4xi1>
+    return
+  }
   func.func @shift_scalar(%arg0: i32, %arg1: i32) {
     %0 = arith.shli %arg0, %arg1 : i32
     %1 = arith.shrsi %arg0, %arg1 : i32
@@ -121,6 +141,27 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [], []>
     %0 = arith.shli %arg0, %arg1 : vector<4xi32>
     %1 = arith.shrsi %arg0, %arg1 : vector<4xi32>
     %2 = arith.shrui %arg0, %arg1 : vector<4xi32>
+    return
+  }
+}
+
+// -----
+module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [], []>, #spirv.resource_limits<>>} {
+  func.func @bool_shift_div_rem_scalar(%arg0: i1, %arg1: i1) {
+    %0 = arith.shli %arg0, %arg1 : i1
+    %1 = arith.shrui %arg0, %arg1 : i1
+    %2 = arith.shrsi %arg0, %arg1 : i1
+    %3 = arith.divui %arg0, %arg1 : i1
+    %4 = arith.divsi %arg0, %arg1 : i1
+    %5 = arith.remui %arg0, %arg1 : i1
+    %6 = arith.remsi %arg0, %arg1 : i1
+    return
+  }
+  func.func @bool_minmax_scalar(%arg0: i1, %arg1: i1) {
+    %0 = arith.maxui %arg0, %arg1 : i1
+    %1 = arith.maxsi %arg0, %arg1 : i1
+    %2 = arith.minui %arg0, %arg1 : i1
+    %3 = arith.minsi %arg0, %arg1 : i1
     return
   }
 }
@@ -674,6 +715,30 @@ module attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [], []>
   func.func @float_scalar(%arg0: f16) {
     %0 = arith.addf %arg0, %arg0 : f16
     return
+  }
+  func.func @uitofp_i8_emulated_f32(%arg0: i8) -> f32 {
+    %0 = arith.uitofp %arg0 : i8 to f32
+    return %0 : f32
+  }
+  func.func @uitofp_i16_emulated_f32(%arg0: i16) -> f32 {
+    %0 = arith.uitofp %arg0 : i16 to f32
+    return %0 : f32
+  }
+  func.func @uitofp_vec_i8_emulated_f32(%arg0: vector<4xi8>) -> vector<4xf32> {
+    %0 = arith.uitofp %arg0 : vector<4xi8> to vector<4xf32>
+    return %0 : vector<4xf32>
+  }
+  func.func @sitofp_i8_emulated_f32(%arg0: i8) -> f32 {
+    %0 = arith.sitofp %arg0 : i8 to f32
+    return %0 : f32
+  }
+  func.func @sitofp_i16_emulated_f32(%arg0: i16) -> f32 {
+    %0 = arith.sitofp %arg0 : i16 to f32
+    return %0 : f32
+  }
+  func.func @sitofp_vec_i8_emulated_f32(%arg0: vector<4xi8>) -> vector<4xf32> {
+    %0 = arith.sitofp %arg0 : vector<4xi8> to vector<4xf32>
+    return %0 : vector<4xf32>
   }
 }
 

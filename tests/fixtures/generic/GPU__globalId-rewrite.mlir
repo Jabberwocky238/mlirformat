@@ -10,7 +10,7 @@
       %2 = "gpu.global_id"() <{dimension = #gpu<dim z>}> : () -> index
       "memref.store"(%2, %arg1) : (index, memref<index, 1>) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

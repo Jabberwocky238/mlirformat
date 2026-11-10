@@ -15,7 +15,7 @@
       %1 = "arith.addi"(%arg0, %arg0) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
       %2 = "arith.addi"(%0, %1) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
       "gpu.return"(%2) : (i32) -> ()
-    }) {sym_name = "func2", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "func2"} : () -> ()
   }) : () -> ()
 }) : () -> ()
 

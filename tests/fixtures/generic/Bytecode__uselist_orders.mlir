@@ -62,3 +62,21 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32) -> i32, sym_name = "test_with_8_uses"}> ({
+  ^bb0(%arg0: i32):
+    %0 = "arith.constant"() <{value = 45 : i32}> : () -> i32
+    %1 = "test.addi"(%arg0, %0) : (i32, i32) -> i32
+    %2 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %3 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %4 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %5 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %6 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %7 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %8 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    %9 = "test.addi"(%1, %0) : (i32, i32) -> i32
+    "func.return"(%9) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+

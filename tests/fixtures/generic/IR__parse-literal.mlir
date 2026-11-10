@@ -19,9 +19,9 @@
     %1 = "arith.constant"() <{value = dense<-1> : tensor<32xi4>}> : () -> tensor<32xi4>
     "func.return"(%1) : (tensor<32xi4>) -> ()
   }) : () -> ()
-  "func.func"() <{function_type = () -> tensor<256xi1>, sym_name = "parse_i1_tensor"}> ({
-    %0 = "arith.constant"() <{value = dense<"0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F"> : tensor<256xi1>}> : () -> tensor<256xi1>
-    "func.return"(%0) : (tensor<256xi1>) -> ()
+  "func.func"() <{function_type = () -> tensor<32xi1>, sym_name = "parse_i1_tensor"}> ({
+    %0 = "arith.constant"() <{value = dense<[true, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, true]> : tensor<32xi1>}> : () -> tensor<32xi1>
+    "func.return"(%0) : (tensor<32xi1>) -> ()
   }) : () -> ()
 }) : () -> ()
 

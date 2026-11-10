@@ -83,25 +83,107 @@ pub struct AllocOp<'a> {
     pub async_token: Vec<Type<'a>>,
 }
 
-/// `gpu.barrier`: Synchronizes all work items of a workgroup.
+/// `gpu.ballot`: Collects predicate values from all threads in a subgroup.
 ///
-/// The `barrier` op synchronizes all work items of a workgroup. It is used
-/// to coordinate communication between the work items of the workgroup.
+/// The `ballot` op performs a ballot operation across all threads in a subgroup.
+/// Each thread contributes its predicate value as a single bit. The result is an
+/// integer where the Nth bit is set iff the Nth thread's predicate is true.
+///
+/// The result type must be a signless integer type. The exact supported widths
+/// are target-dependent. Common GPU targets support i32 and i64.
+///
+/// Example:
+/// ```mlir
+/// %0 = gpu.ballot %pred : i32
+/// %1 = gpu.ballot %pred : i64
+/// ```
+#[mlir::op("gpu.ballot", format = "$predicate attr-dict `:` type($result)", results(result))]
+pub struct BallotOp<'a> {
+    #[slot(predicate_ty)]
+    pub predicate: Value<'a>,
+    #[dtype(is = i1)]
+    pub predicate_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
+/// `gpu.barrier`: Synchronizes work items within an execution scope.
+///
+/// The `barrier` op synchronizes work items within the specified execution
+/// scope. By default, the scope is `workgroup`, synchronizing all work items
+/// in a workgroup.
 ///
 /// ```mlir
+/// // Synchronize all work items in the workgroup, making all prior
+/// // memory accesses visible.
 /// gpu.barrier
 /// ```
 ///
-/// waits until all work items in the workgroup have reached this point
+/// waits until all work items in the workgroup have reached the operation
 /// and all memory accesses made by these work items prior to the op are
 /// visible to all work items in the workgroup. Data hazards between work items
 /// accessing the same memory can be avoided by synchronizing work items
 /// in-between these accesses.
 ///
-/// Either none or all work items of a workgroup need to execute this op
-/// in convergence.
-#[mlir::op("gpu.barrier", format = "attr-dict")]
+/// The `scope` attribute controls the execution scope of the barrier:
+///
+/// ```mlir
+/// // Synchronize within a subgroup (warp/wavefront).
+/// gpu.barrier scope <subgroup>
+/// // Synchronize within a cluster.
+/// gpu.barrier scope <cluster>
+/// ```
+///
+/// A `named` barrier allows synchronizing a specific subset of subgroups
+/// that have been associated with a named barrier handle. Named barriers
+/// require workgroup scope.
+///
+/// ```mlir
+/// // Initialize a named barrier for 4 participating members.
+/// %nb = gpu.initialize_named_barrier %c4 : i32 -> !gpu.named_barrier
+/// // Wait on the named barrier.
+/// gpu.barrier named(%nb : !gpu.named_barrier)
+/// ```
+///
+/// If the `memfence` attribute is specified, the set of memory accesses that
+/// must be completed after the barrier resolves is limited to only those
+/// accesses that read from or write to the specified address spaces. In
+/// particular, specifying `memfence []` creates a barrier that is not required
+/// to affect the visibility of any memory operations and is purely used for
+/// synchronizing work items.
+///
+/// ```mlir
+/// // Only workgroup address space accesses required to be visible.
+/// gpu.barrier memfence [#gpu.address_space<workgroup>]
+/// // No memory accesses required to be visible.
+/// gpu.barrier memfence []
+/// // All memory accesses required to be visible.
+/// gpu.barrier
+/// ```
+///
+/// The three clauses can be combined in any order, but not all combinations may
+/// be supported on a given target:
+///
+/// ```mlir
+/// // Named barrier with a workgroup-only memory fence.
+/// gpu.barrier named(%nb : !gpu.named_barrier) memfence [#gpu.address_space<workgroup>]
+/// // Subgroup barrier with a global fence.
+/// gpu.barrier memfence [#gpu.address_space<global>] scope <subgroup>
+/// ```
+///
+/// Once one thread of execution in a given scope (say, thread in a workgroup)
+/// has executed a particular dynamic instance of `gpu.barrier`, all other threads
+/// in that scope are required to execute the same dynamic instance of `gpu.barrier`
+/// before any thread executes any other instance of it. That is, you cannot, for
+/// example, have the two subgroups of a workgroup arrive at `gpu.barrier` ops in
+/// different branches of an if statement and have this work.
+#[mlir::op("gpu.barrier", format = "oilist( `named` `(` $named_barrier `:` type($named_barrier) `)` | `memfence` $address_spaces | `scope` $scope ) attr-dict")]
 pub struct BarrierOp<'a> {
+    #[slot(named_barrier_ty)]
+    pub named_barrier: Vec<Value<'a>>,
+    pub address_spaces: Option<Attribute<'a>>,
+    #[attr(dialect = "gpu.barrier_scope", default = "<workgroup>")]
+    pub scope: Option<Attribute<'a>>,
+    pub named_barrier_ty: Vec<Type<'a>>,
 }
 
 /// `gpu.binary`: An Op for storing serialized GPU binary objects.
@@ -828,6 +910,9 @@ pub struct GPUFuncOp<'a> {
     pub known_block_size: Option<Attribute<'a>>,
     pub known_grid_size: Option<Attribute<'a>>,
     pub known_cluster_size: Option<Attribute<'a>>,
+    #[attr(int = "i64")]
+    pub workgroup_attributions: Option<Attribute<'a>>,
+    pub kernel: bool,
     pub body: Region<'a>,
 }
 
@@ -967,6 +1052,24 @@ pub struct HostUnregisterOp<'a> {
     pub value_ty: Type<'a>,
 }
 
+/// `gpu.initialize_named_barrier`: Initialize a named barrier with a member count.
+///
+/// Initializes a named barrier object with the given number of participating
+/// members (subgroups) and returns a handle to it. All members that will
+/// synchronize on this barrier must be accounted for in the count.
+///
+/// ```mlir
+/// %nb = gpu.initialize_named_barrier %num_members : i32 -> !gpu.named_barrier
+/// ```
+#[mlir::op("gpu.initialize_named_barrier", format = "$member_count attr-dict `:` type($member_count) `->` type($result)", results(result))]
+pub struct InitializeNamedBarrierOp<'a> {
+    #[slot(member_count_ty)]
+    pub member_count: Value<'a>,
+    #[dtype(is = i32)]
+    pub member_count_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
 ///
 /// Returns the lane id within the subgroup (warp/wave).
 ///
@@ -1024,6 +1127,11 @@ pub struct LaneIdOp<'a> {
 /// `clusterSizeX`, `clusterSizeY`, and `clusterSizeZ` arguments. When these
 /// arguments are present, the Op launches a kernel that clusters the given
 /// thread blocks. This feature is exclusive to certain architectures.
+///
+/// The `cooperative` attribute indicates that the kernel should be launched
+/// cooperatively, guaranteeing that all thread blocks in the grid are
+/// co-resident on the GPU simultaneously. This enables grid-wide
+/// synchronization patterns.
 ///
 /// Example:
 ///
@@ -1113,6 +1221,7 @@ pub struct LaunchFuncOp<'a> {
     #[slot(async_object_ty, name = "asyncObject")]
     pub async_object: Vec<Value<'a>>,
     pub kernel: Attribute<'a>,
+    pub cooperative: bool,
     pub async_dependencies_ty: Vec<Type<'a>>,
     pub grid_size_x_ty: Type<'a>,
     pub cluster_size_x_ty: Vec<Type<'a>>,
@@ -1267,8 +1376,11 @@ pub struct LaunchOp<'a> {
     pub cluster_size_z: Vec<Value<'a>>,
     #[slot(dynamic_shared_memory_size_ty, name = "dynamicSharedMemorySize")]
     pub dynamic_shared_memory_size: Vec<Value<'a>>,
+    pub cooperative: bool,
     pub module: Option<Attribute<'a>>,
     pub function: Option<Attribute<'a>>,
+    #[attr(int = "i64")]
+    pub workgroup_attributions: Option<Attribute<'a>>,
     pub body: Region<'a>,
     pub async_dependencies_ty: Vec<Type<'a>>,
     #[dtype(is = index)]
@@ -2289,6 +2401,9 @@ pub struct SubgroupMmaInsertThreadLocalOp<'a> {
 /// matrix which eventually allows the lowering to determine the size of each
 /// row.  If the `transpose` attribute is present then the op does a transposed load.
 ///
+/// The memory indices along each dimension must be in-bounds for that dimension
+/// as with an ordinary `memref.load`.
+///
 /// For integer types, the resulting `!gpu.mma_matrix` type needs to specify the
 /// signedness of the data if the matrix type is an `A` or `B` operand for
 /// `gpu.subgroup_mma_compute`.
@@ -2331,6 +2446,9 @@ pub struct SubgroupMmaLoadMatrixOp<'a> {
 ///
 /// This op is often meant to be used along with `gpu.subgroup_mma_load_matrix` and
 /// `gpu.subgroup_mma_compute`.
+///
+/// The memory indices along each dimension must be in-bounds for that dimension
+/// as with an ordinary `memref.load`.
 ///
 /// Example:
 ///
@@ -2637,7 +2755,7 @@ pub struct YieldOp<'a> {
 /// The `gpu` dialect.
 #[mlir::dialect(
     "gpu",
-    ops = [AllReduceOp, AllocOp, BarrierOp, BinaryOp, BlockDimOp, BlockIdOp, ClusterBlockIdOp, ClusterDimBlocksOp, ClusterDimOp, ClusterIdOp, Create2To4SpMatOp, CreateBsrOp, CreateCooAoSOp, CreateCooOp, CreateCscOp, CreateCsrOp, CreateDnTensorOp, DeallocOp, DestroyDnTensorOp, DestroySpMatOp, DynamicSharedMemoryOp, GPUFuncOp, GPUModuleOp, GlobalIdOp, GridDimOp, HostRegisterOp, HostUnregisterOp, LaneIdOp, LaunchFuncOp, LaunchOp, MemcpyOp, MemsetOp, NumSubgroupsOp, PrintfOp, ReturnOp, RotateOp, SDDMMBufferSizeOp, SDDMMOp, SetCsrPointersOp, SetDefaultDeviceOp, ShuffleOp, SpGEMMCopyOp, SpGEMMCreateDescrOp, SpGEMMDestroyDescrOp, SpGEMMWorkEstimationOrComputeOp, SpMMBufferSizeOp, SpMMOp, SpMVBufferSizeOp, SpMVOp, SpMatGetSizeOp, SubgroupBroadcastOp, SubgroupIdOp, SubgroupMmaComputeOp, SubgroupMmaConstantMatrixOp, SubgroupMmaElementwiseOp, SubgroupMmaExtractThreadLocalOp, SubgroupMmaInsertThreadLocalOp, SubgroupMmaLoadMatrixOp, SubgroupMmaStoreMatrixOp, SubgroupReduceOp, SubgroupSizeOp, TerminatorOp, ThreadIdOp, WaitOp, WarpExecuteOnLane0Op, YieldOp],
+    ops = [AllReduceOp, AllocOp, BallotOp, BarrierOp, BinaryOp, BlockDimOp, BlockIdOp, ClusterBlockIdOp, ClusterDimBlocksOp, ClusterDimOp, ClusterIdOp, Create2To4SpMatOp, CreateBsrOp, CreateCooAoSOp, CreateCooOp, CreateCscOp, CreateCsrOp, CreateDnTensorOp, DeallocOp, DestroyDnTensorOp, DestroySpMatOp, DynamicSharedMemoryOp, GPUFuncOp, GPUModuleOp, GlobalIdOp, GridDimOp, HostRegisterOp, HostUnregisterOp, InitializeNamedBarrierOp, LaneIdOp, LaunchFuncOp, LaunchOp, MemcpyOp, MemsetOp, NumSubgroupsOp, PrintfOp, ReturnOp, RotateOp, SDDMMBufferSizeOp, SDDMMOp, SetCsrPointersOp, SetDefaultDeviceOp, ShuffleOp, SpGEMMCopyOp, SpGEMMCreateDescrOp, SpGEMMDestroyDescrOp, SpGEMMWorkEstimationOrComputeOp, SpMMBufferSizeOp, SpMMOp, SpMVBufferSizeOp, SpMVOp, SpMatGetSizeOp, SubgroupBroadcastOp, SubgroupIdOp, SubgroupMmaComputeOp, SubgroupMmaConstantMatrixOp, SubgroupMmaElementwiseOp, SubgroupMmaExtractThreadLocalOp, SubgroupMmaInsertThreadLocalOp, SubgroupMmaLoadMatrixOp, SubgroupMmaStoreMatrixOp, SubgroupReduceOp, SubgroupSizeOp, TerminatorOp, ThreadIdOp, WaitOp, WarpExecuteOnLane0Op, YieldOp],
     dependents = ["arith"]
 )]
 pub struct GpuDialect;

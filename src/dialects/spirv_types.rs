@@ -50,6 +50,10 @@ pub enum SpirvType<'a> {
     Matrix { cols: u32, column: Box<Type<'a>> },
     /// `shape: None` is unranked; `-1` a dynamic dim.
     TensorArm { shape: Option<Vec<i64>>, elem: Box<Type<'a>> },
+    /// `!spirv.sampler`: no body.
+    Sampler,
+    /// `!spirv.named_barrier`: no body.
+    NamedBarrier,
 }
 
 /// A cursor over a type body.
@@ -301,6 +305,8 @@ impl<'a> SpirvType<'a> {
             SpirvType::Ptr { pointee, storage } => ("ptr", format!("{pointee}, {storage}")),
             SpirvType::Image { elem, params } => ("image", format!("{elem}, {}", params.join(", "))),
             SpirvType::SampledImage(t) => ("sampled_image", format!("{t}")),
+            SpirvType::Sampler => ("sampler", String::new()),
+            SpirvType::NamedBarrier => ("named_barrier", String::new()),
             SpirvType::Struct { name, members, decorations } => {
                 let mut s = String::new();
                 if let Some(n) = name {
@@ -352,8 +358,11 @@ impl<'a> SpirvType<'a> {
 impl<'a> From<SpirvType<'a>> for Type<'a> {
     #[inline]
     fn from(t: SpirvType<'a>) -> Self {
-        let (m, body) = t.parts();
-        Type::Extended(Extended { name: Cow::Owned(format!("spirv.{m}")), body: Some(Cow::Owned(format!("<{body}>"))), params: Vec::new() })
+        let body = match t {
+            SpirvType::Sampler | SpirvType::NamedBarrier => None,
+            _ => Some(Cow::Owned(format!("<{}>", t.parts().1))),
+        };
+        Type::Extended(Extended { name: Cow::Owned(format!("spirv.{}", t.parts().0)), body, params: Vec::new() })
     }
 }
 
@@ -364,6 +373,11 @@ impl TryFrom<&Type<'_>> for SpirvType<'static> {
     fn try_from(t: &Type<'_>) -> Result<Self, ()> {
         let Type::Extended(e) = t else { return Err(()) };
         let m = e.name.strip_prefix("spirv.").ok_or(())?;
+        match (m, &e.body) {
+            ("sampler", None) => return Ok(SpirvType::Sampler),
+            ("named_barrier", None) => return Ok(SpirvType::NamedBarrier),
+            _ => {}
+        }
         let body = e.body.as_deref().and_then(|b| b.strip_prefix('<')).ok_or(())?;
         Cursor { s: body }.parse(m).ok_or(())
     }

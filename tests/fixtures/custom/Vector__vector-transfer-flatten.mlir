@@ -134,6 +134,16 @@ module {
 
 // -----
 module {
+  func.func @transfer_read_multi_dim_unit_vector(%arg0: memref<5x4x3x2xi8>) -> vector<1x1x1xi8> {
+    %c0 = arith.constant 0 : index
+    %c0_i8 = arith.constant 0 : i8
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0, %c0], %c0_i8 : memref<5x4x3x2xi8>, vector<1x1x1xi8>
+    return %0 : vector<1x1x1xi8>
+  }
+}
+
+// -----
+module {
   func.func @transfer_write_dims_match_contiguous(%arg0: memref<5x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>, %arg1: vector<5x4x3x2xi8>) {
     %c0 = arith.constant 0 : index
     vector.transfer_write %arg1, %arg0[%c0, %c0, %c0, %c0] : vector<5x4x3x2xi8>, memref<5x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>
@@ -271,6 +281,15 @@ module {
   func.func @negative_out_of_bound_transfer_write(%arg0: memref<?x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>, %arg1: vector<1x1x3x2xi8>) {
     %c0 = arith.constant 0 : index
     vector.transfer_write %arg1, %arg0[%c0, %c0, %c0, %c0] {in_bounds = [false, true, true, true]} : vector<1x1x3x2xi8>, memref<?x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @transfer_write_multi_dim_unit_vector(%arg0: memref<5x4x3x2xi8>, %arg1: vector<1x1x1xi8>) {
+    %c0 = arith.constant 0 : index
+    vector.transfer_write %arg1, %arg0[%c0, %c0, %c0, %c0] : vector<1x1x1xi8>, memref<5x4x3x2xi8>
     return
   }
 }

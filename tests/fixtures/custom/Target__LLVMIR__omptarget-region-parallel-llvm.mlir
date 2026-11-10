@@ -13,7 +13,7 @@ module attributes {omp.is_target_device = false} {
     %8 = omp.map.info var_ptr(%3 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
     %9 = omp.map.info var_ptr(%5 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
     %10 = omp.map.info var_ptr(%7 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
-    omp.target map_entries(%8 -> %arg0, %9 -> %arg1, %10 -> %arg2 : !llvm.ptr, !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%8 -> %arg0, %9 -> %arg1, %10 -> %arg2 : !llvm.ptr, !llvm.ptr, !llvm.ptr) {
       omp.parallel {
         %11 = llvm.load %arg0 : !llvm.ptr -> i32
         %12 = llvm.load %arg1 : !llvm.ptr -> i32

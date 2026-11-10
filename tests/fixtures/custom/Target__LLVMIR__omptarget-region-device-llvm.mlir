@@ -16,7 +16,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
     %11 = omp.map.info var_ptr(%8 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
     %12 = omp.map.info var_ptr(%9 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
     %13 = omp.map.info var_ptr(%10 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
-    omp.target map_entries(%11 -> %arg0, %12 -> %arg1, %13 -> %arg2 : !llvm.ptr, !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%11 -> %arg0, %12 -> %arg1, %13 -> %arg2 : !llvm.ptr, !llvm.ptr, !llvm.ptr) {
       %14 = llvm.load %arg0 : !llvm.ptr -> i32
       %15 = llvm.load %arg1 : !llvm.ptr -> i32
       %16 = llvm.add %14, %15 : i32

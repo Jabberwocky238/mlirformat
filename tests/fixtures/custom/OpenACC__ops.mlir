@@ -683,6 +683,14 @@ module {
 
 // -----
 module {
+  %c2_i32 = arith.constant 2 : i32
+  %0 = acc.on_device %c2_i32 : i32 -> i1
+  %c2 = arith.constant 2 : index
+  %1 = acc.on_device %c2 : index -> i1
+}
+
+// -----
+module {
   func.func @testexitdataop(%arg0: !llvm.ptr) {
     %true = arith.constant true
     %c1_i64 = arith.constant 1 : i64
@@ -989,18 +997,18 @@ module {
 
 // -----
 module {
-  llvm.mlir.global external @globalvar() {acc.declare = #acc.declare<dataClause =  acc_create>, addr_space = 0 : i32} : i32 {
+  llvm.mlir.global external @globalvar() {acc.declare = #acc.declare<dataClause = acc_create>, addr_space = 0 : i32} : i32 {
     %0 = llvm.mlir.constant(0 : i32) : i32
     llvm.return %0 : i32
   }
   acc.global_ctor @acc_constructor {
-    %0 = llvm.mlir.addressof @globalvar {acc.declare = #acc.declare<dataClause =  acc_create>} : !llvm.ptr
+    %0 = llvm.mlir.addressof @globalvar {acc.declare = #acc.declare<dataClause = acc_create>} : !llvm.ptr
     %1 = acc.create varPtr(%0 : !llvm.ptr) varType(i32) -> !llvm.ptr
     %2 = acc.declare_enter dataOperands(%1 : !llvm.ptr)
     acc.terminator
   }
   acc.global_dtor @acc_destructor {
-    %0 = llvm.mlir.addressof @globalvar {acc.declare = #acc.declare<dataClause =  acc_create>} : !llvm.ptr
+    %0 = llvm.mlir.addressof @globalvar {acc.declare = #acc.declare<dataClause = acc_create>} : !llvm.ptr
     %1 = acc.getdeviceptr varPtr(%0 : !llvm.ptr) varType(i32) -> !llvm.ptr {dataClause = #acc<data_clause acc_create>}
     acc.declare_exit dataOperands(%1 : !llvm.ptr)
     acc.delete accPtr(%1 : !llvm.ptr)
@@ -1069,7 +1077,7 @@ module {
     %c10_i64 = arith.constant 10 : i64
     %c10_i64_0 = arith.constant 10 : i64
     %c20_i32 = arith.constant 20 : i32
-    %0 = llvm.alloca %c20_i32 x i32 {acc.declare = #acc.declare<dataClause =  acc_create, implicit = true>} : (i32) -> !llvm.ptr
+    %0 = llvm.alloca %c20_i32 x i32 {acc.declare = #acc.declare<dataClause = acc_create, implicit = true>} : (i32) -> !llvm.ptr
     %1 = acc.create varPtr(%0 : !llvm.ptr) varType(!llvm.array<20 x i32>) -> !llvm.ptr {implicit = true}
     %2 = acc.present varPtr(%arg0 : memref<10x10xf32>) varType(tensor<10x10xf32>) -> memref<10x10xf32>
     %3 = acc.present varPtr(%arg1 : memref<10x10xf32>) varType(tensor<10x10xf32>) -> memref<10x10xf32>
@@ -1421,6 +1429,59 @@ module {
     }
     acc.copyout accPtr(%0 : memref<1024xf32>) async(%c1_i32 : i32) to varPtr(%arg0 : memref<1024xf32>)
     return
+  }
+}
+
+// -----
+module {
+  func.func @test_acc_reduction_combine(%arg0: memref<i32>, %arg1: memref<i32>) {
+    acc.reduction_combine %arg0 into %arg1 <add> : memref<i32>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @test_getdeviceptr_opaque_ptr(%arg0: !llvm.ptr) {
+    %0 = acc.getdeviceptr varPtr(%arg0 : !llvm.ptr) -> !llvm.ptr
+    %1 = acc.declare_enter dataOperands(%0 : !llvm.ptr)
+    return
+  }
+}
+
+// -----
+module {
+  acc.reduction.recipe @reduction_maximum_memref_f32 : memref<f32> reduction_operator <maximumf> init {
+  ^bb0(%arg0: memref<f32>):
+    %alloca = memref.alloca() : memref<f32>
+    acc.yield %alloca : memref<f32>
+  } combiner {
+  ^bb0(%arg0: memref<f32>, %arg1: memref<f32>):
+    acc.yield %arg0 : memref<f32>
+  }
+  acc.reduction.recipe @reduction_maxnum_memref_f32 : memref<f32> reduction_operator <maxnumf> init {
+  ^bb0(%arg0: memref<f32>):
+    %alloca = memref.alloca() : memref<f32>
+    acc.yield %alloca : memref<f32>
+  } combiner {
+  ^bb0(%arg0: memref<f32>, %arg1: memref<f32>):
+    acc.yield %arg0 : memref<f32>
+  }
+  acc.reduction.recipe @reduction_minimum_memref_f32 : memref<f32> reduction_operator <minimumf> init {
+  ^bb0(%arg0: memref<f32>):
+    %alloca = memref.alloca() : memref<f32>
+    acc.yield %alloca : memref<f32>
+  } combiner {
+  ^bb0(%arg0: memref<f32>, %arg1: memref<f32>):
+    acc.yield %arg0 : memref<f32>
+  }
+  acc.reduction.recipe @reduction_minnum_memref_f32 : memref<f32> reduction_operator <minnumf> init {
+  ^bb0(%arg0: memref<f32>):
+    %alloca = memref.alloca() : memref<f32>
+    acc.yield %alloca : memref<f32>
+  } combiner {
+  ^bb0(%arg0: memref<f32>, %arg1: memref<f32>):
+    acc.yield %arg0 : memref<f32>
   }
 }
 

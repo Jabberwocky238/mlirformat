@@ -22,7 +22,7 @@
       }) : (f32) -> f32
       "memref.store"(%15, %1, %arg5, %arg4, %arg3) : (f32, memref<?x?x?xf32>, index, index, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%8) <{callee = @printMemrefF32}> : (memref<*xf32>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

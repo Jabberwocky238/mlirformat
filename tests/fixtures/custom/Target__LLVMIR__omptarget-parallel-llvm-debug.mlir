@@ -1,7 +1,7 @@
 #di_basic_type = #llvm.di_basic_type<tag = DW_TAG_base_type, name = "integer", sizeInBits = 32, encoding = DW_ATE_signed>
 #di_file = #llvm.di_file<"target.f90" in "">
 #di_null_type = #llvm.di_null_type
-#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_Fortran95, file = #di_file, producer = "flang", isOptimized = false, emissionKind = Full>
+#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_Fortran95, file = #di_file, producer = "flang", emissionKind = Full>
 #di_subroutine_type = #llvm.di_subroutine_type<callingConvention = DW_CC_program, types = #di_null_type>
 #di_subprogram = #llvm.di_subprogram<compileUnit = #di_compile_unit, scope = #di_file, name = "test", file = #di_file, subprogramFlags = Definition, type = #di_subroutine_type>
 #di_subprogram1 = #llvm.di_subprogram<compileUnit = #di_compile_unit, scope = #di_file, name = "kernel", file = #di_file, subprogramFlags = Definition, type = #di_subroutine_type>
@@ -13,7 +13,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<i32 = dense<32> : vector<2xi64>,
     %1 = llvm.alloca %0 x i32 {bindc_name = "x"} : (i64) -> !llvm.ptr
     llvm.intr.dbg.declare #di_local_variable = %1 : !llvm.ptr
     %2 = omp.map.info var_ptr(%1 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "x"}
-    omp.target map_entries(%2 -> %arg0 : !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%2 -> %arg0 : !llvm.ptr) {
       %3 = llvm.mlir.constant(1 : i32) : i32
       llvm.intr.dbg.declare #di_local_variable1 = %arg0 : !llvm.ptr
       omp.parallel {

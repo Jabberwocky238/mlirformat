@@ -5,7 +5,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -21,7 +21,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -37,7 +37,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -53,7 +53,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -69,7 +69,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -85,7 +85,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -101,7 +101,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -117,7 +117,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -133,7 +133,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_ncw_fcw", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -149,7 +149,23 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
+      %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @conv1d_mixed_precision_bf16_f32(%arg0: tensor<5xbf16>, %arg1: tensor<2xbf16>, %arg2: tensor<4xf32>) -> tensor<4xf32> {
+    %0 = linalg.conv_1d ins(%arg0, %arg1 : tensor<5xbf16>, tensor<2xbf16>) outs(%arg2 : tensor<4xf32>) -> tensor<4xf32>
+    return %0 : tensor<4xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.conv_1d", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -165,7 +181,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.depthwise_conv_1d_nwc_wc"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -181,7 +197,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.depthwise_conv_1d_nwc_wc"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.depthwise_conv_1d_nwc_wc", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -197,7 +213,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -213,7 +229,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.conv_1d_nwc_wcf", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -229,7 +245,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -245,7 +261,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_max"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_max", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -261,7 +277,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -277,7 +293,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_max"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_max", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -293,7 +309,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -309,7 +325,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_ncw_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_ncw_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -325,7 +341,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -341,7 +357,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_nwc_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -357,7 +373,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_ncw_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_ncw_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 
@@ -373,7 +389,7 @@ module {
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.pooling_ncw_sum"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %0 = transform.structured.match ops{["linalg.pooling_ncw_sum", "linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.get_parent_op %0 {isolated_from_above} : (!transform.any_op) -> !transform.any_op
       %2 = transform.structured.vectorize_children_and_apply_patterns %1 : (!transform.any_op) -> !transform.any_op
       transform.yield 

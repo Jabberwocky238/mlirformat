@@ -1,12 +1,16 @@
-6	parse	expected ':'
-7	parse	expected non-function type
-8	parse	expected ','
-10	parse	expected ':'
-11	parse	expected non-function type
-12	parse	expected SSA operand
-13	parse	custom op 'spirv.LogicalNot' 'operand' must be bool or fixed-length vector of bool values of length 2/3/4/8/16, but got 'i32'
-15	parse	expected ','
-16	verify	'spirv.Select' op result expected to be of vector type when condition is of vector type
-17	verify	'spirv.Select' op result should have the same number of elements as the condition when condition is of vector type
-18	verify	'spirv.Select' op failed to verify that all of {true_value, false_value, result} have same type
-19	verify	'spirv.Select' op failed to verify that all of {true_value, false_value, result} have same type
+3	parse	custom op 'spirv.Any' invalid kind of type specified: expected builtin.vector, but found 'i1'
+4	verify	'spirv.Any' op result #0 must be bool, but got 'vector<2xi1>'
+8	parse	custom op 'spirv.All' invalid kind of type specified: expected builtin.vector, but found 'i1'
+9	verify	'spirv.All' op result #0 must be bool, but got 'vector<2xi1>'
+17	parse	expected ':'
+18	parse	expected non-function type
+19	parse	expected ','
+21	parse	expected ':'
+22	parse	expected non-function type
+23	parse	expected SSA operand
+24	parse	custom op 'spirv.LogicalNot' 'operand' must be bool or fixed-length vector of bool values of length 2/3/4/8/16 of ranks 1, but got 'i32'
+26	parse	expected ','
+27	verify	'spirv.Select' op result expected to be of vector type when condition is of vector type
+28	verify	'spirv.Select' op result should have the same number of elements as the condition when condition is of vector type
+29	verify	'spirv.Select' op failed to verify that all of {true_value, false_value, result} have same type
+30	verify	'spirv.Select' op failed to verify that all of {true_value, false_value, result} have same type

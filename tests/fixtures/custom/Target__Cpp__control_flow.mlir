@@ -4,12 +4,12 @@ module {
   ^bb1:  // pred: ^bb0
     cf.br ^bb3(%arg0 : i64)
   ^bb2:  // pred: ^bb0
-    %0 = emitc.call_opaque "add"(%arg0, %arg0) : (i64, i64) -> i64
+    %0 = emitc.call_opaque "add"(%arg0, %arg0)  : (i64, i64) -> i64
     cf.br ^bb3(%0 : i64)
   ^bb3(%1: i64):  // 2 preds: ^bb1, ^bb2
     cf.br ^bb4(%1, %arg0 : i64, i64)
   ^bb4(%2: i64, %3: i64):  // pred: ^bb3
-    %4 = emitc.call_opaque "add"(%2, %3) : (i64, i64) -> i64
+    %4 = emitc.call_opaque "add"(%2, %3)  : (i64, i64) -> i64
     return %4 : i64
   }
   func.func @block_labels0() {

@@ -1,26 +1,4 @@
 "builtin.module"() ({
-  "func.func"() <{function_type = (memref<2x16x16xf32>, index) -> f32, sym_name = "test_load"}> ({
-  ^bb0(%arg1: memref<2x16x16xf32>, %arg2: index):
-    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %2 = "arith.constant"() <{value = 8 : index}> : () -> index
-    %3 = "memref.load"(%arg1, %arg2, %1, %2) : (memref<2x16x16xf32>, index, index, index) -> f32
-    "func.return"(%3) : (f32) -> ()
-  }) : () -> ()
-  "builtin.module"() ({
-    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
-    ^bb0(%arg0: !transform.any_op):
-      %0 = "transform.structured.match"(%arg0) <{ops = ["func.func"]}> : (!transform.any_op) -> !transform.any_op
-      "transform.apply_patterns"(%0) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
-        "transform.apply_patterns.memref.extract_address_computations"() : () -> ()
-      }) : (!transform.any_op) -> ()
-      "transform.debug.emit_remark_at"(%0) <{message = "transformed"}> : (!transform.any_op) -> ()
-      "transform.yield"() : () -> ()
-    }) : () -> ()
-  }) {transform.with_named_sequence} : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = (memref<2x16x16xf32>, index) -> f32, sym_name = "test_load_nontemporal"}> ({
   ^bb0(%arg1: memref<2x16x16xf32>, %arg2: index):
     %1 = "arith.constant"() <{value = 0 : index}> : () -> index
@@ -125,6 +103,86 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (memref<8x8xf32>, f32, index) -> f32, sym_name = "test_atomic_rmw"}> ({
+  ^bb0(%arg1: memref<8x8xf32>, %arg2: f32, %arg3: index):
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "memref.atomic_rmw"(%arg2, %arg1, %arg3, %1) <{kind = 0 : i64}> : (f32, memref<8x8xf32>, index, index) -> f32
+    "func.return"(%2) : (f32) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["func.func"]}> : (!transform.any_op) -> !transform.any_op
+      "transform.apply_patterns"(%0) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
+        "transform.apply_patterns.memref.extract_address_computations"() : () -> ()
+      }) : (!transform.any_op) -> ()
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<8x8xf32>, index) -> (), sym_name = "test_prefetch"}> ({
+  ^bb0(%arg1: memref<8x8xf32>, %arg2: index):
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    "memref.prefetch"(%arg1, %arg2, %1) <{isDataCache = true, isWrite = false, localityHint = 3 : i32}> : (memref<8x8xf32>, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["func.func"]}> : (!transform.any_op) -> !transform.any_op
+      "transform.apply_patterns"(%0) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
+        "transform.apply_patterns.memref.extract_address_computations"() : () -> ()
+      }) : (!transform.any_op) -> ()
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?x?xf32>, index) -> vector<4xf32>, sym_name = "negative_vector_load_without_inbounds"}> ({
+  ^bb0(%arg1: memref<?x?xf32>, %arg2: index):
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %2 = "vector.load"(%arg1, %arg2, %1) : (memref<?x?xf32>, index, index) -> vector<4xf32>
+    "func.return"(%2) : (vector<4xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["func.func"]}> : (!transform.any_op) -> !transform.any_op
+      "transform.apply_patterns"(%0) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
+        "transform.apply_patterns.memref.extract_address_computations"() : () -> ()
+      }) : (!transform.any_op) -> ()
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?x?xf16>, index) -> !gpu.mma_matrix<16x16xf16, "AOp">, sym_name = "test_gpu_subgroup_mma_dynamic_source_shape"}> ({
+  ^bb0(%arg1: memref<?x?xf16>, %arg2: index):
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %2 = "gpu.subgroup_mma_load_matrix"(%arg1, %arg2, %1) <{leadDimension = 32 : index}> : (memref<?x?xf16>, index, index) -> !gpu.mma_matrix<16x16xf16, "AOp">
+    "func.return"(%2) : (!gpu.mma_matrix<16x16xf16, "AOp">) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["func.func"]}> : (!transform.any_op) -> !transform.any_op
+      "transform.apply_patterns"(%0) <{max_iterations = -1 : i64, max_num_rewrites = -1 : i64}> ({
+        "transform.apply_patterns.memref.extract_address_computations"() : () -> ()
+      }) : (!transform.any_op) -> ()
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (memref<4x32x32xf16, 3>, index, index, index) -> vector<4x2xf16>, sym_name = "test_ldmatrix"}> ({
   ^bb0(%arg1: memref<4x32x32xf16, 3>, %arg2: index, %arg3: index, %arg4: index):
     %1 = "nvgpu.ldmatrix"(%arg1, %arg2, %arg3, %arg4) <{numTiles = 4 : i32, transpose = false}> : (memref<4x32x32xf16, 3>, index, index, index) -> vector<4x2xf16>
@@ -144,7 +202,7 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (memref<?x?x?xf16, 3>, index, index, index) -> vector<4x2xf16>, sym_name = "test_ldmatrix"}> ({
+  "func.func"() <{function_type = (memref<?x?x?xf16, 3>, index, index, index) -> vector<4x2xf16>, sym_name = "test_dynamic_ldmatrix"}> ({
   ^bb0(%arg1: memref<?x?x?xf16, 3>, %arg2: index, %arg3: index, %arg4: index):
     %1 = "nvgpu.ldmatrix"(%arg1, %arg2, %arg3, %arg4) <{numTiles = 4 : i32, transpose = false}> : (memref<?x?x?xf16, 3>, index, index, index) -> vector<4x2xf16>
     "func.return"(%1) : (vector<4x2xf16>) -> ()

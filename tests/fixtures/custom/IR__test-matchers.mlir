@@ -21,5 +21,11 @@ module {
     %2 = arith.mulf %arg0, %1 fastmath<fast> : f32
     return %2 : f32
   }
+  func.func @test4(%arg0: f32) -> f32 {
+    %0 = ub.poison : f32
+    %cst = arith.constant 1.000000e+00 : f32
+    %1 = arith.addf %arg0, %cst : f32
+    return %1 : f32
+  }
 }
 

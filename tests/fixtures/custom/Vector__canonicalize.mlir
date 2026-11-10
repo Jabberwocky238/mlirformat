@@ -210,6 +210,78 @@ module {
 
 // -----
 module {
+  func.func @extract_from_constant_mask() -> vector<4xi1> {
+    %0 = vector.constant_mask [2, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[1] : vector<4xi1> from vector<4x4xi1>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @extract_from_constant_mask_all_false() -> vector<4xi1> {
+    %0 = vector.constant_mask [2, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[3] : vector<4xi1> from vector<4x4xi1>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @extract_from_constant_mask_at_boundary() -> vector<4xi1> {
+    %0 = vector.constant_mask [2, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[2] : vector<4xi1> from vector<4x4xi1>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @extract_from_constant_mask_multiple_indices() -> vector<4xi1> {
+    %0 = vector.constant_mask [2, 3, 3] : vector<4x4x4xi1>
+    %1 = vector.extract %0[1, 2] : vector<4xi1> from vector<4x4x4xi1>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @extract_from_constant_mask_dynamic_position_all_true(%arg0: index) -> vector<4xi1> {
+    %0 = vector.constant_mask [4, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[%arg0] : vector<4xi1> from vector<4x4xi1>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @extract_from_constant_mask_dynamic_position_not_all_true(%arg0: index) -> vector<4xi1> {
+    %0 = vector.constant_mask [2, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[%arg0] : vector<4xi1> from vector<4x4xi1>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @extract_scalar_from_constant_mask_within_bounds() -> i1 {
+    %0 = vector.constant_mask [2, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[0, 1] : i1 from vector<4x4xi1>
+    return %1 : i1
+  }
+}
+
+// -----
+module {
+  func.func @extract_scalar_from_constant_mask_outside_bounds() -> i1 {
+    %0 = vector.constant_mask [2, 3] : vector<4x4xi1>
+    %1 = vector.extract %0[0, 3] : i1 from vector<4x4xi1>
+    return %1 : i1
+  }
+}
+
+// -----
+module {
   func.func @constant_mask_to_true_splat() -> vector<2x4xi1> {
     %0 = vector.constant_mask [2, 4] : vector<2x4xi1>
     return %0 : vector<2x4xi1>
@@ -708,6 +780,15 @@ module {
 
 // -----
 module {
+  func.func @fold_shape_cast_from_elements(%arg0: f32, %arg1: f32, %arg2: f32, %arg3: f32) -> vector<2x2xf32> {
+    %0 = vector.from_elements %arg0, %arg1, %arg2, %arg3 : vector<4xf32>
+    %1 = vector.shape_cast %0 : vector<4xf32> to vector<2x2xf32>
+    return %1 : vector<2x2xf32>
+  }
+}
+
+// -----
+module {
   func.func @fold_broadcast_shapecast(%arg0: vector<4xf32>) -> vector<4xf32> {
     %0 = vector.broadcast %arg0 : vector<4xf32> to vector<1x1x4xf32>
     %1 = vector.shape_cast %0 : vector<1x1x4xf32> to vector<4xf32>
@@ -913,6 +994,15 @@ module {
 
 // -----
 module {
+  func.func @bitcast_index_no_fold() -> vector<16xi64> {
+    %cst = arith.constant dense<0> : vector<16xindex>
+    %0 = vector.bitcast %cst : vector<16xindex> to vector<16xi64>
+    return %0 : vector<16xi64>
+  }
+}
+
+// -----
+module {
   func.func @broadcast_poison() -> vector<4x6xi8> {
     %0 = ub.poison : vector<6xi8>
     %1 = vector.broadcast %0 : vector<6xi8> to vector<4x6xi8>
@@ -1112,6 +1202,39 @@ module {
     %4 = "some_op_that_may_have_side_effects"() : () -> tensor<2x3x4xf32>
     %5 = vector.transfer_write %0, %arg0[%c0, %c0, %c0] {in_bounds = [true, true, true]} : vector<2x3x4xf32>, tensor<2x3x4xf32>
     return %1, %3, %5 : tensor<2x3x4xf32>, tensor<2x3x4xf32>, tensor<2x3x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @negative_transfer_folding_masked_read(%arg0: tensor<2x3x4xf32>, %arg1: tensor<2x3x4xf32>, %arg2: vector<2x3x4xi1>) -> tensor<2x3x4xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst, %arg2 {in_bounds = [true, true, true]} : tensor<2x3x4xf32>, vector<2x3x4xf32>
+    %1 = vector.transfer_write %0, %arg1[%c0, %c0, %c0] {in_bounds = [true, true, true]} : vector<2x3x4xf32>, tensor<2x3x4xf32>
+    return %1 : tensor<2x3x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @negative_transfer_folding_masked_write(%arg0: tensor<2x3x4xf32>, %arg1: tensor<2x3x4xf32>, %arg2: vector<2x3x4xi1>) -> tensor<2x3x4xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst {in_bounds = [true, true, true]} : tensor<2x3x4xf32>, vector<2x3x4xf32>
+    %1 = vector.transfer_write %0, %arg1[%c0, %c0, %c0], %arg2 {in_bounds = [true, true, true]} : vector<2x3x4xf32>, tensor<2x3x4xf32>
+    return %1 : tensor<2x3x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @negative_transfer_folding_masked_read_and_write(%arg0: tensor<2x3x4xf32>, %arg1: tensor<2x3x4xf32>, %arg2: vector<2x3x4xi1>) -> tensor<2x3x4xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%c0, %c0, %c0], %cst, %arg2 {in_bounds = [true, true, true]} : tensor<2x3x4xf32>, vector<2x3x4xf32>
+    %1 = vector.transfer_write %0, %arg1[%c0, %c0, %c0], %arg2 {in_bounds = [true, true, true]} : vector<2x3x4xf32>, tensor<2x3x4xf32>
+    return %1 : tensor<2x3x4xf32>
   }
 }
 
@@ -1333,6 +1456,22 @@ module {
   func.func @masked_vector_multi_reduction_single_parallel(%arg0: vector<2xf32>, %arg1: vector<2xf32>, %arg2: vector<2xi1>) -> vector<2xf32> {
     %0 = vector.mask %arg2 { vector.multi_reduction <mul>, %arg0, %arg1 [] : vector<2xf32> to vector<2xf32> } : vector<2xi1> -> vector<2xf32>
     return %0 : vector<2xf32>
+  }
+}
+
+// -----
+module {
+  func.func @vector_multi_reduction_no_reduction_dims_nd(%arg0: vector<2x3xf32>, %arg1: vector<2x3xf32>) -> vector<2x3xf32> {
+    %0 = vector.multi_reduction <add>, %arg0, %arg1 [] : vector<2x3xf32> to vector<2x3xf32>
+    return %0 : vector<2x3xf32>
+  }
+}
+
+// -----
+module {
+  func.func @masked_vector_multi_reduction_no_reduction_dims_nd(%arg0: vector<2x3xf32>, %arg1: vector<2x3xf32>, %arg2: vector<2x3xi1>) -> vector<2x3xf32> {
+    %0 = vector.mask %arg2 { vector.multi_reduction <add>, %arg0, %arg1 [] : vector<2x3xf32> to vector<2x3xf32> } : vector<2x3xi1> -> vector<2x3xf32>
+    return %0 : vector<2x3xf32>
   }
 }
 
@@ -1703,6 +1842,72 @@ module {
   func.func @shuffle_nofold1(%arg0: vector<4xi32>, %arg1: vector<2xi32>) -> vector<5xi32> {
     %0 = vector.shuffle %arg0, %arg1 [0, 1, 2, 3, 4] : vector<4xi32>, vector<2xi32>
     return %0 : vector<5xi32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_all_poison_mask(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> vector<2xi32> {
+    %0 = vector.shuffle %arg0, %arg1 [-1, -1] : vector<3xi32>, vector<3xi32>
+    return %0 : vector<2xi32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_unused_v1(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> vector<2xi32> {
+    %0 = vector.shuffle %arg0, %arg1 [4, 3] : vector<3xi32>, vector<3xi32>
+    return %0 : vector<2xi32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_unused_v2(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> vector<2xi32> {
+    %0 = vector.shuffle %arg0, %arg1 [2, 0] : vector<3xi32>, vector<3xi32>
+    return %0 : vector<2xi32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_unused_v1_with_poison_idx(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> vector<3xi32> {
+    %0 = vector.shuffle %arg0, %arg1 [4, -1, 3] : vector<3xi32>, vector<3xi32>
+    return %0 : vector<3xi32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_unused_v2_multidim(%arg0: vector<4x2xf32>, %arg1: vector<3x2xf32>) -> vector<3x2xf32> {
+    %0 = vector.shuffle %arg0, %arg1 [2, 0, 3] : vector<4x2xf32>, vector<3x2xf32>
+    return %0 : vector<3x2xf32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_both_operands_used(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> vector<4xi32> {
+    %0 = vector.shuffle %arg0, %arg1 [0, 3, 1, 4] : vector<3xi32>, vector<3xi32>
+    return %0 : vector<4xi32>
+  }
+}
+
+// -----
+module {
+  func.func @shuffle_poison_unused(%arg0: vector<2xi32>) -> vector<4xi32> {
+    %0 = ub.poison : vector<2xi32>
+    %1 = vector.shuffle %0, %arg0 [0, 1, -1, -1] : vector<2xi32>, vector<2xi32>
+    return %1 : vector<4xi32>
+  }
+}
+
+// -----
+module {
+  func.func @fold_poison_into_mask(%arg0: vector<2xi32>) -> vector<4xi32> {
+    %0 = ub.poison : vector<2xi32>
+    %1 = vector.shuffle %0, %arg0 [0, 1, 2, 1] : vector<2xi32>, vector<2xi32>
+    return %1 : vector<4xi32>
   }
 }
 
@@ -2407,6 +2612,17 @@ module {
 
 // -----
 module {
+  func.func @insert_scalar_poison_idx_dense_dest() -> vector<2xf16> {
+    %cst = arith.constant dense<0.000000e+00> : vector<2xf16>
+    %c-1 = arith.constant -1 : index
+    %cst_0 = arith.constant 2.500000e+00 : f16
+    %0 = vector.insert %cst_0, %cst [%c-1] : f16 into vector<2xf16>
+    return %0 : vector<2xf16>
+  }
+}
+
+// -----
+module {
   func.func @no_fold_insert_scalar_idx_oob(%arg0: vector<4x5xf32>, %arg1: vector<5xf32>) -> vector<4x5xf32> {
     %c-2 = arith.constant -2 : index
     %0 = vector.insert %arg1, %arg0 [%c-2] : vector<5xf32> into vector<4x5xf32>
@@ -2640,6 +2856,59 @@ module {
     %0 = vector.insert %arg1, %arg0 [0] : f32 into vector<4xf32>
     %1 = vector.insert %arg1, %0 [1] : f32 into vector<4xf32>
     return %1 : vector<4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @extract_strided_slice_of_extract_strided_slice(%arg0: vector<4x8x16xf32>) -> vector<2x2x16xf32> {
+    %0 = vector.extract_strided_slice %arg0 {offsets = [1, 2], sizes = [3, 4], strides = [1, 1]} : vector<4x8x16xf32> to vector<3x4x16xf32>
+    %1 = vector.extract_strided_slice %0 {offsets = [0, 1], sizes = [2, 2], strides = [1, 1]} : vector<3x4x16xf32> to vector<2x2x16xf32>
+    return %1 : vector<2x2x16xf32>
+  }
+}
+
+// -----
+module {
+  func.func @extract_strided_slice_inner_shorter(%arg0: vector<4x8x16xf32>) -> vector<2x2x4xf32> {
+    %0 = vector.extract_strided_slice %arg0 {offsets = [1], sizes = [3], strides = [1]} : vector<4x8x16xf32> to vector<3x8x16xf32>
+    %1 = vector.extract_strided_slice %0 {offsets = [0, 1, 2], sizes = [2, 2, 4], strides = [1, 1, 1]} : vector<3x8x16xf32> to vector<2x2x4xf32>
+    return %1 : vector<2x2x4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @extract_strided_slice_outer_shorter(%arg0: vector<4x8x16xf32>) -> vector<2x4x16xf32> {
+    %0 = vector.extract_strided_slice %arg0 {offsets = [1, 2], sizes = [3, 4], strides = [1, 1]} : vector<4x8x16xf32> to vector<3x4x16xf32>
+    %1 = vector.extract_strided_slice %0 {offsets = [0], sizes = [2], strides = [1]} : vector<3x4x16xf32> to vector<2x4x16xf32>
+    return %1 : vector<2x4x16xf32>
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_empty_mask_scalar_result_with_passthru(%arg0: vector<1xi1>, %arg1: i32, %arg2: i32) -> i32 {
+    %0 = vector.mask %arg0, %arg1 { vector.yield %arg2 : i32 } : vector<1xi1> -> i32
+    return %0 : i32
+  }
+}
+
+// -----
+module {
+  func.func @no_fold_alltrue_mask_empty_body_scalar_result(%arg0: i32, %arg1: i32) -> i32 {
+    %0 = vector.constant_mask [1] : vector<1xi1>
+    %1 = vector.mask %0, %arg0 { vector.yield %arg1 : i32 } : vector<1xi1> -> i32
+    return %1 : i32
+  }
+}
+
+// -----
+module {
+  func.func @interleave_deinterleave_fold(%arg0: vector<4xf32>) -> vector<4xf32> {
+    %res1, %res2 = vector.deinterleave %arg0 : vector<4xf32> -> vector<2xf32>
+    %0 = vector.interleave %res1, %res2 : vector<2xf32> -> vector<4xf32>
+    return %0 : vector<4xf32>
   }
 }
 

@@ -213,3 +213,88 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (i32, i32), sym_name = "unroll_unsigned_i2_tc2"}> ({
+    %0 = "arith.constant"() <{value = 7 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = 0 : i2}> : () -> i2
+    %2 = "arith.constant"() <{value = -2 : i2}> : () -> i2
+    %3 = "arith.constant"() <{value = 1 : i2}> : () -> i2
+    %4:2 = "scf.for"(%1, %2, %3, %0, %0) <{unsignedCmp}> ({
+    ^bb0(%arg0: i2, %arg1: i32, %arg2: i32):
+      %5 = "arith.addi"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      %6 = "arith.muli"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "scf.yield"(%5, %6) : (i32, i32) -> ()
+    }) : (i2, i2, i2, i32, i32) -> (i32, i32)
+    "func.return"(%4#0, %4#1) : (i32, i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (i32, i32), sym_name = "unroll_unsigned_i3_tc4"}> ({
+    %0 = "arith.constant"() <{value = 7 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = 0 : i3}> : () -> i3
+    %2 = "arith.constant"() <{value = -4 : i3}> : () -> i3
+    %3 = "arith.constant"() <{value = 1 : i3}> : () -> i3
+    %4:2 = "scf.for"(%1, %2, %3, %0, %0) <{unsignedCmp}> ({
+    ^bb0(%arg0: i3, %arg1: i32, %arg2: i32):
+      %5 = "arith.addi"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      %6 = "arith.muli"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "scf.yield"(%5, %6) : (i32, i32) -> ()
+    }) : (i3, i3, i3, i32, i32) -> (i32, i32)
+    "func.return"(%4#0, %4#1) : (i32, i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (i32, i32), sym_name = "unroll_unsigned_i1_tc1"}> ({
+    %0 = "arith.constant"() <{value = 7 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = false}> : () -> i1
+    %2 = "arith.constant"() <{value = true}> : () -> i1
+    %3 = "arith.constant"() <{value = true}> : () -> i1
+    %4:2 = "scf.for"(%1, %2, %3, %0, %0) <{unsignedCmp}> ({
+    ^bb0(%arg0: i1, %arg1: i32, %arg2: i32):
+      %5 = "arith.addi"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      %6 = "arith.muli"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "scf.yield"(%5, %6) : (i32, i32) -> ()
+    }) : (i1, i1, i1, i32, i32) -> (i32, i32)
+    "func.return"(%4#0, %4#1) : (i32, i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (i32, i32), sym_name = "unroll_unsigned_i3_tc5_with_epilogue"}> ({
+    %0 = "arith.constant"() <{value = 7 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = 0 : i3}> : () -> i3
+    %2 = "arith.constant"() <{value = -3 : i3}> : () -> i3
+    %3 = "arith.constant"() <{value = 1 : i3}> : () -> i3
+    %4:2 = "scf.for"(%1, %2, %3, %0, %0) <{unsignedCmp}> ({
+    ^bb0(%arg0: i3, %arg1: i32, %arg2: i32):
+      %5 = "arith.addi"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      %6 = "arith.muli"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "scf.yield"(%5, %6) : (i32, i32) -> ()
+    }) : (i3, i3, i3, i32, i32) -> (i32, i32)
+    "func.return"(%4#0, %4#1) : (i32, i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (i32, i32), sym_name = "unroll_unsigned_i2_step2_bug2"}> ({
+    %0 = "arith.constant"() <{value = 7 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = 0 : i2}> : () -> i2
+    %2 = "arith.constant"() <{value = -2 : i2}> : () -> i2
+    %3 = "arith.constant"() <{value = -2 : i2}> : () -> i2
+    %4:2 = "scf.for"(%1, %2, %3, %0, %0) <{unsignedCmp}> ({
+    ^bb0(%arg0: i2, %arg1: i32, %arg2: i32):
+      %5 = "arith.addi"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      %6 = "arith.muli"(%arg1, %arg2) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "scf.yield"(%5, %6) : (i32, i32) -> ()
+    }) : (i2, i2, i2, i32, i32) -> (i32, i32)
+    "func.return"(%4#0, %4#1) : (i32, i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+

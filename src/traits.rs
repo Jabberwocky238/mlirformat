@@ -93,13 +93,13 @@ impl OpInfos {
         Self { ops: BTreeMap::new(), dialects: BTreeSet::new() }
     }
 
-    /// What `mlir-opt` 22.1.8 knows: every upstream op, and the dialects it registers
+    /// What `mlir-opt` 23.1.5 knows: every upstream op, and the dialects it registers
     /// (`mlir-opt --show-dialects`).
     pub fn upstream() -> Self {
         let mut infos = Self::new();
         infos.register_upstream_ops();
         for ns in [
-            "acc", "affine", "amdgpu", "amx", "arith", "arm_neon", "arm_sme", "arm_sve", "async", "bufferization", "builtin", "cf", "complex", "dlti", "emitc", "func", "gpu", "index", "irdl", "linalg", "llvm", "math", "memref", "ml_program", "mpi", "nvgpu", "nvvm", "omp", "pdl", "pdl_interp", "ptr", "quant", "rocdl", "scf", "shape", "shard", "smt", "sparse_tensor", "spirv", "tensor", "test", "test_dyn", "test_irdl_to_cpp", "tosa", "transform", "ub", "vector", "wasmssa", "x86vector", "xegpu", "xevm",
+            "acc", "affine", "amdgpu", "arith", "arm_neon", "arm_sme", "arm_sve", "async", "bufferization", "builtin", "cf", "complex", "dlti", "emitc", "func", "gpu", "index", "irdl", "linalg", "llvm", "math", "memref", "ml_program", "mpi", "nvgpu", "nvvm", "omp", "pdl", "pdl_interp", "ptr", "quant", "rocdl", "scf", "shape", "shard", "smt", "sparse_tensor", "spirv", "tensor", "test", "test_dyn", "test_irdl_to_cpp", "tosa", "transform", "ub", "vector", "wasmssa", "x86", "xegpu", "xevm",
         ] {
             infos.dialect(ns);
         }

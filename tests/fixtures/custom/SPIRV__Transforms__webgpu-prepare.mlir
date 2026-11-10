@@ -36,6 +36,18 @@ module {
       %0 = spirv.IAddCarry %arg0, %arg1 : !spirv.struct<(i16, i16)>
       spirv.ReturnValue %0 : !spirv.struct<(i16, i16)>
     }
+    spirv.func @isubborrow_i32(%arg0: i32, %arg1: i32) -> !spirv.struct<(i32, i32)> "None" {
+      %0 = spirv.ISubBorrow %arg0, %arg1 : !spirv.struct<(i32, i32)>
+      spirv.ReturnValue %0 : !spirv.struct<(i32, i32)>
+    }
+    spirv.func @isubborrow_vector_i32(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> !spirv.struct<(vector<3xi32>, vector<3xi32>)> "None" {
+      %0 = spirv.ISubBorrow %arg0, %arg1 : !spirv.struct<(vector<3xi32>, vector<3xi32>)>
+      spirv.ReturnValue %0 : !spirv.struct<(vector<3xi32>, vector<3xi32>)>
+    }
+    spirv.func @isubborrow_i16(%arg0: i16, %arg1: i16) -> !spirv.struct<(i16, i16)> "None" {
+      %0 = spirv.ISubBorrow %arg0, %arg1 : !spirv.struct<(i16, i16)>
+      spirv.ReturnValue %0 : !spirv.struct<(i16, i16)>
+    }
     spirv.func @is_inf_f32(%arg0: f32) -> i1 "None" {
       %0 = spirv.IsInf %arg0 : f32
       spirv.ReturnValue %0 : i1

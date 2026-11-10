@@ -349,62 +349,6 @@ module {
 
 // -----
 module {
-  func.func @invalid_schedule(%arg0: memref<?xf32>, %arg1: memref<?xf32>) {
-    %c0 = arith.constant 0 : index
-    %c1 = arith.constant 1 : index
-    %c4 = arith.constant 4 : index
-    %cst = arith.constant 1.000000e+00 : f32
-    scf.for %arg2 = %c0 to %c4 step %c1 {
-      %0 = memref.load %arg0[%arg2] {__test_pipelining_op_order__ = 2 : i64, __test_pipelining_stage__ = 0 : i64} : memref<?xf32>
-      %1 = arith.addf %0, %cst {__test_pipelining_op_order__ = 0 : i64, __test_pipelining_stage__ = 2 : i64} : f32
-      memref.store %1, %arg1[%arg2] {__test_pipelining_op_order__ = 1 : i64, __test_pipelining_stage__ = 1 : i64} : memref<?xf32>
-    } {__test_pipelining_loop__}
-    return
-  }
-}
-
-// -----
-module {
-  func.func @invalid_schedule2(%arg0: memref<?xf32>, %arg1: memref<?xf32>) {
-    %c0 = arith.constant 0 : index
-    %c1 = arith.constant 1 : index
-    %c4 = arith.constant 4 : index
-    %cst = arith.constant 1.000000e+00 : f32
-    %0 = scf.for %arg2 = %c0 to %c4 step %c1 iter_args(%arg3 = %c0) -> (index) {
-      %1 = memref.load %arg0[%arg3] {__test_pipelining_op_order__ = 0 : i64, __test_pipelining_stage__ = 0 : i64} : memref<?xf32>
-      %2 = arith.addi %arg3, %c1 {__test_pipelining_op_order__ = 1 : i64, __test_pipelining_stage__ = 1 : i64} : index
-      memref.store %1, %arg1[%arg3] {__test_pipelining_op_order__ = 2 : i64, __test_pipelining_stage__ = 2 : i64} : memref<?xf32>
-      scf.yield %2 : index
-    } {__test_pipelining_loop__}
-    return
-  }
-}
-
-// -----
-module {
-  func.func @invalid_schedule3(%arg0: memref<?xf32>, %arg1: memref<?xf32>, %arg2: index) {
-    %c0 = arith.constant 0 : index
-    %c1 = arith.constant 1 : index
-    %c4 = arith.constant 4 : index
-    %0 = scf.for %arg3 = %c0 to %c4 step %c1 iter_args(%arg4 = %c0) -> (index) {
-      %1 = arith.cmpi slt, %arg2, %c4 {__test_pipelining_op_order__ = 0 : i64, __test_pipelining_stage__ = 0 : i64} : index
-      %2 = scf.if %1 -> (index) {
-        %5 = arith.addi %arg4, %c1 : index
-        scf.yield %5 : index
-      } else {
-        scf.yield %arg4 : index
-      } {__test_pipelining_op_order__ = 1 : i64, __test_pipelining_stage__ = 0 : i64}
-      %3 = memref.load %arg0[%2] {__test_pipelining_op_order__ = 2 : i64, __test_pipelining_stage__ = 0 : i64} : memref<?xf32>
-      %4 = arith.addi %2, %c1 {__test_pipelining_op_order__ = 3 : i64, __test_pipelining_stage__ = 1 : i64} : index
-      memref.store %3, %arg1[%2] {__test_pipelining_op_order__ = 4 : i64, __test_pipelining_stage__ = 2 : i64} : memref<?xf32>
-      scf.yield %4 : index
-    } {__test_pipelining_loop__}
-    return
-  }
-}
-
-// -----
-module {
   func.func @invalid_loop_step(%arg0: memref<?xf32>, %arg1: memref<?xf32>) {
     %c0 = arith.constant 0 : index
     %cst = arith.constant 1.000000e+00 : f32

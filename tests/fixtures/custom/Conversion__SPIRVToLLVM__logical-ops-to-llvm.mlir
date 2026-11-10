@@ -39,5 +39,21 @@ module {
     %0 = spirv.LogicalOr %arg0, %arg1 : vector<4xi1>
     spirv.Return
   }
+  spirv.func @ordered_scalar(%arg0: f32, %arg1: f32) "None" {
+    %0 = spirv.Ordered %arg0, %arg1 : f32
+    spirv.Return
+  }
+  spirv.func @ordered_vector(%arg0: vector<4xf32>, %arg1: vector<4xf32>) "None" {
+    %0 = spirv.Ordered %arg0, %arg1 : vector<4xf32>
+    spirv.Return
+  }
+  spirv.func @unordered_scalar(%arg0: f32, %arg1: f32) "None" {
+    %0 = spirv.Unordered %arg0, %arg1 : f32
+    spirv.Return
+  }
+  spirv.func @unordered_vector(%arg0: vector<4xf32>, %arg1: vector<4xf32>) "None" {
+    %0 = spirv.Unordered %arg0, %arg1 : vector<4xf32>
+    spirv.Return
+  }
 }
 

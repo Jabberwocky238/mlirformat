@@ -239,3 +239,31 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<5x4xi32>) -> (tensor<5x4xi32>, tensor<5x4xi1>), sym_name = "fuse_same_producer_multiple_consumers"}> ({
+  ^bb0(%arg0: tensor<5x4xi32>):
+    %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    %1 = "arith.constant"() <{value = 1 : i32}> : () -> i32
+    %2 = "tensor.empty"() : () -> tensor<30x8xi32>
+    %3 = "linalg.generic"(%2) <{indexing_maps = [#map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 0, 1>}> ({
+    ^bb0(%arg5: i32):
+      "linalg.yield"(%1) : (i32) -> ()
+    }) : (tensor<30x8xi32>) -> tensor<30x8xi32>
+    %4 = "tensor.extract_slice"(%3) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 7, 4>, static_sizes = array<i64: 5, 4>, static_strides = array<i64: 1, 1>}> : (tensor<30x8xi32>) -> tensor<5x4xi32>
+    %5 = "tensor.empty"() : () -> tensor<5x4xi1>
+    %6 = "linalg.generic"(%4, %5) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg3: i32, %arg4: i1):
+      %9 = "arith.cmpi"(%arg3, %0) <{predicate = 0 : i64}> : (i32, i32) -> i1
+      "linalg.yield"(%9) : (i1) -> ()
+    }) : (tensor<5x4xi32>, tensor<5x4xi1>) -> tensor<5x4xi1>
+    %7 = "linalg.generic"(%4, %arg0) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg1: i32, %arg2: i32):
+      %8 = "arith.addi"(%arg1, %1) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "linalg.yield"(%8) : (i32) -> ()
+    }) : (tensor<5x4xi32>, tensor<5x4xi32>) -> tensor<5x4xi32>
+    "func.return"(%7, %6) : (tensor<5x4xi32>, tensor<5x4xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

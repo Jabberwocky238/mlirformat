@@ -6,6 +6,12 @@ module {
     %3 = emitc.cmp lt, %2, %arg3 : (i32, i32) -> i1
     return %3 : i1
   }
+  func.func @expression_recurring_args(%arg0: i32, %arg1: i32) -> i1 {
+    %0 = emitc.mul %arg0, %arg1 : (i32, i32) -> i32
+    %1 = emitc.sub %0, %arg0 : (i32, i32) -> i32
+    %2 = emitc.cmp lt, %1, %arg1 : (i32, i32) -> i1
+    return %2 : i1
+  }
   func.func @multiple_expressions(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) -> (i32, i32) {
     %0 = emitc.mul %arg0, %arg1 : (i32, i32) -> i32
     %1 = emitc.sub %0, %arg2 : (i32, i32) -> i32
@@ -15,22 +21,9 @@ module {
   }
   func.func @expression_with_call(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: i32) -> i1 {
     %0 = emitc.mul %arg0, %arg1 : (i32, i32) -> i32
-    %1 = emitc.call_opaque "foo"(%0, %arg2) : (i32, i32) -> i32
+    %1 = emitc.call_opaque "foo"(%0, %arg2)  : (i32, i32) -> i32
     %2 = emitc.cmp lt, %1, %arg1 : (i32, i32) -> i1
     return %2 : i1
-  }
-  func.func @expression_with_dereference(%arg0: i32, %arg1: i32, %arg2: !emitc.ptr<i32>) -> i1 {
-    %0 = emitc.mul %arg0, %arg1 : (i32, i32) -> i32
-    %1 = emitc.apply "*"(%arg2) : (!emitc.ptr<i32>) -> i32
-    %2 = emitc.cmp lt, %0, %1 : (i32, i32) -> i1
-    return %2 : i1
-  }
-  func.func @expression_with_address_taken(%arg0: i32, %arg1: i32, %arg2: !emitc.ptr<i32>) -> i1 {
-    %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
-    %1 = emitc.apply "&"(%0) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
-    %2 = emitc.add %1, %arg1 : (!emitc.ptr<i32>, i32) -> !emitc.ptr<i32>
-    %3 = emitc.cmp lt, %2, %arg2 : (!emitc.ptr<i32>, !emitc.ptr<i32>) -> i1
-    return %3 : i1
   }
   func.func @no_nested_expression(%arg0: i32, %arg1: i32) -> i1 {
     %0 = emitc.expression %arg0, %arg1 : (i32, i32) -> i1 {
@@ -40,7 +33,7 @@ module {
     return %0 : i1
   }
   func.func @single_result_requirement() -> (i32, i32) {
-    %0:2 = emitc.call_opaque "foo"() : () -> (i32, i32)
+    %0:2 = emitc.call_opaque "foo"()  : () -> (i32, i32)
     return %0#0, %0#1 : i32, i32
   }
   func.func @expression_with_load(%arg0: i32, %arg1: !emitc.ptr<i32>) -> i1 {
@@ -64,6 +57,59 @@ module {
     %0 = "emitc.constant"() <{value = 42 : i32}> : () -> i32
     %1 = emitc.mul %arg0, %0 : (i32, i32) -> i32
     return %1 : i32
+  }
+  func.func @identity_cast_folded(%arg0: i32) -> i32 {
+    %0 = emitc.cast %arg0 : i32 to i32
+    %1 = emitc.bitwise_and %0, %arg0 : (i32, i32) -> i32
+    return %1 : i32
+  }
+  func.func @expression_with_subscript(%arg0: !emitc.array<4x8xi32>, %arg1: i32, %arg2: i32) -> i32 {
+    %0 = emitc.add %arg1, %arg2 : (i32, i32) -> i32
+    %1 = emitc.mul %0, %arg2 : (i32, i32) -> i32
+    %2 = emitc.subscript %arg0[%0, %1] : (!emitc.array<4x8xi32>, i32, i32) -> !emitc.lvalue<i32>
+    %3 = emitc.load %2 : <i32>
+    return %3 : i32
+  }
+  func.func @member(%arg0: !emitc.opaque<"mystruct">, %arg1: i32, %arg2: index) {
+    %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<!emitc.opaque<"mystruct">>
+    emitc.assign %arg0 : !emitc.opaque<"mystruct"> to %0 : <!emitc.opaque<"mystruct">>
+    %1 = "emitc.member"(%0) <{member = "a"}> : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.lvalue<i32>
+    emitc.assign %arg1 : i32 to %1 : <i32>
+    %2 = "emitc.member"(%0) <{member = "b"}> : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.lvalue<i32>
+    %3 = emitc.load %2 : <i32>
+    %4 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
+    emitc.assign %3 : i32 to %4 : <i32>
+    %5 = "emitc.member"(%0) <{member = "c"}> : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.array<2xi32>
+    %6 = emitc.subscript %5[%arg2] : (!emitc.array<2xi32>, index) -> !emitc.lvalue<i32>
+    %7 = emitc.load %6 : <i32>
+    emitc.assign %7 : i32 to %4 : <i32>
+    %8 = "emitc.member"(%0) <{member = "d"}> : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.array<2xi32>
+    %9 = emitc.subscript %8[%arg2] : (!emitc.array<2xi32>, index) -> !emitc.lvalue<i32>
+    emitc.assign %arg1 : i32 to %9 : <i32>
+    return
+  }
+  func.func @member_of_pointer(%arg0: !emitc.ptr<!emitc.opaque<"mystruct">>, %arg1: i32, %arg2: index) {
+    %0 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>
+    emitc.assign %arg0 : !emitc.ptr<!emitc.opaque<"mystruct">> to %0 : <!emitc.ptr<!emitc.opaque<"mystruct">>>
+    %1 = "emitc.member_of_ptr"(%0) <{member = "a"}> : (!emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>) -> !emitc.lvalue<i32>
+    emitc.assign %arg1 : i32 to %1 : <i32>
+    %2 = "emitc.member_of_ptr"(%0) <{member = "b"}> : (!emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>) -> !emitc.lvalue<i32>
+    %3 = emitc.load %2 : <i32>
+    %4 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
+    emitc.assign %3 : i32 to %4 : <i32>
+    %5 = "emitc.member_of_ptr"(%0) <{member = "c"}> : (!emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>) -> !emitc.array<2xi32>
+    %6 = emitc.subscript %5[%arg2] : (!emitc.array<2xi32>, index) -> !emitc.lvalue<i32>
+    %7 = emitc.load %6 : <i32>
+    emitc.assign %7 : i32 to %4 : <i32>
+    %8 = "emitc.member_of_ptr"(%0) <{member = "d"}> : (!emitc.lvalue<!emitc.ptr<!emitc.opaque<"mystruct">>>) -> !emitc.array<2xi32>
+    %9 = emitc.subscript %8[%arg2] : (!emitc.array<2xi32>, index) -> !emitc.lvalue<i32>
+    emitc.assign %arg1 : i32 to %9 : <i32>
+    return
+  }
+  func.func @expression_with_literal(%arg0: f32) -> f32 {
+    %0 = emitc.literal "M_PI" : f32
+    %1 = emitc.add %arg0, %0 : (f32, f32) -> f32
+    return %1 : f32
   }
 }
 

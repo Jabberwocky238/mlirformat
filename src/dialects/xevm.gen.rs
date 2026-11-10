@@ -44,7 +44,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 ///                 : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi16>
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("xevm.blockload2d", results(res))]
 pub struct BlockLoad2dOp<'a> {
     #[slot(ptr_ty)]
@@ -113,7 +113,7 @@ pub struct BlockLoad2dOp<'a> {
 ///                 : (!llvm.ptr<1>) -> vector<4xi16>
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("xevm.blockload", results(res))]
 pub struct BlockLoadOp<'a> {
     #[slot(ptr_ty)]
@@ -151,7 +151,7 @@ pub struct BlockLoadOp<'a> {
 ///     : (!llvm.ptr<1>, i32, i32, i32, i32, i32)
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("xevm.blockprefetch2d")]
 pub struct BlockPrefetch2dOp<'a> {
     #[slot(ptr_ty)]
@@ -221,7 +221,7 @@ pub struct BlockPrefetch2dOp<'a> {
 ///     : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>)
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("xevm.blockstore2d")]
 pub struct BlockStore2dOp<'a> {
     #[slot(ptr_ty)]
@@ -287,7 +287,7 @@ pub struct BlockStore2dOp<'a> {
 ///     : (!llvm.ptr<1>, vector<4xi16>)
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("xevm.blockstore")]
 pub struct BlockStoreOp<'a> {
     #[slot(ptr_ty)]
@@ -299,6 +299,22 @@ pub struct BlockStoreOp<'a> {
     #[dtype(strip = "llvm.ptr")]
     pub ptr_ty: Type<'a>,
     pub val_ty: Type<'a>,
+}
+
+/// `xevm.extf`: Floating point extension from f8/bf8/f4 to f16/bf16
+///
+/// The `xevm.extf` operation extends a floating point value from
+/// f8/bf8/f4 format to f16/bf16 format. It is the inverse of `xevm.truncf`.
+#[mlir::op("xevm.extf", format = "$src ` ` `{` $src_etype `,` $dst_etype `}` attr-dict `:` functional-type($src, $dst)", results(dst))]
+pub struct ExtfOp<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(dialect = "xevm<ext_src_etype")]
+    pub src_etype: Attribute<'a>,
+    #[attr(dialect = "xevm<ext_dst_etype")]
+    pub dst_etype: Attribute<'a>,
+    pub src_ty: Type<'a>,
+    pub dst: Type<'a>,
 }
 
 #[mlir::op("xevm.group_count.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
@@ -329,6 +345,52 @@ pub struct LaneIdOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `xevm.mma_mx`: Subgroup matrix multiply-add with MxN shape and MX scaling
+///
+/// The `xevm.mma_mx` is similar to `xevm.mma` has scale operands for A and B matrices.
+/// It is a cooperative operation where all threads/lanes in a subgroup participates
+/// and carries out matrix multiplication plus accumulation:
+///
+///   D = C + A x B
+///
+///   where the A, B, C input matrices and the result D have shapes:
+///     - D : MxN
+///     - C : MxN
+///     - A : MxK
+///     - B : KxN
+///
+/// Parameters:
+///   * `a` - vector of matrix A elements.
+///   * `b` - vector of matrix B elements.
+///   * `scale_a` - vector or scalar of scaling factors for matrix A.
+///   * `scale_b` - vector or scalar of scaling factors for matrix B.
+///   * `c` - (optional) vector of matrix C elements.
+///   * `shape` - the shape of the matrices, specified as `M`, `N`, and `K` values.
+///   * `types` - the data types of the matrices, specified as `D`, `A`, `B`, and optionally `C`.
+#[mlir::op("xevm.mma_mx", format = "$a `,` $b `,` $scale_a `,` $scale_b (`,` $c^)? ` ` `{` `shape` `=` $shape `,` `types` `=` $types `}` attr-dict `:` functional-type($a $b $scale_a $scale_b $c, $d)", results(d))]
+pub struct MMAMxOp<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(scale_a_ty)]
+    pub scale_a: Value<'a>,
+    #[slot(scale_b_ty)]
+    pub scale_b: Value<'a>,
+    #[slot(c_ty)]
+    pub c: Vec<Value<'a>>,
+    #[attr(dialect = "xevm.mma_shape")]
+    pub shape: Attribute<'a>,
+    #[attr(dialect = "xevm.mma_types")]
+    pub types: Attribute<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub scale_a_ty: Type<'a>,
+    pub scale_b_ty: Type<'a>,
+    pub c_ty: Vec<Type<'a>>,
+    pub d: Type<'a>,
+}
+
 /// `xevm.mma`: Subgroup matrix multiply-add
 ///
 /// The `xevm.mma` is a cooperative operation where all threads/lanes in
@@ -354,9 +416,7 @@ pub struct LaneIdOp<'a> {
 ///   %d = xevm.mma %a, %b, %c { shape=<m=8, n=16, k=16>, types=<d=f32, a=f16, b=f16, c=f32> }
 ///          : (vector<8xi16>, vector<8xi32>, vector<8xf32>) -> vector<8xf32>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("xevm.mma", results(d))]
+#[mlir::op("xevm.mma", format = "$a `,` $b (`,` $c^)? ` ` `{` `shape` `=` $shape `,` `types` `=` $types `}` attr-dict `:` functional-type($a $b $c, $d)", results(d))]
 pub struct MMAOp<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
@@ -400,7 +460,7 @@ pub struct MemfenceOp<'a> {
 ///   or 4 (generic)
 /// * `cache_control` - specify caching options
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("xevm.prefetch")]
 pub struct PrefetchOp<'a> {
     #[slot(ptr_ty)]
@@ -422,6 +482,22 @@ pub struct SubgroupSizeOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
     pub res: Type<'a>,
+}
+
+/// `xevm.truncf`: Floating point truncation from f16/bf16 to f8/bf8/f4
+///
+/// The `xevm.truncf` operation truncates a floating point value from
+/// f16/bf16 to f8/bf8/f4 format.
+#[mlir::op("xevm.truncf", format = "$src ` ` `{` $src_etype `,` $dst_etype `}` attr-dict `:` functional-type($src, $dst)", results(dst))]
+pub struct TruncfOp<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(dialect = "xevm<src_etype")]
+    pub src_etype: Attribute<'a>,
+    #[attr(dialect = "xevm<dst_etype")]
+    pub dst_etype: Attribute<'a>,
+    pub src_ty: Type<'a>,
+    pub dst: Type<'a>,
 }
 
 #[mlir::op("xevm.local_size.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
@@ -490,7 +566,7 @@ pub struct WorkitemIdZOp<'a> {
 /// The `xevm` dialect.
 #[mlir::dialect(
     "xevm",
-    ops = [BlockLoad2dOp, BlockLoadOp, BlockPrefetch2dOp, BlockStore2dOp, BlockStoreOp, GridDimXOp, GridDimYOp, GridDimZOp, LaneIdOp, MMAOp, MemfenceOp, PrefetchOp, SubgroupIdOp, SubgroupSizeOp, WorkgroupDimXOp, WorkgroupDimYOp, WorkgroupDimZOp, WorkgroupIdXOp, WorkgroupIdYOp, WorkgroupIdZOp, WorkitemIdXOp, WorkitemIdYOp, WorkitemIdZOp],
+    ops = [BlockLoad2dOp, BlockLoadOp, BlockPrefetch2dOp, BlockStore2dOp, BlockStoreOp, ExtfOp, GridDimXOp, GridDimYOp, GridDimZOp, LaneIdOp, MMAMxOp, MMAOp, MemfenceOp, PrefetchOp, SubgroupIdOp, SubgroupSizeOp, TruncfOp, WorkgroupDimXOp, WorkgroupDimYOp, WorkgroupDimZOp, WorkgroupIdXOp, WorkgroupIdYOp, WorkgroupIdZOp, WorkitemIdXOp, WorkitemIdYOp, WorkitemIdZOp],
     dependents = ["llvm"]
 )]
 pub struct XevmDialect;

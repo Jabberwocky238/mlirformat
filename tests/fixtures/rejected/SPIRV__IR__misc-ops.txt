@@ -1,3 +1,5 @@
 1	parse	expected non-function type
 2	parse	expected ':'
 4	parse	use of value '%arg' expects different type than prior uses: 'i1' vs 'f32'
+9	verify	'spirv.KHR.Expect' op failed to verify that all of {value, expectedValue, result} have same type
+10	verify	'spirv.KHR.Expect' op operand #0 must be 8/16/32/64-bit integer or bool or fixed-length vector of 8/16/32/64-bit integer or bool values of length 2/3/4/8/16 of ranks 1, but got 'f32'

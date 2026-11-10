@@ -166,7 +166,7 @@
         "affine.yield"() : () -> ()
       }) : () -> ()
       "gpu.return"() : () -> ()
-    }) {sym_name = "gpu_loop_nest_simplest", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "gpu_loop_nest_simplest"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "loop_nest_outer_unroll"}> ({
     "affine.for"() <{lowerBoundMap = #map, operandSegmentSizes = array<i32: 0, 0, 0>, step = 1 : index, upperBoundMap = #map4}> ({

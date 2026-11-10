@@ -78,7 +78,7 @@
     %1 = "gpu.launch"(%arg4, %0, %0, %0, %0, %0, %0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0>}> ({
     ^bb0(%arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index, %arg12: index, %arg13: index, %arg14: index, %arg15: index, %arg16: index, %arg17: index, %arg18: index):
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (!gpu.async.token, index, index, index, index, index, index) -> !gpu.async.token
+    }) : (!gpu.async.token, index, index, index, index, index, index) -> !gpu.async.token
     "func.return"(%arg1) : (memref<2x32xf32>) -> ()
   }) : () -> ()
 }) : () -> ()

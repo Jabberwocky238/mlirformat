@@ -2,7 +2,7 @@ module {
   func.func @arm_streaming() {
     return
   }
-  func.func @not_arm_streaming() attributes {enable_arm_streaming_ignore} {
+  func.func @not_arm_streaming() attributes {llvm.enable_arm_streaming_ignore} {
     return
   }
   func.func @requires_arm_streaming() {

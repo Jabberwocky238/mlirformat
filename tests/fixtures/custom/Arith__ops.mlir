@@ -31,6 +31,22 @@ module {
     %sum, %overflow = arith.addui_extended %arg0, %arg1 : vector<[8]xi64>, vector<[8]xi1>
     return %sum : vector<[8]xi64>
   }
+  func.func @test_subui_extended(%arg0: i64, %arg1: i64) -> i64 {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : i64, i1
+    return %diff : i64
+  }
+  func.func @test_subui_extended_tensor(%arg0: tensor<8x8xi64>, %arg1: tensor<8x8xi64>) -> tensor<8x8xi64> {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : tensor<8x8xi64>, tensor<8x8xi1>
+    return %diff : tensor<8x8xi64>
+  }
+  func.func @test_subui_extended_vector(%arg0: vector<8xi64>, %arg1: vector<8xi64>) -> vector<8xi64> {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : vector<8xi64>, vector<8xi1>
+    return %diff : vector<8xi64>
+  }
+  func.func @test_subui_extended_scalable_vector(%arg0: vector<[8]xi64>, %arg1: vector<[8]xi64>) -> vector<[8]xi64> {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : vector<[8]xi64>, vector<[8]xi1>
+    return %diff : vector<[8]xi64>
+  }
   func.func @test_subi(%arg0: i64, %arg1: i64) -> i64 {
     %0 = arith.subi %arg0, %arg1 : i64
     return %0 : i64
@@ -319,6 +335,26 @@ module {
     %0 = arith.negf %arg0 : vector<[8]xf64>
     return %0 : vector<[8]xf64>
   }
+  func.func @test_flush_denormals(%arg0: f32) -> f32 {
+    %0 = arith.flush_denormals %arg0 : f32
+    return %0 : f32
+  }
+  func.func @test_flush_denormals_tensor(%arg0: tensor<8x8xf32>) -> tensor<8x8xf32> {
+    %0 = arith.flush_denormals %arg0 : tensor<8x8xf32>
+    return %0 : tensor<8x8xf32>
+  }
+  func.func @test_flush_denormals_vector(%arg0: vector<8xf32>) -> vector<8xf32> {
+    %0 = arith.flush_denormals %arg0 : vector<8xf32>
+    return %0 : vector<8xf32>
+  }
+  func.func @test_flush_denormals_scalable_vector(%arg0: vector<[8]xf32>) -> vector<[8]xf32> {
+    %0 = arith.flush_denormals %arg0 : vector<[8]xf32>
+    return %0 : vector<[8]xf32>
+  }
+  func.func @test_flush_denormals_bf16(%arg0: bf16) -> bf16 {
+    %0 = arith.flush_denormals %arg0 : bf16
+    return %0 : bf16
+  }
   func.func @test_addf(%arg0: f64, %arg1: f64) -> f64 {
     %0 = arith.addf %arg0, %arg1 : f64
     return %0 : f64
@@ -415,6 +451,14 @@ module {
     %0 = arith.extui %arg0 : vector<[8]xi32> to vector<[8]xi64>
     return %0 : vector<[8]xi64>
   }
+  func.func @test_extui_nneg(%arg0: i32) -> i64 {
+    %0 = arith.extui %arg0 nneg : i32 to i64
+    return %0 : i64
+  }
+  func.func @test_extui_nneg_vector(%arg0: vector<8xi32>) -> vector<8xi64> {
+    %0 = arith.extui %arg0 nneg : vector<8xi32> to vector<8xi64>
+    return %0 : vector<8xi64>
+  }
   func.func @test_extsi(%arg0: i32) -> i64 {
     %0 = arith.extsi %arg0 : i32 to i64
     return %0 : i64
@@ -491,6 +535,26 @@ module {
     %4 = arith.truncf %arg0 to_nearest_away : f64 to f32
     return %0, %1, %2, %3, %4 : f32, f32, f32, f32, f32
   }
+  func.func @test_convertf(%arg0: f16) -> bf16 {
+    %0 = arith.convertf %arg0 : f16 to bf16
+    return %0 : bf16
+  }
+  func.func @test_convertf_vector(%arg0: vector<8xf16>) -> vector<8xbf16> {
+    %0 = arith.convertf %arg0 : vector<8xf16> to vector<8xbf16>
+    return %0 : vector<8xbf16>
+  }
+  func.func @test_convertf_scalable_vector(%arg0: vector<[8]xbf16>) -> vector<[8]xf16> {
+    %0 = arith.convertf %arg0 : vector<[8]xbf16> to vector<[8]xf16>
+    return %0 : vector<[8]xf16>
+  }
+  func.func @test_convertf_tensor(%arg0: tensor<8x8xf16>) -> tensor<8x8xbf16> {
+    %0 = arith.convertf %arg0 : tensor<8x8xf16> to tensor<8x8xbf16>
+    return %0 : tensor<8x8xbf16>
+  }
+  func.func @test_convertf_rounding_mode(%arg0: bf16) -> f16 {
+    %0 = arith.convertf %arg0 to_nearest_even : bf16 to f16
+    return %0 : f16
+  }
   func.func @test_uitofp(%arg0: i32) -> f32 {
     %0 = arith.uitofp %arg0 : i32 to f32
     return %0 : f32
@@ -506,6 +570,14 @@ module {
   func.func @test_uitofp_scalable_vector(%arg0: vector<[8]xi32>) -> vector<[8]xf32> {
     %0 = arith.uitofp %arg0 : vector<[8]xi32> to vector<[8]xf32>
     return %0 : vector<[8]xf32>
+  }
+  func.func @test_uitofp_nneg(%arg0: i32) -> f32 {
+    %0 = arith.uitofp %arg0 nneg : i32 to f32
+    return %0 : f32
+  }
+  func.func @test_uitofp_nneg_vector(%arg0: vector<8xi32>) -> vector<8xf32> {
+    %0 = arith.uitofp %arg0 nneg : vector<8xi32> to vector<8xf32>
+    return %0 : vector<8xf32>
   }
   func.func @test_sitofp(%arg0: i16) -> f64 {
     %0 = arith.sitofp %arg0 : i16 to f64
@@ -618,6 +690,14 @@ module {
   func.func @test_index_castui_scalable_vector1(%arg0: vector<[8]xindex>) -> vector<[8]xi64> {
     %0 = arith.index_castui %arg0 : vector<[8]xindex> to vector<[8]xi64>
     return %0 : vector<[8]xi64>
+  }
+  func.func @test_index_castui_nneg(%arg0: i32) -> index {
+    %0 = arith.index_castui %arg0 nneg : i32 to index
+    return %0 : index
+  }
+  func.func @test_index_castui_nneg_vector(%arg0: vector<8xi32>) -> vector<8xindex> {
+    %0 = arith.index_castui %arg0 nneg : vector<8xi32> to vector<8xindex>
+    return %0 : vector<8xindex>
   }
   func.func @test_bitcast0(%arg0: i64) -> f64 {
     %0 = arith.bitcast %arg0 : i64 to f64
@@ -750,10 +830,19 @@ module {
     %3 = arith.divf %arg0, %arg1 fastmath<fast> : f32
     %4 = arith.remf %arg0, %arg1 fastmath<fast> : f32
     %5 = arith.negf %arg0 fastmath<fast> : f32
-    %6 = arith.addf %arg0, %arg1 : f32
-    %7 = arith.addf %arg0, %arg1 fastmath<nnan,ninf> : f32
-    %8 = arith.mulf %arg0, %arg1 fastmath<fast> : f32
-    %9 = arith.cmpf oeq, %arg0, %arg1 fastmath<fast> : f32
+    %6 = arith.flush_denormals %arg0 fastmath<fast> : f32
+    %7 = arith.addf %arg0, %arg1 : f32
+    %8 = arith.addf %arg0, %arg1 fastmath<nnan,ninf> : f32
+    %9 = arith.mulf %arg0, %arg1 fastmath<fast> : f32
+    %10 = arith.cmpf oeq, %arg0, %arg1 fastmath<fast> : f32
+    return
+  }
+  func.func @roundingmode(%arg0: f32, %arg1: f32) {
+    %0 = arith.addf %arg0, %arg1 to_nearest_even : f32
+    %1 = arith.subf %arg0, %arg1 downward : f32
+    %2 = arith.mulf %arg0, %arg1 upward : f32
+    %3 = arith.divf %arg0, %arg1 toward_zero : f32
+    %4 = arith.addf %arg0, %arg1 to_nearest_even fastmath<fast> : f32
     return
   }
   func.func @select_tensor(%arg0: tensor<8xi1>, %arg1: tensor<8xi32>, %arg2: tensor<8xi32>) -> tensor<8xi32> {

@@ -244,6 +244,8 @@
 // -----
 // -----
 // -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x2x3x4xi32>) -> (), sym_name = "operand_rank_equals_result_size_success"}> ({
   ^bb0(%arg0: tensor<1x2x3x4xi32>):

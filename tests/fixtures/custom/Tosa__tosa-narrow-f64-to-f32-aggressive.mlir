@@ -40,3 +40,19 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @test_dense_ressource_f64() -> tensor<1x2xf64> {
+    %0 = "tosa.const"() <{values = dense_resource<resource> : tensor<1x2xf64>}> : () -> tensor<1x2xf64>
+    return %0 : tensor<1x2xf64>
+  }
+}
+
+{-#
+  dialect_resources: {
+    builtin: {
+      resource: "0x0800000000000000000000000000000000000000"
+    }
+  }
+#-}
+

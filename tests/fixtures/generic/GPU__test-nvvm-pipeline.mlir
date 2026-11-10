@@ -8,7 +8,7 @@
       %2 = "math.exp"(%arg0) <{fastmath = #arith.fastmath<none>}> : (f32) -> f32
       "gpu.printf"(%2) <{format = "%f"}> : (f32) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

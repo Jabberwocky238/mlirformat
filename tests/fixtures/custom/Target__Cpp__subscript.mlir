@@ -29,10 +29,10 @@ module {
     %2 = load %0 : <f32>
     call @func1(%2) : (f32) -> ()
     %3 = load %1 : <f32>
-    call_opaque "func2"(%3) : (f32) -> ()
+    call_opaque "func2"(%3)  : (f32) -> ()
     %4 = load %0 : <f32>
     %5 = load %1 : <f32>
-    call_opaque "func3"(%4, %5) {args = [1 : index, 0 : index]} : (f32, f32) -> ()
+    call_opaque "func3"(%4, %5) <{args = [1 : index, 0 : index]}> : (f32, f32) -> ()
     return
   }
 }

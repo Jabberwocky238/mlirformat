@@ -1,6 +1,0 @@
-1	verify	'test.nvvm_requires_sm_80' op is not supported on sm_70
-2	verify	'test.nvvm_requires_sm_80' op is not supported on sm_75
-3	verify	'test.nvvm_requires_sm_90a' op is not supported on sm_90
-4	verify	'test.nvvm_requires_sm_90a' op is not supported on sm_80
-5	verify	'test.nvvm_requires_sm_90a_or_sm_100a' op is not supported on sm_80
-6	verify	'test.nvvm_requires_sm_90a_or_sm_100a' op is not supported on sm_90

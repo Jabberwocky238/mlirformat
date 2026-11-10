@@ -11,7 +11,7 @@
       %6 = "arith.addi"(%5, %5) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
       "memref.store"(%6, %3, %0) : (i32, memref<1xi32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     %4 = "memref.load"(%3, %0) : (memref<1xi32>, index) -> i32
     "vector.print"(%4) <{punctuation = #vector.punctuation<newline>}> : (i32) -> ()
     "func.return"() : () -> ()

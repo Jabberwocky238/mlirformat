@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Adds to tests/fixtures/ every llvm-project `mlir/test` file that a vanilla mlir-opt 22.1.8 reads.
+"""Adds to tests/fixtures/ every llvm-project `mlir/test` file that a vanilla mlir-opt 23.1.5 reads.
 
     python3 scripts/fixtures.py --llvm $LLVM --mlir-opt /usr/lib/llvm-22/bin/mlir-opt
 
@@ -11,9 +11,10 @@ leading `Dialect/` dropped: `Dialect/Affine/ops.mlir` ⇒ `Affine__ops.mlir`):
     generic/<name>.mlir    the same with `--mlir-print-op-generic`
 
 `-verify-diagnostics` is added when a RUN line has it (the chunks that fail on purpose are left
-out of the output). A file is skipped when mlir-opt fails on it, or does not read back what it
-printed. Files already there are kept (some had a chunk mlir-opt cannot read back taken out by
-hand); `--force` rewrites them.
+out of the output). When mlir-opt fails on a file, or does not read back what it printed, its chunks are taken one
+by one and only those it reads and reads back are kept; a file none of whose chunks do is
+skipped; such a file gets no `upstream/` copy (its rejected chunks are not compared). Files
+already there are kept; `--force` rewrites them.
 
 Then, for every `upstream/` file, which of its `// -----` chunks mlir-opt rejects when it only
 reads it (no pass), written to `rejected/<name>.txt`, one line per rejected chunk:
@@ -41,8 +42,8 @@ def name_of(rel: Path) -> str:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--llvm", required=True, help="llvm-project checkout at llvmorg-22.1.8")
-    ap.add_argument("--mlir-opt", required=True, help="a vanilla mlir-opt 22.1.8")
+    ap.add_argument("--llvm", required=True, help="llvm-project checkout at llvmorg-23.1.5")
+    ap.add_argument("--mlir-opt", required=True, help="a vanilla mlir-opt 23.1.5")
     ap.add_argument("--force", action="store_true", help="rewrite the fixtures already there")
     opts = ap.parse_args()
     root = Path(opts.llvm) / "mlir" / "test"
@@ -59,16 +60,33 @@ def main():
         verify = ["-verify-diagnostics"] if any("RUN:" in l and "verify-diagnostics" in l for l in text.splitlines()) else []
         try:
             custom, generic = run([*verify, str(path)]), run([*verify, "--mlir-print-op-generic", str(path)])
-            if custom.returncode or generic.returncode or not custom.stdout.strip():
-                return "skipped: mlir-opt fails"
-            if run([], custom.stdout).returncode or run([], generic.stdout).returncode:
-                return "skipped: does not read back"
+            whole = not (custom.returncode or generic.returncode or not custom.stdout.strip())
+            whole = whole and not (run([], custom.stdout).returncode or run([], generic.stdout).returncode)
+            if whole:
+                kept = (custom.stdout, generic.stdout)
+            else:
+                # Chunk by chunk: keep the ones mlir-opt reads and reads back.
+                cs, gs = [], []
+                for chunk in text.split("// -----"):
+                    chunk = chunk.lstrip("-")
+                    c, g = run([*verify, "-"], chunk), run([*verify, "--mlir-print-op-generic", "-"], chunk)
+                    if c.returncode or g.returncode or not c.stdout.strip():
+                        continue
+                    if run([], c.stdout).returncode or run([], g.stdout).returncode:
+                        continue
+                    cs.append(c.stdout)
+                    gs.append(g.stdout)
+                if not cs:
+                    return "skipped: mlir-opt fails"
+                kept = ("// -----\n".join(cs), "// -----\n".join(gs))
         except subprocess.TimeoutExpired:
             return "skipped: timeout"
-        (out / "upstream" / f"{name}.mlir").write_text(text)
-        (out / "custom" / f"{name}.mlir").write_text(custom.stdout)
-        (out / "generic" / f"{name}.mlir").write_text(generic.stdout)
-        return "added"
+        # `upstream/` (what the rejection tests read) only for a file mlir-opt reads whole.
+        if whole:
+            (out / "upstream" / f"{name}.mlir").write_text(text)
+        (out / "custom" / f"{name}.mlir").write_text(kept[0])
+        (out / "generic" / f"{name}.mlir").write_text(kept[1])
+        return "added" if whole else "added: some chunks"
 
     def verdicts(path: Path) -> int:
         """`rejected/<name>.txt` for one `upstream/` file; how many chunks it lists."""

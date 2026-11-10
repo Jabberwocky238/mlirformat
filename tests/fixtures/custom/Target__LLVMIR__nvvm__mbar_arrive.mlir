@@ -44,7 +44,7 @@ module {
   }
   llvm.func @mbarrier_arrive_ignore_retval(%arg0: i32, %arg1: !llvm.ptr<3>) {
     nvvm.mbarrier.arrive %arg1, %arg0 : !llvm.ptr<3>
-    nvvm.mbarrier.arrive %arg1, %arg0 : !llvm.ptr<3>
+    %0 = nvvm.mbarrier.arrive %arg1, %arg0 : !llvm.ptr<3> -> i64
     llvm.return
   }
 }

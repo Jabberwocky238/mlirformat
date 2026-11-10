@@ -249,3 +249,16 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @no_coalesce_zero_step(%arg0: index, %arg1: index) {
+    %c0 = arith.constant 0 : index
+    scf.for %arg2 = %arg0 to %arg1 step %c0 {
+      scf.for %arg3 = %arg0 to %arg1 step %c0 {
+        "use"(%arg2, %arg3) : (index, index) -> ()
+      }
+    }
+    return
+  }
+}
+

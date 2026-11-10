@@ -1,7 +1,7 @@
 module attributes {gpu.container_module} {
   gpu.module @kernels {
     gpu.func @hello() kernel {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       gpu.printf "Hello from %d\0A", %thread_id_x : index
       gpu.return
     }

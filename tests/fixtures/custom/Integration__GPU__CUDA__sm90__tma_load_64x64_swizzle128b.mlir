@@ -46,8 +46,8 @@ module @mymod {
     %4 = nvgpu.tma.create.descriptor %cast_5 box[%c64, %c64] : memref<*xf16> -> <tensor = memref<64x64xf16, 3>, swizzle = swizzle_128b, l2promo = none, oob = zero, interleave = none>
     %c32768_i32 = arith.constant 32768 : i32
     gpu.launch blocks(%arg0, %arg1, %arg2) in (%arg6 = %c1, %arg7 = %c1, %arg8 = %c1) threads(%arg3, %arg4, %arg5) in (%arg9 = %c128, %arg10 = %c1, %arg11 = %c1) dynamic_shared_memory_size %c32768_i32 {
-      %block_dim_x = gpu.block_dim  x
-      %thread_id_x = gpu.thread_id  x
+      %block_dim_x = gpu.block_dim x
+      %thread_id_x = gpu.thread_id x
       %c0_6 = arith.constant 0 : index
       %c32768_7 = arith.constant 32768 : index
       %c24576 = arith.constant 24576 : index

@@ -186,9 +186,7 @@ pub struct CompressStoreOp<'a> {
 ///         2 | 1    1    0
 ///         3 | 0    0    0
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("vector.constant_mask", results(result))]
+#[mlir::op("vector.constant_mask", format = "$mask_dim_sizes attr-dict `:` qualified(type($result))", results(result))]
 pub struct ConstantMaskOp<'a> {
     #[attr(dense = "i64")]
     pub mask_dim_sizes: Attribute<'a>,
@@ -321,6 +319,8 @@ pub struct ContractionOp<'a> {
     pub iterator_types: Attribute<'a>,
     #[attr(dialect = "vector.kind", default = "<add>")]
     pub kind: Option<Attribute<'a>>,
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
+    pub fastmath: Option<Attribute<'a>>,
     pub lhs_ty: Type<'a>,
     pub rhs_ty: Type<'a>,
     pub acc_ty: Type<'a>,
@@ -355,14 +355,12 @@ pub struct ContractionOp<'a> {
 ///         2 | 1    1    0
 ///         3 | 0    0    0
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("vector.create_mask", results(result))]
+#[mlir::op("vector.create_mask", format = "$mask_dim_sizes attr-dict `:` qualified(type($result))", results(result))]
 pub struct CreateMaskOp<'a> {
-    #[slot(operands_ty)]
-    pub operands: Vec<Value<'a>>,
+    #[slot(mask_dim_sizes_ty)]
+    pub mask_dim_sizes: Vec<Value<'a>>,
     #[dtype(is = index)]
-    pub operands_ty: Type<'a>,
+    pub mask_dim_sizes_ty: Type<'a>,
     pub result: Type<'a>,
 }
 
@@ -528,9 +526,7 @@ pub struct ExtractOp<'a> {
 /// ```
 ///
 /// TODO: Implement support for poison indices.
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("vector.extract_strided_slice", results(result))]
+#[mlir::op("vector.extract_strided_slice", format = "$source attr-dict `:` type($source) `to` qualified(type($result))", results(result))]
 pub struct ExtractStridedSliceOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -641,6 +637,9 @@ pub struct FromElementsOp<'a> {
 /// The gather operation can be used directly where applicable, or can be used
 /// during progressively lowering to bring other memory operations closer to
 /// hardware ISA support for a gather.
+///
+/// The memref must have non-negative strides. Negative strides are not supported
+/// and will trigger a verification error.
 ///
 /// An optional `alignment` attribute allows to specify the byte alignment of the
 /// gather operation. It must be a positive power of 2. The operation must access
@@ -830,6 +829,9 @@ pub struct InterleaveOp<'a> {
 /// %result = vector.load %memref[%i, %j] : memref<200x100xvector<4x8xf32>>, vector<4x8xf32>
 /// ```
 ///
+/// The memref must have non-negative strides. Negative strides are not supported
+/// and will trigger a verification error.
+///
 /// Representation-wise, the 'vector.load' operation permits out-of-bounds
 /// reads. Support and implementation of out-of-bounds vector loads is
 /// target-specific. No assumptions should be made on the value of elements
@@ -856,6 +858,7 @@ pub struct LoadOp<'a> {
     pub base: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
+    #[attr(default = "false", optional)]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
@@ -966,6 +969,9 @@ pub struct MaskOp<'a> {
 ///    : memref<?x?xf32>, vector<16xi1>, vector<16xf32> into vector<16xf32>
 /// ```
 ///
+/// The memref must have non-negative strides. Negative strides are not supported
+/// and will trigger a verification error.
+///
 /// An optional `alignment` attribute allows to specify the byte alignment of the
 /// load operation. It must be a positive power of 2. The operation must access
 /// memory at an address aligned to this boundary. Violating this requirement
@@ -1022,6 +1028,9 @@ pub struct MaskedLoadOp<'a> {
 /// vector.maskedstore %base[%i, %j], %mask, %value
 ///   : memref<?x?xf32>, vector<16xi1>, vector<16xf32>
 /// ```
+///
+/// The memref must have non-negative strides. Negative strides are not supported
+/// and will trigger a verification error.
 ///
 /// An optional `alignment` attribute allows to specify the byte alignment of the
 /// store operation. It must be a positive power of 2. The operation must access
@@ -1359,6 +1368,9 @@ pub struct ScanOp<'a> {
 /// correspond to those of the `llvm.masked.scatter`
 /// [intrinsic](https://llvm.org/docs/LangRef.html#llvm-masked-scatter-intrinsics).
 ///
+/// The memref must have non-negative strides. Negative strides are not supported
+/// and will trigger a verification error.
+///
 /// An optional `alignment` attribute allows to specify the byte alignment of the
 /// scatter operation. It must be a positive power of 2. The operation must access
 /// memory at an address aligned to this boundary. Violating this requirement
@@ -1464,7 +1476,7 @@ pub struct ShapeCastOp<'a> {
 ///            : vector<4xf32>, vector<4xf32>       ; yields vector<6xf32>
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (result type `vector` inferred in C++).
 #[mlir::op("vector.shuffle", results(vector))]
 pub struct ShuffleOp<'a> {
     #[slot(v1_ty)]
@@ -1480,17 +1492,22 @@ pub struct ShuffleOp<'a> {
 
 /// `vector.step`: A linear sequence of values from 0 to N
 ///
-/// A `step` operation produces an index vector, i.e. a 1-D vector of values of
-/// index type that represents a linear sequence from 0 to N-1, where N is the
-/// number of elements in the `result` vector.
+/// A `step` operation produces a 1-D vector representing a linear sequence from
+/// 0 to N-1, where N is the number of elements in the `result` vector.
+///
+/// The result element type must be `index` or a signless integer of at least 8
+/// bits. If the sequence value exceeds the allowed limit for the element type
+/// then the result for that lane is truncated.
 ///
 /// Supports fixed-width and scalable vectors.
 ///
 /// Examples:
 ///
 /// ```mlir
-/// %0 = vector.step : vector<4xindex> ; [0, 1, 2, 3]
-/// %1 = vector.step : vector<[4]xindex> ; [0, 1, .., <vscale * 4 - 1>]
+/// %0 = vector.step : vector<4xindex>   // [0, 1, 2, 3]
+/// %1 = vector.step : vector<4xi32>     // [0, 1, 2, 3]
+/// %2 = vector.step : vector<258xi8>    // [0, 1, .., 255, 0, 1]
+/// %3 = vector.step : vector<[4]xindex> // [0, 1, .., <vscale * 4 - 1>]
 /// ```
 #[mlir::op("vector.step", format = "attr-dict `:` type($result)", results(result))]
 pub struct StepOp<'a> {
@@ -1541,6 +1558,9 @@ pub struct StepOp<'a> {
 /// vector.store %valueToStore, %memref[%i, %j] : memref<200x100xvector<4x8xf32>>, vector<4x8xf32>
 /// ```
 ///
+/// The memref must have non-negative strides. Negative strides are not supported
+/// and will trigger a verification error.
+///
 /// Representation-wise, the 'vector.store' operation permits out-of-bounds
 /// writes. Support and implementation of out-of-bounds vector stores are
 /// target-specific. No assumptions should be made on the memory written out of
@@ -1568,6 +1588,7 @@ pub struct StoreOp<'a> {
     pub base: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
+    #[attr(default = "false", optional)]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,

@@ -91,5 +91,47 @@ module {
     acc.declare_exit token(%1) dataOperands(%0 : memref<i32>)
     return
   }
+  acc.routine @acc_routine_atomic_read func(@atomic_read) seq 
+  func.func @atomic_read(%arg0: memref<f64>, %arg1: memref<f64>) attributes {acc.routine_info = #acc.routine_info<[@acc_routine_atomic_read]>} {
+    acc.atomic.read %arg1 = %arg0 : memref<f64>, memref<f64>, f64
+    return
+  }
+  acc.routine @acc_routine_atomic_write func(@atomic_write) seq 
+  func.func @atomic_write(%arg0: memref<f64>) attributes {acc.routine_info = #acc.routine_info<[@acc_routine_atomic_write]>} {
+    %cst = arith.constant 5.000000e-01 : f64
+    acc.atomic.write %arg0 = %cst : memref<f64>, f64
+    return
+  }
+  acc.routine @acc_routine_atomic_update func(@atomic_update) seq 
+  func.func @atomic_update(%arg0: memref<f64>) attributes {acc.routine_info = #acc.routine_info<[@acc_routine_atomic_update]>} {
+    %cst = arith.constant 5.000000e-01 : f64
+    acc.parallel {
+      acc.atomic.update %arg0 : memref<f64> {
+      ^bb0(%arg1: f64):
+        %0 = arith.cmpf ogt, %cst, %arg1 fastmath<contract> : f64
+        %1 = arith.select %0, %cst, %arg1 : f64
+        acc.yield %1 : f64
+      }
+      acc.terminator
+    }
+    return
+  }
+  acc.routine @acc_routine_atomic_capture func(@atomic_capture) seq 
+  func.func @atomic_capture(%arg0: memref<f64>, %arg1: memref<f64>) attributes {acc.routine_info = #acc.routine_info<[@acc_routine_atomic_capture]>} {
+    %cst = arith.constant 5.000000e-01 : f64
+    acc.parallel {
+      acc.atomic.capture {
+        acc.atomic.update %arg0 : memref<f64> {
+        ^bb0(%arg2: f64):
+          %0 = arith.cmpf ogt, %cst, %arg2 fastmath<contract> : f64
+          %1 = arith.select %0, %cst, %arg2 : f64
+          acc.yield %1 : f64
+        }
+        acc.atomic.read %arg1 = %arg0 : memref<f64>, memref<f64>, f64
+      }
+      acc.terminator
+    }
+    return
+  }
 }
 

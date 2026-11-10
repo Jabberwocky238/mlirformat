@@ -37,3 +37,14 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<13x21x3x1x1x1xf32>) -> tensor<13x21x3x1x1x1xf32>, sym_name = "test_pad_large_input_rank"}> ({
+  ^bb0(%arg0: tensor<13x21x3x1x1x1xf32>):
+    %0 = "tosa.const"() <{values = dense<3.140000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const_shape"() <{values = dense<0> : tensor<12xindex>}> : () -> !tosa.shape<12>
+    %2 = "tosa.pad"(%arg0, %1, %0) : (tensor<13x21x3x1x1x1xf32>, !tosa.shape<12>, tensor<1xf32>) -> tensor<13x21x3x1x1x1xf32>
+    "func.return"(%2) : (tensor<13x21x3x1x1x1xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

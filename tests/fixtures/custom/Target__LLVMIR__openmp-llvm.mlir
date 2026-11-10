@@ -167,7 +167,7 @@ module {
 // -----
 module {
   llvm.func @wsloop_linear(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: !llvm.ptr) {
-    omp.wsloop linear(%arg3 = %arg2 : !llvm.ptr) {
+    omp.wsloop linear(%arg3 : !llvm.ptr = %arg2 : i32) {
       omp.loop_nest (%arg4) : i32 = (%arg0) to (%arg1) step (%arg2) {
         omp.yield
       }
@@ -470,7 +470,7 @@ module {
 // -----
 module {
   llvm.func @simd_linear(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: !llvm.ptr) {
-    omp.simd linear(%arg3 = %arg2 : !llvm.ptr) {
+    omp.simd linear(%arg3 : !llvm.ptr = %arg2 : i32) {
       omp.loop_nest (%arg4) : i32 = (%arg0) to (%arg1) step (%arg2) {
         omp.yield
       }
@@ -483,7 +483,7 @@ module {
 module {
   llvm.func @simd_linear_i64_var_i32_step(%arg0: i32, %arg1: i32, %arg2: !llvm.ptr) {
     %0 = llvm.mlir.constant(1 : i32) : i32
-    omp.simd linear(%arg2 = %0 : !llvm.ptr) {
+    omp.simd linear(%arg2 : !llvm.ptr = %0 : i32) {
       omp.loop_nest (%arg3) : i32 = (%arg0) to (%arg1) step (%0) {
         omp.yield
       }
@@ -496,7 +496,7 @@ module {
 module {
   llvm.func @simd_linear_f64_var_i32_step(%arg0: i32, %arg1: i32, %arg2: !llvm.ptr) {
     %0 = llvm.mlir.constant(1 : i32) : i32
-    omp.simd linear(%arg2 = %0 : !llvm.ptr) {
+    omp.simd linear(%arg2 : !llvm.ptr = %0 : i32) {
       omp.loop_nest (%arg3) : i32 = (%arg0) to (%arg1) step (%0) {
         omp.yield
       }
@@ -1031,6 +1031,76 @@ module {
 
 // -----
 module {
+  llvm.func @atomic_update_float_multi_step(%arg0: !llvm.ptr, %arg1: f32, %arg2: f32) {
+    omp.atomic.update %arg0 : !llvm.ptr {
+    ^bb0(%arg3: f32):
+      %0 = llvm.fmul %arg3, %arg1 : f32
+      %1 = llvm.fadd %0, %arg2 : f32
+      omp.yield(%1 : f32)
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @atomic_update_float_intrinsic(%arg0: !llvm.ptr, %arg1: f32) {
+    omp.atomic.update %arg0 : !llvm.ptr {
+    ^bb0(%arg2: f32):
+      %0 = llvm.intr.maxnum(%arg2, %arg1) : (f32, f32) -> f32
+      omp.yield(%0 : f32)
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @omp_atomic_capture_complex_swap(%arg0: !llvm.ptr, %arg1: !llvm.ptr) {
+    %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32
+    %1 = llvm.mlir.undef : !llvm.struct<(f32, f32)>
+    %2 = llvm.insertvalue %0, %1[0] : !llvm.struct<(f32, f32)> 
+    %3 = llvm.insertvalue %0, %2[1] : !llvm.struct<(f32, f32)> 
+    omp.atomic.capture {
+      omp.atomic.read %arg1 = %arg0 : !llvm.ptr, !llvm.ptr, !llvm.struct<(f32, f32)>
+      omp.atomic.write %arg0 = %3 : !llvm.ptr, !llvm.struct<(f32, f32)>
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @omp_atomic_capture_complex8_swap(%arg0: !llvm.ptr, %arg1: !llvm.ptr) {
+    %0 = llvm.mlir.constant(1.000000e+00 : f64) : f64
+    %1 = llvm.mlir.undef : !llvm.struct<(f64, f64)>
+    %2 = llvm.insertvalue %0, %1[0] : !llvm.struct<(f64, f64)> 
+    %3 = llvm.insertvalue %0, %2[1] : !llvm.struct<(f64, f64)> 
+    omp.atomic.capture {
+      omp.atomic.read %arg1 = %arg0 : !llvm.ptr, !llvm.ptr, !llvm.struct<(f64, f64)>
+      omp.atomic.write %arg0 = %3 : !llvm.ptr, !llvm.struct<(f64, f64)>
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @omp_atomic_capture_complex_swap_seq_cst(%arg0: !llvm.ptr, %arg1: !llvm.ptr) {
+    %0 = llvm.mlir.constant(1.000000e+00 : f32) : f32
+    %1 = llvm.mlir.undef : !llvm.struct<(f32, f32)>
+    %2 = llvm.insertvalue %0, %1[0] : !llvm.struct<(f32, f32)> 
+    %3 = llvm.insertvalue %0, %2[1] : !llvm.struct<(f32, f32)> 
+    omp.atomic.capture memory_order(seq_cst) {
+      omp.atomic.read %arg1 = %arg0 : !llvm.ptr, !llvm.ptr, !llvm.struct<(f32, f32)>
+      omp.atomic.write %arg0 = %3 : !llvm.ptr, !llvm.struct<(f32, f32)>
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
   llvm.func @omp_atomic_read_complex() {
     %0 = llvm.mlir.constant(1 : i64) : i64
     %1 = llvm.alloca %0 x !llvm.struct<(f32, f32)> {bindc_name = "ib"} : (i64) -> !llvm.ptr
@@ -1440,6 +1510,119 @@ module {
 
 // -----
 module {
+  llvm.func @omp_atomic_compare(%arg0: !llvm.ptr, %arg1: i32, %arg2: i32, %arg3: !llvm.ptr, %arg4: f32, %arg5: f32, %arg6: !llvm.ptr, %arg7: !llvm.struct<(f32, f32)>, %arg8: !llvm.struct<(f32, f32)>, %arg9: !llvm.ptr, %arg10: !llvm.ptr, %arg11: !llvm.ptr) {
+    omp.atomic.compare %arg0 : !llvm.ptr {
+    ^bb0(%arg12: i32):
+      %2 = llvm.icmp "eq" %arg12, %arg1 : i32
+      %3 = llvm.select %2, %arg2, %arg12 : i1, i32
+      omp.yield(%3 : i32)
+    }
+    omp.atomic.compare %arg3 : !llvm.ptr {
+    ^bb0(%arg12: f32):
+      %2 = llvm.fcmp "oeq" %arg12, %arg4 : f32
+      %3 = llvm.select %2, %arg5, %arg12 : i1, f32
+      omp.yield(%3 : f32)
+    }
+    omp.atomic.compare %arg6 : !llvm.ptr {
+    ^bb0(%arg12: !llvm.struct<(f32, f32)>):
+      %2 = llvm.extractvalue %arg12[0] : !llvm.struct<(f32, f32)> 
+      %3 = llvm.extractvalue %arg7[0] : !llvm.struct<(f32, f32)> 
+      %4 = llvm.fcmp "oeq" %2, %3 : f32
+      %5 = llvm.extractvalue %arg12[1] : !llvm.struct<(f32, f32)> 
+      %6 = llvm.extractvalue %arg7[1] : !llvm.struct<(f32, f32)> 
+      %7 = llvm.fcmp "oeq" %5, %6 : f32
+      %8 = llvm.and %4, %7 : i1
+      %9 = llvm.select %8, %arg8, %arg12 : i1, !llvm.struct<(f32, f32)>
+      omp.yield(%9 : !llvm.struct<(f32, f32)>)
+    }
+    omp.atomic.compare %arg0 : !llvm.ptr {
+    ^bb0(%arg12: i32):
+      %2 = llvm.icmp "slt" %arg12, %arg1 : i32
+      %3 = llvm.select %2, %arg1, %arg12 : i1, i32
+      omp.yield(%3 : i32)
+    }
+    omp.atomic.compare %arg0 : !llvm.ptr {
+    ^bb0(%arg12: i32):
+      %2 = llvm.icmp "sgt" %arg12, %arg1 : i32
+      %3 = llvm.select %2, %arg1, %arg12 : i1, i32
+      omp.yield(%3 : i32)
+    }
+    omp.atomic.compare %arg3 : !llvm.ptr {
+    ^bb0(%arg12: f32):
+      %2 = llvm.fcmp "olt" %arg12, %arg4 : f32
+      %3 = llvm.select %2, %arg4, %arg12 : i1, f32
+      omp.yield(%3 : f32)
+    }
+    omp.atomic.compare %arg3 : !llvm.ptr {
+    ^bb0(%arg12: f32):
+      %2 = llvm.fcmp "ogt" %arg12, %arg4 : f32
+      %3 = llvm.select %2, %arg4, %arg12 : i1, f32
+      omp.yield(%3 : f32)
+    }
+    omp.atomic.compare memory_order(seq_cst) %arg0 : !llvm.ptr {
+    ^bb0(%arg12: i32):
+      %2 = llvm.icmp "eq" %arg12, %arg1 : i32
+      %3 = llvm.select %2, %arg2, %arg12 : i1, i32
+      omp.yield(%3 : i32)
+    }
+    omp.atomic.compare memory_order(seq_cst) %arg6 : !llvm.ptr {
+    ^bb0(%arg12: !llvm.struct<(f32, f32)>):
+      %2 = llvm.extractvalue %arg12[0] : !llvm.struct<(f32, f32)> 
+      %3 = llvm.extractvalue %arg7[0] : !llvm.struct<(f32, f32)> 
+      %4 = llvm.fcmp "oeq" %2, %3 : f32
+      %5 = llvm.extractvalue %arg12[1] : !llvm.struct<(f32, f32)> 
+      %6 = llvm.extractvalue %arg7[1] : !llvm.struct<(f32, f32)> 
+      %7 = llvm.fcmp "oeq" %5, %6 : f32
+      %8 = llvm.and %4, %7 : i1
+      %9 = llvm.select %8, %arg8, %arg12 : i1, !llvm.struct<(f32, f32)>
+      omp.yield(%9 : !llvm.struct<(f32, f32)>)
+    }
+    %0 = llvm.load %arg10 : !llvm.ptr -> i32
+    %1 = llvm.load %arg11 : !llvm.ptr -> i32
+    omp.atomic.compare %arg9 : !llvm.ptr {
+    ^bb0(%arg12: i32):
+      %2 = llvm.icmp "eq" %arg12, %0 : i32
+      %3 = llvm.select %2, %1, %arg12 : i1, i32
+      omp.yield(%3 : i32)
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @omp_atomic_compare_weak(%arg0: !llvm.ptr, %arg1: i32, %arg2: i32) {
+    omp.atomic.compare %arg0 : !llvm.ptr {
+    ^bb0(%arg3: i32):
+      %0 = llvm.icmp "eq" %arg3, %arg1 : i32
+      %1 = llvm.select %0, %arg2, %arg3 : i1, i32
+      omp.yield(%1 : i32)
+    } {weak}
+    omp.atomic.compare memory_order(seq_cst) %arg0 : !llvm.ptr {
+    ^bb0(%arg3: i32):
+      %0 = llvm.icmp "eq" %arg3, %arg1 : i32
+      %1 = llvm.select %0, %arg2, %arg3 : i1, i32
+      omp.yield(%1 : i32)
+    } {weak}
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @omp_atomic_compare_float_neg_zero(%arg0: !llvm.ptr, %arg1: f32, %arg2: f32) {
+    omp.atomic.compare %arg0 : !llvm.ptr {
+    ^bb0(%arg3: f32):
+      %0 = llvm.fcmp "oeq" %arg3, %arg1 : f32
+      %1 = llvm.select %0, %arg2, %arg3 : i1, f32
+      omp.yield(%1 : f32)
+    }
+    llvm.return
+  }
+}
+
+// -----
+module {
   llvm.func @omp_sections_empty() {
     omp.sections {
       omp.terminator
@@ -1800,35 +1983,35 @@ module {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<debug_kind = 1, assume_teams_oversubscription = true, assume_threads_oversubscription = true, assume_no_thread_state = true, assume_no_nested_parallelism = true>} {
+module attributes {omp.flags = #omp.flags<debug_kind = 1, assume_teams_oversubscription = true, assume_threads_oversubscription = true, assume_no_thread_state = true, assume_no_nested_parallelism = true>, omp.is_gpu = true} {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<>} {
+module attributes {omp.flags = #omp.flags<>, omp.is_gpu = true, omp.is_target_device = true} {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<openmp_device_version = 51>} {
+module attributes {omp.flags = #omp.flags<openmp_device_version = 51>, omp.is_gpu = true, omp.is_target_device = true} {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<>, omp.version = #omp.version<version = 50>} {
+module attributes {omp.flags = #omp.flags<>, omp.is_gpu = true, omp.is_target_device = true, omp.version = #omp.version<version = 50>} {
 }
 
 // -----
-module attributes {omp.version = #omp.version<version = 51>} {
+module attributes {omp.is_target_device = true, omp.version = #omp.version<version = 51>} {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<>} {
+module attributes {omp.flags = #omp.flags<>, omp.is_gpu = true} {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true>} {
+module attributes {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true>, omp.is_gpu = true} {
 }
 
 // -----
-module attributes {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true, no_gpu_lib = true>} {
+module attributes {omp.flags = #omp.flags<assume_teams_oversubscription = true, assume_no_thread_state = true, no_gpu_lib = true>, omp.is_gpu = true} {
 }
 
 // -----
@@ -1974,5 +2157,57 @@ module {
     }
     llvm.return
   }
+  llvm.func @task_affinity_plain(%arg0: !llvm.ptr {llvm.nocapture}) {
+    %0 = llvm.mlir.constant(4 : i64) : i64
+    omp.parallel {
+      omp.single {
+        %1 = omp.affinity_entry %arg0, %0 : (!llvm.ptr, i64) -> !omp.affinity_entry_ty<!llvm.ptr, i64>
+        omp.task affinity(%1 : !omp.affinity_entry_ty<!llvm.ptr, i64>) {
+          omp.terminator
+        }
+        omp.terminator
+      }
+      omp.terminator
+    }
+    llvm.return
+  }
+}
+
+// -----
+module attributes {llvm.target_triple = "nvptx64-nvidia-cuda", omp.is_target_device = true} {
+  llvm.mlir.global internal @any() {addr_space = 0 : i32} : i32
+  llvm.mlir.global internal @host() {addr_space = 0 : i32} : i32
+  llvm.mlir.global internal @nohost() {addr_space = 0 : i32} : i32
+  llvm.func @omp_groupprivate_device() attributes {omp.declare_target = #omp.declaretarget<device_type = (any), capture_clause = (to)>} {
+    %0 = llvm.mlir.constant(1 : i32) : i32
+    %1 = omp.groupprivate @any device_type (any) : !llvm.ptr
+    llvm.store %0, %1 : i32, !llvm.ptr
+    %2 = omp.groupprivate @host device_type (host) : !llvm.ptr
+    llvm.store %0, %2 : i32, !llvm.ptr
+    %3 = omp.groupprivate @nohost device_type (nohost) : !llvm.ptr
+    llvm.store %0, %3 : i32, !llvm.ptr
+    llvm.return
+  }
+}
+
+// -----
+module attributes {omp.is_target_device = false} {
+  llvm.mlir.global internal @any1() {addr_space = 0 : i32} : i32
+  llvm.mlir.global internal @host1() {addr_space = 0 : i32} : i32
+  llvm.mlir.global internal @nohost1() {addr_space = 0 : i32} : i32
+  llvm.func @omp_groupprivate_host() {
+    %0 = llvm.mlir.constant(1 : i32) : i32
+    %1 = omp.groupprivate @any1 device_type (any) : !llvm.ptr
+    llvm.store %0, %1 : i32, !llvm.ptr
+    %2 = omp.groupprivate @host1 device_type (host) : !llvm.ptr
+    llvm.store %0, %2 : i32, !llvm.ptr
+    %3 = omp.groupprivate @nohost1 device_type (nohost) : !llvm.ptr
+    llvm.store %0, %3 : i32, !llvm.ptr
+    llvm.return
+  }
+}
+
+// -----
+module {
 }
 

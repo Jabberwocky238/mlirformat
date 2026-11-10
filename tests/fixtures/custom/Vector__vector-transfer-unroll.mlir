@@ -120,3 +120,20 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @transfer_read_unroll_dynamic_index(%arg0: memref<4x4xf32>, %arg1: index) -> vector<4x2xf32> {
+    %cst = arith.constant 0.000000e+00 : f32
+    %0 = vector.transfer_read %arg0[%arg1, %arg1], %cst : memref<4x4xf32>, vector<4x2xf32>
+    return %0 : vector<4x2xf32>
+  }
+}
+
+// -----
+module {
+  func.func @transfer_write_unroll_dynamic_index(%arg0: memref<4x4xf32>, %arg1: vector<4x2xf32>, %arg2: index) {
+    vector.transfer_write %arg1, %arg0[%arg2, %arg2] : vector<4x2xf32>, memref<4x4xf32>
+    return
+  }
+}
+

@@ -81,5 +81,38 @@ module {
     %0 = vector.gather %arg0[%c0] [%arg1], %arg2, %arg3 : tensor<?xf32>, vector<[2]xindex>, vector<[2]xi1>, vector<[2]xf32> into vector<[2]xf32>
     return %0 : vector<[2]xf32>
   }
+  func.func @gather_memref_2d_delinearize(%arg0: memref<4x2xf32>, %arg1: vector<4xi32>, %arg2: vector<4xi1>, %arg3: vector<4xf32>) -> vector<4xf32> {
+    %c0 = arith.constant 0 : index
+    %0 = vector.gather %arg0[%c0, %c0] [%arg1], %arg2, %arg3 : memref<4x2xf32>, vector<4xi32>, vector<4xi1>, vector<4xf32> into vector<4xf32>
+    return %0 : vector<4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @gather_memref_2d_delinearize_nonzero_offsets(%arg0: memref<4x2xf32>, %arg1: index, %arg2: index, %arg3: vector<2xi32>, %arg4: vector<2xi1>, %arg5: vector<2xf32>) -> vector<2xf32> {
+    %0 = vector.gather %arg0[%arg1, %arg2] [%arg3], %arg4, %arg5 : memref<4x2xf32>, vector<2xi32>, vector<2xi1>, vector<2xf32> into vector<2xf32>
+    return %0 : vector<2xf32>
+  }
+}
+
+// -----
+module {
+  func.func @strided_gather_with_non_zero_offset(%arg0: memref<6x5xf32>, %arg1: vector<2xindex>, %arg2: vector<2xi1>, %arg3: vector<2xf32>) -> vector<2xf32> {
+    %c0 = arith.constant 0 : index
+    %subview = memref.subview %arg0[0, 3] [6, 1] [1, 1] : memref<6x5xf32> to memref<6xf32, strided<[5], offset: 3>>
+    %0 = vector.gather %subview[%c0] [%arg1], %arg2, %arg3 : memref<6xf32, strided<[5], offset: 3>>, vector<2xindex>, vector<2xi1>, vector<2xf32> into vector<2xf32>
+    return %0 : vector<2xf32>
+  }
+}
+
+// -----
+module {
+  func.func @negative_strided_gather_with_dynamic_offset(%arg0: memref<4x3xf32>, %arg1: index, %arg2: vector<2xindex>, %arg3: vector<2xi1>, %arg4: vector<2xf32>) -> vector<2xf32> {
+    %c0 = arith.constant 0 : index
+    %subview = memref.subview %arg0[0, %arg1] [4, 1] [1, 1] : memref<4x3xf32> to memref<4xf32, strided<[3], offset: ?>>
+    %0 = vector.gather %subview[%c0] [%arg2], %arg3, %arg4 : memref<4xf32, strided<[3], offset: ?>>, vector<2xindex>, vector<2xi1>, vector<2xf32> into vector<2xf32>
+    return %0 : vector<2xf32>
+  }
 }
 

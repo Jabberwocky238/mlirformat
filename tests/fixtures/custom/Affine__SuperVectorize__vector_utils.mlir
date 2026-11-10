@@ -27,5 +27,14 @@ module {
     }
     return
   }
+  func.func @transfer_rank_mismatch_no_crash(%arg0: memref<82x97xf32>) {
+    %0 = ub.poison : f32
+    affine.for %arg1 = 0 to 82 {
+      affine.for %arg2 = 0 to 97 step 128 {
+        %1 = vector.transfer_read %arg0[%arg1, %arg2], %0 : memref<82x97xf32>, vector<128xf32>
+      }
+    }
+    return
+  }
 }
 

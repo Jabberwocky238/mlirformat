@@ -1,5 +1,5 @@
 module {
-  func.func @merge_blocks(%arg0: i32, %arg1: i32) {
+  func.func @merge_blocks(%arg0: i32, %arg1: i32) -> (i32, i32) {
     %cst = arith.constant dense<[[0, 1], [2, 3]]> : tensor<2x2xi32>
     %cst_0 = arith.constant dense<1> : tensor<5xi32>
     %cst_1 = arith.constant dense<[[0, 1]]> : tensor<1x2xi32>

@@ -41,17 +41,17 @@ module {
 // -----
 // -----
 module {
-  func.func @make_dma_base(%arg0: index, %arg1: memref<8xi32, 1>, %arg2: memref<8xi32, 3>) -> !amdgpu.tdm_base<i32> {
-    %0 = amdgpu.make_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, 1>, memref<8xi32, 3> -> !amdgpu.tdm_base<i32>
+  func.func @make_dma_base(%arg0: index, %arg1: memref<8xi32, #gpu.address_space<global>>, %arg2: memref<8xi32, #gpu.address_space<workgroup>>) -> !amdgpu.tdm_base<i32> {
+    %0 = amdgpu.make_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, #gpu.address_space<global>>, memref<8xi32, #gpu.address_space<workgroup>> -> !amdgpu.tdm_base<i32>
     return %0 : !amdgpu.tdm_base<i32>
   }
 }
 
 // -----
 module {
-  func.func @make_gather_dma_base(%arg0: index, %arg1: memref<8xi32, 1>, %arg2: memref<8xi32, 3>) -> (!amdgpu.tdm_gather_base<i32, i16>, !amdgpu.tdm_gather_base<i32, i32>) {
-    %0 = amdgpu.make_gather_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, 1>, memref<8xi32, 3> -> !amdgpu.tdm_gather_base<i32, i16>
-    %1 = amdgpu.make_gather_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, 1>, memref<8xi32, 3> -> !amdgpu.tdm_gather_base<i32, i32>
+  func.func @make_gather_dma_base(%arg0: index, %arg1: memref<8xi32, #gpu.address_space<global>>, %arg2: memref<8xi32, #gpu.address_space<workgroup>>) -> (!amdgpu.tdm_gather_base<i32, i16>, !amdgpu.tdm_gather_base<i32, i32>) {
+    %0 = amdgpu.make_gather_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, #gpu.address_space<global>>, memref<8xi32, #gpu.address_space<workgroup>> -> !amdgpu.tdm_gather_base<i32, i16>
+    %1 = amdgpu.make_gather_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, #gpu.address_space<global>>, memref<8xi32, #gpu.address_space<workgroup>> -> !amdgpu.tdm_gather_base<i32, i32>
     return %0, %1 : !amdgpu.tdm_gather_base<i32, i16>, !amdgpu.tdm_gather_base<i32, i32>
   }
 }
@@ -66,8 +66,8 @@ module {
 
 // -----
 module {
-  func.func @make_dma_descriptor_atomic_barrier(%arg0: !amdgpu.tdm_base<i32>, %arg1: memref<8xi32, 3>, %arg2: index) -> !amdgpu.tdm_descriptor {
-    %0 = amdgpu.make_dma_descriptor %arg0 globalSize [128, 64] globalStride [64, 1] sharedSize [128, 64] atomicBarrier(%arg1[%arg2] : memref<8xi32, 3>) : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
+  func.func @make_dma_descriptor_atomic_barrier(%arg0: !amdgpu.tdm_base<i32>, %arg1: memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg2: index) -> !amdgpu.tdm_descriptor {
+    %0 = amdgpu.make_dma_descriptor %arg0 globalSize [128, 64] globalStride [64, 1] sharedSize [128, 64] atomicBarrier(%arg1[%arg2] : memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
     return %0 : !amdgpu.tdm_descriptor
   }
 }
@@ -118,13 +118,102 @@ module {
     amdgpu.tensor_store_from_lds %arg0 : !amdgpu.tdm_descriptor
     return
   }
+  func.func @make_gather_dma_descriptor(%arg0: !amdgpu.tdm_gather_base<i32, i16>, %arg1: vector<13xi16>) -> !amdgpu.tdm_descriptor {
+    %0 = amdgpu.make_gather_dma_descriptor %arg0[%arg1] globalSize [128, 64] globalStride [64, 1] sharedSize [128, 64] : !amdgpu.tdm_gather_base<i32, i16>, vector<13xi16> -> !amdgpu.tdm_descriptor
+    return %0 : !amdgpu.tdm_descriptor
+  }
+  func.func @ds_barrier_init(%arg0: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg1: i32) {
+    amdgpu.ds_barrier_init %arg0[], %arg1 : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i32
+    return
+  }
+  func.func @ds_barrier_poll_state(%arg0: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) -> !amdgpu.ds_barrier_state {
+    %0 = amdgpu.ds_barrier_poll_state %arg0[] : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>> -> !amdgpu.ds_barrier_state
+    return %0 : !amdgpu.ds_barrier_state
+  }
+  func.func @ds_async_barrier_arrive(%arg0: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) {
+    amdgpu.ds_async_barrier_arrive %arg0[] : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>
+    return
+  }
+  func.func @ds_barrier_arrive(%arg0: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg1: i64) -> !amdgpu.ds_barrier_state {
+    %0 = amdgpu.ds_barrier_arrive %arg0[], %arg1 : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i64 -> !amdgpu.ds_barrier_state
+    return %0 : !amdgpu.ds_barrier_state
+  }
+  func.func @ds_barrier_state_phase(%arg0: !amdgpu.ds_barrier_state) -> i32 {
+    %0 = amdgpu.ds_barrier_state_phase %arg0 : !amdgpu.ds_barrier_state -> i32
+    return %0 : i32
+  }
+  func.func @ds_barrier_state_pending_count(%arg0: !amdgpu.ds_barrier_state) -> i32 {
+    %0 = amdgpu.ds_barrier_state_pending_count %arg0 : !amdgpu.ds_barrier_state -> i32
+    return %0 : i32
+  }
+  func.func @ds_barrier_state_init_count(%arg0: !amdgpu.ds_barrier_state) -> i32 {
+    %0 = amdgpu.ds_barrier_state_init_count %arg0 : !amdgpu.ds_barrier_state -> i32
+    return %0 : i32
+  }
+  func.func @ds_barrier_state_phase_parity(%arg0: !amdgpu.ds_barrier_state) -> i1 {
+    %0 = amdgpu.ds_barrier_state_phase_parity %arg0 : !amdgpu.ds_barrier_state -> i1
+    return %0 : i1
+  }
 }
 
 // -----
 module {
-  func.func @make_gather_dma_descriptor(%arg0: !amdgpu.tdm_gather_base<i32, i16>, %arg1: vector<13xi16>) -> !amdgpu.tdm_descriptor {
-    %0 = amdgpu.make_gather_dma_descriptor %arg0[%arg1] globalSize [128, 64] globalStride [64, 1] sharedSize [128, 64] : !amdgpu.tdm_gather_base<i32, i16>, vector<13xi16> -> !amdgpu.tdm_descriptor
-    return %0 : !amdgpu.tdm_descriptor
+  func.func @global_load_async_to_lds_b32(%arg0: memref<128x72xf32, #gpu.address_space<global>>) {
+    %c0 = arith.constant 0 : index
+    %c12 = arith.constant 12 : index
+    %c32 = arith.constant 32 : index
+    %alloc = memref.alloc() : memref<64x64xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg0[%c12, %c0], %alloc[%c32, %c0] : f32, memref<128x72xf32, #gpu.address_space<global>>, memref<64x64xf32, #gpu.address_space<workgroup>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_b8(%arg0: memref<128x72xi8, #gpu.address_space<global>>) {
+    %c0 = arith.constant 0 : index
+    %alloc = memref.alloc() : memref<64x64xi8, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg0[%c0, %c0], %alloc[%c0, %c0] : i8, memref<128x72xi8, #gpu.address_space<global>>, memref<64x64xi8, #gpu.address_space<workgroup>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_b64(%arg0: memref<128x72xf32, #gpu.address_space<global>>) {
+    %c0 = arith.constant 0 : index
+    %alloc = memref.alloc() : memref<64x64xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg0[%c0, %c0], %alloc[%c0, %c0] : vector<2xf32>, memref<128x72xf32, #gpu.address_space<global>>, memref<64x64xf32, #gpu.address_space<workgroup>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_b128(%arg0: memref<128x72xf32, #gpu.address_space<global>>) {
+    %c0 = arith.constant 0 : index
+    %alloc = memref.alloc() : memref<64x64xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg0[%c0, %c0], %alloc[%c0, %c0] : vector<4xf32>, memref<128x72xf32, #gpu.address_space<global>>, memref<64x64xf32, #gpu.address_space<workgroup>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_dynamic_indices(%arg0: memref<512xi32, #gpu.address_space<global>>, %arg1: index, %arg2: index) {
+    %alloc = memref.alloc() : memref<256xi32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg0[%arg1], %alloc[%arg2] : i32, memref<512xi32, #gpu.address_space<global>>, memref<256xi32, #gpu.address_space<workgroup>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_b128_masked(%arg0: memref<128x72xf32, #gpu.address_space<global>>, %arg1: i1) {
+    %c0 = arith.constant 0 : index
+    %alloc = memref.alloc() : memref<64x64xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg0[%c0, %c0], %alloc[%c0, %c0], %arg1 : vector<4xf32>, memref<128x72xf32, #gpu.address_space<global>>, memref<64x64xf32, #gpu.address_space<workgroup>>
+    return
   }
 }
 

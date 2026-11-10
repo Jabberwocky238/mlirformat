@@ -2,24 +2,24 @@ module attributes {omp.is_target_device = false, omp.target_triples = ["nvptx64-
   llvm.func @_QPopenmp_target(%arg0: i16, %arg1: i32, %arg2: i64) {
     %0 = llvm.mlir.constant(0 : i32) : i32
     %1 = llvm.mlir.constant(1 : i16) : i16
-    omp.target device(%1 : i16) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
+    omp.target kernel_type(generic) device(%1 : i16) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
       omp.terminator
     }
     %2 = llvm.mlir.constant(2 : i32) : i32
-    omp.target device(%2 : i32) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
+    omp.target kernel_type(generic) device(%2 : i32) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
       omp.terminator
     }
     %3 = llvm.mlir.constant(3 : i64) : i64
-    omp.target device(%3 : i64) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
+    omp.target kernel_type(generic) device(%3 : i64) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
       omp.terminator
     }
-    omp.target device(%arg0 : i16) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
+    omp.target kernel_type(generic) device(%arg0 : i16) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
       omp.terminator
     }
-    omp.target device(%arg1 : i32) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
+    omp.target kernel_type(generic) device(%arg1 : i32) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
       omp.terminator
     }
-    omp.target device(%arg2 : i64) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
+    omp.target kernel_type(generic) device(%arg2 : i64) host_eval(%0 -> %arg3, %0 -> %arg4, %0 -> %arg5 : i32, i32, i32) {
       omp.terminator
     }
     llvm.return

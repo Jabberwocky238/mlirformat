@@ -11,6 +11,16 @@ module {
 
 // -----
 module {
+  spirv.module Logical Vulkan requires #spirv.vce<v1.6, [Shader, Linkage, CooperativeMatrixKHR, VulkanMemoryModel], [SPV_KHR_cooperative_matrix, SPV_KHR_vulkan_memory_model]> {
+    spirv.func @bit_cast_coop(%arg0: !spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>) "None" {
+      %0 = spirv.Bitcast %arg0 : !spirv.coopmatrix<4x4xf32, Subgroup, MatrixA> to !spirv.coopmatrix<4x4xi32, Subgroup, MatrixA>
+      spirv.Return
+    }
+  }
+}
+
+// -----
+module {
   spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [Shader, Linkage, BFloat16TypeKHR, Float64, Int64], [SPV_KHR_bfloat16]> {
     spirv.func @convert_f_to_s(%arg0: f32) -> i32 "None" {
       %0 = spirv.ConvertFToS %arg0 : f32 to i32

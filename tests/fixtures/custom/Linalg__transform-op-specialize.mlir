@@ -1,48 +1,4 @@
 #map = affine_map<(d0, d1) -> (d0, d1)>
-#map1 = affine_map<(d0, d1) -> (d1, d0)>
-module {
-  func.func @not_a_copy_expect_no_match(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf32>) {
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<?x?xf32>) outs(%arg1 : memref<?x?xf32>) {
-    ^bb0(%in: f32, %out: f32):
-      %0 = arith.addf %in, %out : f32
-      linalg.yield %0 : f32
-    }
-    return
-  }
-  func.func @transpose_op_expect_no_match(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf32>) {
-    linalg.generic {indexing_maps = [#map, #map1], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<?x?xf32>) outs(%arg1 : memref<?x?xf32>) {
-    ^bb0(%in: f32, %out: f32):
-      linalg.yield %in : f32
-    }
-    return
-  }
-  func.func @copy_with_up_cast(%arg0: memref<?x?xf16>, %arg1: memref<?x?xf32>) {
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<?x?xf16>) outs(%arg1 : memref<?x?xf32>) {
-    ^bb0(%in: f16, %out: f32):
-      %0 = arith.extf %in : f16 to f32
-      linalg.yield %0 : f32
-    }
-    return
-  }
-  func.func @copy_with_down_cast(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf16>) {
-    linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : memref<?x?xf32>) outs(%arg1 : memref<?x?xf16>) {
-    ^bb0(%in: f32, %out: f16):
-      %0 = arith.truncf %in : f32 to f16
-      linalg.yield %0 : f16
-    }
-    return
-  }
-  module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match interface{LinalgOp} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %1 = transform.structured.specialize %0 : (!transform.any_op) -> !transform.any_op
-      transform.yield 
-    }
-  }
-}
-
-// -----
-#map = affine_map<(d0, d1) -> (d0, d1)>
 #map1 = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
 module {
   func.func @specialize_trivial_copy_memref(%arg0: memref<?x?xf32>, %arg1: memref<?x?xf32>) {

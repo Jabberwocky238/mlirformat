@@ -12,12 +12,12 @@
     %26 = "arith.constant"() <{value = dense<123> : vector<[4]xi32>}> : () -> vector<[4]xi32>
     %27 = "arith.constant"() <{value = dense<314> : vector<[4]xi32>}> : () -> vector<[4]xi32>
     %28 = "arith.constant"() <{value = dense<0> : vector<[4]xi32>}> : () -> vector<[4]xi32>
-    %29 = "vector.contract"(%26, %27, %25) <{indexing_maps = [#map, #map, #map1], iterator_types = [#vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<[4]xi32>, vector<[4]xi32>, i32) -> i32
+    %29 = "vector.contract"(%26, %27, %25) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map, #map1], iterator_types = [#vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<[4]xi32>, vector<[4]xi32>, i32) -> i32
     %30 = "vector.vscale"() : () -> index
     %31 = "arith.index_cast"(%30) : (index) -> i32
     %32 = "arith.divui"(%29, %31) : (i32, i32) -> i32
     "vector.print"(%32) <{punctuation = #vector.punctuation<newline>}> : (i32) -> ()
-    %33 = "vector.contract"(%26, %28, %25) <{indexing_maps = [#map, #map, #map1], iterator_types = [#vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<[4]xi32>, vector<[4]xi32>, i32) -> i32
+    %33 = "vector.contract"(%26, %28, %25) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map, #map1], iterator_types = [#vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<[4]xi32>, vector<[4]xi32>, i32) -> i32
     "vector.print"(%33) <{punctuation = #vector.punctuation<newline>}> : (i32) -> ()
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "SVE: END OF TEST OUTPUT"}> : () -> ()
     "func.return"() : () -> ()
@@ -27,13 +27,13 @@
     %16 = "arith.constant"() <{value = dense<123> : vector<3x[4]xi32>}> : () -> vector<3x[4]xi32>
     %17 = "arith.constant"() <{value = dense<314> : vector<[4]xi32>}> : () -> vector<[4]xi32>
     %18 = "arith.constant"() <{value = dense<0> : vector<[4]xi32>}> : () -> vector<[4]xi32>
-    %19 = "vector.contract"(%16, %17, %15) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x[4]xi32>, vector<[4]xi32>, vector<3xi32>) -> vector<3xi32>
+    %19 = "vector.contract"(%16, %17, %15) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x[4]xi32>, vector<[4]xi32>, vector<3xi32>) -> vector<3xi32>
     %20 = "vector.vscale"() : () -> index
     %21 = "vector.broadcast"(%20) : (index) -> vector<3xindex>
     %22 = "arith.index_cast"(%21) : (vector<3xindex>) -> vector<3xi32>
     %23 = "arith.divui"(%19, %22) : (vector<3xi32>, vector<3xi32>) -> vector<3xi32>
     "vector.print"(%23) <{punctuation = #vector.punctuation<newline>}> : (vector<3xi32>) -> ()
-    %24 = "vector.contract"(%16, %18, %15) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x[4]xi32>, vector<[4]xi32>, vector<3xi32>) -> vector<3xi32>
+    %24 = "vector.contract"(%16, %18, %15) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x[4]xi32>, vector<[4]xi32>, vector<3xi32>) -> vector<3xi32>
     "vector.print"(%24) <{punctuation = #vector.punctuation<newline>}> : (vector<3xi32>) -> ()
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "SVE: END OF TEST OUTPUT"}> : () -> ()
     "func.return"() : () -> ()
@@ -42,7 +42,7 @@
     %8 = "arith.constant"() <{value = dense<123> : vector<3x5xi32>}> : () -> vector<3x5xi32>
     %9 = "arith.constant"() <{value = dense<123> : vector<5x[2]xi32>}> : () -> vector<5x[2]xi32>
     %10 = "arith.constant"() <{value = dense<314> : vector<3x[2]xi32>}> : () -> vector<3x[2]xi32>
-    %11 = "vector.contract"(%8, %9, %10) <{indexing_maps = [#map5, #map6, #map7], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x5xi32>, vector<5x[2]xi32>, vector<3x[2]xi32>) -> vector<3x[2]xi32>
+    %11 = "vector.contract"(%8, %9, %10) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map5, #map6, #map7], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x5xi32>, vector<5x[2]xi32>, vector<3x[2]xi32>) -> vector<3x[2]xi32>
     %12 = "vector.extract"(%11) <{static_position = array<i64: 0>}> : (vector<3x[2]xi32>) -> vector<[2]xi32>
     "vector.print"(%12) <{punctuation = #vector.punctuation<newline>}> : (vector<[2]xi32>) -> ()
     %13 = "vector.extract"(%11) <{static_position = array<i64: 1>}> : (vector<3x[2]xi32>) -> vector<[2]xi32>
@@ -56,7 +56,7 @@
     %1 = "arith.constant"() <{value = dense<1.230000e+00> : vector<3x5xf32>}> : () -> vector<3x5xf32>
     %2 = "arith.constant"() <{value = dense<1.230000e+00> : vector<5x[2]xf32>}> : () -> vector<5x[2]xf32>
     %3 = "arith.constant"() <{value = dense<3.140000e+00> : vector<3x[2]xf32>}> : () -> vector<3x[2]xf32>
-    %4 = "vector.contract"(%1, %2, %3) <{indexing_maps = [#map5, #map6, #map7], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x5xf32>, vector<5x[2]xf32>, vector<3x[2]xf32>) -> vector<3x[2]xf32>
+    %4 = "vector.contract"(%1, %2, %3) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map5, #map6, #map7], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<3x5xf32>, vector<5x[2]xf32>, vector<3x[2]xf32>) -> vector<3x[2]xf32>
     %5 = "vector.extract"(%4) <{static_position = array<i64: 0>}> : (vector<3x[2]xf32>) -> vector<[2]xf32>
     "vector.print"(%5) <{punctuation = #vector.punctuation<newline>}> : (vector<[2]xf32>) -> ()
     %6 = "vector.extract"(%4) <{static_position = array<i64: 1>}> : (vector<3x[2]xf32>) -> vector<[2]xf32>

@@ -6,7 +6,7 @@ module {
     omp.yield(%arg1 : !llvm.ptr)
   }
   llvm.func @test_alloca_ip_workaround() {
-    omp.target {
+    omp.target kernel_type(generic) {
       %0 = llvm.mlir.constant(1 : i32) : i32
       %1 = llvm.alloca %0 x !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)> {alignment = 8 : i64} : (i32) -> !llvm.ptr
       %2 = llvm.mlir.constant(0 : index) : i64

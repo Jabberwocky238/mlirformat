@@ -68,7 +68,7 @@ module {
     ^bb0(%arg4: index, %arg5: index):
       %0 = arith.muli %arg4, %arg5 : index
       tensor.yield %0 : index
-    } : tensor<?x10xindex> to tensor<?x?xindex>
+    } {test.discardable.attr = 1 : i64} : tensor<?x10xindex> to tensor<?x?xindex>
     return %padded : tensor<?x?xindex>
   }
   module attributes {transform.with_named_sequence} {
@@ -87,7 +87,7 @@ module {
     ^bb0(%arg4: index, %arg5: index):
       %c50 = arith.constant 50 : index
       tensor.yield %c50 : index
-    } : tensor<?x10xindex> to tensor<?x?xindex>
+    } {test.discardable.attr = 1 : i64} : tensor<?x10xindex> to tensor<?x?xindex>
     return %padded : tensor<?x?xindex>
   }
   module attributes {transform.with_named_sequence} {
@@ -105,7 +105,7 @@ module {
     %padded = tensor.pad %arg0 low[5, %arg1] high[%arg2, %arg3] {
     ^bb0(%arg5: index, %arg6: index):
       tensor.yield %arg4 : index
-    } : tensor<?x10xindex> to tensor<?x?xindex>
+    } {test.discardable.attr = 1 : i64} : tensor<?x10xindex> to tensor<?x?xindex>
     return %padded : tensor<?x?xindex>
   }
   module attributes {transform.with_named_sequence} {
@@ -130,6 +130,21 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["tensor.pad"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %1 = transform.structured.rewrite_in_destination_passing_style %0 : (!transform.any_op) -> !transform.any_op
+      transform.yield 
+    }
+  }
+}
+
+// -----
+module {
+  func.func @already_destination_passing_style(%arg0: tensor<134217728xf32>, %arg1: tensor<134217728xf32>) -> tensor<134217728xf32> {
+    %0 = linalg.add ins(%arg0, %arg1 : tensor<134217728xf32>, tensor<134217728xf32>) outs(%arg0 : tensor<134217728xf32>) -> tensor<134217728xf32>
+    return %0 : tensor<134217728xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.add"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %1 = transform.structured.rewrite_in_destination_passing_style %0 : (!transform.any_op) -> !transform.any_op
       transform.yield 
     }

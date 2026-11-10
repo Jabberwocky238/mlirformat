@@ -724,6 +724,14 @@
 
 // -----
 "builtin.module"() ({
+  %0 = "arith.constant"() <{value = 2 : i32}> : () -> i32
+  %1 = "acc.on_device"(%0) : (i32) -> i1
+  %2 = "arith.constant"() <{value = 2 : index}> : () -> index
+  %3 = "acc.on_device"(%2) : (index) -> i1
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (!llvm.ptr) -> (), sym_name = "testexitdataop"}> ({
   ^bb0(%arg0: !llvm.ptr):
     %0 = "arith.constant"() <{value = true}> : () -> i1
@@ -1049,15 +1057,15 @@
   "llvm.mlir.global"() <{addr_space = 0 : i32, global_type = i32, linkage = #llvm.linkage<external>, sym_name = "globalvar", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
     %5 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32
     "llvm.return"(%5) : (i32) -> ()
-  }) {acc.declare = #acc.declare<dataClause =  acc_create>} : () -> ()
+  }) {acc.declare = #acc.declare<dataClause = acc_create>} : () -> ()
   "acc.global_ctor"() <{sym_name = "acc_constructor"}> ({
-    %2 = "llvm.mlir.addressof"() <{global_name = @globalvar}> {acc.declare = #acc.declare<dataClause =  acc_create>} : () -> !llvm.ptr
+    %2 = "llvm.mlir.addressof"() <{global_name = @globalvar}> {acc.declare = #acc.declare<dataClause = acc_create>} : () -> !llvm.ptr
     %3 = "acc.create"(%2) <{dataClause = #acc<data_clause acc_create>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = i32}> : (!llvm.ptr) -> !llvm.ptr
     %4 = "acc.declare_enter"(%3) : (!llvm.ptr) -> !acc.declare_token
     "acc.terminator"() : () -> ()
   }) : () -> ()
   "acc.global_dtor"() <{sym_name = "acc_destructor"}> ({
-    %0 = "llvm.mlir.addressof"() <{global_name = @globalvar}> {acc.declare = #acc.declare<dataClause =  acc_create>} : () -> !llvm.ptr
+    %0 = "llvm.mlir.addressof"() <{global_name = @globalvar}> {acc.declare = #acc.declare<dataClause = acc_create>} : () -> !llvm.ptr
     %1 = "acc.getdeviceptr"(%0) <{dataClause = #acc<data_clause acc_create>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = i32}> : (!llvm.ptr) -> !llvm.ptr
     "acc.declare_exit"(%1) <{operandSegmentSizes = array<i32: 0, 1>}> : (!llvm.ptr) -> ()
     "acc.delete"(%1) <{dataClause = #acc<data_clause acc_delete>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0>, structured = true}> : (!llvm.ptr) -> ()
@@ -1128,7 +1136,7 @@
     %3 = "arith.constant"() <{value = 10 : i64}> : () -> i64
     %4 = "arith.constant"() <{value = 10 : i64}> : () -> i64
     %5 = "arith.constant"() <{value = 20 : i32}> : () -> i32
-    %6 = "llvm.alloca"(%5) <{elem_type = i32}> {acc.declare = #acc.declare<dataClause =  acc_create, implicit = true>} : (i32) -> !llvm.ptr
+    %6 = "llvm.alloca"(%5) <{elem_type = i32}> {acc.declare = #acc.declare<dataClause = acc_create, implicit = true>} : (i32) -> !llvm.ptr
     %7 = "acc.create"(%6) <{dataClause = #acc<data_clause acc_create>, implicit = true, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = !llvm.array<20 x i32>}> : (!llvm.ptr) -> !llvm.ptr
     %8 = "acc.present"(%arg0) <{dataClause = #acc<data_clause acc_present>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = tensor<10x10xf32>}> : (memref<10x10xf32>) -> memref<10x10xf32>
     %9 = "acc.present"(%arg1) <{dataClause = #acc<data_clause acc_present>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = tensor<10x10xf32>}> : (memref<10x10xf32>) -> memref<10x10xf32>
@@ -1479,14 +1487,14 @@
     %1 = "arith.constant"() <{value = 1024 : index}> : () -> index
     %2 = "acc.copyin"(%arg0) <{dataClause = #acc<data_clause acc_copyin>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = f32}> : (memref<1024xf32>) -> memref<1024xf32>
     %3 = "acc.create"(%arg1) <{dataClause = #acc<data_clause acc_create>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = f32}> : (memref<1024xf32>) -> memref<1024xf32>
-    "acc.kernel_environment"(%2, %3) <{operandSegmentSizes = array<i32: 2, 0, 0>}> ({
+    "acc.kernel_environment"(%2, %3) <{operandSegmentSizes = array<i32: 2, 0, 0, 0>}> ({
       "gpu.launch"(%0, %0, %0, %1, %0, %0) <{operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0>}> ({
       ^bb0(%arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index, %arg12: index, %arg13: index):
         %4 = "memref.load"(%2, %arg5) : (memref<1024xf32>, index) -> f32
         %5 = "arith.mulf"(%4, %4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
         "memref.store"(%5, %3, %arg5) : (f32, memref<1024xf32>, index) -> ()
         "gpu.terminator"() : () -> ()
-      }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+      }) : (index, index, index, index, index, index) -> ()
     }) : (memref<1024xf32>, memref<1024xf32>) -> ()
     "acc.copyout"(%3, %arg1) <{dataClause = #acc<data_clause acc_copyout>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, structured = true, varType = f32}> : (memref<1024xf32>, memref<1024xf32>) -> ()
     "acc.delete"(%2) <{dataClause = #acc<data_clause acc_delete>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0>, structured = true}> : (memref<1024xf32>) -> ()
@@ -1502,16 +1510,75 @@
     %1 = "arith.constant"() <{value = 1024 : index}> : () -> index
     %2 = "arith.constant"() <{value = 1 : i32}> : () -> i32
     %3 = "acc.create"(%arg0, %2) <{asyncOperandsDeviceType = [#acc.device_type<none>], dataClause = #acc<data_clause acc_create>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 1>, structured = true, varType = f32}> : (memref<1024xf32>, i32) -> memref<1024xf32>
-    "acc.kernel_environment"(%3, %2) <{asyncOperandsDeviceType = [#acc.device_type<none>], operandSegmentSizes = array<i32: 1, 1, 0>}> ({
+    "acc.kernel_environment"(%3, %2) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> ({
       "gpu.launch"(%0, %0, %0, %1, %0, %0) <{operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0>}> ({
       ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index, %arg12: index):
         %4 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32
         "memref.store"(%4, %3, %arg4) : (f32, memref<1024xf32>, index) -> ()
         "gpu.terminator"() : () -> ()
-      }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+      }) : (index, index, index, index, index, index) -> ()
     }) : (memref<1024xf32>, i32) -> ()
     "acc.copyout"(%3, %arg0, %2) <{asyncOperandsDeviceType = [#acc.device_type<none>], dataClause = #acc<data_clause acc_copyout>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 1, 0, 1>, structured = true, varType = f32}> : (memref<1024xf32>, memref<1024xf32>, i32) -> ()
     "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<i32>, memref<i32>) -> (), sym_name = "test_acc_reduction_combine"}> ({
+  ^bb0(%arg0: memref<i32>, %arg1: memref<i32>):
+    "acc.reduction_combine"(%arg1, %arg0) <{reductionOperator = #acc.reduction_operator<add>}> : (memref<i32>, memref<i32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!llvm.ptr) -> (), sym_name = "test_getdeviceptr_opaque_ptr"}> ({
+  ^bb0(%arg0: !llvm.ptr):
+    %0 = "acc.getdeviceptr"(%arg0) <{dataClause = #acc<data_clause acc_getdeviceptr>, implicit = false, modifiers = #acc<data_clause_modifier none>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, structured = true, varType = !llvm.ptr}> : (!llvm.ptr) -> !llvm.ptr
+    %1 = "acc.declare_enter"(%0) : (!llvm.ptr) -> !acc.declare_token
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "acc.reduction.recipe"() <{reductionOperator = #acc.reduction_operator<maximumf>, sym_name = "reduction_maximum_memref_f32", type = memref<f32>}> ({
+  ^bb0(%arg11: memref<f32>):
+    %3 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<f32>
+    "acc.yield"(%3) : (memref<f32>) -> ()
+  }, {
+  ^bb0(%arg9: memref<f32>, %arg10: memref<f32>):
+    "acc.yield"(%arg9) : (memref<f32>) -> ()
+  }, {
+  }) : () -> ()
+  "acc.reduction.recipe"() <{reductionOperator = #acc.reduction_operator<maxnumf>, sym_name = "reduction_maxnum_memref_f32", type = memref<f32>}> ({
+  ^bb0(%arg8: memref<f32>):
+    %2 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<f32>
+    "acc.yield"(%2) : (memref<f32>) -> ()
+  }, {
+  ^bb0(%arg6: memref<f32>, %arg7: memref<f32>):
+    "acc.yield"(%arg6) : (memref<f32>) -> ()
+  }, {
+  }) : () -> ()
+  "acc.reduction.recipe"() <{reductionOperator = #acc.reduction_operator<minimumf>, sym_name = "reduction_minimum_memref_f32", type = memref<f32>}> ({
+  ^bb0(%arg5: memref<f32>):
+    %1 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<f32>
+    "acc.yield"(%1) : (memref<f32>) -> ()
+  }, {
+  ^bb0(%arg3: memref<f32>, %arg4: memref<f32>):
+    "acc.yield"(%arg3) : (memref<f32>) -> ()
+  }, {
+  }) : () -> ()
+  "acc.reduction.recipe"() <{reductionOperator = #acc.reduction_operator<minnumf>, sym_name = "reduction_minnum_memref_f32", type = memref<f32>}> ({
+  ^bb0(%arg2: memref<f32>):
+    %0 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<f32>
+    "acc.yield"(%0) : (memref<f32>) -> ()
+  }, {
+  ^bb0(%arg0: memref<f32>, %arg1: memref<f32>):
+    "acc.yield"(%arg0) : (memref<f32>) -> ()
+  }, {
   }) : () -> ()
 }) : () -> ()
 

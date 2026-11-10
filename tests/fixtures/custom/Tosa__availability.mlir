@@ -21,6 +21,19 @@ module {
 
 // -----
 module {
+  func.func @test_avg_pool2d_adaptive(%arg0: tensor<1x7x7x9xf32>) -> tensor<1x7x7x9xf32> {
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %2 = tosa.const_shape  {values = dense<2> : tensor<2xindex>} : () -> !tosa.shape<2>
+    %3 = tosa.const_shape  {values = dense<1> : tensor<2xindex>} : () -> !tosa.shape<2>
+    %4 = tosa.const_shape  {values = dense<[0, 1, 0, 1]> : tensor<4xindex>} : () -> !tosa.shape<4>
+    %5 = tosa.avg_pool2d_adaptive %arg0, %0, %1, %2, %3, %4 {acc_type = f32} : (tensor<1x7x7x9xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<1x7x7x9xf32>
+    return %5 : tensor<1x7x7x9xf32>
+  }
+}
+
+// -----
+module {
   func.func @test_conv2d(%arg0: tensor<1x4x4x4xf32>, %arg1: tensor<8x1x1x4xf32>, %arg2: tensor<8xf32>) -> tensor<1x4x4x8xf32> {
     %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
     %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
@@ -486,7 +499,7 @@ module {
   func.func @test_slice(%arg0: tensor<13x21x3xf32>) -> tensor<4x11x1xf32> {
     %0 = tosa.const_shape  {values = dense<[4, 11, 1]> : tensor<3xindex>} : () -> !tosa.shape<3>
     %1 = tosa.const_shape  {values = dense<[6, 8, 0]> : tensor<3xindex>} : () -> !tosa.shape<3>
-    %2 = tosa.slice %arg0, %0, %1 : (tensor<13x21x3xf32>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xf32>
+    %2 = tosa.slice %arg0, %1, %0 : (tensor<13x21x3xf32>, !tosa.shape<3>, !tosa.shape<3>) -> tensor<4x11x1xf32>
     return %2 : tensor<4x11x1xf32>
   }
 }
@@ -518,6 +531,24 @@ module {
 
 // -----
 module {
+  func.func @test_row_gather(%arg0: tensor<13x21x3xf32>, %arg1: tensor<13x26xi32>) -> tensor<13x52x3xf32> {
+    %0 = "tosa.const"() <{values = dense<2> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = tosa.row_gather %arg0, %arg1, %0 : (tensor<13x21x3xf32>, tensor<13x26xi32>, tensor<1xi32>) -> tensor<13x52x3xf32>
+    return %1 : tensor<13x52x3xf32>
+  }
+}
+
+// -----
+module {
+  func.func @test_row_gather_block_scaled(%arg0: tensor<13x21x32xf4E2M1FN>, %arg1: tensor<13x21x1xf8E8M0FNU>, %arg2: tensor<13x26xi32>) -> (tensor<13x52x32xf4E2M1FN>, tensor<13x52x1xf8E8M0FNU>) {
+    %0 = "tosa.const"() <{values = dense<2> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1:2 = tosa.row_gather_block_scaled %arg0, %arg1, %arg2, %0 {block_size = #tosa.block_size<BLOCK_SIZE_32>} : (tensor<13x21x32xf4E2M1FN>, tensor<13x21x1xf8E8M0FNU>, tensor<13x26xi32>, tensor<1xi32>) -> (tensor<13x52x32xf4E2M1FN>, tensor<13x52x1xf8E8M0FNU>)
+    return %1#0, %1#1 : tensor<13x52x32xf4E2M1FN>, tensor<13x52x1xf8E8M0FNU>
+  }
+}
+
+// -----
+module {
   func.func @test_scatter(%arg0: tensor<13x28x3xf32>, %arg1: tensor<13x26xi32>, %arg2: tensor<13x26x3xf32>) -> tensor<13x28x3xf32> {
     %0 = tosa.scatter %arg0, %arg1, %arg2 : (tensor<13x28x3xf32>, tensor<13x26xi32>, tensor<13x26x3xf32>) -> tensor<13x28x3xf32>
     return %0 : tensor<13x28x3xf32>
@@ -537,7 +568,7 @@ module {
 
 // -----
 module {
-  func.func @test_cast1(%arg0: tensor<13x21x3xi32>) -> tensor<13x21x3xf32> {
+  func.func @test_cast(%arg0: tensor<13x21x3xi32>) -> tensor<13x21x3xf32> {
     %0 = tosa.cast %arg0 : (tensor<13x21x3xi32>) -> tensor<13x21x3xf32>
     return %0 : tensor<13x21x3xf32>
   }

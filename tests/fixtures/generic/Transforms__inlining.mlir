@@ -229,3 +229,31 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (f16, f16)>, linkage = #llvm.linkage<external>, sym_name = "inline_test_return_arity_mismatch", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg4: f16, %arg5: f16):
+    "llvm.call"(%arg4, %arg5) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @inline_test_return_arity_mismatch_callee, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 2, 0>}> : (f16, f16) -> ()
+    "llvm.return"() : () -> ()
+  }) {llvm.emit_c_interface} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (f16, f16)>, linkage = #llvm.linkage<external>, sym_name = "inline_test_return_arity_mismatch_callee", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg2: f16, %arg3: f16):
+    %5 = "test.op_with_bitcast_type"(%arg2) : (f16) -> tensor<4xf32>
+    %6 = "test.op_with_bitcast_type"(%arg3) : (f16) -> tensor<2xi32>
+    "test.return"(%5, %6) : (tensor<4xf32>, tensor<2xi32>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i32) -> i32, sym_name = "inline_functional_region_multiblock"}> ({
+  ^bb0(%arg0: i32):
+    %0 = "test.functional_region_op"() ({
+    ^bb0(%arg1: i32):
+      %2 = "arith.addi"(%arg1, %arg1) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "cf.br"(%2)[^bb1] : (i32) -> ()
+    ^bb1(%3: i32):  // pred: ^bb0
+      %4 = "arith.addi"(%3, %3) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+      "test.return"(%4) : (i32) -> ()
+    }) : () -> ((i32) -> i32)
+    %1 = "func.call_indirect"(%0, %arg0) : ((i32) -> i32, i32) -> i32
+    "func.return"(%1) : (i32) -> ()
+  }) : () -> ()
+}) : () -> ()
+

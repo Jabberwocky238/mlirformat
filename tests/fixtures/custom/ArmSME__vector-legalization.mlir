@@ -275,6 +275,14 @@ module {
 
 // -----
 module {
+  func.func @xfer_read_scalable_column_f64(%arg0: index, %arg1: index, %arg2: f64, %arg3: memref<?x?xf64>) -> vector<[4]x1xf64> {
+    %0 = vector.transfer_read %arg3[%arg0, %arg1], %arg2 : memref<?x?xf64>, vector<[4]x1xf64>
+    return %0 : vector<[4]x1xf64>
+  }
+}
+
+// -----
+module {
   func.func @negative_xfer_read_scalable_column_x2(%arg0: index, %arg1: index, %arg2: f32, %arg3: memref<?x?xf32>) -> vector<[4]x2xf32> {
     %0 = vector.transfer_read %arg3[%arg0, %arg1], %arg2 : memref<?x?xf32>, vector<[4]x2xf32>
     return %0 : vector<[4]x2xf32>

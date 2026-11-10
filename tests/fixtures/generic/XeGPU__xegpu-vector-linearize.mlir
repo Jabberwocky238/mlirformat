@@ -96,26 +96,26 @@
 // -----
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "test_kernel"}> ({
-    "gpu.func"() <{function_type = (memref<8x16xf16>, memref<16x16xf16>, memref<8x16xf32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<8x16xf16>, memref<16x16xf16>, memref<8x16xf32>) -> (), kernel}> ({
     ^bb0(%arg0: memref<8x16xf16>, %arg1: memref<16x16xf16>, %arg2: memref<8x16xf32>):
       %0 = "arith.constant"() <{value = 0 : index}> : () -> index
       %1 = "arith.constant"() <{value = dense<0.000000e+00> : vector<8x8xf16>}> : () -> vector<8x8xf16>
       %2 = "arith.constant"() <{value = dense<0.000000e+00> : vector<8x8xf16>}> : () -> vector<8x8xf16>
       %3 = "arith.constant"() <{value = dense<5.000000e+00> : vector<8x8xf32>}> : () -> vector<8x8xf32>
-      %4 = "xegpu.create_nd_tdesc"(%arg0, %0, %0) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, operandSegmentSizes = array<i32: 1, 2, 0, 0>}> : (memref<8x16xf16>, index, index) -> !xegpu.tensor_desc<8x16xf16>
-      %5 = "xegpu.load_nd"(%4) : (!xegpu.tensor_desc<8x16xf16>) -> vector<8x16xf16>
+      %4 = "xegpu.create_nd_tdesc"(%arg0) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<8x16xf16>) -> !xegpu.tensor_desc<8x16xf16>
+      %5 = "xegpu.load_nd"(%4) <{const_offsets = array<i64: 0, 0>}> : (!xegpu.tensor_desc<8x16xf16>) -> vector<8x16xf16>
       %6 = "vector.insert_strided_slice"(%1, %5) <{offsets = [0, 0], strides = [1, 1]}> {sizes = [8, 8]} : (vector<8x8xf16>, vector<8x16xf16>) -> vector<8x16xf16>
-      %7 = "xegpu.create_nd_tdesc"(%arg1, %0, %0) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, operandSegmentSizes = array<i32: 1, 2, 0, 0>}> : (memref<16x16xf16>, index, index) -> !xegpu.tensor_desc<16x16xf16>
-      %8 = "xegpu.load_nd"(%7) : (!xegpu.tensor_desc<16x16xf16>) -> vector<16x16xf16>
+      %7 = "xegpu.create_nd_tdesc"(%arg1) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<16x16xf16>) -> !xegpu.tensor_desc<16x16xf16>
+      %8 = "xegpu.load_nd"(%7) <{const_offsets = array<i64: 0, 0>}> : (!xegpu.tensor_desc<16x16xf16>) -> vector<16x16xf16>
       %9 = "vector.insert_strided_slice"(%2, %8) <{offsets = [0, 0], strides = [1, 1]}> {sizes = [8, 8]} : (vector<8x8xf16>, vector<16x16xf16>) -> vector<16x16xf16>
       %10 = "xegpu.dpas"(%6, %9) : (vector<8x16xf16>, vector<16x16xf16>) -> vector<8x16xf32>
       %11 = "vector.extract_strided_slice"(%10) <{offsets = [0, 0], sizes = [8, 8], strides = [1, 1]}> : (vector<8x16xf32>) -> vector<8x8xf32>
       %12 = "arith.addf"(%11, %3) <{fastmath = #arith.fastmath<none>}> : (vector<8x8xf32>, vector<8x8xf32>) -> vector<8x8xf32>
       %13 = "vector.insert_strided_slice"(%12, %10) <{offsets = [0, 0], strides = [1, 1]}> {sizes = [8, 8]} : (vector<8x8xf32>, vector<8x16xf32>) -> vector<8x16xf32>
-      %14 = "xegpu.create_nd_tdesc"(%arg2, %0, %0) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, operandSegmentSizes = array<i32: 1, 2, 0, 0>}> : (memref<8x16xf32>, index, index) -> !xegpu.tensor_desc<8x16xf32>
-      "xegpu.store_nd"(%13, %14) : (vector<8x16xf32>, !xegpu.tensor_desc<8x16xf32>) -> ()
+      %14 = "xegpu.create_nd_tdesc"(%arg2) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<8x16xf32>) -> !xegpu.tensor_desc<8x16xf32>
+      "xegpu.store_nd"(%13, %14) <{const_offsets = array<i64: 0, 0>}> : (vector<8x16xf32>, !xegpu.tensor_desc<8x16xf32>) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "test_kernel", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "test_kernel"} : () -> ()
   }) : () -> ()
 }) : () -> ()
 

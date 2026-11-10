@@ -42,7 +42,7 @@
       %17 = "gpu.subgroup_mma_compute"(%14, %15, %16) <{a_transpose}> : (!gpu.mma_matrix<16x16xf16, "AOp">, !gpu.mma_matrix<16x16xf16, "BOp">, !gpu.mma_matrix<16x16xf16, "COp">) -> !gpu.mma_matrix<16x16xf16, "COp">
       "gpu.subgroup_mma_store_matrix"(%17, %0, %5, %5) <{leadDimension = 16 : index}> : (!gpu.mma_matrix<16x16xf16, "COp">, memref<16x16xf16>, index, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "scf.for"(%5, %6, %8) ({
     ^bb0(%arg0: index):
       "scf.for"(%5, %6, %8) ({

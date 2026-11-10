@@ -1,4 +1,4 @@
-//! `arith` (subset; formats from `ArithOps.td`, checked against `mlir-opt` 22.1.8 output).
+//! `arith` (subset; formats from `ArithOps.td`, checked against `mlir-opt` 23.1.5 output).
 
 use core::fmt::{self, Write};
 
@@ -65,6 +65,39 @@ macro_rules! casts {
     )*};
 }
 
+/// `lhs, rhs <roundingmode> fastmath<..> : T`: the float binary ops with a rounding mode.
+macro_rules! rounded {
+    ($($ty:ident = $name:literal),* $(,)?) => {$(
+        #[mlir::op($name, format = "$lhs `,` $rhs ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+        pub struct $ty<'a> {
+            #[slot(result)]
+            pub lhs: Value<'a>,
+            #[slot(result)]
+            pub rhs: Value<'a>,
+            #[attr(dialect = "arith.fastmath", default = "<none>")]
+            pub fastmath: Option<Attribute<'a>>,
+            #[attr(int = "i32")]
+            pub roundingmode: Option<RoundingMode>,
+            pub result: Type<'a>,
+        }
+    )*};
+}
+
+/// `in nneg : A to B`: the casts with a unit `nonNeg` property.
+macro_rules! nneg_casts {
+    ($($ty:ident = $name:literal),* $(,)?) => {$(
+        #[mlir::op($name, format = "$in (`nneg` $nonNeg^)? attr-dict `:` type($in) `to` type($out)", results(out))]
+        pub struct $ty<'a> {
+            #[slot(in_ty, name = "in")]
+            pub input: Value<'a>,
+            #[attr(name = "nonNeg")]
+            pub non_neg: bool,
+            pub in_ty: Type<'a>,
+            pub out: Type<'a>,
+        }
+    )*};
+}
+
 /// Enum properties: an MLIR integer case value (declaration order) or the case keyword.
 macro_rules! predicates {
     ($($(#[$m:meta])* $ty:ident { $($case:ident $(= $kw:literal)?),* $(,)? })*) => {$(
@@ -91,13 +124,17 @@ flagged! { "$lhs `,` $rhs (`overflow` `` $overflowFlags^)? attr-dict `:` type($r
 }
 
 flagged! { "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", fastmath = "fastmath", "arith.fastmath":
-    AddF = "arith.addf", SubF = "arith.subf", MulF = "arith.mulf", DivF = "arith.divf", RemF = "arith.remf",
+    RemF = "arith.remf",
     MaximumF = "arith.maximumf", MinimumF = "arith.minimumf", MaxNumF = "arith.maxnumf", MinNumF = "arith.minnumf",
 }
 
+rounded! { AddF = "arith.addf", SubF = "arith.subf", MulF = "arith.mulf", DivF = "arith.divf" }
+
+nneg_casts! { IndexCastUI = "arith.index_castui", ExtUI = "arith.extui", UIToFP = "arith.uitofp" }
+
 casts! {
-    IndexCast = "arith.index_cast", IndexCastUI = "arith.index_castui", ExtSI = "arith.extsi", ExtUI = "arith.extui",
-    SIToFP = "arith.sitofp", UIToFP = "arith.uitofp", FPToSI = "arith.fptosi", FPToUI = "arith.fptoui", Bitcast = "arith.bitcast",
+    IndexCast = "arith.index_cast", ExtSI = "arith.extsi",
+    SIToFP = "arith.sitofp", FPToSI = "arith.fptosi", FPToUI = "arith.fptoui", Bitcast = "arith.bitcast",
 }
 
 predicates! {
@@ -190,14 +227,21 @@ impl Parse for Select<'_> {
     }
 }
 
-#[mlir::op("arith.negf", format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
-pub struct NegF<'a> {
-    #[slot(result)]
-    pub operand: Value<'a>,
-    #[attr(dialect = "arith.fastmath", default = "<none>")]
-    pub fastmath: Option<Attribute<'a>>,
-    pub result: Type<'a>,
+/// `operand fastmath<..> : T`: the float unary ops.
+macro_rules! float_unary {
+    ($($ty:ident = $name:literal),* $(,)?) => {$(
+        #[mlir::op($name, format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+        pub struct $ty<'a> {
+            #[slot(result)]
+            pub operand: Value<'a>,
+            #[attr(dialect = "arith.fastmath", default = "<none>")]
+            pub fastmath: Option<Attribute<'a>>,
+            pub result: Type<'a>,
+        }
+    )*};
 }
+
+float_unary! { NegF = "arith.negf", FlushDenormals = "arith.flush_denormals" }
 
 #[mlir::op("arith.cmpi", format = "$predicate `,` $lhs `,` $rhs attr-dict `:` type($lhs)", results(result))]
 pub struct CmpI<'a> {
@@ -271,6 +315,33 @@ pub struct AddUIExtended<'a> {
     pub overflow: Type<'a>,
 }
 
+/// `%diff, %borrow = lhs, rhs : T, i1`.
+#[mlir::op("arith.subui_extended", format = "$lhs `,` $rhs attr-dict `:` type($diff) `,` type($borrow)", results(diff, borrow))]
+pub struct SubUIExtended<'a> {
+    #[slot(diff)]
+    pub lhs: Value<'a>,
+    #[slot(diff)]
+    pub rhs: Value<'a>,
+    pub diff: Type<'a>,
+    pub borrow: Type<'a>,
+}
+
+#[mlir::op(
+    "arith.convertf",
+    format = "$in ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `to` type($out)",
+    results(out)
+)]
+pub struct ConvertF<'a> {
+    #[slot(in_ty, name = "in")]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
+    #[attr(dialect = "arith.fastmath")]
+    pub fastmath: Option<Attribute<'a>>,
+    pub in_ty: Type<'a>,
+    pub out: Type<'a>,
+}
+
 #[mlir::op(
     "arith.scaling_extf",
     format = "$in `,` $scale (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `,` type($scale) `to` type($out)",
@@ -310,7 +381,7 @@ pub struct ScalingTruncF<'a> {
 /// The `arith` dialect.
 #[mlir::dialect(
     "arith",
-    ops = [AndI, OrI, XOrI, MaxSI, MaxUI, MinSI, MinUI, DivSI, DivUI, RemSI, RemUI, CeilDivSI, CeilDivUI, FloorDivSI, ShRSI, ShRUI, AddI, SubI, MulI, ShLI, AddF, SubF, MulF, DivF, RemF, MaximumF, MinimumF, MaxNumF, MinNumF, IndexCast, IndexCastUI, ExtSI, ExtUI, SIToFP, UIToFP, FPToSI, FPToUI, Bitcast, NegF, CmpI, CmpF, Constant, ExtF, TruncF, Select, TruncI, MulSIExtended, MulUIExtended, AddUIExtended, ScalingExtF, ScalingTruncF],
+    ops = [AndI, OrI, XOrI, MaxSI, MaxUI, MinSI, MinUI, DivSI, DivUI, RemSI, RemUI, CeilDivSI, CeilDivUI, FloorDivSI, ShRSI, ShRUI, AddI, SubI, MulI, ShLI, AddF, SubF, MulF, DivF, RemF, MaximumF, MinimumF, MaxNumF, MinNumF, IndexCast, IndexCastUI, ExtSI, ExtUI, SIToFP, UIToFP, FPToSI, FPToUI, Bitcast, NegF, CmpI, CmpF, Constant, ExtF, TruncF, Select, TruncI, MulSIExtended, MulUIExtended, AddUIExtended, SubUIExtended, FlushDenormals, ConvertF, ScalingExtF, ScalingTruncF],
     materializer
 )]
 pub struct ArithDialect;

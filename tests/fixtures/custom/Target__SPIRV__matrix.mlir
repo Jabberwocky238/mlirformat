@@ -28,6 +28,10 @@ module {
       %0 = spirv.VectorTimesMatrix %arg0, %arg1 : vector<3xf32>, !spirv.matrix<4 x vector<3xf32>> -> vector<4xf32>
       spirv.ReturnValue %0 : vector<4xf32>
     }
+    spirv.func @outer_product_1(%arg0: vector<3xf32>, %arg1: vector<2xf32>) -> !spirv.matrix<2 x vector<3xf32>> "None" {
+      %0 = spirv.OuterProduct %arg0, %arg1 : vector<3xf32>, vector<2xf32> -> !spirv.matrix<2 x vector<3xf32>>
+      spirv.ReturnValue %0 : !spirv.matrix<2 x vector<3xf32>>
+    }
     spirv.func @matrix_times_matrix_1(%arg0: !spirv.matrix<3 x vector<3xf32>>, %arg1: !spirv.matrix<3 x vector<3xf32>>) -> !spirv.matrix<3 x vector<3xf32>> "None" {
       %0 = spirv.MatrixTimesMatrix %arg0, %arg1 : !spirv.matrix<3 x vector<3xf32>>, !spirv.matrix<3 x vector<3xf32>> -> !spirv.matrix<3 x vector<3xf32>>
       spirv.ReturnValue %0 : !spirv.matrix<3 x vector<3xf32>>

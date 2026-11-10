@@ -25,24 +25,22 @@ module {
     llvm.store %12, %3 : i32, !llvm.ptr
     omp.task private(@_QFEc_firstprivate_i32 %3 -> %arg0 : !llvm.ptr) {
       %15 = omp.map.info var_ptr(%1 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "i"}
-      %16 = omp.map.info var_ptr(%arg0 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "c"}
-      %17 = omp.map.info var_ptr(%9 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "chunksz"}
-      omp.target map_entries(%15 -> %arg1, %16 -> %arg2, %17 -> %arg3 : !llvm.ptr, !llvm.ptr, !llvm.ptr) {
-        %18 = llvm.mlir.constant(9999 : i32) : i32
-        %19 = llvm.mlir.constant(1 : i32) : i32
+      %16 = llvm.mlir.constant(9999 : i32) : i32
+      %17 = llvm.mlir.constant(1 : i32) : i32
+      %18 = llvm.load %arg0 : !llvm.ptr -> i32
+      %19 = llvm.add %18, %16 : i32
+      omp.target kernel_type(spmd) host_eval(%17 -> %arg1, %18 -> %arg2, %19 -> %arg3 : i32, i32, i32) map_entries(%15 -> %arg4 : !llvm.ptr) {
         omp.parallel {
-          %20 = llvm.load %arg2 : !llvm.ptr -> i32
-          %21 = llvm.add %20, %18 : i32
-          omp.wsloop private(@_QFEi_private_i32 %arg1 -> %arg4 : !llvm.ptr) {
-            omp.loop_nest (%arg5) : i32 = (%20) to (%21) inclusive step (%19) {
-              llvm.store %arg5, %arg4 : i32, !llvm.ptr
+          omp.wsloop private(@_QFEi_private_i32 %arg4 -> %arg5 : !llvm.ptr) {
+            omp.loop_nest (%arg6) : i32 = (%arg2) to (%arg3) inclusive step (%arg1) {
+              llvm.store %arg6, %arg5 : i32, !llvm.ptr
               omp.yield
             }
           }
           omp.terminator
-        }
+        } {omp.combined}
         omp.terminator
-      }
+      } {omp.combined}
       omp.terminator
     }
     llvm.return

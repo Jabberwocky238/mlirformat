@@ -1,4 +1,4 @@
-//! `index` (formats from `IndexOps.td`, checked against `mlir-opt` 22.1.8 output). Everything is
+//! `index` (formats from `IndexOps.td`, checked against `mlir-opt` 23.1.5 output). Everything is
 //! `index` unless spelled otherwise.
 
 use core::fmt::{self, Write};

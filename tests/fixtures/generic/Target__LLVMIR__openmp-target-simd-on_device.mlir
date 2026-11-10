@@ -6,7 +6,7 @@
   }, {
   }) : () -> ()
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "test_target_simd", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
-    "omp.target"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.target"() <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       %0 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
       %1 = "llvm.alloca"(%0) <{elem_type = i32}> {bindc_name = "x"} : (i32) -> !llvm.ptr
       "omp.simd"(%1) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0>, private_syms = [@simd_privatizer]}> ({

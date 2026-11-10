@@ -68,3 +68,20 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<f32>) -> vector<f32>, sym_name = "zero_d_vector_return"}> ({
+  ^bb0(%arg0: vector<f32>):
+    "func.return"(%arg0) : (vector<f32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<f32>, vector<f32>) -> vector<f32>, sym_name = "zero_d_vector_elementwise"}> ({
+  ^bb0(%arg0: vector<f32>, %arg1: vector<f32>):
+    %0 = "arith.addf"(%arg0, %arg1) <{fastmath = #arith.fastmath<none>}> : (vector<f32>, vector<f32>) -> vector<f32>
+    "func.return"(%0) : (vector<f32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

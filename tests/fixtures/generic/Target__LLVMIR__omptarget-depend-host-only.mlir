@@ -5,8 +5,8 @@
     %3 = "llvm.mlir.constant"() <{value = 40 : index}> : () -> i64
     %4 = "omp.map.bounds"(%2, %1, %3, %2, %2) <{operandSegmentSizes = array<i32: 1, 1, 1, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64, i64) -> !omp.map_bounds_ty
     %5 = "llvm.mlir.addressof"() <{global_name = @_QFEa}> : () -> !llvm.ptr
-    %6 = "omp.map.info"(%5, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<40 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    "omp.target"(%5, %6) <{depend_kinds = [#omp<clause_task_depend(taskdependin)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0>}> ({
+    %6 = "omp.map.info"(%5, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "a", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<40 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    "omp.target"(%5, %6) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependin)>], kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr):
       %7 = "llvm.mlir.constant"() <{value = 100 : index}> : () -> i32
       "llvm.store"(%7, %arg0) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()

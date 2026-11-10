@@ -591,3 +591,66 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<8x16x8x32xf32>) -> (), sym_name = "pack_memref"}> ({
+  ^bb0(%arg0: memref<128x256xf32>, %arg1: memref<8x16x8x32xf32>):
+    "linalg.pack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 8, 32>}> : (memref<128x256xf32>, memref<8x16x8x32xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16x8x8x32xf32>, memref<128x256xf32>) -> (), sym_name = "unpack_memref"}> ({
+  ^bb0(%arg0: memref<16x8x8x32xf32>, %arg1: memref<128x256xf32>):
+    "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<16x8x8x32xf32>, memref<128x256xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x256xf32>, memref<16x8x8x32xf32>) -> (), sym_name = "test_pack_memref"}> ({
+  ^bb0(%arg0: memref<128x256xf32>, %arg1: memref<16x8x8x32xf32>):
+    "linalg.pack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_inner_tiles = array<i64: 8, 32>}> : (memref<128x256xf32>, memref<16x8x8x32xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<16x8x8x32xf32>, memref<128x256xf32>) -> (), sym_name = "test_unpack_memref"}> ({
+  ^bb0(%arg0: memref<16x8x8x32xf32>, %arg1: memref<128x256xf32>):
+    "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (memref<16x8x8x32xf32>, memref<128x256xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<127x255xf32>, memref<16x8x8x32xf32>, f32) -> (), sym_name = "test_pack_memref_with_padding"}> ({
+  ^bb0(%arg0: memref<127x255xf32>, %arg1: memref<16x8x8x32xf32>, %arg2: f32):
+    "linalg.pack"(%arg0, %arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, static_inner_tiles = array<i64: 8, 32>}> : (memref<127x255xf32>, memref<16x8x8x32xf32>, f32) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<128x256xf32>, tensor<16x8x8x32xf32>) -> tensor<16x8x8x32xf32>, sym_name = "test_pack_tensor"}> ({
+  ^bb0(%arg0: tensor<128x256xf32>, %arg1: tensor<16x8x8x32xf32>):
+    %0 = "linalg.pack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_inner_tiles = array<i64: 8, 32>}> : (tensor<128x256xf32>, tensor<16x8x8x32xf32>) -> tensor<16x8x8x32xf32>
+    "func.return"(%0) : (tensor<16x8x8x32xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<16x8x8x32xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>, sym_name = "test_unpack_tensor"}> ({
+  ^bb0(%arg0: tensor<16x8x8x32xf32>, %arg1: tensor<128x256xf32>):
+    %0 = "linalg.unpack"(%arg0, %arg1) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 32>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<16x8x8x32xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
+    "func.return"(%0) : (tensor<128x256xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

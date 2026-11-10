@@ -46,6 +46,8 @@ pub(super) enum C {
     /// `I32Attr`, `SI32Attr`, `AnyI64Attr`, a `ConfinedAttr` with `IntNonNegative` /
     /// `IntPositive` (`min`), an `I32EnumAttr` (`cases`).
     Int { width: u32, sign: Sign, min: Option<i64>, cases: Option<&'static [i64]> },
+    /// An integer property (`I64Prop`): any `IntegerAttr`.
+    AnyInt,
     Index,
     Float(u32),
     Bool,
@@ -60,6 +62,26 @@ pub(super) enum C {
     AnyOf(&'static [C]),
     /// A dialect's `EnumAttr`: `#spirv.memory_access<..>` (its full name).
     Dialect(&'static str),
+    /// A dialect's `EnumAttr` confined to some of its cases (`EnumAttrIsOneOf` /
+    /// `EnumAttrIsNoneOf`): `#nvvm.sat_mode<sat>`.
+    DialectCases(&'static str, Pick),
+}
+
+/// The cases an `EnumAttrIsOneOf` (`OneOf`) or `EnumAttrIsNoneOf` (`NoneOf`) names.
+#[derive(Clone, Copy)]
+pub(super) enum Pick {
+    OneOf(&'static [&'static str]),
+    NoneOf(&'static [&'static str]),
+}
+
+impl Pick {
+    /// Is `case` allowed?
+    fn admits(self, case: &str) -> bool {
+        match self {
+            Pick::OneOf(cs) => cs.contains(&case),
+            Pick::NoneOf(cs) => !cs.contains(&case),
+        }
+    }
 }
 
 /// ⭐ The kind of one operand or result type: the C++ class its ODS constraint is of
@@ -154,6 +176,7 @@ impl C {
             }
             (C::Int { width: 1, .. }, Attribute::Bool(_)) | (C::Bool, Attribute::Bool(_)) => true,
             (C::Index, Attribute::Int { ty: Some(Type::Index), .. }) => true,
+            (C::AnyInt, Attribute::Int { ty: None | Some(Type::Integer { .. } | Type::Index), .. }) => true,
             (C::Float(w), Attribute::Float { ty, .. }) => ty.as_ref().map_or(Some(64), Type::bit_width) == Some(*w),
             (C::Str, Attribute::Str { ty: None, .. }) => true,
             (C::Type(None), Attribute::Type(_)) => true,
@@ -181,6 +204,10 @@ impl C {
             (C::AnyOf(cs), a) => cs.iter().any(|c| c.admits(Some(a))),
             // Itself, or an alias (`#mode`).
             (C::Dialect(name), Attribute::Extended { ext, .. }) => ext.name == *name || !ext.name.contains('.'),
+            // An alias stands for whatever it is; the attribute itself, by its case.
+            (C::DialectCases(name, pick), Attribute::Extended { ext, .. }) => {
+                !ext.name.contains('.') || (ext.name == *name && ext.body.as_deref().map(|b| b.trim_start_matches('<').trim_end_matches('>').trim()).is_some_and(|c| pick.admits(c)))
+            }
             // An alias (`#map`) or a dialect attribute: what it stands for is not known here.
             (_, Attribute::Extended { .. }) => true,
             _ => false,

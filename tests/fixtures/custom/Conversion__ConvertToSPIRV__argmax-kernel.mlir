@@ -6,7 +6,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
       %c1 = arith.constant 1 : index
       %c32_i32 = arith.constant 32 : i32
       %0 = arith.divui %c1_i32, %c32_i32 : i32
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %1 = index.castu %thread_id_x : index to i32
       %2 = index.castu %0 : i32 to index
       %c0_i32 = arith.constant 0 : i32
@@ -22,7 +22,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
         %17 = arith.select %15, %14, %arg4 : f32
         scf.yield %16, %17 : i32, f32
       }
-      %5 = gpu.subgroup_reduce  maximumf %4#1 : (f32) -> f32
+      %5 = gpu.subgroup_reduce maximumf %4#1 : (f32) -> f32
       %6 = arith.cmpf oeq, %4#1, %5 : f32
       %7 = spirv.GroupNonUniformBallot <Subgroup> %6 : vector<4xi32>
       %8 = spirv.GroupNonUniformBallotFindLSB <Subgroup> %7 : vector<4xi32>, i32

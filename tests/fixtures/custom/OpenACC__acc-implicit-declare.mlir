@@ -127,3 +127,16 @@ module {
   }
 }
 
+// -----
+module {
+  memref.global @global_in_compute_region : memref<f32> = dense<0.000000e+00>
+  func.func @test_scalar_in_compute_region() {
+    acc.compute_region {
+      %0 = memref.get_global @global_in_compute_region : memref<f32>
+      %1 = memref.load %0[] : memref<f32>
+      acc.yield
+    } {origin = "acc.parallel"}
+    return
+  }
+}
+

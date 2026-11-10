@@ -46,7 +46,7 @@
       %18 = "gpu.subgroup_mma_compute"(%15, %16, %17) : (!gpu.mma_matrix<8x4xf64, "AOp">, !gpu.mma_matrix<4x8xf64, "BOp">, !gpu.mma_matrix<8x8xf64, "COp">) -> !gpu.mma_matrix<8x8xf64, "COp">
       "gpu.subgroup_mma_store_matrix"(%18, %3, %6, %6) <{leadDimension = 8 : index}> : (!gpu.mma_matrix<8x8xf64, "COp">, memref<8x8xf64>, index, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%14) <{callee = @printMemrefF64}> : (memref<*xf64>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

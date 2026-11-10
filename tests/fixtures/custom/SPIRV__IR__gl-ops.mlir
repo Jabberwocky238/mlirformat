@@ -151,6 +151,19 @@ module {
     %0 = spirv.GL.Atanh %arg0 : vector<3xf16>
     return
   }
+  func.func @atan2(%arg0: f32, %arg1: f32) {
+    %0 = spirv.GL.Atan2 %arg0, %arg1 : f32
+    return
+  }
+  func.func @atan2vec(%arg0: vector<3xf16>, %arg1: vector<3xf16>) {
+    %0 = spirv.GL.Atan2 %arg0, %arg1 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+module {
   func.func @pow(%arg0: f32, %arg1: f32) {
     %0 = spirv.GL.Pow %arg0, %arg1 : f32
     return
@@ -177,6 +190,18 @@ module {
   }
   func.func @round_even_vec(%arg0: vector<3xf16>) {
     %0 = spirv.GL.RoundEven %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @trunc(%arg0: f32) {
+    %0 = spirv.GL.Trunc %arg0 : f32
+    return
+  }
+  func.func @trunc_vec(%arg0: vector<3xf16>) {
+    %0 = spirv.GL.Trunc %arg0 : vector<3xf16>
     return
   }
 }
@@ -412,6 +437,31 @@ module {
 // -----
 // -----
 module {
+  func.func @step_scalar(%arg0: f32, %arg1: f32) {
+    %0 = spirv.GL.Step %arg0, %arg1 : f32
+    return
+  }
+  func.func @step_vector(%arg0: vector<3xf32>, %arg1: vector<3xf32>) {
+    %0 = spirv.GL.Step %arg0, %arg1 : vector<3xf32>
+    return
+  }
+}
+
+// -----
+// -----
+module {
+  func.func @smoothstep_scalar(%arg0: f32, %arg1: f32, %arg2: f32) {
+    %0 = spirv.GL.SmoothStep %arg0, %arg1, %arg2 : f32
+    return
+  }
+  func.func @smoothstep_vector(%arg0: vector<3xf32>, %arg1: vector<3xf32>, %arg2: vector<3xf32>) {
+    %0 = spirv.GL.SmoothStep %arg0, %arg1, %arg2 : vector<3xf32>
+    return
+  }
+}
+
+// -----
+module {
   func.func @fract(%arg0: f32) {
     %0 = spirv.GL.Fract %arg0 : f32
     return
@@ -532,3 +582,65 @@ module {
 // -----
 // -----
 // -----
+// -----
+module {
+  func.func @radians(%arg0: f32) {
+    %0 = spirv.GL.Radians %arg0 : f32
+    return
+  }
+  func.func @radiansvec(%arg0: vector<3xf16>) {
+    %0 = spirv.GL.Radians %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+module {
+  func.func @degrees(%arg0: f32) {
+    %0 = spirv.GL.Degrees %arg0 : f32
+    return
+  }
+  func.func @degreesvec(%arg0: vector<3xf16>) {
+    %0 = spirv.GL.Degrees %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+module {
+  func.func @nmax(%arg0: f32, %arg1: f32) {
+    %0 = spirv.GL.NMax %arg0, %arg1 : f32
+    return
+  }
+  func.func @nmaxvec(%arg0: vector<3xf16>, %arg1: vector<3xf16>) {
+    %0 = spirv.GL.NMax %arg0, %arg1 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @nmin(%arg0: f32, %arg1: f32) {
+    %0 = spirv.GL.NMin %arg0, %arg1 : f32
+    return
+  }
+  func.func @nminvec(%arg0: vector<3xf16>, %arg1: vector<3xf16>) {
+    %0 = spirv.GL.NMin %arg0, %arg1 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @nclamp(%arg0: f32, %arg1: f32, %arg2: f32) {
+    %0 = spirv.GL.NClamp %arg0, %arg1, %arg2 : f32
+    return
+  }
+  func.func @nclampvec(%arg0: vector<3xf32>, %arg1: vector<3xf32>, %arg2: vector<3xf32>) {
+    %0 = spirv.GL.NClamp %arg0, %arg1, %arg2 : vector<3xf32>
+    return
+  }
+}
+

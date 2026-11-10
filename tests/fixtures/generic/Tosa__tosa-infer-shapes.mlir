@@ -135,6 +135,24 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x?xf32>, tensor<2x1xf32>) -> tensor<*xi1>, sym_name = "test_dynamic_binary_broadcast"}> ({
+  ^bb0(%arg0: tensor<1x?xf32>, %arg1: tensor<2x1xf32>):
+    %0 = "tosa.equal"(%arg0, %arg1) : (tensor<1x?xf32>, tensor<2x1xf32>) -> tensor<*xi1>
+    "func.return"(%0) : (tensor<*xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x?xf32>, tensor<2x4xf32>) -> tensor<*xi1>, sym_name = "test_resolvable_dynamic_binary_broadcast"}> ({
+  ^bb0(%arg0: tensor<1x?xf32>, %arg1: tensor<2x4xf32>):
+    %0 = "tosa.equal"(%arg0, %arg1) : (tensor<1x?xf32>, tensor<2x4xf32>) -> tensor<*xi1>
+    "func.return"(%0) : (tensor<*xi1>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (tensor<4xi1>, tensor<1xi32>, tensor<4xi32>) -> (), sym_name = "test_select_i32"}> ({
   ^bb0(%arg0: tensor<4xi1>, %arg1: tensor<1xi32>, %arg2: tensor<4xi32>):
     %0 = "tosa.select"(%arg0, %arg1, %arg2) : (tensor<4xi1>, tensor<1xi32>, tensor<4xi32>) -> tensor<*xi32>
@@ -218,6 +236,72 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x3x4xi32>, tensor<2x5x4xi32>) -> (), sym_name = "test_static_matmul_t"}> ({
+  ^bb0(%arg0: tensor<2x3x4xi32>, %arg1: tensor<2x5x4xi32>):
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %2 = "tosa.matmul_t"(%arg0, %arg1, %0, %1) : (tensor<2x3x4xi32>, tensor<2x5x4xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<*xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x?x?xi32>, tensor<2x5x4xi32>) -> (), sym_name = "test_dynamic_lhs_matmul_t"}> ({
+  ^bb0(%arg0: tensor<?x?x?xi32>, %arg1: tensor<2x5x4xi32>):
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %2 = "tosa.matmul_t"(%arg0, %arg1, %0, %1) : (tensor<?x?x?xi32>, tensor<2x5x4xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x3x4xi32>, tensor<?x?x?xi32>) -> (), sym_name = "test_dynamic_rhs_matmul_t"}> ({
+  ^bb0(%arg0: tensor<2x3x4xi32>, %arg1: tensor<?x?x?xi32>):
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %2 = "tosa.matmul_t"(%arg0, %arg1, %0, %1) : (tensor<2x3x4xi32>, tensor<?x?x?xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x3x4xi32>, tensor<1x5x4xi32>) -> (), sym_name = "test_broadcast_matmul_t"}> ({
+  ^bb0(%arg0: tensor<4x3x4xi32>, %arg1: tensor<1x5x4xi32>):
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %2 = "tosa.matmul_t"(%arg0, %arg1, %0, %1) : (tensor<4x3x4xi32>, tensor<1x5x4xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x?x?xi32>, tensor<1x?x?xi32>) -> (), sym_name = "test_dynamic_broadcast_matmul_t"}> ({
+  ^bb0(%arg0: tensor<?x?x?xi32>, %arg1: tensor<1x?x?xi32>):
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %2 = "tosa.matmul_t"(%arg0, %arg1, %0, %1) : (tensor<?x?x?xi32>, tensor<1x?x?xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<*xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xi32>, tensor<*xi32>) -> (), sym_name = "test_unranked_matmul_t"}> ({
+  ^bb0(%arg0: tensor<*xi32>, %arg1: tensor<*xi32>):
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %2 = "tosa.matmul_t"(%arg0, %arg1, %0, %1) : (tensor<*xi32>, tensor<*xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x2x2xf32>, tensor<1xf32>) -> tensor<*xf32>, sym_name = "test_accepts_unranked_scalar_tensor"}> ({
   ^bb0(%arg0: tensor<1x2x2xf32>, %arg1: tensor<1xf32>):
     %0 = "tosa.cast"(%arg1) : (tensor<1xf32>) -> tensor<*xf32>
@@ -279,6 +363,78 @@
     %3 = "tosa.reshape"(%arg0, %2) : (tensor<4x?xi32>, !tosa.shape<1>) -> tensor<?xi32>
     %4 = "tosa.const_shape"() <{values = dense<[2, -1]> : tensor<2xindex>}> : () -> !tosa.shape<2>
     %5 = "tosa.reshape"(%arg0, %4) : (tensor<4x?xi32>, !tosa.shape<2>) -> tensor<?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x4xi32>) -> (), sym_name = "test_static_reshape_non_block_scaled"}> ({
+  ^bb0(%arg0: tensor<4x4xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<16> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %1 = "tosa.reshape_block_scaled"(%arg0, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<4x4xi32>, !tosa.shape<1>) -> tensor<16xi32>
+    %2 = "tosa.const_shape"() <{values = dense<[2, 8]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.reshape_block_scaled"(%arg0, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<4x4xi32>, !tosa.shape<2>) -> tensor<2x8xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x?xi32>) -> (), sym_name = "test_dynamic_reshape_non_block_scaled"}> ({
+  ^bb0(%arg0: tensor<4x?xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<16> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %1 = "tosa.reshape_block_scaled"(%arg0, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<4x?xi32>, !tosa.shape<1>) -> tensor<?xi32>
+    %2 = "tosa.const_shape"() <{values = dense<[2, 8]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.reshape_block_scaled"(%arg0, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<4x?xi32>, !tosa.shape<2>) -> tensor<?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x4xi32>) -> (), sym_name = "test_unranked_reshape_non_block_scaled"}> ({
+  ^bb0(%arg0: tensor<4x4xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<16> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %1 = "tosa.reshape_block_scaled"(%arg0, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<4x4xi32>, !tosa.shape<1>) -> tensor<*xi32>
+    %2 = "tosa.const_shape"() <{values = dense<[2, 8]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.reshape_block_scaled"(%arg0, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<4x4xi32>, !tosa.shape<2>) -> tensor<*xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x32xf4E2M1FN>, tensor<4x1xf8E8M0FNU>) -> (), sym_name = "test_static_reshape_block_scaled"}> ({
+  ^bb0(%arg0: tensor<4x32xf4E2M1FN>, %arg1: tensor<4x1xf8E8M0FNU>):
+    %0 = "tosa.const_shape"() <{values = dense<128> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %1:2 = "tosa.reshape_block_scaled"(%arg0, %arg1, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x32xf4E2M1FN>, tensor<4x1xf8E8M0FNU>, !tosa.shape<1>) -> (tensor<128xf4E2M1FN>, tensor<4xf8E8M0FNU>)
+    %2 = "tosa.const_shape"() <{values = dense<[2, 64]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3:2 = "tosa.reshape_block_scaled"(%arg0, %arg1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x32xf4E2M1FN>, tensor<4x1xf8E8M0FNU>, !tosa.shape<2>) -> (tensor<2x64xf4E2M1FN>, tensor<2x2xf8E8M0FNU>)
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x?xf4E2M1FN>, tensor<?x1xf8E8M0FNU>) -> (), sym_name = "test_dynamic_reshape_block_scaled"}> ({
+  ^bb0(%arg0: tensor<4x?xf4E2M1FN>, %arg1: tensor<?x1xf8E8M0FNU>):
+    %0 = "tosa.const_shape"() <{values = dense<128> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %1:2 = "tosa.reshape_block_scaled"(%arg0, %arg1, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x?xf4E2M1FN>, tensor<?x1xf8E8M0FNU>, !tosa.shape<1>) -> (tensor<?xf4E2M1FN>, tensor<?xf8E8M0FNU>)
+    %2 = "tosa.const_shape"() <{values = dense<[2, 64]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3:2 = "tosa.reshape_block_scaled"(%arg0, %arg1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x?xf4E2M1FN>, tensor<?x1xf8E8M0FNU>, !tosa.shape<2>) -> (tensor<2x?xf4E2M1FN>, tensor<?x2xf8E8M0FNU>)
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x32xf4E2M1FN>, tensor<4x1xf8E8M0FNU>) -> (), sym_name = "test_unranked_reshape_block_scaled"}> ({
+  ^bb0(%arg0: tensor<4x32xf4E2M1FN>, %arg1: tensor<4x1xf8E8M0FNU>):
+    %0 = "tosa.const_shape"() <{values = dense<128> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %1:2 = "tosa.reshape_block_scaled"(%arg0, %arg1, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x32xf4E2M1FN>, tensor<4x1xf8E8M0FNU>, !tosa.shape<1>) -> (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>)
+    %2 = "tosa.const_shape"() <{values = dense<[2, 64]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3:2 = "tosa.reshape_block_scaled"(%arg0, %arg1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x32xf4E2M1FN>, tensor<4x1xf8E8M0FNU>, !tosa.shape<2>) -> (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>)
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -393,28 +549,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (tensor<8x8x8x?xi32>) -> (), sym_name = "test_slice_size_out_of_bound"}> ({
-  ^bb0(%arg0: tensor<8x8x8x?xi32>):
-    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
-    %1 = "tosa.const_shape"() <{values = dense<[0, -2, 9, 4]> : tensor<4xindex>}> : () -> !tosa.shape<4>
-    %2 = "tosa.slice"(%arg0, %0, %1) : (tensor<8x8x8x?xi32>, !tosa.shape<4>, !tosa.shape<4>) -> tensor<?x?x?x?xi32>
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<8x8x8x?xi32>) -> (), sym_name = "test_slice_start_out_of_bound"}> ({
-  ^bb0(%arg0: tensor<8x8x8x?xi32>):
-    %0 = "tosa.const_shape"() <{values = dense<[-1, 8, 6, 8000000]> : tensor<4xindex>}> : () -> !tosa.shape<4>
-    %1 = "tosa.const_shape"() <{values = dense<[1, 1, 3, 4]> : tensor<4xindex>}> : () -> !tosa.shape<4>
-    %2 = "tosa.slice"(%arg0, %0, %1) : (tensor<8x8x8x?xi32>, !tosa.shape<4>, !tosa.shape<4>) -> tensor<?x?x?x?xi32>
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<10x?x2xf32>) -> (), sym_name = "test_slice_dynamic"}> ({
   ^bb0(%arg0: tensor<10x?x2xf32>):
     %0 = "tosa.const_shape"() <{values = dense<[1, 0, 0]> : tensor<3xindex>}> : () -> !tosa.shape<3>
@@ -485,6 +619,75 @@
   "func.func"() <{function_type = (tensor<3x?x5xi32>, tensor<?x6xi32>) -> (), sym_name = "gather_minimum_info"}> ({
   ^bb0(%arg0: tensor<3x?x5xi32>, %arg1: tensor<?x6xi32>):
     %0 = "tosa.gather"(%arg0, %arg1) : (tensor<3x?x5xi32>, tensor<?x6xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x4x5xi32>, tensor<3x6xi32>) -> (), sym_name = "row_gather_static"}> ({
+  ^bb0(%arg0: tensor<3x4x5xi32>, %arg1: tensor<3x6xi32>):
+    %0 = "tosa.const"() <{values = dense<2> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.row_gather"(%arg0, %arg1, %0) : (tensor<3x4x5xi32>, tensor<3x6xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x?x5xi32>, tensor<?x6xi32>) -> (), sym_name = "row_gather_minimum_info"}> ({
+  ^bb0(%arg0: tensor<3x?x5xi32>, %arg1: tensor<?x6xi32>):
+    %0 = "tosa.const"() <{values = dense<2> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.row_gather"(%arg0, %arg1, %0) : (tensor<3x?x5xi32>, tensor<?x6xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x4x5xi32>, tensor<3x6xi32>, tensor<1xi32>) -> (), sym_name = "row_gather_nonconstant_row_count"}> ({
+  ^bb0(%arg0: tensor<3x4x5xi32>, %arg1: tensor<3x6xi32>, %arg2: tensor<1xi32>):
+    %0 = "tosa.row_gather"(%arg0, %arg1, %arg2) : (tensor<3x4x5xi32>, tensor<3x6xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x4x5xi32>, tensor<3x6xi32>) -> (), sym_name = "row_gather_row_count_one"}> ({
+  ^bb0(%arg0: tensor<3x4x5xi32>, %arg1: tensor<3x6xi32>):
+    %0 = "tosa.const"() <{values = dense<1> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.row_gather"(%arg0, %arg1, %0) : (tensor<3x4x5xi32>, tensor<3x6xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xi32>, tensor<*xi32>) -> (), sym_name = "row_gather_unranked"}> ({
+  ^bb0(%arg0: tensor<*xi32>, %arg1: tensor<*xi32>):
+    %0 = "tosa.const"() <{values = dense<1> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.row_gather"(%arg0, %arg1, %0) : (tensor<*xi32>, tensor<*xi32>, tensor<1xi32>) -> tensor<*xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x4x5xi32>, tensor<3x6xi32>) -> (), sym_name = "row_gather_block_scaled_static"}> ({
+  ^bb0(%arg0: tensor<3x4x5xi32>, %arg1: tensor<3x6xi32>):
+    %0 = "tosa.const"() <{values = dense<2> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "tosa.row_gather_block_scaled"(%arg0, %arg1, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_1>}> : (tensor<3x4x5xi32>, tensor<3x6xi32>, tensor<1xi32>) -> tensor<?x?x?xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x4x32xf4E2M1FN>, tensor<3x4x1xf8E8M0FNU>, tensor<3x6xi32>) -> (), sym_name = "row_gather_block_scaled_mxfp_static"}> ({
+  ^bb0(%arg0: tensor<3x4x32xf4E2M1FN>, %arg1: tensor<3x4x1xf8E8M0FNU>, %arg2: tensor<3x6xi32>):
+    %0 = "tosa.const"() <{values = dense<2> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1:2 = "tosa.row_gather_block_scaled"(%arg0, %arg1, %arg2, %0) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<3x4x32xf4E2M1FN>, tensor<3x4x1xf8E8M0FNU>, tensor<3x6xi32>, tensor<1xi32>) -> (tensor<?x?x?xf4E2M1FN>, tensor<?x?x?xf8E8M0FNU>)
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -614,6 +817,81 @@
     %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
     %2 = "tosa.avg_pool2d"(%arg0, %0, %1) <{acc_type = f32, kernel = array<i64: 4, 3>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 2, 3>}> : (tensor<3x14x12x7xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?xf32>
     %3 = "tosa.max_pool2d"(%arg0) <{kernel = array<i64: 4, 3>, nan_mode = #tosa.nan_mode<PROPAGATE>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 2, 3>}> : (tensor<3x14x12x7xf32>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x5x6x7xf32>) -> (), sym_name = "test_avg_pool2d_adaptive_static"}> ({
+  ^bb0(%arg0: tensor<3x5x6x7xf32>):
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %2 = "tosa.const_shape"() <{values = dense<[4, 3]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %4 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %5 = "tosa.avg_pool2d_adaptive"(%arg0, %0, %1, %2, %3, %4) <{acc_type = f32}> : (tensor<3x5x6x7xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x?x?x?xf32>) -> (), sym_name = "test_avg_pool2d_adaptive_dynamic_input"}> ({
+  ^bb0(%arg0: tensor<?x?x?x?xf32>):
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %2 = "tosa.const_shape"() <{values = dense<[4, 3]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %4 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %5 = "tosa.avg_pool2d_adaptive"(%arg0, %0, %1, %2, %3, %4) <{acc_type = f32}> : (tensor<?x?x?x?xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x5x6x7xf32>) -> (), sym_name = "test_avg_pool2d_adaptive_padded"}> ({
+  ^bb0(%arg0: tensor<3x5x6x7xf32>):
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %2 = "tosa.const_shape"() <{values = dense<[4, 3]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %4 = "tosa.const_shape"() <{values = dense<[3, 2, 1, 0]> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %5 = "tosa.avg_pool2d_adaptive"(%arg0, %0, %1, %2, %3, %4) <{acc_type = f32}> : (tensor<3x5x6x7xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x14x12x7xf32>) -> (), sym_name = "test_avg_pool2d_adaptive_stride"}> ({
+  ^bb0(%arg0: tensor<3x14x12x7xf32>):
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %2 = "tosa.const_shape"() <{values = dense<[4, 3]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.const_shape"() <{values = dense<[2, 3]> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %4 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %5 = "tosa.avg_pool2d_adaptive"(%arg0, %0, %1, %2, %3, %4) <{acc_type = f32}> : (tensor<3x14x12x7xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3x5x6x7xf32>) -> (), sym_name = "test_avg_pool2d_adaptive_non_constshape_operands"}> ({
+  ^bb0(%arg0: tensor<3x5x6x7xf32>):
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %2 = "tosa.const_shape"() <{values = dense<4> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %3 = "tosa.const_shape"() <{values = dense<3> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %4 = "tosa.concat_shape"(%2, %3) : (!tosa.shape<1>, !tosa.shape<1>) -> !tosa.shape<2>
+    %5 = "tosa.const_shape"() <{values = dense<2> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %6 = "tosa.const_shape"() <{values = dense<3> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %7 = "tosa.concat_shape"(%5, %6) : (!tosa.shape<1>, !tosa.shape<1>) -> !tosa.shape<2>
+    %8 = "tosa.const_shape"() <{values = dense<0> : tensor<1xindex>}> : () -> !tosa.shape<1>
+    %9 = "tosa.concat_shape"(%8, %8, %8, %8) : (!tosa.shape<1>, !tosa.shape<1>, !tosa.shape<1>, !tosa.shape<1>) -> !tosa.shape<4>
+    %10 = "tosa.avg_pool2d_adaptive"(%arg0, %0, %1, %4, %7, %9) <{acc_type = f32}> : (tensor<3x5x6x7xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<?x?x?x?xf32>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -950,18 +1228,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (tensor<1x3x1x1xi8>) -> (), sym_name = "resize_negative_output_dim"}> ({
-  ^bb0(%arg0: tensor<1x3x1x1xi8>):
-    %0 = "tosa.const_shape"() <{values = dense<[1, 3, 1, 1]> : tensor<4xindex>}> : () -> !tosa.shape<4>
-    %1 = "tosa.const_shape"() <{values = dense<[6, 1]> : tensor<2xindex>}> : () -> !tosa.shape<2>
-    %2 = "tosa.const_shape"() <{values = dense<[-15, 0]> : tensor<2xindex>}> : () -> !tosa.shape<2>
-    %3 = "tosa.resize"(%arg0, %0, %1, %2) <{mode = #tosa.resize_mode<NEAREST_NEIGHBOR>}> : (tensor<1x3x1x1xi8>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xi8>
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = (tensor<f32>, tensor<f32>, tensor<i1>) -> (), sym_name = "if_test_simple"}> ({
   ^bb0(%arg0: tensor<f32>, %arg1: tensor<f32>, %arg2: tensor<i1>):
     %0 = "tosa.log"(%arg0) : (tensor<f32>) -> tensor<f32>
@@ -1012,6 +1278,21 @@
       %1 = "tosa.sub"(%arg0, %arg1) : (tensor<f32>, tensor<f32>) -> tensor<f32>
       "tosa.yield"(%1) : (tensor<f32>) -> ()
     }) : (tensor<i1>) -> tensor<f32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<3xf32>, tensor<3xf32>, tensor<i1>) -> (), sym_name = "if_test_propagate_dynamic"}> ({
+  ^bb0(%arg0: tensor<3xf32>, %arg1: tensor<3xf32>, %arg2: tensor<i1>):
+    %0 = "tosa.cond_if"(%arg2, %arg0, %arg1) ({
+    ^bb0(%arg5: tensor<?xf32>, %arg6: tensor<?xf32>):
+      "tosa.yield"(%arg5) : (tensor<?xf32>) -> ()
+    }, {
+    ^bb0(%arg3: tensor<?xf32>, %arg4: tensor<?xf32>):
+      "tosa.yield"(%arg4) : (tensor<?xf32>) -> ()
+    }) : (tensor<i1>, tensor<3xf32>, tensor<3xf32>) -> tensor<?xf32>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -1219,8 +1500,8 @@
     %0 = "tosa.cast"(%arg0) : (tensor<1x2x8xf32>) -> tensor<?x2x8xf32>
     %1 = "arith.constant"() <{value = 0 : index}> : () -> index
     %2 = "tensor.dim"(%0, %1) : (tensor<?x2x8xf32>, index) -> index
-    %3 = "tensor.expand_shape"(%0, %2) <{reassociation = [[0], [1, 2], [3]], static_output_shape = array<i64: -9223372036854775808, 1, 4, 8>}> : (tensor<?x2x8xf32>, index) -> tensor<?x1x2x8xf32>
-    %4 = "tensor.expand_shape"(%0, %2) <{reassociation = [[0], [1, 2], [3]], static_output_shape = array<i64: -9223372036854775808, 1, 4, 8>}> : (tensor<?x2x8xf32>, index) -> tensor<?x1x2x8xf32>
+    %3 = "tensor.expand_shape"(%0, %2) <{reassociation = [[0], [1, 2], [3]], static_output_shape = array<i64: -9223372036854775808, 1, 2, 8>}> : (tensor<?x2x8xf32>, index) -> tensor<?x1x2x8xf32>
+    %4 = "tensor.expand_shape"(%0, %2) <{reassociation = [[0], [1, 2], [3]], static_output_shape = array<i64: -9223372036854775808, 1, 2, 8>}> : (tensor<?x2x8xf32>, index) -> tensor<?x1x2x8xf32>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -1331,6 +1612,209 @@
   ^bb0(%arg0: tensor<4x?xf32>):
     %0:2 = "tosa.cast_to_block_scaled"(%arg0) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<4x?xf32>) -> (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>)
     "func.return"(%0#0, %0#1) : (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4x4x64xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<8x1x1x64xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_static"}> ({
+  ^bb0(%arg0: tensor<1x4x4x64xf4E2M1FN>, %arg1: tensor<1x4x4x2xf8E8M0FNU>, %arg2: tensor<8x1x1x64xf4E2M1FN>, %arg3: tensor<8x1x1x2xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<1x4x4x64xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<8x1x1x64xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x4x4x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<?x1x1x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_dynamic_scales"}> ({
+  ^bb0(%arg0: tensor<?x4x4x64xf4E2M1FN>, %arg1: tensor<*xf8E8M0FNU>, %arg2: tensor<?x1x1x64xf4E2M1FN>, %arg3: tensor<*xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<?x4x4x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<?x1x1x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_dynamic_data"}> ({
+  ^bb0(%arg0: tensor<*xf4E2M1FN>, %arg1: tensor<1x4x4x2xf8E8M0FNU>, %arg2: tensor<*xf4E2M1FN>, %arg3: tensor<8x1x1x2xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<*xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_dynamic_unranked"}> ({
+  ^bb0(%arg0: tensor<*xf4E2M1FN>, %arg1: tensor<*xf8E8M0FNU>, %arg2: tensor<*xf4E2M1FN>, %arg3: tensor<*xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x8x9x?xf32>, tensor<3x3x?x?xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> (), sym_name = "test_dwconv2d_bias_broadcast"}> ({
+  ^bb0(%arg0: tensor<2x8x9x?xf32>, %arg1: tensor<3x3x?x?xf32>, %arg2: tensor<1xf32>, %arg3: tensor<1xf32>, %arg4: tensor<1xf32>):
+    %0 = "tosa.depthwise_conv2d"(%arg0, %arg1, %arg2, %arg3, %arg4) <{acc_type = f32, dilation = array<i64: 1, 1>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> : (tensor<2x8x9x?xf32>, tensor<3x3x?x?xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x6x7x3xf32>, tensor<?x3x3x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> (), sym_name = "test_tconv2d_bias_broadcast"}> ({
+  ^bb0(%arg0: tensor<2x6x7x3xf32>, %arg1: tensor<?x3x3x3xf32>, %arg2: tensor<1xf32>, %arg3: tensor<1xf32>, %arg4: tensor<1xf32>):
+    %0 = "tosa.transpose_conv2d"(%arg0, %arg1, %arg2, %arg3, %arg4) <{acc_type = f32, out_pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> {dilation = array<i64: 1, 1>, out_shape = array<i64: -1, -1, -1, -1>, pad = array<i64: 0, 0, 0, 0>} : (tensor<2x6x7x3xf32>, tensor<?x3x3x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x8x9x3xf32>, tensor<?x3x6x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> (), sym_name = "test_conv2d_bias_broadcast"}> ({
+  ^bb0(%arg0: tensor<2x8x9x3xf32>, %arg1: tensor<?x3x6x3xf32>, %arg2: tensor<1xf32>, %arg3: tensor<1xf32>, %arg4: tensor<1xf32>):
+    %0 = "tosa.conv2d"(%arg0, %arg1, %arg2, %arg3, %arg4) <{acc_type = f32, dilation = array<i64: 1, 1>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> : (tensor<2x8x9x3xf32>, tensor<?x3x6x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x8x9x10x3xf32>, tensor<?x3x6x4x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> (), sym_name = "test_conv3d_bias_broadcast"}> ({
+  ^bb0(%arg0: tensor<2x8x9x10x3xf32>, %arg1: tensor<?x3x6x4x3xf32>, %arg2: tensor<1xf32>, %arg3: tensor<1xf32>, %arg4: tensor<1xf32>):
+    %0 = "tosa.conv3d"(%arg0, %arg1, %arg2, %arg3, %arg4) <{acc_type = f32, dilation = array<i64: 1, 1, 1>, pad = array<i64: 0, 0, 0, 0, 0, 0>, stride = array<i64: 1, 1, 1>}> : (tensor<2x8x9x10x3xf32>, tensor<?x3x6x4x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xi32>, tensor<1xi32>) -> (), sym_name = "test_avg_pool2d_unranked_input"}> ({
+  ^bb0(%arg0: tensor<*xi32>, %arg1: tensor<1xi32>):
+    %0 = "tosa.avg_pool2d"(%arg0, %arg1, %arg1) <{acc_type = i32, kernel = array<i64: 1, 1>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> : (tensor<*xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<*xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<7x12xi32>, tensor<80xi32>, tensor<4xi32>) -> tensor<?xi32>, sym_name = "test_simple_shape_expression"}> ({
+  ^bb0(%arg0: tensor<7x12xi32>, %arg1: tensor<80xi32>, %arg2: tensor<4xi32>):
+    %0 = "tosa.dim"(%arg1) <{axis = 0 : i32}> : (tensor<80xi32>) -> !tosa.shape<1>
+    %1 = "tosa.dim"(%arg2) <{axis = 0 : i32}> : (tensor<4xi32>) -> !tosa.shape<1>
+    %2 = "tosa.add_shape"(%0, %1) : (!tosa.shape<1>, !tosa.shape<1>) -> !tosa.shape<1>
+    %3 = "tosa.reshape"(%arg0, %2) : (tensor<7x12xi32>, !tosa.shape<1>) -> tensor<?xi32>
+    %4 = "tosa.dim"(%3) <{axis = 0 : i32}> : (tensor<?xi32>) -> !tosa.shape<1>
+    %5 = "tosa.tile"(%3, %4) : (tensor<?xi32>, !tosa.shape<1>) -> tensor<?xi32>
+    "func.return"(%5) : (tensor<?xi32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<1x4x4x64xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<8x1x1x64xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_static"}> ({
+  ^bb0(%arg0: tensor<1x4x4x64xf4E2M1FN>, %arg1: tensor<1x4x4x2xf8E8M0FNU>, %arg2: tensor<8x1x1x64xf4E2M1FN>, %arg3: tensor<8x1x1x2xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<1x4x4x64xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<8x1x1x64xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<?x4x4x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<?x1x1x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_dynamic_scales"}> ({
+  ^bb0(%arg0: tensor<?x4x4x64xf4E2M1FN>, %arg1: tensor<*xf8E8M0FNU>, %arg2: tensor<?x1x1x64xf4E2M1FN>, %arg3: tensor<*xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<?x4x4x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<?x1x1x64xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_dynamic_data"}> ({
+  ^bb0(%arg0: tensor<*xf4E2M1FN>, %arg1: tensor<1x4x4x2xf8E8M0FNU>, %arg2: tensor<*xf4E2M1FN>, %arg3: tensor<8x1x1x2xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<*xf4E2M1FN>, tensor<1x4x4x2xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<8x1x1x2xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, tensor<4xi32>, tensor<2xi32>, tensor<2xi32>) -> tensor<*xf32>, sym_name = "test_conv2d_block_scaled_dynamic_unranked"}> ({
+  ^bb0(%arg0: tensor<*xf4E2M1FN>, %arg1: tensor<*xf8E8M0FNU>, %arg2: tensor<*xf4E2M1FN>, %arg3: tensor<*xf8E8M0FNU>, %arg4: tensor<1xf32>, %arg5: tensor<4xi32>, %arg6: tensor<2xi32>, %arg7: tensor<2xi32>):
+    %0 = "tosa.const_shape"() <{values = dense<0> : tensor<4xindex>}> : () -> !tosa.shape<4>
+    %1 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %2 = "tosa.const_shape"() <{values = dense<1> : tensor<2xindex>}> : () -> !tosa.shape<2>
+    %3 = "tosa.conv2d_block_scaled"(%arg0, %arg1, %arg2, %arg3, %arg4, %0, %1, %2) <{block_size = #tosa.block_size<BLOCK_SIZE_32>}> : (tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<*xf4E2M1FN>, tensor<*xf8E8M0FNU>, tensor<1xf32>, !tosa.shape<4>, !tosa.shape<2>, !tosa.shape<2>) -> tensor<*xf32>
+    "func.return"(%3) : (tensor<*xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x8x9x?xf32>, tensor<3x3x?x?xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> (), sym_name = "test_dwconv2d_bias_broadcast"}> ({
+  ^bb0(%arg0: tensor<2x8x9x?xf32>, %arg1: tensor<3x3x?x?xf32>, %arg2: tensor<1xf32>, %arg3: tensor<1xf32>, %arg4: tensor<1xf32>):
+    %0 = "tosa.depthwise_conv2d"(%arg0, %arg1, %arg2, %arg3, %arg4) <{acc_type = f32, dilation = array<i64: 1, 1>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> : (tensor<2x8x9x?xf32>, tensor<3x3x?x?xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<2x6x7x3xf32>, tensor<?x3x3x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> (), sym_name = "test_tconv2d_bias_broadcast"}> ({
+  ^bb0(%arg0: tensor<2x6x7x3xf32>, %arg1: tensor<?x3x3x3xf32>, %arg2: tensor<1xf32>, %arg3: tensor<1xf32>, %arg4: tensor<1xf32>):
+    %0 = "tosa.transpose_conv2d"(%arg0, %arg1, %arg2, %arg3, %arg4) <{acc_type = f32, out_pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> {dilation = array<i64: 1, 1>, out_shape = array<i64: -1, -1, -1, -1>, pad = array<i64: 0, 0, 0, 0>} : (tensor<2x6x7x3xf32>, tensor<?x3x3x3xf32>, tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<?x?x?x?xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xi32>, tensor<1xi32>) -> (), sym_name = "test_avg_pool2d_unranked_input"}> ({
+  ^bb0(%arg0: tensor<*xi32>, %arg1: tensor<1xi32>):
+    %0 = "tosa.avg_pool2d"(%arg0, %arg1, %arg1) <{acc_type = i32, kernel = array<i64: 1, 1>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 1, 1>}> : (tensor<*xi32>, tensor<1xi32>, tensor<1xi32>) -> tensor<*xi32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#sparse = #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed) }>
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "while_with_sparse_tensor_encoding"}> ({
+    %0 = "tosa.const"() <{values = dense<0> : tensor<1xi32>}> : () -> tensor<1xi32>
+    %1 = "sparse_tensor.convert"(%0) : (tensor<1xi32>) -> tensor<1xi32, #sparse>
+    %2 = "tosa.while_loop"(%1) ({
+    ^bb0(%arg1: tensor<1xi32, #sparse>):
+      %4 = "tosa.const"() <{values = dense<3> : tensor<1xi32>}> : () -> tensor<1xi32>
+      %5 = "sparse_tensor.convert"(%arg1) : (tensor<1xi32, #sparse>) -> tensor<1xi32>
+      %6 = "tosa.greater_equal"(%4, %5) : (tensor<1xi32>, tensor<1xi32>) -> tensor<1xi1>
+      "tosa.yield"(%6) : (tensor<1xi1>) -> ()
+    }, {
+    ^bb0(%arg0: tensor<1xi32, #sparse>):
+      %3 = "tosa.const"() <{values = dense<1> : tensor<1xi32>}> : () -> tensor<1xi32>
+      "tosa.yield"(%3) : (tensor<1xi32>) -> ()
+    }) : (tensor<1xi32, #sparse>) -> tensor<1xi32>
+    "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 

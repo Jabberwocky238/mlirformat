@@ -1,0 +1,9 @@
+3	verify	'test.token.any_type' op operand #0 must be any non-token type, but got 'token'
+4	verify	'test.token.produce_without_trait' op produces token result #0 but does not have the TokenProducerTrait
+5	verify	'test.token.consume_without_trait' op consumes token operand #0 but does not have the TokenConsumerTrait
+6	verify	token entry block argument #0 requires the parent operation to have the TokenProducerTrait
+7	verify	token entry block argument #0 requires the parent operation to have the TokenProducerTrait
+8	verify	'test.token.consume_without_trait' op consumes token operand #0 but does not have the TokenConsumerTrait
+9	verify	token block argument #0 is only allowed in a region entry block
+10	verify	token entry block argument #0 requires the parent operation to have the TokenProducerTrait
+11	parse	use of value '%arg0' expects different type than prior uses: 'token' vs 'i32'

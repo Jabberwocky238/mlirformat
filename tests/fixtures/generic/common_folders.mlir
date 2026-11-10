@@ -1,8 +1,8 @@
 "builtin.module"() ({
-  "func.func"() <{function_type = () -> tensor<4x2xsi32>, sym_name = "test_fold_unary_op_f32_to_si32"}> ({
+  "func.func"() <{function_type = () -> tensor<4x2xi32>, sym_name = "test_fold_unary_op_f32_to_i32"}> ({
     %0 = "arith.constant"() <{value = dense<5.100000e+00> : tensor<4x2xf32>}> : () -> tensor<4x2xf32>
-    %1 = "test.sign"(%0) : (tensor<4x2xf32>) -> tensor<4x2xsi32>
-    "func.return"(%1) : (tensor<4x2xsi32>) -> ()
+    %1 = "test.sign"(%0) : (tensor<4x2xf32>) -> tensor<4x2xi32>
+    "func.return"(%1) : (tensor<4x2xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
 

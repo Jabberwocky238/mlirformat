@@ -1,4 +1,56 @@
 module {
+  func.func @any_vector2(%arg0: vector<2xi1>) -> i1 {
+    %0 = spirv.Any %arg0 : vector<2xi1>
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @any_vector3(%arg0: vector<3xi1>) -> i1 {
+    %0 = spirv.Any %arg0 : vector<3xi1>
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @any_vector4(%arg0: vector<4xi1>) -> i1 {
+    %0 = spirv.Any %arg0 : vector<4xi1>
+    return %0 : i1
+  }
+}
+
+// -----
+// -----
+// -----
+module {
+  func.func @all_vector2(%arg0: vector<2xi1>) -> i1 {
+    %0 = spirv.All %arg0 : vector<2xi1>
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @all_vector3(%arg0: vector<3xi1>) -> i1 {
+    %0 = spirv.All %arg0 : vector<3xi1>
+    return %0 : i1
+  }
+}
+
+// -----
+module {
+  func.func @all_vector4(%arg0: vector<4xi1>) -> i1 {
+    %0 = spirv.All %arg0 : vector<4xi1>
+    return %0 : i1
+  }
+}
+
+// -----
+// -----
+// -----
+module {
   func.func @iequal_scalar(%arg0: i32, %arg1: i32) -> i1 {
     %0 = spirv.IEqual %arg0, %arg1 : i32
     return %0 : i1
@@ -53,6 +105,18 @@ module {
   }
   func.func @isnan_vector(%arg0: vector<2xf32>) -> vector<2xi1> {
     %0 = spirv.IsNan %arg0 : vector<2xf32>
+    return %0 : vector<2xi1>
+  }
+}
+
+// -----
+module {
+  func.func @isnormal_scalar(%arg0: f32) -> i1 {
+    %0 = spirv.IsNormal %arg0 : f32
+    return %0 : i1
+  }
+  func.func @isnormal_vector(%arg0: vector<2xf32>) -> vector<2xi1> {
+    %0 = spirv.IsNormal %arg0 : vector<2xf32>
     return %0 : vector<2xi1>
   }
   func.func @logicalBinary(%arg0: i1, %arg1: i1, %arg2: i1) {
@@ -128,6 +192,18 @@ module {
     %cst_vec_3xf32 = spirv.Constant dense<[2.000000e+00, 3.000000e+00, 4.000000e+00]> : vector<3xf32>
     %cst_vec_3xf32_0 = spirv.Constant dense<[5.000000e+00, 6.000000e+00, 7.000000e+00]> : vector<3xf32>
     %0 = spirv.Select %arg0, %cst_vec_3xf32, %cst_vec_3xf32_0 : vector<3xi1>, vector<3xf32>
+    return
+  }
+  func.func @select_op_array(%arg0: i1, %arg1: !spirv.array<4 x i32>, %arg2: !spirv.array<4 x i32>) {
+    %0 = spirv.Select %arg0, %arg1, %arg2 : i1, !spirv.array<4 x i32>
+    return
+  }
+  func.func @select_op_struct(%arg0: i1, %arg1: !spirv.struct<(i32, i32)>, %arg2: !spirv.struct<(i32, i32)>) {
+    %0 = spirv.Select %arg0, %arg1, %arg2 : i1, !spirv.struct<(i32, i32)>
+    return
+  }
+  func.func @select_op_matrix(%arg0: i1, %arg1: !spirv.matrix<4 x vector<3xf32>>, %arg2: !spirv.matrix<4 x vector<3xf32>>) {
+    %0 = spirv.Select %arg0, %arg1, %arg2 : i1, !spirv.matrix<4 x vector<3xf32>>
     return
   }
 }

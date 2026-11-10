@@ -14,7 +14,7 @@
     %3 = "llvm.mlir.constant"() <{value = 3.140000e+00 : f32}> : () -> f32
     %4 = "llvm.mlir.constant"() <{value = 1000 : i32}> : () -> i32
     %5 = "llvm.mlir.constant"() <{value = 1 : i32}> : () -> i32
-    "omp.teams"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.teams"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.distribute"(%1, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 2>, private_syms = [@_QFEpriv_val_dist_private_f32, @_QFEi_private_i32]}> ({
       ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
         "omp.loop_nest"(%5, %4, %5) <{loop_inclusive}> ({

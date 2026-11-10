@@ -85,3 +85,88 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1024x1024xf32>) -> (), sym_name = "multi_buffer_expand_shape"}> ({
+  ^bb0(%arg0: memref<1024x1024xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x128xf32>
+    %1 = "arith.constant"() <{value = 1024 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    "scf.for"(%2, %1, %3) ({
+    ^bb0(%arg1: index):
+      %4 = "memref.subview"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808, 0>, static_sizes = array<i64: 4, 128>, static_strides = array<i64: 1, 1>}> : (memref<1024x1024xf32>, index) -> memref<4x128xf32, #map>
+      "memref.copy"(%4, %0) : (memref<4x128xf32, #map>, memref<4x128xf32>) -> ()
+      %5 = "memref.expand_shape"(%0) <{reassociation = [[0, 1], [2, 3]], static_output_shape = array<i64: 2, 2, 64, 2>}> : (memref<4x128xf32>) -> memref<2x2x64x2xf32>
+      "some_use"(%5) : (memref<2x2x64x2xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1024x1024xf32>) -> (), sym_name = "multi_buffer_collapse_shape"}> ({
+  ^bb0(%arg0: memref<1024x1024xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x128xf32>
+    %1 = "arith.constant"() <{value = 1024 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    "scf.for"(%2, %1, %3) ({
+    ^bb0(%arg1: index):
+      %4 = "memref.subview"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808, 0>, static_sizes = array<i64: 4, 128>, static_strides = array<i64: 1, 1>}> : (memref<1024x1024xf32>, index) -> memref<4x128xf32, #map>
+      "memref.copy"(%4, %0) : (memref<4x128xf32, #map>, memref<4x128xf32>) -> ()
+      %5 = "memref.collapse_shape"(%0) <{reassociation = [[0, 1]]}> : (memref<4x128xf32>) -> memref<512xf32>
+      "some_use"(%5) : (memref<512xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1024x1024xf32>) -> (), sym_name = "multi_buffer_cast"}> ({
+  ^bb0(%arg0: memref<1024x1024xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x128xf32>
+    %1 = "arith.constant"() <{value = 1024 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    "scf.for"(%2, %1, %3) ({
+    ^bb0(%arg1: index):
+      %4 = "memref.subview"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808, 0>, static_sizes = array<i64: 4, 128>, static_strides = array<i64: 1, 1>}> : (memref<1024x1024xf32>, index) -> memref<4x128xf32, #map>
+      "memref.copy"(%4, %0) : (memref<4x128xf32, #map>, memref<4x128xf32>) -> ()
+      %5 = "memref.cast"(%0) : (memref<4x128xf32>) -> memref<?x128xf32>
+      "some_use"(%5) : (memref<?x128xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1)[s0] -> (d0 * 1024 + s0 + d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<1024x1024xf32>) -> (), sym_name = "multi_buffer_chained_view_ops"}> ({
+  ^bb0(%arg0: memref<1024x1024xf32>):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x128xf32>
+    %1 = "arith.constant"() <{value = 1024 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index
+    "scf.for"(%2, %1, %3) ({
+    ^bb0(%arg1: index):
+      %4 = "memref.subview"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808, 0>, static_sizes = array<i64: 4, 128>, static_strides = array<i64: 1, 1>}> : (memref<1024x1024xf32>, index) -> memref<4x128xf32, #map>
+      "memref.copy"(%4, %0) : (memref<4x128xf32, #map>, memref<4x128xf32>) -> ()
+      %5 = "memref.expand_shape"(%0) <{reassociation = [[0, 1], [2, 3]], static_output_shape = array<i64: 2, 2, 64, 2>}> : (memref<4x128xf32>) -> memref<2x2x64x2xf32>
+      %6 = "memref.cast"(%5) : (memref<2x2x64x2xf32>) -> memref<?x2x64x2xf32>
+      "some_use"(%6) : (memref<?x2x64x2xf32>) -> ()
+      "scf.yield"() : () -> ()
+    }) : (index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

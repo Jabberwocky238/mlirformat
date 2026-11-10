@@ -264,3 +264,13 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @memref_load_neg_stride(%arg0: memref<2000xf32>) -> f32 {
+    %reinterpret_cast = memref.reinterpret_cast %arg0 to offset: [1000], sizes: [100], strides: [-1] : memref<2000xf32> to memref<100xf32, strided<[-1], offset: 1000>>
+    %c5 = arith.constant 5 : index
+    %0 = memref.load %reinterpret_cast[%c5] : memref<100xf32, strided<[-1], offset: 1000>>
+    return %0 : f32
+  }
+}
+

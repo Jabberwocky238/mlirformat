@@ -29,29 +29,3 @@
   }) : () -> ()
 }) : () -> ()
 
-// -----
-#map = affine_map<(d0, d1) -> (d0, d1)>
-#map1 = affine_map<(d0, d1) -> (d0)>
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<?x?xf32>, tensor<?xf32>) -> (), sym_name = "func"}> ({
-  ^bb0(%arg0: tensor<?x?xf32>, %arg1: tensor<?xf32>):
-    %0 = "linalg.generic"(%arg0, %arg1) <{indexing_maps = [#map, #map1], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<reduction>], operandSegmentSizes = array<i32: 1, 1>}> ({
-    ^bb0(%arg2: f32, %arg3: f32):
-      "linalg.yield"(%arg2) : (f32) -> ()
-    }) : (tensor<?x?xf32>, tensor<?xf32>) -> tensor<?xf32>
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (tensor<4x8xf32>, tensor<4x8xf32>) -> tensor<4x8xf32>, sym_name = "func"}> ({
-  ^bb0(%arg0: tensor<4x8xf32>, %arg1: tensor<4x8xf32>):
-    %0 = "linalg.copy"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1>}> ({
-    ^bb0(%arg2: f32, %arg3: f32):
-      "linalg.yield"(%arg2) : (f32) -> ()
-    }) : (tensor<4x8xf32>, tensor<4x8xf32>) -> tensor<4x8xf32>
-    "func.return"(%0) : (tensor<4x8xf32>) -> ()
-  }) : () -> ()
-}) : () -> ()
-

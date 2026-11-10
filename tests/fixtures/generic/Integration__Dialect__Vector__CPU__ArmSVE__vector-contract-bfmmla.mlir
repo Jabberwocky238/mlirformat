@@ -56,7 +56,7 @@
     %12 = "func.call"(%11) <{callee = @prepareRHSTestData}> : (vector<4x4xbf16>) -> memref<?xbf16>
     %13 = "vector.transfer_read"(%12, %2, %4) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = #map1}> : (memref<?xbf16>, index, bf16) -> vector<[16]xbf16>
     %14 = "vector.shape_cast"(%13) : (vector<[16]xbf16>) -> vector<[4]x4xbf16>
-    %15 = "vector.contract"(%10, %14, %7) <{indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<[4]x4xbf16>, vector<4x[4]xf32>) -> vector<4x[4]xf32>
+    %15 = "vector.contract"(%10, %14, %7) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map2, #map3, #map4], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<[4]x4xbf16>, vector<4x[4]xf32>) -> vector<4x[4]xf32>
     "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(BFMMLA):\0A"}> : () -> ()
     %16 = "vector.extract"(%15) <{static_position = array<i64: 0>}> : (vector<4x[4]xf32>) -> vector<[4]xf32>
     %17 = "vector.extract"(%15) <{static_position = array<i64: 1>}> : (vector<4x[4]xf32>) -> vector<[4]xf32>

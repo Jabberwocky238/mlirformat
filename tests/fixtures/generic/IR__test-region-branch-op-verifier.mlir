@@ -12,14 +12,10 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (index) -> (), sym_name = "test_no_terminator"}> ({
-  ^bb0(%arg0: index):
-    "test.switch_with_no_break"(%arg0) <{cases = array<i64: 0, 1>}> ({
-    ^bb0:
-    }, {
-    ^bb0:
-    }) : (index) -> ()
-    "func.return"() : () -> ()
+  "func.func"() <{function_type = (i32) -> f32, sym_name = "func_with_region_branch_terminator"}> ({
+  ^bb0(%arg0: i32):
+    %0 = "test.constant"() <{value = 5.300000e+00 : f32}> : () -> f32
+    "test.loop_block_term"(%arg0, %0) : (i32, f32) -> ()
   }) : () -> ()
 }) : () -> ()
 

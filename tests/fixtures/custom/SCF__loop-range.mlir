@@ -58,5 +58,47 @@ module {
     }
     return
   }
+  func.func @no_fold_negative_mul() {
+    %c-1 = arith.constant -1 : index
+    %c0 = arith.constant 0 : index
+    %c10 = arith.constant 10 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg0 = %c0 to %c10 step %c1 {
+      %0 = arith.muli %arg0, %c-1 : index
+      "test.sink"(%0) : (index) -> ()
+    }
+    return
+  }
+  func.func @no_fold_negative_mul_indvar_rhs() {
+    %c-1 = arith.constant -1 : index
+    %c0 = arith.constant 0 : index
+    %c10 = arith.constant 10 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg0 = %c0 to %c10 step %c1 {
+      %0 = arith.muli %c-1, %arg0 : index
+      "test.sink"(%0) : (index) -> ()
+    }
+    return
+  }
+  func.func @no_fold_zero_mul() {
+    %c0 = arith.constant 0 : index
+    %c10 = arith.constant 10 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg0 = %c0 to %c10 step %c1 {
+      %0 = arith.muli %arg0, %c0 : index
+      "test.sink"(%0) : (index) -> ()
+    }
+    return
+  }
+  func.func @no_fold_runtime_mul(%arg0: index) {
+    %c0 = arith.constant 0 : index
+    %c10 = arith.constant 10 : index
+    %c1 = arith.constant 1 : index
+    scf.for %arg1 = %c0 to %c10 step %c1 {
+      %0 = arith.muli %arg1, %arg0 : index
+      "test.sink"(%0) : (index) -> ()
+    }
+    return
+  }
 }
 

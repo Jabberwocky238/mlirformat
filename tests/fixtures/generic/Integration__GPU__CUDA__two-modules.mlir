@@ -12,13 +12,13 @@
       %7 = "arith.index_cast"(%arg15) : (index) -> i32
       "memref.store"(%7, %1, %arg15) : (i32, memref<?xi32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "gpu.launch"(%2, %2, %2, %4, %2, %2) <{operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0>}> ({
     ^bb0(%arg0: index, %arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: index, %arg6: index, %arg7: index, %arg8: index, %arg9: index, %arg10: index, %arg11: index):
       %6 = "arith.index_cast"(%arg3) : (index) -> i32
       "memref.store"(%6, %1, %arg3) : (i32, memref<?xi32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%5) <{callee = @printMemrefI32}> : (memref<*xi32>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

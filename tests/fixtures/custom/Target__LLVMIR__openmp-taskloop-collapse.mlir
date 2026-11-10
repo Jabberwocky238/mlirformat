@@ -1,0 +1,35 @@
+module {
+  omp.private {type = private} @_QFtestEi_private_i32 : i32
+  omp.private {type = firstprivate} @_QFtestEa_firstprivate_i32 : i32 copy {
+  ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
+    %0 = llvm.load %arg0 : !llvm.ptr -> i32
+    llvm.store %0, %arg1 : i32, !llvm.ptr
+    omp.yield(%arg1 : !llvm.ptr)
+  }
+  llvm.func @_QPtest() {
+    %0 = llvm.mlir.constant(1 : i64) : i64
+    %1 = llvm.alloca %0 x i32 {bindc_name = "i"} : (i64) -> !llvm.ptr
+    %2 = llvm.alloca %0 x i32 {bindc_name = "j"} : (i64) -> !llvm.ptr
+    %3 = llvm.alloca %0 x i32 {bindc_name = "a"} : (i64) -> !llvm.ptr
+    %4 = llvm.mlir.constant(20 : i32) : i32
+    llvm.store %4, %3 : i32, !llvm.ptr
+    %5 = llvm.mlir.constant(1 : i32) : i32
+    %6 = llvm.mlir.constant(5 : i32) : i32
+    %7 = llvm.mlir.constant(10 : i32) : i32
+    omp.taskloop.context private(@_QFtestEa_firstprivate_i32 %3 -> %arg0, @_QFtestEi_private_i32 %1 -> %arg1 : !llvm.ptr, !llvm.ptr) {
+      omp.taskloop.wrapper {
+        omp.loop_nest (%arg2, %arg3) : i32 = (%5, %5) to (%7, %6) inclusive step (%5, %5) collapse(2) {
+          llvm.store %arg2, %arg1 : i32, !llvm.ptr
+          %8 = llvm.load %arg0 : !llvm.ptr -> i32
+          %9 = llvm.mlir.constant(1 : i32) : i32
+          %10 = llvm.add %8, %9 : i32
+          llvm.store %10, %arg0 : i32, !llvm.ptr
+          omp.yield
+        }
+      }
+      omp.terminator
+    } {omp.combined}
+    llvm.return
+  }
+}
+

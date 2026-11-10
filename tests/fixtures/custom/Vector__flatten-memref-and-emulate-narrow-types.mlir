@@ -30,7 +30,8 @@ module {
 module {
   func.func @vector_store_2d_i4(%arg0: index, %arg1: vector<8xi4>) {
     %alloc = memref.alloc() : memref<4x8xi4>
-    vector.store %arg1, %alloc[%arg0, %arg0] : memref<4x8xi4>, vector<8xi4>
+    %c0 = arith.constant 0 : index
+    vector.store %arg1, %alloc[%arg0, %c0] : memref<4x8xi4>, vector<8xi4>
     return
   }
 }

@@ -35,7 +35,7 @@
         %12 = "arith.addi"(%10, %11) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
         "memref.store"(%12, %3, %arg5) : (i32, memref<?xi32>, index) -> ()
         "gpu.terminator"() : () -> ()
-      }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+      }) : (index, index, index, index, index, index) -> ()
       "async.yield"() : () -> ()
     }) : (!async.token, !async.token, !async.value<memref<?xi32>>, !async.value<memref<?xi32>>) -> !async.token
     "async.await"(%9) : (!async.token) -> ()

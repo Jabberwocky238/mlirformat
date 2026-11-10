@@ -56,6 +56,11 @@ module {
     %1 = llvm.intr.fabs(%arg1) : (vector<8xf32>) -> vector<8xf32>
     llvm.return
   }
+  llvm.func @arithmetic_fence_test(%arg0: f32, %arg1: vector<8xf32>) {
+    %0 = llvm.intr.arithmetic.fence(%arg0) : (f32) -> f32
+    %1 = llvm.intr.arithmetic.fence(%arg1) : (vector<8xf32>) -> vector<8xf32>
+    llvm.return
+  }
   llvm.func @sqrt_test(%arg0: f32, %arg1: vector<8xf32>) {
     %0 = llvm.intr.sqrt(%arg0) : (f32) -> f32
     %1 = llvm.intr.sqrt(%arg1) : (vector<8xf32>) -> vector<8xf32>
@@ -243,6 +248,12 @@ module {
     %1 = llvm.intr.umin(%arg2, %arg3) : (vector<8xi32>, vector<8xi32>) -> vector<8xi32>
     llvm.return
   }
+  llvm.func @fake_use(%arg0: i32, %arg1: !llvm.ptr) {
+    llvm.intr.fake.use %arg0 : i32
+    llvm.intr.fake.use %arg1 : !llvm.ptr
+    llvm.intr.fake.use %arg0, %arg1 : i32, !llvm.ptr
+    llvm.return
+  }
   llvm.func @assume_without_opbundles(%arg0: i1) {
     llvm.intr.assume %arg0 : i1
     llvm.return
@@ -289,6 +300,7 @@ module {
     %1 = llvm.intr.masked.load %arg0, %arg1 {alignment = 1 : i32, nontemporal} : (!llvm.ptr, vector<7xi1>) -> vector<7xf32>
     %2 = llvm.intr.masked.load %arg0, %arg1, %0 {alignment = 1 : i32} : (!llvm.ptr, vector<7xi1>, vector<7xf32>) -> vector<7xf32>
     llvm.intr.masked.store %1, %arg0, %arg1 {alignment = 1 : i32} : vector<7xf32>, vector<7xi1> into !llvm.ptr
+    llvm.intr.masked.store %1, %arg0, %arg1 {alignment = 1 : i32, nontemporal} : vector<7xf32>, vector<7xi1> into !llvm.ptr
     llvm.return
   }
   llvm.func @masked_gather_scatter_intrinsics(%arg0: vector<7x!llvm.ptr>, %arg1: vector<7xi1>) {
@@ -420,15 +432,19 @@ module {
     %1 = llvm.intr.ushl.sat(%arg2, %arg3) : (vector<8xi32>, vector<8xi32>) -> vector<8xi32>
     llvm.return
   }
-  llvm.func @coro_id(%arg0: i32, %arg1: !llvm.ptr) {
-    %0 = llvm.mlir.zero : !llvm.ptr
-    %1 = llvm.intr.coro.id %arg0, %arg1, %arg1, %0 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.token
+  llvm.func @coro_id() {
+    %0 = llvm.mlir.constant(0 : i32) : i32
+    %1 = llvm.mlir.constant(16 : i64) : i64
+    %2 = llvm.alloca %1 x i8 : (i64) -> !llvm.ptr
+    %3 = llvm.mlir.zero : !llvm.ptr
+    %4 = llvm.intr.coro.id %0, %2, %3, %3 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> token
     llvm.return
   }
-  llvm.func @coro_begin(%arg0: i32, %arg1: !llvm.ptr) {
-    %0 = llvm.mlir.zero : !llvm.ptr
-    %1 = llvm.intr.coro.id %arg0, %arg1, %arg1, %0 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.token
-    %2 = llvm.intr.coro.begin %1, %arg1 : (!llvm.token, !llvm.ptr) -> !llvm.ptr
+  llvm.func @coro_begin(%arg0: !llvm.ptr) {
+    %0 = llvm.mlir.constant(0 : i32) : i32
+    %1 = llvm.mlir.zero : !llvm.ptr
+    %2 = llvm.intr.coro.id %0, %1, %1, %1 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> token
+    %3 = llvm.intr.coro.begin %2, %arg0 : (token, !llvm.ptr) -> !llvm.ptr
     llvm.return
   }
   llvm.func @coro_size() {
@@ -442,24 +458,26 @@ module {
     llvm.return
   }
   llvm.func @coro_save(%arg0: !llvm.ptr) {
-    %0 = llvm.intr.coro.save %arg0 : (!llvm.ptr) -> !llvm.token
+    %0 = llvm.intr.coro.save %arg0 : (!llvm.ptr) -> token
     llvm.return
   }
-  llvm.func @coro_suspend(%arg0: i32, %arg1: i1, %arg2: !llvm.ptr) {
-    %0 = llvm.mlir.zero : !llvm.ptr
-    %1 = llvm.intr.coro.id %arg0, %arg2, %arg2, %0 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.token
-    %2 = llvm.intr.coro.suspend %1, %arg1 : i8
+  llvm.func @coro_suspend(%arg0: i1) {
+    %0 = llvm.mlir.constant(0 : i32) : i32
+    %1 = llvm.mlir.zero : !llvm.ptr
+    %2 = llvm.intr.coro.id %0, %1, %1, %1 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> token
+    %3 = llvm.intr.coro.suspend %2, %arg0 : i8
     llvm.return
   }
   llvm.func @coro_end(%arg0: !llvm.ptr, %arg1: i1) {
-    %0 = llvm.mlir.none : !llvm.token
-    %1 = llvm.intr.coro.end %arg0, %arg1, %0 : (!llvm.ptr, i1, !llvm.token) -> !llvm.void
+    %0 = llvm.mlir.none : token
+    %1 = llvm.intr.coro.end %arg0, %arg1, %0 : (!llvm.ptr, i1, token) -> !llvm.void
     llvm.return
   }
-  llvm.func @coro_free(%arg0: i32, %arg1: !llvm.ptr) {
-    %0 = llvm.mlir.zero : !llvm.ptr
-    %1 = llvm.intr.coro.id %arg0, %arg1, %arg1, %0 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.token
-    %2 = llvm.intr.coro.free %1, %arg1 : (!llvm.token, !llvm.ptr) -> !llvm.ptr
+  llvm.func @coro_free(%arg0: !llvm.ptr) {
+    %0 = llvm.mlir.constant(0 : i32) : i32
+    %1 = llvm.mlir.zero : !llvm.ptr
+    %2 = llvm.intr.coro.id %0, %1, %1, %1 : (i32, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> token
+    %3 = llvm.intr.coro.free %2, %arg0 : (token, !llvm.ptr) -> !llvm.ptr
     llvm.return
   }
   llvm.func @coro_resume(%arg0: !llvm.ptr) {
@@ -583,6 +601,41 @@ module {
   llvm.func @vector_ptrmask(%arg0: vector<8x!llvm.ptr>, %arg1: vector<8xi64>) -> vector<8x!llvm.ptr> {
     %0 = llvm.intr.ptrmask %arg0, %arg1 : (vector<8x!llvm.ptr>, vector<8xi64>) -> vector<8x!llvm.ptr>
     llvm.return %0 : vector<8x!llvm.ptr>
+  }
+  llvm.func @experimental_constrained_fadd(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.fadd %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.fadd %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fsub(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.fsub %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.fsub %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fmul(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.fmul %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.fmul %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fdiv(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.fdiv %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.fdiv %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
+  }
+  llvm.func @experimental_constrained_frem(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.frem %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.frem %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fma(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.fma %arg0, %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.fma %arg1, %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
+  }
+  llvm.func @experimental_constrained_fmuladd(%arg0: f32, %arg1: vector<4xf32>) {
+    %0 = llvm.intr.experimental.constrained.fmuladd %arg0, %arg0, %arg0 towardzero ignore : f32
+    %1 = llvm.intr.experimental.constrained.fmuladd %arg1, %arg1, %arg1 towardzero ignore : vector<4xf32>
+    llvm.return
   }
   llvm.func @experimental_constrained_uitofp(%arg0: i32, %arg1: vector<4xi32>) {
     %0 = llvm.intr.experimental.constrained.uitofp %arg0 towardzero ignore : i32 to f32

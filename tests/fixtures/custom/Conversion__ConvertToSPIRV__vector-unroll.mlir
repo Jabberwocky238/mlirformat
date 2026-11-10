@@ -60,3 +60,18 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @zero_d_vector_return(%arg0: vector<f32>) -> vector<f32> {
+    return %arg0 : vector<f32>
+  }
+}
+
+// -----
+module {
+  func.func @zero_d_vector_elementwise(%arg0: vector<f32>, %arg1: vector<f32>) -> vector<f32> {
+    %0 = arith.addf %arg0, %arg1 : vector<f32>
+    return %0 : vector<f32>
+  }
+}
+

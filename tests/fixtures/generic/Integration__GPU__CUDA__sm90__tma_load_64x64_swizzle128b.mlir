@@ -98,9 +98,9 @@
         "scf.yield"() : () -> ()
       }, {
       }) : (i1) -> ()
-      "gpu.barrier"() : () -> ()
+      "gpu.barrier"() <{scope = #gpu.barrier_scope<workgroup>}> : () -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index, i32) -> ()
+    }) : (index, index, index, index, index, index, i32) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

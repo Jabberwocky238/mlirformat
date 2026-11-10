@@ -5,7 +5,8 @@ module {
     %sharding = shard.sharding @grid4x4 split_axes = [[0]] : !shard.sharding
     %sharding_annotated = shard.shard %cst to %sharding : tensor<1024x1024xf32>
     %c434_i32 = arith.constant 434 : i32
-    return %sharding_annotated : tensor<1024x1024xf32>
+    %sharding_annotated_0 = shard.shard %sharding_annotated to %sharding annotate_for_users : tensor<1024x1024xf32>
+    return %sharding_annotated_0 : tensor<1024x1024xf32>
   }
 }
 

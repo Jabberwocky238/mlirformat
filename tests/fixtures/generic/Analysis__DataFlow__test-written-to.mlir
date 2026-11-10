@@ -259,3 +259,12 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32) -> (), sym_name = "private2", sym_visibility = "private"}> ({
+  ^bb0(%arg0: i32):
+    %0 = "arith.index_cast"(%arg0) {tag = "in_private2"} : (i32) -> index
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

@@ -16,19 +16,3 @@ module {
   }) : () -> ()
 }
 
-// -----
-module {
-  "test.symbol_scope_isolated"() ({
-    func.func @inner_func(%arg0: tensor<?xf32, #test.tensor_encoding<"hello">>) -> tensor<?xf32, #test.tensor_encoding<"hello">> {
-      return %arg0 : tensor<?xf32, #test.tensor_encoding<"hello">>
-    }
-    func.func @outer_func(%arg0: tensor<?xf32, #test.tensor_encoding<"hello">>) -> (tensor<?xf32, #test.tensor_encoding<"hello">>, tensor<?xf32, #test.tensor_encoding<"not hello">>) {
-      %0 = call @inner_func(%arg0) : (tensor<?xf32, #test.tensor_encoding<"hello">>) -> tensor<?xf32, #test.tensor_encoding<"hello">>
-      %1 = "test.create_tensor_op"() : () -> tensor<?xf32, #test.tensor_encoding<"not hello">>
-      %2 = "test.dummy_tensor_op"(%1) : (tensor<?xf32, #test.tensor_encoding<"not hello">>) -> tensor<?xf32, #test.tensor_encoding<"not hello">>
-      return %0, %2 : tensor<?xf32, #test.tensor_encoding<"hello">>, tensor<?xf32, #test.tensor_encoding<"not hello">>
-    }
-    "test.finish"() : () -> ()
-  }) : () -> ()
-}
-

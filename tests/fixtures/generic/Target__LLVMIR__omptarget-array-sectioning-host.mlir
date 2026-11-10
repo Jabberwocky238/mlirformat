@@ -7,9 +7,9 @@
     %6 = "llvm.mlir.constant"() <{value = 2 : index}> : () -> i64
     %7 = "omp.map.bounds"(%5, %6, %4, %4) <{operandSegmentSizes = array<i32: 1, 1, 0, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64) -> !omp.map_bounds_ty
     %8 = "omp.map.bounds"(%4, %4, %4, %4) <{operandSegmentSizes = array<i32: 1, 1, 0, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %9 = "omp.map.info"(%2, %7, %7, %8) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "inarray(1:3,1:3,2:2)", operandSegmentSizes = array<i32: 1, 0, 0, 3>, partial_map = false, var_type = !llvm.array<3 x array<3 x array<3 x i32>>>}> : (!llvm.ptr, !omp.map_bounds_ty, !omp.map_bounds_ty, !omp.map_bounds_ty) -> !llvm.ptr
-    %10 = "omp.map.info"(%3, %7, %7, %7) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "outarray(1:3,1:3,1:3)", operandSegmentSizes = array<i32: 1, 0, 0, 3>, partial_map = false, var_type = !llvm.array<3 x array<3 x array<3 x i32>>>}> : (!llvm.ptr, !omp.map_bounds_ty, !omp.map_bounds_ty, !omp.map_bounds_ty) -> !llvm.ptr
-    "omp.target"(%9, %10) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0>}> ({
+    %9 = "omp.map.info"(%2, %7, %7, %8) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "inarray(1:3,1:3,2:2)", operandSegmentSizes = array<i32: 1, 0, 0, 3>, partial_map = false, var_ptr_type = !llvm.array<3 x array<3 x array<3 x i32>>>}> : (!llvm.ptr, !omp.map_bounds_ty, !omp.map_bounds_ty, !omp.map_bounds_ty) -> !llvm.ptr
+    %10 = "omp.map.info"(%3, %7, %7, %7) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "outarray(1:3,1:3,1:3)", operandSegmentSizes = array<i32: 1, 0, 0, 3>, partial_map = false, var_ptr_type = !llvm.array<3 x array<3 x array<3 x i32>>>}> : (!llvm.ptr, !omp.map_bounds_ty, !omp.map_bounds_ty, !omp.map_bounds_ty) -> !llvm.ptr
+    "omp.target"(%9, %10) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0>}> ({
     ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
       %11 = "llvm.mlir.constant"() <{value = 0 : i64}> : () -> i64
       %12 = "llvm.mlir.constant"() <{value = 1 : i64}> : () -> i64

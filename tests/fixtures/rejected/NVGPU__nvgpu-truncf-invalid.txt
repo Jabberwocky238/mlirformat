@@ -1,0 +1,13 @@
+1	verify	'nvgpu.truncf' op result type 'f32' must be narrower than operand type 'f16'
+2	verify	'nvgpu.truncf' op input type must be 64/32/16 bitwidth, but got 8
+3	verify	'nvgpu.truncf' op expects RZ or RP rounding mode when result type is e8m0, but got #nvvm.fp_rnd_mode<rn>
+4	parse	custom op 'nvgpu.truncf' 'nvgpu.truncf' op attribute 'sat' failed to satisfy constraint: Describes the saturation mode whose value is one of {none, satfinite}
+5	verify	'nvgpu.truncf' op expects RN rounding mode, but got #nvvm.fp_rnd_mode<rz>
+6	verify	'nvgpu.truncf' op expects RN rounding mode for f64 input, but got #nvvm.fp_rnd_mode<rz>
+7	verify	'nvgpu.truncf' op RS (stochastic) rounding is only supported for f32->f16/bf16, got 'f32' -> 'f8E4M3FN'
+8	verify	'nvgpu.truncf' op random_bits operand is required with RS rounding
+9	verify	'nvgpu.truncf' op expects RN rounding mode, but got #nvvm.fp_rnd_mode<rp>
+10	verify	'nvgpu.truncf' op random_bits can only be used with RS rounding mode
+11	verify	'nvgpu.truncf' op input and output shapes must match, got 'vector<16xf32>' and 'vector<8xf8E4M3FN>'
+12	verify	'nvgpu.truncf' op input and output must both be scalars or both be vectors, got 'f32' and 'vector<1xf16>'
+13	verify	'nvgpu.truncf' op operand #0 must be floating-point or vector of floating-point values, but got 'vector<f32>'

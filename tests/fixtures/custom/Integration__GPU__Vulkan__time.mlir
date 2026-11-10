@@ -1,8 +1,8 @@
 module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader], [SPV_KHR_storage_buffer_storage_class]>, #spirv.resource_limits<>>} {
   gpu.module @kernels {
     gpu.func @kernel_add(%arg0: memref<16384xf32>, %arg1: memref<16384xf32>, %arg2: memref<16384xf32>) kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [128, 1, 1]>} {
-      %block_id_x = gpu.block_id  x
-      %thread_id_x = gpu.thread_id  x
+      %block_id_x = gpu.block_id x
+      %thread_id_x = gpu.thread_id x
       %c128 = arith.constant 128 : index
       %0 = arith.muli %block_id_x, %c128 : index
       %1 = arith.addi %0, %thread_id_x : index

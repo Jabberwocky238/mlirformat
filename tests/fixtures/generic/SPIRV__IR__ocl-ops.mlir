@@ -17,6 +17,78 @@
 // -----
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "exp2"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.CL.exp2"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "exp2vec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.CL.exp2"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "exp10"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.CL.exp10"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "exp10vec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.CL.exp10"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "log2"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.CL.log2"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "log2vec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.CL.log2"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "log10"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.CL.log10"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "log10vec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.CL.log10"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (f32) -> (), sym_name = "fabs"}> ({
   ^bb0(%arg2: f32):
     %2 = "spirv.CL.fabs"(%arg2) : (f32) -> f32
@@ -58,6 +130,24 @@
   "func.func"() <{function_type = (i8) -> (), sym_name = "sabsi8"}> ({
   ^bb0(%arg0: i8):
     %0 = "spirv.CL.s_abs"(%arg0) : (i8) -> i8
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32) -> (), sym_name = "clz"}> ({
+  ^bb0(%arg1: i32):
+    %1 = "spirv.CL.clz"(%arg1) : (i32) -> i32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xi16>) -> (), sym_name = "clzvec"}> ({
+  ^bb0(%arg0: vector<3xi16>):
+    %0 = "spirv.CL.clz"(%arg0) : (vector<3xi16>) -> vector<3xi16>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -142,6 +232,20 @@
   "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "rintvec"}> ({
   ^bb0(%arg0: vector<3xf16>):
     %0 = "spirv.CL.rint"(%arg0) : (vector<3xf16>) -> vector<3xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "trunc"}> ({
+  ^bb0(%arg1: f32):
+    %1 = "spirv.CL.trunc"(%arg1) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<3xf16>) -> (), sym_name = "truncvec"}> ({
+  ^bb0(%arg0: vector<3xf16>):
+    %0 = "spirv.CL.trunc"(%arg0) : (vector<3xf16>) -> vector<3xf16>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -247,6 +351,24 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "erfc"}> ({
+  ^bb0(%arg0: f32):
+    %0 = "spirv.CL.erfc"(%arg0) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>) -> (), sym_name = "erfc"}> ({
+  ^bb0(%arg0: vector<4xf16>):
+    %0 = "spirv.CL.erfc"(%arg0) : (vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (f32) -> (), sym_name = "asin"}> ({
   ^bb0(%arg0: f32):
     %0 = "spirv.CL.asin"(%arg0) : (f32) -> f32
@@ -319,6 +441,24 @@
 
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "cbrt"}> ({
+  ^bb0(%arg0: f32):
+    %0 = "spirv.CL.cbrt"(%arg0) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>) -> (), sym_name = "cbrt"}> ({
+  ^bb0(%arg0: vector<4xf16>):
+    %0 = "spirv.CL.cbrt"(%arg0) : (vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (f32, f32) -> (), sym_name = "atan2"}> ({
   ^bb0(%arg0: f32, %arg1: f32):
     %0 = "spirv.CL.atan2"(%arg0, %arg1) : (f32, f32) -> f32
@@ -331,6 +471,175 @@
   "func.func"() <{function_type = (vector<4xf16>, vector<4xf16>) -> (), sym_name = "atan2"}> ({
   ^bb0(%arg0: vector<4xf16>, %arg1: vector<4xf16>):
     %0 = "spirv.CL.atan2"(%arg0, %arg1) : (vector<4xf16>, vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, i32) -> (), sym_name = "ldexp"}> ({
+  ^bb0(%arg0: f32, %arg1: i32):
+    %0 = "spirv.CL.ldexp"(%arg0, %arg1) : (f32, i32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<3xf32>, vector<3xi32>) -> (), sym_name = "ldexp_vec"}> ({
+  ^bb0(%arg0: vector<3xf32>, %arg1: vector<3xi32>):
+    %0 = "spirv.CL.ldexp"(%arg0, %arg1) : (vector<3xf32>, vector<3xi32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, i32) -> (), sym_name = "pown"}> ({
+  ^bb0(%arg0: f32, %arg1: i32):
+    %0 = "spirv.CL.pown"(%arg0, %arg1) : (f32, i32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<3xf32>, vector<3xi32>) -> (), sym_name = "pown_vec"}> ({
+  ^bb0(%arg0: vector<3xf32>, %arg1: vector<3xi32>):
+    %0 = "spirv.CL.pown"(%arg0, %arg1) : (vector<3xf32>, vector<3xi32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, i32) -> (), sym_name = "rootn"}> ({
+  ^bb0(%arg0: f32, %arg1: i32):
+    %0 = "spirv.CL.rootn"(%arg0, %arg1) : (f32, i32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<3xf32>, vector<3xi32>) -> (), sym_name = "rootn_vec"}> ({
+  ^bb0(%arg0: vector<3xf32>, %arg1: vector<3xi32>):
+    %0 = "spirv.CL.rootn"(%arg0, %arg1) : (vector<3xf32>, vector<3xi32>) -> vector<3xf32>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "copysign"}> ({
+  ^bb0(%arg0: f32, %arg1: f32):
+    %0 = "spirv.CL.copysign"(%arg0, %arg1) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>, vector<4xf16>) -> (), sym_name = "copysign"}> ({
+  ^bb0(%arg0: vector<4xf16>, %arg1: vector<4xf16>):
+    %0 = "spirv.CL.copysign"(%arg0, %arg1) : (vector<4xf16>, vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "expm1"}> ({
+  ^bb0(%arg0: f32):
+    %0 = "spirv.CL.expm1"(%arg0) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>) -> (), sym_name = "expm1"}> ({
+  ^bb0(%arg0: vector<4xf16>):
+    %0 = "spirv.CL.expm1"(%arg0) : (vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "fdim"}> ({
+  ^bb0(%arg0: f32, %arg1: f32):
+    %0 = "spirv.CL.fdim"(%arg0, %arg1) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>, vector<4xf16>) -> (), sym_name = "fdim"}> ({
+  ^bb0(%arg0: vector<4xf16>, %arg1: vector<4xf16>):
+    %0 = "spirv.CL.fdim"(%arg0, %arg1) : (vector<4xf16>, vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "fmod"}> ({
+  ^bb0(%arg0: f32, %arg1: f32):
+    %0 = "spirv.CL.fmod"(%arg0, %arg1) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>, vector<4xf16>) -> (), sym_name = "fmod"}> ({
+  ^bb0(%arg0: vector<4xf16>, %arg1: vector<4xf16>):
+    %0 = "spirv.CL.fmod"(%arg0, %arg1) : (vector<4xf16>, vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32, f32) -> (), sym_name = "hypot"}> ({
+  ^bb0(%arg0: f32, %arg1: f32):
+    %0 = "spirv.CL.hypot"(%arg0, %arg1) : (f32, f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>, vector<4xf16>) -> (), sym_name = "hypot"}> ({
+  ^bb0(%arg0: vector<4xf16>, %arg1: vector<4xf16>):
+    %0 = "spirv.CL.hypot"(%arg0, %arg1) : (vector<4xf16>, vector<4xf16>) -> vector<4xf16>
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> (), sym_name = "log1p"}> ({
+  ^bb0(%arg0: f32):
+    %0 = "spirv.CL.log1p"(%arg0) : (f32) -> f32
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf16>) -> (), sym_name = "log1p"}> ({
+  ^bb0(%arg0: vector<4xf16>):
+    %0 = "spirv.CL.log1p"(%arg0) : (vector<4xf16>) -> vector<4xf16>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

@@ -24,7 +24,7 @@
     "func.return"(%arg13) : (memref<256x256xf32>) -> ()
   }) {llvm.emit_c_interface} : () -> ()
   "gpu.module"() <{sym_name = "test_kernel"}> ({
-    "gpu.func"() <{function_type = (memref<256x256xf16>, memref<256x256xf16>, memref<256x256xf32>) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<256x256xf16>, memref<256x256xf16>, memref<256x256xf32>) -> (), kernel}> ({
     ^bb0(%arg6: memref<256x256xf16>, %arg7: memref<256x256xf16>, %arg8: memref<256x256xf32>):
       %22 = "arith.constant"() <{value = 0 : index}> : () -> index
       %23 = "arith.constant"() <{value = 1 : index}> : () -> index
@@ -37,15 +37,15 @@
       %30 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index
       %31 = "arith.muli"(%29, %27) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
       %32 = "arith.muli"(%30, %27) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-      %33 = "xegpu.create_nd_tdesc"(%arg8) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf32>) -> !xegpu.tensor_desc<256x256xf32, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>>
+      %33 = "xegpu.create_nd_tdesc"(%arg8) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf32>) -> !xegpu.tensor_desc<256x256xf32, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>>
       %34 = "xegpu.load_nd"(%33, %31, %32) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<256x256xf32, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>>, index, index) -> vector<256x256xf32>
-      %35 = "xegpu.create_nd_tdesc"(%arg6) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 32], inst_data = [8, 16]>>
-      %36 = "xegpu.create_nd_tdesc"(%arg7) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [16, 16]>>
-      %37 = "xegpu.create_nd_tdesc"(%arg6) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>>
+      %35 = "xegpu.create_nd_tdesc"(%arg6) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 32], inst_data = [8, 16]>>
+      %36 = "xegpu.create_nd_tdesc"(%arg7) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [16, 16]>>
+      %37 = "xegpu.create_nd_tdesc"(%arg6) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>>
       "xegpu.prefetch_nd"(%37, %31, %22) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>>, index, index) -> ()
       "xegpu.prefetch_nd"(%37, %31, %24) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>>, index, index) -> ()
       "xegpu.prefetch_nd"(%37, %31, %25) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<256x32xf16, #xegpu.layout<sg_layout = [32, 1], sg_data = [8, 32], inst_data = [8, 16]>>, index, index) -> ()
-      %38 = "xegpu.create_nd_tdesc"(%arg7) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>>
+      %38 = "xegpu.create_nd_tdesc"(%arg7) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<256x256xf16>) -> !xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>>
       "xegpu.prefetch_nd"(%38, %22, %32) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>>, index, index) -> ()
       "xegpu.prefetch_nd"(%38, %24, %32) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>>, index, index) -> ()
       "xegpu.prefetch_nd"(%38, %25, %32) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>}> : (!xegpu.tensor_desc<32x256xf16, #xegpu.layout<sg_layout = [4, 8], sg_data = [8, 32], inst_data = [8, 16]>>, index, index) -> ()
@@ -61,7 +61,7 @@
       }) : (index, index, index, vector<256x256xf32>) -> vector<256x256xf32>
       "xegpu.store_nd"(%39, %33, %31, %32) <{const_offsets = array<i64: -9223372036854775808, -9223372036854775808>, layout = #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>}> : (vector<256x256xf32>, !xegpu.tensor_desc<256x256xf32, #xegpu.layout<sg_layout = [8, 4], sg_data = [32, 64], inst_data = [8, 16]>>, index, index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "test_kernel", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "test_kernel"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
     %0 = "arith.constant"() <{value = 0 : index}> : () -> index

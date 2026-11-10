@@ -74,7 +74,7 @@ module {
       %c49152 = arith.constant 49152 : index
       %c57344 = arith.constant 57344 : index
       %c40960 = arith.constant 40960 : index
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %7 = gpu.dynamic_shared_memory : memref<?xi8, #gpu.address_space<workgroup>>
       %view = memref.view %7[%c0_12][] : memref<?xi8, #gpu.address_space<workgroup>> to memref<2x128x64xf16, #gpu.address_space<workgroup>>
       %view_19 = memref.view %7[%c32768][] : memref<?xi8, #gpu.address_space<workgroup>> to memref<2x64x128xf16, #gpu.address_space<workgroup>>
@@ -86,7 +86,7 @@ module {
       %9 = nvvm.elect.sync -> i1
       %10 = arith.divui %thread_id_x, %c32_14 : index
       %11 = index.casts %10 : index to i32
-      %12 = nvvm.shfl.sync  idx %c32_i32, %11, %c0_i32_20, %c-1_i32 : i32 -> i32
+      %12 = nvvm.shfl.sync idx %c32_i32, %11, %c0_i32_20, %c-1_i32 : i32 -> i32
       %13 = arith.remui %12, %c4_i32 : i32
       %14 = arith.cmpi eq, %13, %c0_i32_20 : i32
       %15 = arith.andi %14, %9 : i1

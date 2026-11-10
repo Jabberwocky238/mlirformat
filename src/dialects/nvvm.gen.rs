@@ -3,20 +3,36 @@
 
 use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
-#[mlir::op("nvvm.read.ptx.sreg.aggr.smem.size", format = "attr-dict `:` type($res)", results(res))]
-pub struct AggrSmemSize<'a> {
+/// `nvvm.addf`: Performs floating point addition of the given arguments `lhs` and `rhs`
+///
+/// The `nvvm.addf` operation performs floating point addition of two floating
+/// point operands of the same type.
+///
+/// The rounding mode is specified by the `rnd` attribute, saturation mode by
+/// the `sat` attribute, and flush-to-zero by the `ftz` attribute.
+///
+/// For more information, see PTX ISA:
+/// - [floating point addition](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-add)
+/// - [half-precision floating point addition](https://docs.nvidia.com/cuda/parallel-thread-execution/#half-precision-floating-point-instructions-add)
+#[mlir::op("nvvm.addf", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
+pub struct AddFOp<'a> {
+    #[slot(res)]
+    pub lhs: Value<'a>,
+    #[slot(res)]
+    pub rhs: Value<'a>,
+    #[attr(dialect = "nvvm.fp_rnd_mode", default = "<none>")]
+    pub rnd: Option<Attribute<'a>>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
     pub res: Type<'a>,
 }
 
-/// `nvvm.barrier0`: CTA Barrier Synchronization Op (Barrier ID 0)
-///
-/// The `nvvm.barrier0` operation is a convenience operation that performs barrier
-/// synchronization and communication within a CTA (Cooperative Thread Array) using
-/// barrier ID 0. It is functionally equivalent to `nvvm.barrier` or `nvvm.barrier id=0`.
-///
-/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-bar)
-#[mlir::op("nvvm.barrier0", format = "attr-dict")]
-pub struct Barrier0Op<'a> {
+#[mlir::op("nvvm.read.ptx.sreg.aggr.smem.size", format = "attr-dict `:` type($res)", results(res))]
+pub struct AggrSmemSize<'a> {
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
 }
 
 ///
@@ -26,6 +42,10 @@ pub struct Barrier0Op<'a> {
 /// The default barrier id is 0 that is similar to `nvvm.barrier` Op. When
 /// `barrierId` is not present, the default barrier id is used.
 ///
+/// The `aligned` attribute, which defaults to `true`, generates the aligned
+/// form of the barrier (all threads in the CTA execute the same barrier
+/// instruction). When set to `false`, the unaligned form is generated.
+///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-bar)
 #[mlir::op("nvvm.barrier.arrive", format = "(`id` `=` $barrierId^)? `number_of_threads` `=` $numberOfThreads attr-dict")]
 pub struct BarrierArriveOp<'a> {
@@ -33,6 +53,8 @@ pub struct BarrierArriveOp<'a> {
     pub barrier_id: Vec<Value<'a>>,
     #[slot(number_of_threads_ty, name = "numberOfThreads")]
     pub number_of_threads: Value<'a>,
+    #[attr(default = "true")]
+    pub aligned: Option<Attribute<'a>>,
     #[dtype(is = i32)]
     pub barrier_id_ty: Type<'a>,
     #[dtype(is = i32)]
@@ -45,16 +67,21 @@ pub struct BarrierArriveOp<'a> {
 /// within a CTA (Cooperative Thread Array). It causes executing threads to wait for
 /// all non-exited threads participating in the barrier to arrive.
 ///
-/// The operation takes two optional operands:
+/// The operation takes the following optional operands and attributes:
 ///
 /// - `barrierId`: Specifies a logical barrier resource with value 0 through 15.
 ///   Each CTA instance has sixteen barriers numbered 0..15. Defaults to 0 if not specified.
 /// - `numberOfThreads`: Specifies the number of threads participating in the barrier.
 ///   When specified, the value must be a multiple of the warp size. If not specified,
 ///   all threads in the CTA participate in the barrier.
-/// - `reductionOp`: specifies the reduction operation (`popc`, `and`, `or`).
-/// - `reductionPredicate`: specifies the predicate to be used with the
-///   `reductionOp`.
+/// - `aligned`: Selects between the `.aligned` and non-`.aligned` forms of the
+///   underlying `@llvm.nvvm.barrier.cta.*` intrinsic family. Defaults to true,
+///   which requires every thread in the CTA to reach this same barrier
+///   instruction, otherwise the behavior is undefined. Set it to false to emit
+///   the non-`.aligned` form.
+///
+/// Reduction variants of the barrier instruction are modeled by the
+/// `nvvm.barrier.reduction` op.
 ///
 /// The barrier operation guarantees that when the barrier completes, prior memory
 /// accesses requested by participating threads are performed relative to all threads
@@ -64,27 +91,55 @@ pub struct BarrierArriveOp<'a> {
 /// When a barrier completes, the waiting threads are restarted without delay, and
 /// the barrier is reinitialized so that it can be immediately reused.
 ///
-/// This operation generates an aligned barrier, indicating that all threads in the CTA
-/// will execute the same barrier instruction. Behavior is undefined if all threads in the
-/// CTA do not reach this instruction.
-///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-bar)
-///
-/// Generic form only (NVVM_BarrierOp: format: unexpected `^ $reductionPredicate)? (`->` type($res)^)? attr-dict`).
-#[mlir::op("nvvm.barrier", results(res))]
+#[mlir::op("nvvm.barrier", format = "(`id` `=` $barrierId^)? (`number_of_threads` `=` $numberOfThreads^)? attr-dict")]
 pub struct BarrierOp<'a> {
     #[slot(barrier_id_ty, name = "barrierId")]
     pub barrier_id: Vec<Value<'a>>,
     #[slot(number_of_threads_ty, name = "numberOfThreads")]
     pub number_of_threads: Vec<Value<'a>>,
-    #[slot(reduction_predicate_ty, name = "reductionPredicate")]
-    pub reduction_predicate: Vec<Value<'a>>,
-    #[attr(name = "reductionOp", dialect = "nvvm.reduction")]
-    pub reduction_op: Option<Attribute<'a>>,
+    #[attr(default = "true")]
+    pub aligned: Option<Attribute<'a>>,
     #[dtype(is = i32)]
     pub barrier_id_ty: Type<'a>,
     #[dtype(is = i32)]
     pub number_of_threads_ty: Type<'a>,
+}
+
+/// `nvvm.barrier.reduction`: CTA Barrier Reduction Op
+///
+/// The `nvvm.barrier.reduction` operation performs barrier synchronization with a
+/// reduction across the per-thread predicates contributed by participating threads
+/// in a CTA.
+///
+/// - `barrierId`: Specifies a logical barrier resource with value 0 through 15.
+///   Optional; defaults to barrier id 0 when not specified.
+/// - `reductionOp`: The reduction kind (`popc`, `and`, `or`) applied across the
+///   per-thread predicates.
+/// - `reductionPredicate`: The per-thread i32 predicate. It is compared against
+///   zero to form the i1 value fed into the reduction.
+/// - `aligned`: Selects between the `.aligned` and non-`.aligned` forms of the
+///   underlying `@llvm.nvvm.barrier.cta.red.*` intrinsic family. Defaults to
+///   true, which requires every thread in the CTA to reach this same barrier
+///   instruction, otherwise the behavior is undefined. Set it to false to emit
+///   the non-`.aligned` form.
+///
+/// The result is the i32 reduction value computed across all threads
+/// participating in the barrier.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-bar)
+#[mlir::op("nvvm.barrier.reduction", format = "qualified($reductionOp) $reductionPredicate (`id` `=` $barrierId^)? `->` type($res) attr-dict", results(res))]
+pub struct BarrierReductionOp<'a> {
+    #[slot(barrier_id_ty, name = "barrierId")]
+    pub barrier_id: Vec<Value<'a>>,
+    #[slot(reduction_predicate_ty, name = "reductionPredicate")]
+    pub reduction_predicate: Value<'a>,
+    #[attr(name = "reductionOp", dialect = "nvvm.reduction")]
+    pub reduction_op: Attribute<'a>,
+    #[attr(default = "true")]
+    pub aligned: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub barrier_id_ty: Type<'a>,
     #[dtype(is = i32)]
     pub reduction_predicate_ty: Type<'a>,
     #[dtype(is = i32)]
@@ -95,6 +150,7 @@ pub struct BarrierOp<'a> {
 pub struct BlockDimXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -102,6 +158,7 @@ pub struct BlockDimXOp<'a> {
 pub struct BlockDimYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -109,6 +166,7 @@ pub struct BlockDimYOp<'a> {
 pub struct BlockDimZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -116,6 +174,7 @@ pub struct BlockDimZOp<'a> {
 pub struct BlockIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -123,6 +182,7 @@ pub struct BlockIdXOp<'a> {
 pub struct BlockIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -130,6 +190,7 @@ pub struct BlockIdYOp<'a> {
 pub struct BlockIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -137,6 +198,7 @@ pub struct BlockIdZOp<'a> {
 pub struct BlockInClusterIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -144,6 +206,7 @@ pub struct BlockInClusterIdXOp<'a> {
 pub struct BlockInClusterIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -151,6 +214,7 @@ pub struct BlockInClusterIdYOp<'a> {
 pub struct BlockInClusterIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -186,11 +250,13 @@ pub struct BulkStoreOp<'a> {
 
 #[mlir::op("nvvm.read.ptx.sreg.clock64", format = "attr-dict `:` type($res)", results(res))]
 pub struct Clock64Op<'a> {
+    #[dtype(is = i64)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.clock", format = "attr-dict `:` type($res)", results(res))]
 pub struct ClockOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -229,6 +295,7 @@ pub struct ClusterArriveRelaxedOp<'a> {
 pub struct ClusterDim<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -236,6 +303,7 @@ pub struct ClusterDim<'a> {
 pub struct ClusterDimBlocksXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -243,6 +311,7 @@ pub struct ClusterDimBlocksXOp<'a> {
 pub struct ClusterDimBlocksYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -250,6 +319,7 @@ pub struct ClusterDimBlocksYOp<'a> {
 pub struct ClusterDimBlocksZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -257,6 +327,7 @@ pub struct ClusterDimBlocksZOp<'a> {
 pub struct ClusterDimXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -264,6 +335,7 @@ pub struct ClusterDimXOp<'a> {
 pub struct ClusterDimYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -271,6 +343,7 @@ pub struct ClusterDimYOp<'a> {
 pub struct ClusterDimZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -278,6 +351,7 @@ pub struct ClusterDimZOp<'a> {
 pub struct ClusterId<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -285,6 +359,7 @@ pub struct ClusterId<'a> {
 pub struct ClusterIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -292,6 +367,7 @@ pub struct ClusterIdXOp<'a> {
 pub struct ClusterIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -299,6 +375,7 @@ pub struct ClusterIdYOp<'a> {
 pub struct ClusterIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -371,33 +448,160 @@ pub struct ClusterWaitOp<'a> {
     pub aligned: bool,
 }
 
+/// `nvvm.convert.bf16x2.to.f4x2`: Convert an bf16x2 input to f4x2
+///
+/// This Op converts each of the given BF16 inputs in an bf16x2 vector to the specified fp4 type.
+/// The result `dst` is returned as an i8 type where the converted values are
+/// packed such that the value converted from the first element of `a` is
+/// stored in the lower 4 bits of `dst` and the value converted from the second
+/// element of `a` is stored in the upper 4 bits of `dst`.
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+#[mlir::op("nvvm.convert.bf16x2.to.f4x2", format = "$src attr-dict `:` type($src) `->` type($dst) `(` $dstTy `)`", results(dst))]
+pub struct ConvertBF16x2ToF4x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[attr(name = "dstTy")]
+    pub dst_ty: Attribute<'a>,
+    pub src_ty: Type<'a>,
+    #[dtype(is = i8)]
+    pub dst: Type<'a>,
+}
+
+/// `nvvm.convert.bf16x2.to.f6x2`: Convert an bf16x2 input to f6x2
+///
+/// This Op converts each of the given BF16 inputs in an bf16x2 vector to the specified fp6 type. The result `dst` is
+/// represented either as an i16 type or as a vector of two i8 types.
+/// If `dst` is returned as an i16 type, the converted values are packed such
+/// that the value converted from the first element of `a` is stored in the
+/// lower 8 bits of `dst` with 2 MSB bits padded with zeros and the value
+/// converted from the second element of `a` is stored in the upper 8 bits of
+/// `dst` with 2 MSB bits padded with zeros.
+/// If `dst` is returned as a vector type, each converted value is stored as an
+/// i8 element in the vector with 2 MSB bits padded with zeros.
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+#[mlir::op("nvvm.convert.bf16x2.to.f6x2", format = "$src attr-dict `:` type($src) `->` type($dst) `(` $dstTy `)`", results(dst))]
+pub struct ConvertBF16x2ToF6x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[attr(name = "dstTy")]
+    pub dst_ty: Attribute<'a>,
+    pub src_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
 /// `nvvm.convert.bf16x2.to.f8x2`: Convert a pair of bf16 inputs to f8x2
 ///
 /// This Op converts the given bf16 inputs in a bf16x2 vector to the specified
-/// f8 type.
-/// The result `dst` is represented as an i16 type or as a vector
-/// of two i8 types.
-/// If `dst` is returned as an i16 type, the converted values from `a`
-/// are packed such that the value converted from the first element of `a`
-/// is stored in the upper 8 bits of `dst` and the value converted from the
-/// second element of `a` is stored in the lower 8 bits of `dst`.
+/// f8 type. The result `dst` is represented either as a packed i16 type or as
+/// a vector of two i8 types.
+/// If `dst` is returned as an i16 type, the converted values are packed such
+/// that the value converted from the first element of `a` is stored in the
+/// lower 8 bits of `dst` and the value converted from the second element of
+/// `a` is stored in the upper 8 bits of `dst`.
 /// If `dst` is returned as a vector type, each converted value is stored as an
 /// i8 element in the vector.
 /// The `rnd` and `sat` attributes specify the rounding and saturation modes
 /// respectively.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
-#[mlir::op("nvvm.convert.bf16x2.to.f8x2", format = "$a attr-dict `:` type($a) `->` type($dst) `(` $dstTy `)`", results(dst))]
+#[mlir::op("nvvm.convert.bf16x2.to.f8x2", format = "$src attr-dict `:` type($src) `->` type($dst) `(` $dstTy `)`", results(dst))]
 pub struct ConvertBF16x2ToF8x2Op<'a> {
-    #[slot(a_ty)]
-    pub a: Value<'a>,
+    #[slot(src_ty)]
+    pub src: Value<'a>,
     #[attr(dialect = "nvvm.fp_rnd_mode", default = "<none>")]
     pub rnd: Option<Attribute<'a>>,
     #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
     pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
     #[attr(name = "dstTy")]
     pub dst_ty: Attribute<'a>,
-    pub a_ty: Type<'a>,
+    pub src_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
+/// `nvvm.convert.bf16x2.to.s2f6x2`: Convert a pair of BF16 inputs to S2F6x2
+///
+/// This Op converts each of the given BF16 inputs in a bf16x2 vector to the
+/// S2F6x2 type. The result `dst` can be either a packed i16 type or a vector
+/// of two i8 types.
+/// If `dst` is returned as an i16 type, the converted values are packed such
+/// that the value converted from the first element of `a` is stored in the
+/// lower 8 bits of `dst` and the value converted from the second element of
+/// `a` is stored in the upper 8 bits of `dst`.
+/// If `dst` is returned as a vector type, each converted value is stored as an
+/// i8 element in the vector.
+/// The `relu` attribute, when set, lowers to the '.relu' variant
+/// of the cvt instruction.
+/// The optional scaling-factors for each of the inputs are provided through
+/// the operand `scaleFactor` as a packed i16 type. Only `ue8m0` is supported
+/// as the type of the scale-factor currently.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
+#[mlir::op("nvvm.convert.bf16x2.to.s2f6x2", format = "$src (`,` $scaleFactor^)? attr-dict `:` type($src) `->` type($dst)", results(dst))]
+pub struct ConvertBF16x2ToS2F6x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[slot(scale_factor_ty, name = "scaleFactor")]
+    pub scale_factor: Vec<Value<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    pub src_ty: Type<'a>,
+    #[dtype(is = i16)]
+    pub scale_factor_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
+/// `nvvm.convert.f16x2.to.f4x2`: Convert an f16x2 input to f4x2
+///
+/// This Op converts each of the given F16 inputs in an f16x2 vector to the specified fp4 type.
+/// The result `dst` is returned as an i8 type where the converted values are
+/// packed such that the value converted from the first element of `a` is
+/// stored in the lower 4 bits of `dst` and the value converted from the second
+/// element of `a` is stored in the upper 4 bits of `dst`.
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+#[mlir::op("nvvm.convert.f16x2.to.f4x2", format = "$src attr-dict `:` type($src) `->` type($dst) `(` $dstTy `)`", results(dst))]
+pub struct ConvertF16x2ToF4x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[attr(name = "dstTy")]
+    pub dst_ty: Attribute<'a>,
+    pub src_ty: Type<'a>,
+    #[dtype(is = i8)]
+    pub dst: Type<'a>,
+}
+
+/// `nvvm.convert.f16x2.to.f6x2`: Convert an f16x2 input to f6x2
+///
+/// This Op converts each of the given F16 inputs in an f16x2 vector to the specified fp6 type. The result `dst` is
+/// represented either as an i16 type or as a vector of two i8 types.
+/// If `dst` is returned as an i16 type, the converted values are packed such
+/// that the value converted from the first element of `a` is stored in the
+/// lower 8 bits of `dst` with 2 MSB bits padded with zeros and the value
+/// converted from the second element of `a` is stored in the upper 8 bits of
+/// `dst` with 2 MSB bits padded with zeros.
+/// If `dst` is returned as a vector type, each converted value is stored as an
+/// i8 element in the vector with 2 MSB bits padded with zeros.
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+#[mlir::op("nvvm.convert.f16x2.to.f6x2", format = "$src attr-dict `:` type($src) `->` type($dst) `(` $dstTy `)`", results(dst))]
+pub struct ConvertF16x2ToF6x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[attr(name = "dstTy")]
+    pub dst_ty: Attribute<'a>,
+    pub src_ty: Type<'a>,
     pub dst: Type<'a>,
 }
 
@@ -600,6 +804,42 @@ pub struct ConvertF32x2ToF8x2Op<'a> {
     pub dst: Type<'a>,
 }
 
+/// `nvvm.convert.f32x2.to.s2f6x2`: Convert a pair of f32 inputs to S2F6x2
+///
+/// This Op converts each of the given f32 inputs to the
+/// S2F6x2 type. The result `dst` can be either a packed i16 type or a vector
+/// of two i8 types.
+/// If `dst` is returned as an i16 type, the converted values are packed such
+/// that the value converted from `a` is stored in the upper 8 bits of `dst`
+/// and the value converted from `b` is stored in the lower 8 bits of `dst`.
+/// If `dst` is returned as a vector type, each converted value is stored as an
+/// i8 element in the vector.
+/// The `relu` attribute, when set, lowers to the '.relu' variant
+/// of the cvt instruction.
+/// The optional scaling-factors for each of the inputs are provided through
+/// the operand `scaleFactor` as a packed i16 type. Only `ue8m0` is supported
+/// as the type of the scale-factor currently.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
+#[mlir::op("nvvm.convert.f32x2.to.s2f6x2", format = "$a `,` $b (`,` $scaleFactor^)? attr-dict `:` type($dst)", results(dst))]
+pub struct ConvertF32x2ToS2F6x2Op<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(scale_factor_ty, name = "scaleFactor")]
+    pub scale_factor: Vec<Value<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[dtype(is = f32)]
+    pub a_ty: Type<'a>,
+    #[dtype(is = f32)]
+    pub b_ty: Type<'a>,
+    #[dtype(is = i16)]
+    pub scale_factor_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
 /// `nvvm.convert.f32x4.to.f4x4`: Convert vector<4xf32> to packed f4x4 with stochastic rounding (.rs) and satfinite
 ///
 /// Converts a vector<4xf32> to packed f4x4 format using
@@ -679,25 +919,131 @@ pub struct ConvertF32x4ToF8x4Op<'a> {
     pub dst: Type<'a>,
 }
 
+/// `nvvm.convert.f4x2.to.bf16x2`: Convert a pair of f4 inputs to bf16x2
+///
+/// This Op converts the given f4 inputs in a packed i8 to bf16.
+///
+/// The result `dst` is represented as a vector of bf16 elements.
+///
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+///
+/// The `sat` attribute specifies the saturation mode.
+///
+/// The optional scaling-factors for each of the inputs are provided through
+/// the operand `scaleFactor` as a packed i16 type. Only `ue8m0` is supported
+/// as the type of the scale-factor currently.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
+///
+///
+/// Example:
+///
+/// ```mlir
+/// // Basic conversion; the f4x2 source is packed in a single i8.
+/// %res1 = nvvm.convert.f4x2.to.bf16x2 %src
+///     : i8 (f4E2M1FN) -> vector<2xbf16>
+///
+/// // Conversion with relu and saturation.
+/// %res2 = nvvm.convert.f4x2.to.bf16x2 %src
+///     {relu = true, sat = #nvvm.sat_mode<satfinite>}
+///     : i8 (f4E2M1FN) -> vector<2xbf16>
+///
+/// // Conversion with a packed ue8m0 scale-factor.
+/// %res3 = nvvm.convert.f4x2.to.bf16x2 %src, %scaleFactor
+///     : i8 (f4E2M1FN) -> vector<2xbf16>
+/// ```
+#[mlir::op("nvvm.convert.f4x2.to.bf16x2", format = "$src (`,` $scaleFactor^)? attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
+pub struct ConvertF4x2ToBF16x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[slot(scale_factor_ty, name = "scaleFactor")]
+    pub scale_factor: Vec<Value<'a>>,
+    #[attr(name = "srcType")]
+    pub src_type: Attribute<'a>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[dtype(is = i8)]
+    pub src_ty: Type<'a>,
+    #[dtype(is = i16)]
+    pub scale_factor_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
 /// `nvvm.convert.f4x2.to.f16x2`: Convert a pair of f4 inputs to f16x2
 ///
 /// This Op converts the given f4 inputs in a packed i8 to f16.
 ///
 /// The result `dst` is represented as a vector of f16 elements.
+///
 /// The `relu` attribute, when set, lowers to the '.relu' variant of
-/// the cvt instruction."
+/// the cvt instruction.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
 #[mlir::op("nvvm.convert.f4x2.to.f16x2", format = "$src attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
 pub struct ConvertF4x2ToF16x2Op<'a> {
     #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr(default = "false")]
-    pub relu: Option<Attribute<'a>>,
     #[attr(name = "srcType")]
     pub src_type: Attribute<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
     #[dtype(is = i8)]
     pub src_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
+/// `nvvm.convert.f6x2.to.bf16x2`: Convert a pair of f6 inputs to bf16x2
+///
+/// This Op converts the given f6 inputs in a i8x2 vector to bf16.
+///
+/// The result `dst` is represented as a vector of bf16 elements.
+///
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+///
+/// The `sat` attribute specifies the saturation mode.
+///
+/// The optional scaling-factors for each of the inputs are provided through
+/// the operand `scaleFactor` as a packed i16 type. Only `ue8m0` is supported
+/// as the type of the scale-factor currently.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
+///
+///
+/// Example:
+///
+/// ```mlir
+/// // Basic conversion from f6E2M3FN.
+/// %res1 = nvvm.convert.f6x2.to.bf16x2 %src
+///     : vector<2xi8> (f6E2M3FN) -> vector<2xbf16>
+///
+/// // Conversion from f6E3M2FN with relu and saturation.
+/// %res2 = nvvm.convert.f6x2.to.bf16x2 %src
+///     {relu = true, sat = #nvvm.sat_mode<satfinite>}
+///     : vector<2xi8> (f6E3M2FN) -> vector<2xbf16>
+///
+/// // Conversion with a packed ue8m0 scale-factor.
+/// %res3 = nvvm.convert.f6x2.to.bf16x2 %src, %scaleFactor
+///     : vector<2xi8> (f6E2M3FN) -> vector<2xbf16>
+/// ```
+#[mlir::op("nvvm.convert.f6x2.to.bf16x2", format = "$src (`,` $scaleFactor^)? attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
+pub struct ConvertF6x2ToBF16x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[slot(scale_factor_ty, name = "scaleFactor")]
+    pub scale_factor: Vec<Value<'a>>,
+    #[attr(name = "srcType")]
+    pub src_type: Attribute<'a>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    pub src_ty: Type<'a>,
+    #[dtype(is = i16)]
+    pub scale_factor_ty: Type<'a>,
     pub dst: Type<'a>,
 }
 
@@ -706,18 +1052,19 @@ pub struct ConvertF4x2ToF16x2Op<'a> {
 /// This Op converts the given f6 inputs in a i8x2 vector to f16.
 ///
 /// The result `dst` is represented as a vector of f16 elements.
+///
 /// The `relu` attribute, when set, lowers to the '.relu' variant of
-/// the cvt instruction."
+/// the cvt instruction.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
 #[mlir::op("nvvm.convert.f6x2.to.f16x2", format = "$src attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
 pub struct ConvertF6x2ToF16x2Op<'a> {
     #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr(default = "false")]
-    pub relu: Option<Attribute<'a>>,
     #[attr(name = "srcType")]
     pub src_type: Attribute<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
     pub src_ty: Type<'a>,
     pub dst: Type<'a>,
 }
@@ -728,15 +1075,49 @@ pub struct ConvertF6x2ToF16x2Op<'a> {
 ///
 /// The result `dst` is represented as a vector of bf16 elements.
 ///
+/// The `relu` attribute, when set, lowers to the '.relu' variant of
+/// the cvt instruction.
+///
+/// The `sat` attribute specifies the saturation mode.
+///
+/// The optional scaling-factors for each of the inputs are provided through
+/// the operand `scaleFactor` as a packed i16 type. Only `ue8m0` is supported
+/// as the type of the scale-factor currently.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
-#[mlir::op("nvvm.convert.f8x2.to.bf16x2", format = "$src attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
+///
+///
+/// Example:
+///
+/// ```mlir
+/// // Basic conversion from f8E4M3FN.
+/// %res1 = nvvm.convert.f8x2.to.bf16x2 %src
+///     : vector<2xi8> (f8E4M3FN) -> vector<2xbf16>
+///
+/// // Conversion from f8E5M2 with relu and saturation.
+/// %res2 = nvvm.convert.f8x2.to.bf16x2 %src
+///     {relu = true, sat = #nvvm.sat_mode<satfinite>}
+///     : vector<2xi8> (f8E5M2) -> vector<2xbf16>
+///
+/// // Conversion with a packed ue8m0 scale-factor.
+/// %res3 = nvvm.convert.f8x2.to.bf16x2 %src, %scaleFactor
+///     : vector<2xi8> (f8E4M3FN) -> vector<2xbf16>
+/// ```
+#[mlir::op("nvvm.convert.f8x2.to.bf16x2", format = "$src (`,` $scaleFactor^)? attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
 pub struct ConvertF8x2ToBF16x2Op<'a> {
     #[slot(src_ty)]
     pub src: Value<'a>,
+    #[slot(scale_factor_ty, name = "scaleFactor")]
+    pub scale_factor: Vec<Value<'a>>,
     #[attr(name = "srcType")]
     pub src_type: Attribute<'a>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
     pub src_ty: Type<'a>,
+    #[dtype(is = i16)]
+    pub scale_factor_ty: Type<'a>,
     pub dst: Type<'a>,
 }
 
@@ -745,18 +1126,19 @@ pub struct ConvertF8x2ToBF16x2Op<'a> {
 /// This Op converts the given f8 inputs in a i8x2 vector to f16.
 ///
 /// The result `dst` is represented as a vector of f16 elements.
+///
 /// The `relu` attribute, when set, lowers to the '.relu' variant of
-/// the cvt instruction."
+/// the cvt instruction.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
 #[mlir::op("nvvm.convert.f8x2.to.f16x2", format = "$src attr-dict `:` type($src) `(` $srcType `)` `->` type($dst)", results(dst))]
 pub struct ConvertF8x2ToF16x2Op<'a> {
     #[slot(src_ty)]
     pub src: Value<'a>,
-    #[attr(default = "false")]
-    pub relu: Option<Attribute<'a>>,
     #[attr(name = "srcType")]
     pub src_type: Attribute<'a>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
     pub src_ty: Type<'a>,
     pub dst: Type<'a>,
 }
@@ -783,6 +1165,50 @@ pub struct ConvertFloatToTF32Op<'a> {
     #[dtype(is = f32)]
     pub src_ty: Type<'a>,
     #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+/// `nvvm.convert.s2f6x2.to.bf16x2`: Convert s2f6x2 to bf16x2
+///
+/// This Op converts a pair of s2f6x2 inputs to bf16x2 type. The result `dst`
+/// is represented as a vector of two bf16 elements.
+///
+/// The `relu` attribute, when set, lowers to the '.relu' variant
+/// of the cvt instruction.
+///
+/// The optional scaling-factors for each of the inputs are provided through
+/// the operand `scaleFactor` as a packed i16 type. Only `ue8m0` is supported
+/// as the type of the scale-factor currently.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cvt)
+#[mlir::op("nvvm.convert.s2f6x2.to.bf16x2", format = "$src (`,` $scaleFactor^)? attr-dict `:` type($src) `->` type($dst)", results(dst))]
+pub struct ConvertS2F6x2ToBF16x2Op<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[slot(scale_factor_ty, name = "scaleFactor")]
+    pub scale_factor: Vec<Value<'a>>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    pub src_ty: Type<'a>,
+    #[dtype(is = i16)]
+    pub scale_factor_ty: Type<'a>,
+    pub dst: Type<'a>,
+}
+
+/// `nvvm.cos`: Cosine (fast approximation)
+///
+/// Computes a fast approximation of the cosine of the input value (in
+/// radians). The `ftz` attribute, when set, flushes subnormal inputs
+/// and results to sign-preserving zero.
+#[mlir::op("nvvm.cos", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct CosOp<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[dtype(is = f32)]
     pub res: Type<'a>,
 }
 
@@ -1149,9 +1575,7 @@ pub struct CpAsyncCommitGroupOp<'a> {
 /// how the mbarrier's state is updated.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-cp-async-mbarrier-arrive)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.cp.async.mbarrier.arrive")]
+#[mlir::op("nvvm.cp.async.mbarrier.arrive", format = "$addr attr-dict `:` qualified(type($addr))")]
 pub struct CpAsyncMBarrierArriveOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -1186,6 +1610,28 @@ pub struct CpAsyncOp<'a> {
 pub struct CpAsyncWaitGroupOp<'a> {
     #[attr(int = "i32")]
     pub n: Attribute<'a>,
+}
+
+/// `nvvm.divf`: Divide one value by another
+///
+/// Divides lhs by rhs, stores result in res (`res = lhs / rhs`).
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-div)
+#[mlir::op("nvvm.divf", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
+pub struct DivFOp<'a> {
+    #[slot(res)]
+    pub lhs: Value<'a>,
+    #[slot(res)]
+    pub rhs: Value<'a>,
+    #[attr(dialect = "nvvm.fp_rnd_mode", default = "<none>")]
+    pub rnd: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub approx: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub full: Option<Attribute<'a>>,
+    pub res: Type<'a>,
 }
 
 /// `nvvm.dot.accumulate.2way`: Two-way 16-bit to 8-bit dot product-accumulate instruction
@@ -1274,6 +1720,7 @@ pub struct DotAccumulate4WayOp<'a> {
 
 #[mlir::op("nvvm.read.ptx.sreg.dynamic.smem.size", format = "attr-dict `:` type($res)", results(res))]
 pub struct DynamicSmemSize<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -1286,9 +1733,7 @@ pub struct DynamicSmemSize<'a> {
 /// the leader thread, and `False` for all other threads.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-elect-sync)
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("nvvm.elect.sync", results(pred))]
+#[mlir::op("nvvm.elect.sync", format = "($membermask^)? attr-dict `->` qualified(type($pred))", results(pred))]
 pub struct ElectSyncOp<'a> {
     #[slot(membermask_ty)]
     pub membermask: Vec<Value<'a>>,
@@ -1300,161 +1745,208 @@ pub struct ElectSyncOp<'a> {
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg0", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg0Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg10", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg10Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg11", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg11Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg12", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg12Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg13", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg13Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg14", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg14Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg15", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg15Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg16", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg16Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg17", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg17Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg18", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg18Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg19", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg19Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg1", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg1Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg20", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg20Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg21", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg21Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg22", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg22Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg23", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg23Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg24", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg24Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg25", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg25Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg26", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg26Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg27", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg27Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg28", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg28Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg29", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg29Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg2", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg2Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg30", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg30Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg31", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg31Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg3", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg3Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg4", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg4Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg5", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg5Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg6", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg6Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg7", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg7Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg8", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg8Op<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.envreg9", format = "attr-dict `:` type($res)", results(res))]
 pub struct EnvReg9Op<'a> {
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+/// `nvvm.ex2`: Base-2 exponential (fast approximation)
+///
+/// Computes a fast approximation of 2 raised to the power of the input
+/// value. The `ftz` attribute, when set, flushes subnormal inputs and
+/// results to sign-preserving zero.
+#[mlir::op("nvvm.ex2", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct Ex2Op<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[dtype(is = f32)]
     pub res: Type<'a>,
 }
 
@@ -1573,13 +2065,51 @@ pub struct FenceSyncRestrictOp<'a> {
     pub order: Attribute<'a>,
 }
 
+/// `nvvm.fma`: Performs floating point fused multiply-add operation with support for mixed      precision operands
+///
+/// The `nvvm.fma` operation performs floating point fused multiply-add of
+/// three operands of the same type.
+///
+/// The rounding mode is specified by the `rnd` attribute, saturation mode by
+/// the `sat` attribute, flush-to-zero by the `ftz` attribute, and ReLU by the
+/// `relu` attribute.
+///
+/// Out-of-bounds (OOB) behavior is controlled by the `oob` attribute. `oob`
+/// clamps the result to 0 if either of the operands is `OOB NaN` (see [Tensors](https://docs.nvidia.com/cuda/parallel-thread-execution/#tensors)).
+///
+/// For more information, see PTX ISA:
+/// - [floating point fused multiply-add](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-fma)
+/// - [half-precision floating point fused multiply-add](https://docs.nvidia.com/cuda/parallel-thread-execution/#half-precision-floating-point-instructions-fma)
+#[mlir::op("nvvm.fma", format = "$a `,` $b `,` $c attr-dict `:` type($a)", results(res))]
+pub struct FmaOp<'a> {
+    #[slot(res)]
+    pub a: Value<'a>,
+    #[slot(res)]
+    pub b: Value<'a>,
+    #[slot(res)]
+    pub c: Value<'a>,
+    #[attr(dialect = "nvvm.fp_rnd_mode")]
+    pub rnd: Attribute<'a>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub relu: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub oob: Option<Attribute<'a>>,
+    pub res: Type<'a>,
+}
+
 #[mlir::op("nvvm.read.ptx.sreg.globaltimer.lo", format = "attr-dict `:` type($res)", results(res))]
 pub struct GlobalTimerLoOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.globaltimer", format = "attr-dict `:` type($res)", results(res))]
 pub struct GlobalTimerOp<'a> {
+    #[dtype(is = i64)]
     pub res: Type<'a>,
 }
 
@@ -1587,6 +2117,7 @@ pub struct GlobalTimerOp<'a> {
 pub struct GridDimXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -1594,6 +2125,7 @@ pub struct GridDimXOp<'a> {
 pub struct GridDimYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -1601,6 +2133,7 @@ pub struct GridDimYOp<'a> {
 pub struct GridDimZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -1608,6 +2141,7 @@ pub struct GridDimZOp<'a> {
 pub struct GridIdOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -1691,31 +2225,37 @@ pub struct InlinePtxOp<'a> {
 pub struct LaneIdOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.lanemask.eq", format = "attr-dict `:` type($res)", results(res))]
 pub struct LaneMaskEqOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.lanemask.ge", format = "attr-dict `:` type($res)", results(res))]
 pub struct LaneMaskGeOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.lanemask.gt", format = "attr-dict `:` type($res)", results(res))]
 pub struct LaneMaskGtOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.lanemask.le", format = "attr-dict `:` type($res)", results(res))]
 pub struct LaneMaskLeOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.lanemask.lt", format = "attr-dict `:` type($res)", results(res))]
 pub struct LaneMaskLtOp<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -1737,6 +2277,21 @@ pub struct LdMatrixOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `nvvm.log2`: Base-2 logarithm (fast approximation)
+///
+/// Computes a fast approximation of the base-2 logarithm of the input
+/// value. The `ftz` attribute, when set, flushes subnormal inputs and
+/// results to sign-preserving zero.
+#[mlir::op("nvvm.log2", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct Log2Op<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
 /// `nvvm.mbarrier.arrive_drop.expect_tx`: MBarrier arrive_drop with expected transaction count
 ///
 /// The `nvvm.mbarrier.arrive_drop.expect_tx` operation is similar to the
@@ -1744,9 +2299,7 @@ pub struct LdMatrixOp<'a> {
 /// `arrive_drop` operation instead of only an `arrive` operation.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive-drop)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.arrive_drop.expect_tx", results(res))]
+#[mlir::op("nvvm.mbarrier.arrive_drop.expect_tx", format = "$addr `,` $txcount attr-dict `:` qualified(type($addr)) `,` qualified(type($txcount)) (`->` type($res)^)?", results(res))]
 pub struct MBarrierArriveDropExpectTxOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -1771,9 +2324,7 @@ pub struct MBarrierArriveDropExpectTxOp<'a> {
 /// will not cause the barrier to complete its current phase.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive-drop)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.arrive_drop.nocomplete", results(res))]
+#[mlir::op("nvvm.mbarrier.arrive_drop.nocomplete", format = "$addr `,` $count attr-dict `:` qualified(type($addr)) `,` qualified(type($count)) `->` type($res)", results(res))]
 pub struct MBarrierArriveDropNocompleteOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -1891,9 +2442,7 @@ pub struct MBarrierArriveExpectTxOp<'a> {
 ///   Must be in the valid range as specified in the *mbarrier object* contents.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.arrive.nocomplete", results(res))]
+#[mlir::op("nvvm.mbarrier.arrive.nocomplete", format = "$addr `,` $count attr-dict `:` qualified(type($addr)) `,` qualified(type($count)) `->` type($res)", results(res))]
 pub struct MBarrierArriveNocompleteOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -1966,9 +2515,7 @@ pub struct MBarrierArriveOp<'a> {
 /// operation. `CTA` and `CLUSTER` are the only allowed values for `scope`.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-complete-tx)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.complete_tx")]
+#[mlir::op("nvvm.mbarrier.complete_tx", format = "$addr `,` $txcount attr-dict `:` qualified(type($addr)) `,` qualified(type($txcount))")]
 pub struct MBarrierCompleteTxOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -1990,9 +2537,7 @@ pub struct MBarrierCompleteTxOp<'a> {
 /// and `CLUSTER` are the only allowed values for `scope`.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-expect-tx)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.expect_tx")]
+#[mlir::op("nvvm.mbarrier.expect_tx", format = "$addr `,` $txcount attr-dict `:` qualified(type($addr)) `,` qualified(type($txcount))")]
 pub struct MBarrierExpectTxOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -2059,9 +2604,7 @@ pub struct MBarrierInitOp<'a> {
 ///   the behavior is undefined.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-inval)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.inval")]
+#[mlir::op("nvvm.mbarrier.inval", format = "$addr attr-dict `:` qualified(type($addr))")]
 pub struct MBarrierInvalOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -2120,9 +2663,7 @@ pub struct MBarrierInvalOp<'a> {
 ///    between `mbarrier.arrive` and this wait.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#parallel-synchronization-and-communication-instructions-mbarrier-test-wait-try-wait)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.test.wait", results(res))]
+#[mlir::op("nvvm.mbarrier.test.wait", format = "$addr `,` $stateOrPhase attr-dict `:` qualified(type($addr)) `,` qualified(type($stateOrPhase)) `->` type($res)", results(res))]
 pub struct MBarrierTestWaitOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -2224,9 +2765,7 @@ pub struct MBarrierTryWaitOp<'a> {
 /// the specified phase is reached.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#parallel-synchronization-and-communication-instructions-mbarrier-test-wait-try-wait)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.mbarrier.try_wait.parity")]
+#[mlir::op("nvvm.mbarrier.try_wait.parity", format = "$addr `,` $phase `,` $ticks attr-dict `:` qualified(type($addr)) `,` qualified(type($phase)) `,` qualified(type($ticks))")]
 pub struct MBarrierTryWaitParityOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -2398,9 +2937,9 @@ pub struct MmaBlockScaleOp<'a> {
 /// `intOverflowBehavior` is only relevant when the `multiplicandType` attribute
 /// is one of `u8, s8, u4, s4`, this attribute describes how overflow is handled
 /// in the accumulator. When the attribute is `satfinite`, the accumulator values
-/// are clamped in the int32 range on overflow. This is the default behavior.
-/// Alternatively, accumulator behavior `wrapped` can also be specified, in
-/// which case overflow wraps from one end of the range to the other.
+/// are clamped in the int32 range on overflow. Alternatively, accumulator
+/// behavior `wrapped` can be specified (this is the default), in which case
+/// overflow wraps from one end of the range to the other.
 ///
 /// `layoutA` and `layoutB` are required and should generally be set to
 /// `#nvvm.mma_layout<row>` and `#nvvm.mma_layout<col>` respectively, but other
@@ -2648,6 +3187,39 @@ pub struct MmaSpOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `nvvm.movmatrix`: Warp-level matrix transpose
+///
+/// Moves a row-major matrix across all threads in a warp, reading elements
+/// from source `$src`, and writing the transposed elements to destination
+/// `$dst`.
+///
+/// The `shape` attribute indicates the dimensions of the matrix being
+/// transposed. Each matrix element holds 16-bit data as indicated by the
+/// `eltType` attribute.
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#warp-level-matrix-movmatrix-instruction)
+///
+/// Example:
+/// ```mlir
+/// %dst = nvvm.movmatrix %src {shape = #nvvm.ld_st_matrix_shape<m = 8, n = 8>,
+///                             eltType = #nvvm.ld_st_matrix_elt_type<b16>} : i32
+/// ```
+#[mlir::op("nvvm.movmatrix", format = "$src attr-dict `:` type($src)", results(dst))]
+pub struct MovMatrixOp<'a> {
+    #[slot(src_ty)]
+    pub src: Value<'a>,
+    #[attr(dialect = "nvvm.ld_st_matrix_shape")]
+    pub shape: Attribute<'a>,
+    #[attr(dialect = "nvvm.mma_layout", default = "<col>")]
+    pub layout: Option<Attribute<'a>>,
+    #[attr(name = "eltType", dialect = "nvvm.ld_st_matrix_elt_type")]
+    pub elt_type: Attribute<'a>,
+    #[dtype(is = i32)]
+    pub src_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub dst: Type<'a>,
+}
+
 /// `nvvm.nanosleep`: Suspends the thread for a specified duration.
 ///
 /// The op suspends the thread for a sleep duration approximately close to the
@@ -2858,7 +3430,7 @@ pub struct ReduxOp<'a> {
     pub val: Value<'a>,
     #[slot(mask_and_clamp_ty)]
     pub mask_and_clamp: Value<'a>,
-    #[attr(dialect = "nvvm<redux_kind")]
+    #[attr(dialect = "nvvm<reduction_kind")]
     pub kind: Attribute<'a>,
     #[attr(default = "false")]
     pub abs: Option<Attribute<'a>>,
@@ -2866,6 +3438,29 @@ pub struct ReduxOp<'a> {
     pub nan: Option<Attribute<'a>>,
     #[dtype(is = i32)]
     pub mask_and_clamp_ty: Type<'a>,
+    pub res: Type<'a>,
+}
+
+/// `nvvm.rsqrt`: Reciprocal square root (fast approximation)
+///
+/// Computes an approximation of the reciprocal of the square root of the
+/// input value: `d = 1 / sqrt(a)`. Supports both f32 and f64. The maximum
+/// relative error for the f32 form over the entire positive finite range
+/// is 2^-22.9.
+///
+/// The `ftz` attribute, when set, flushes subnormal inputs and results to
+/// sign-preserving zero. For f64 inputs, `ftz=true` selects a coarser
+/// approximation that uses only the upper 32 bits of the input (the lower
+/// 32 bits of the result are zeroed).
+///
+/// For more information, see PTX ISA:
+/// [rsqrt](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-rsqrt)
+#[mlir::op("nvvm.rsqrt", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct RsqrtOp<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
     pub res: Type<'a>,
 }
 
@@ -2917,10 +3512,29 @@ pub struct ShflOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `nvvm.sin`: Sine (fast approximation)
+///
+/// Computes a fast approximation of the sine of the input value (in radians).
+/// The `ftz` attribute, when set, flushes subnormal inputs and results to
+/// sign-preserving zero.
+///
+/// For more information, see PTX ISA:
+/// [sin](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-sin)
+#[mlir::op("nvvm.sin", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct SinOp<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
 #[mlir::op("nvvm.read.ptx.sreg.nsmid", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct SmDimOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -2928,6 +3542,45 @@ pub struct SmDimOp<'a> {
 pub struct SmIdOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
+    pub res: Type<'a>,
+}
+
+/// `nvvm.sqrt.approx`: Square root (fast approximation)
+///
+/// Computes a fast approximation of the square root of the input value
+/// (`res = sqrt(src)`). The maximum relative error over the entire positive
+/// finite range is 2^-23.
+///
+/// The `ftz` attribute, when set, flushes subnormal inputs and results to
+/// sign-preserving zero.
+///
+/// For more information, see PTX ISA:
+/// [sqrt](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-sqrt)
+#[mlir::op("nvvm.sqrt.approx", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct SqrtApproxOp<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    #[dtype(is = f32)]
+    pub res: Type<'a>,
+}
+
+/// `nvvm.sqrt`: Take the square root of a value
+///
+/// Compute sqrt(src) and store the result in res.
+///
+/// For more information, see PTX ISA:
+/// [sqrt](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-sqrt)
+#[mlir::op("nvvm.sqrt", format = "$src attr-dict `:` type($src)", results(res))]
+pub struct SqrtOp<'a> {
+    #[slot(res)]
+    pub src: Value<'a>,
+    #[attr(dialect = "nvvm.fp_rnd_mode")]
+    pub rnd: Attribute<'a>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
     pub res: Type<'a>,
 }
 
@@ -2955,6 +3608,32 @@ pub struct StMatrixOp<'a> {
     pub ptr_ty: Type<'a>,
     #[dtype(is = i32)]
     pub sources_ty: Type<'a>,
+}
+
+/// `nvvm.subf`: Performs floating point subtraction of the given arguments `lhs` and `rhs`
+///
+/// The `nvvm.subf` operation performs floating point subtraction of two
+/// operands.
+///
+/// It supports the same type combinations and modifiers as `nvvm.addf`.
+/// This is equivalent to `nvvm.addf(lhs, -rhs)`.
+///
+/// For more information, see PTX ISA:
+/// - [floating point subtraction](https://docs.nvidia.com/cuda/parallel-thread-execution/#floating-point-instructions-sub)
+/// - [half-precision floating point subtraction](https://docs.nvidia.com/cuda/parallel-thread-execution/#half-precision-floating-point-instructions-sub)
+#[mlir::op("nvvm.subf", format = "$lhs `,` $rhs attr-dict `:` type($res)", results(res))]
+pub struct SubFOp<'a> {
+    #[slot(res)]
+    pub lhs: Value<'a>,
+    #[slot(res)]
+    pub rhs: Value<'a>,
+    #[attr(dialect = "nvvm.fp_rnd_mode", default = "<none>")]
+    pub rnd: Option<Attribute<'a>>,
+    #[attr(dialect = "nvvm.sat_mode", default = "<none>")]
+    pub sat: Option<Attribute<'a>>,
+    #[attr(default = "false")]
+    pub ftz: Option<Attribute<'a>>,
+    pub res: Type<'a>,
 }
 
 /// `nvvm.bar.warp.sync`: Warp Barrier Synchronization Op
@@ -2997,9 +3676,7 @@ pub struct SyncWarpOp<'a> {
 /// address to the `addr` argument. The `nCols` operand specifies the
 /// number of columns to be allocated and it must be a power-of-two.
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-memory-alloc-manage-instructions)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.tcgen05.alloc")]
+#[mlir::op("nvvm.tcgen05.alloc", format = "$addr `,` $nCols attr-dict `:` qualified(type($addr)) `,` qualified(type($nCols))")]
 pub struct Tcgen05AllocOp<'a> {
     #[slot(addr_ty)]
     pub addr: Value<'a>,
@@ -3083,9 +3760,7 @@ pub struct Tcgen05CpOp<'a> {
 /// memory allocation. The `nCols` operand specifies the number
 /// of columns to be de-allocated, and it must be a power-of-two.
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-memory-alloc-manage-instructions)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.tcgen05.dealloc")]
+#[mlir::op("nvvm.tcgen05.dealloc", format = "$taddr `,` $nCols attr-dict `:` qualified(type($taddr)) `,` qualified(type($nCols))")]
 pub struct Tcgen05DeallocOp<'a> {
     #[slot(taddr_ty)]
     pub taddr: Value<'a>,
@@ -3175,6 +3850,75 @@ pub struct Tcgen05LdOp<'a> {
     pub res: Type<'a>,
 }
 
+/// `nvvm.tcgen05.ld.red`: Tcgen05 tensor memory load and reduce instructions
+///
+/// Instruction `tcgen05.ld.red` asynchronously loads data from the Tensor
+/// Memory at the location specified by the 32-bit address operand `addr` into
+/// the destination register `data`, collectively across all threads of the
+/// warp. The operation also performs reduction operation specified by `op` on
+/// the loaded data across columns in each lane and stored into `redVal`
+///
+/// The `shape` and the `num` attribute together determines the total
+/// dimension of the data which is loaded from the Tensor Memory. The `shape`
+/// attribute indicates the base dimension of data to be accessed as described
+/// in the Data Movement Shape. The `num` attribute indicates the repeat
+/// factor on the base dimension resulting in the total dimension of the data
+/// that is accessed.
+///
+/// The shape `16x32bx2` performs two accesses into Tensor Memory of the shape
+/// `16x32b`. The base address of the first access is specified by `addr`
+/// and the base address of the second access is specified by
+/// `addr + offset`, where `offset` is an immediate argument.
+///
+/// The following table describes the size of the vector for various combinations
+/// of `num` and `shape` attributes:
+/// ```text
+/// |=============================================|
+/// | num/shape      |     16x32bx2/32x32b        |
+/// |=============================================|
+/// | x2             |             2              |
+/// | x4             |             4              |
+/// | x8             |             8              |
+/// | x16            |             16             |
+/// | x32            |             32             |
+/// | x64            |             64             |
+/// | x128           |             128            |
+/// |=============================================|
+/// ```
+///
+/// Example:
+/// ```mlir
+///   %data, %redval = nvvm.tcgen05.ld.red %addr, %offset {
+///     shape = #nvvm.tcgen05_ldst_shape<shape_16x32bx2>,
+///   } : <2xi32>, i32
+///
+///   %data, %redval = nvvm.tcgen05.ld.red %addr {
+///     shape = #nvvm.tcgen05_ldst_shape<shape_32x32b>,
+///   } : <2xf32>, f32
+/// ```
+///
+/// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-instructions-tcgen05-ld)
+#[mlir::op("nvvm.tcgen05.ld.red", format = "$op $addr (`,` $offset^)? attr-dict `:` type($data) `,` type($redVal)", results(data, red_val))]
+pub struct Tcgen05LdRedOp<'a> {
+    #[slot(addr_ty)]
+    pub addr: Value<'a>,
+    #[slot(offset_ty)]
+    pub offset: Vec<Value<'a>>,
+    #[attr(dialect = "nvvm.tcgen05_ldst_shape")]
+    pub shape: Attribute<'a>,
+    #[attr(dialect = "nvvm<reduction_kind")]
+    pub op: Attribute<'a>,
+    pub abs: bool,
+    pub nan: bool,
+    #[dtype(is = "!llvm.ptr<6>", strip = "llvm.ptr")]
+    pub addr_ty: Type<'a>,
+    #[dtype(is = i64)]
+    pub offset_ty: Type<'a>,
+    pub data: Type<'a>,
+    #[dtype(name = "redVal")]
+    pub red_val: Type<'a>,
+}
+
 /// `nvvm.tcgen05.mma.block_scale`: Performs block scaled MMA operation on 5th-gen tensor cores
 ///
 /// The `tcgen05.mma.block_scale` operation is an asynchronous tensor core instruction
@@ -3198,7 +3942,7 @@ pub struct Tcgen05LdOp<'a> {
 /// - `idesc` is a 32 bit value representing the [Instruction Descriptor](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-instruction-descriptor)
 ///
 /// Required Attributes:
-/// - `kind` is a MMABlockScaleKind attribute
+/// - `kind` is a Tcgen05MMAKind attribute restricted to mxf8f6f4, mxf4, or mxf4nvf4
 ///
 /// - `ctaGroup` specifies CTA group configuration
 ///   * cta_1: MMA will be performed on the current thread's CTA
@@ -3208,9 +3952,7 @@ pub struct Tcgen05LdOp<'a> {
 /// - collectorOp is a Tcgen05MMACollectorOp attribute with matrix A as the collector buffer
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-mma-instructions-mma)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.tcgen05.mma.block_scale")]
+#[mlir::op("nvvm.tcgen05.mma.block_scale", format = "$matrixD `,` $matrixA `,` $matrixB `,` $idesc `,` $enableInputD `,` $scaleA `,` $scaleB attr-dict `:` `(` qualified(type($matrixD)) `,` qualified(type($matrixA)) `,` qualified(type($matrixB)) `,` qualified(type($idesc)) `,` qualified(type($enableInputD)) `,` qualified(type($scaleA)) `,` qualified(type($scaleB)) `)`")]
 pub struct Tcgen05MMABlockScaleOp<'a> {
     #[slot(matrix_d_ty, name = "matrixD")]
     pub matrix_d: Value<'a>,
@@ -3226,7 +3968,7 @@ pub struct Tcgen05MMABlockScaleOp<'a> {
     pub scale_a: Value<'a>,
     #[slot(scale_b_ty, name = "scaleB")]
     pub scale_b: Value<'a>,
-    #[attr(dialect = "nvvm.block_scale_kind")]
+    #[attr(dialect = "nvvm.tcgen05_mma_kind")]
     pub kind: Attribute<'a>,
     #[attr(name = "ctaGroup", dialect = "nvvm.cta_group")]
     pub cta_group: Attribute<'a>,
@@ -3354,9 +4096,7 @@ pub struct Tcgen05MMAOp<'a> {
 /// Other attributes and operands are similar to that of tcgen05.mma.block_scale Op
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-mma-instructions-mma-sp)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.tcgen05.mma.sp.block_scale")]
+#[mlir::op("nvvm.tcgen05.mma.sp.block_scale", format = "$matrixD `,` $matrixA `,` $matrixB `,` $idesc `,` $enableInputD `,` $sparseMetadata `,` $scaleA `,` $scaleB attr-dict `:` `(` qualified(type($matrixD)) `,` qualified(type($matrixA)) `,` qualified(type($matrixB)) `,` qualified(type($idesc)) `,` qualified(type($enableInputD)) `,` qualified(type($sparseMetadata)) `,` qualified(type($scaleA)) `,` qualified(type($scaleB)) `)`")]
 pub struct Tcgen05MMASparseBlockScaleOp<'a> {
     #[slot(matrix_d_ty, name = "matrixD")]
     pub matrix_d: Value<'a>,
@@ -3374,7 +4114,7 @@ pub struct Tcgen05MMASparseBlockScaleOp<'a> {
     pub scale_a: Value<'a>,
     #[slot(scale_b_ty, name = "scaleB")]
     pub scale_b: Value<'a>,
-    #[attr(dialect = "nvvm.block_scale_kind")]
+    #[attr(dialect = "nvvm.tcgen05_mma_kind")]
     pub kind: Attribute<'a>,
     #[attr(name = "ctaGroup", dialect = "nvvm.cta_group")]
     pub cta_group: Attribute<'a>,
@@ -3634,9 +4374,7 @@ pub struct Tcgen05MMAWsSparseOp<'a> {
 ///                                       %baseOffset, %leadingDimMode, %swizzleMode) : (i32, i32, i32, i8, i1, i8) -> i64
 /// ```
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-shared-memory-descriptor)
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("nvvm.tcgen05.mma_smem_desc", results(res))]
+#[mlir::op("nvvm.tcgen05.mma_smem_desc", format = "`(` $startAddr `,` $leadingDimOffset `,` $strideDimOffset `,` $baseOffset `,` $leadingDimMode `,` $swizzleMode `)` attr-dict `:` `(` qualified(type($startAddr)) `,` qualified(type($leadingDimOffset)) `,` qualified(type($strideDimOffset)) `,` qualified(type($baseOffset)) `,` qualified(type($leadingDimMode)) `,` qualified(type($swizzleMode)) `)` `->` type($res)", results(res))]
 pub struct Tcgen05MmaSmemDescOp<'a> {
     #[slot(start_addr_ty, name = "startAddr")]
     pub start_addr: Value<'a>,
@@ -3687,9 +4425,7 @@ pub struct Tcgen05RelinquishAllocPermitOp<'a> {
 /// address of the matrix in Tensor Memory whose rows must be down shifted.
 ///
 /// [For more information, see PTX ISA](https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-instructions-tcgen05-shift)
-///
-/// Generic form only (directive `operands)`).
-#[mlir::op("nvvm.tcgen05.shift")]
+#[mlir::op("nvvm.tcgen05.shift", format = "$taddr attr-dict `:` qualified(type($taddr))")]
 pub struct Tcgen05ShiftOp<'a> {
     #[slot(taddr_ty)]
     pub taddr: Value<'a>,
@@ -3776,10 +4512,58 @@ pub struct Tcgen05WaitOp<'a> {
     pub kind: Attribute<'a>,
 }
 
+/// `nvvm.tensormap.replace`: Modifies a field of the tensor-map object
+///
+/// The `nvvm.tensormap.replace` replaces the specified field of the tensor-map
+/// object at the location specified by `addr` with a new value (specified by
+/// `new_value` or `new_value_attr`).
+///
+/// The `field` argument specifies the field of the tensor-map object to
+/// replace.
+///
+/// `new_value` is an `i32`/`i64` argument that specifies the new value to
+/// replace the `field` with for the `global_address`, `rank`, `box_dim`,
+/// `global_dim`, `global_stride`, and `element_stride` fields. It must be an
+/// `i64` for the `global_address` and `global_stride` fields and `i32` for the
+/// remaining fields.
+///
+/// For `rank`, `new_value` must be one less than the desired tensor rank as
+/// this field uses zero-based numbering.
+///
+/// `new_value_attr` is an attribute that specifies the new value to replace
+/// the `field` with for the `elemtype`, `interleave_layout`, `swizzle_mode`,
+/// `swizzle_atomicity`, and `fill_mode` fields. It takes the place of
+/// `new_value` for these fields. It must be a valid attribute corresponding to
+/// the `field` type.
+///
+/// The ordinal `ord` is an immediate integer argument that specifies the
+/// ordinal of the `field` across the tensor which needs to be replaced and is
+/// required only for the `box_dim`, `global_dim`, `global_stride`, and
+/// `element_stride` fields.
+///
+/// [For more information, see PTX ISA.](https://docs.nvidia.com/cuda/parallel-thread-execution/#data-movement-and-conversion-instructions-tensormap-replace)
+///
+/// Generic form only (directive `:`).
+#[mlir::op("nvvm.tensormap.replace")]
+pub struct TensormapReplaceOp<'a> {
+    #[slot(addr_ty)]
+    pub addr: Value<'a>,
+    #[slot(new_value_ty)]
+    pub new_value: Vec<Value<'a>>,
+    #[attr(dialect = "nvvm<tensormap_field")]
+    pub field: Attribute<'a>,
+    #[attr(int = "i32")]
+    pub ord: Option<Attribute<'a>>,
+    pub new_value_attr: Option<Attribute<'a>>,
+    pub addr_ty: Type<'a>,
+    pub new_value_ty: Vec<Type<'a>>,
+}
+
 #[mlir::op("nvvm.read.ptx.sreg.tid.x", format = "(`range` $range^)? attr-dict `:` type($res)", results(res))]
 pub struct ThreadIdXOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -3787,6 +4571,7 @@ pub struct ThreadIdXOp<'a> {
 pub struct ThreadIdYOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -3794,11 +4579,13 @@ pub struct ThreadIdYOp<'a> {
 pub struct ThreadIdZOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
 #[mlir::op("nvvm.read.ptx.sreg.total.smem.size", format = "attr-dict `:` type($res)", results(res))]
 pub struct TotalSmemSize<'a> {
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -3914,6 +4701,7 @@ pub struct WMMAStoreOp<'a> {
 pub struct WarpDimOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -3921,6 +4709,7 @@ pub struct WarpDimOp<'a> {
 pub struct WarpIdOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -3928,6 +4717,7 @@ pub struct WarpIdOp<'a> {
 pub struct WarpSizeOp<'a> {
     #[attr(dialect = "llvm.constant_range")]
     pub range: Option<Attribute<'a>>,
+    #[dtype(is = i32)]
     pub res: Type<'a>,
 }
 
@@ -4053,7 +4843,7 @@ pub struct WgmmaWaitGroupSyncOp<'a> {
 /// The `nvvm` dialect.
 #[mlir::dialect(
     "nvvm",
-    ops = [AggrSmemSize, Barrier0Op, BarrierArriveOp, BarrierOp, BlockDimXOp, BlockDimYOp, BlockDimZOp, BlockIdXOp, BlockIdYOp, BlockIdZOp, BlockInClusterIdXOp, BlockInClusterIdYOp, BlockInClusterIdZOp, Breakpoint, BulkStoreOp, Clock64Op, ClockOp, ClusterArriveOp, ClusterArriveRelaxedOp, ClusterDim, ClusterDimBlocksXOp, ClusterDimBlocksYOp, ClusterDimBlocksZOp, ClusterDimXOp, ClusterDimYOp, ClusterDimZOp, ClusterId, ClusterIdXOp, ClusterIdYOp, ClusterIdZOp, ClusterLaunchControlQueryCancelOp, ClusterLaunchControlTryCancelOp, ClusterWaitOp, ConvertBF16x2ToF8x2Op, ConvertF16x2ToF8x2Op, ConvertF32x2ToBF16x2Op, ConvertF32x2ToF16x2Op, ConvertF32x2ToF4x2Op, ConvertF32x2ToF6x2Op, ConvertF32x2ToF8x2Op, ConvertF32x4ToF4x4Op, ConvertF32x4ToF6x4Op, ConvertF32x4ToF8x4Op, ConvertF4x2ToF16x2Op, ConvertF6x2ToF16x2Op, ConvertF8x2ToBF16x2Op, ConvertF8x2ToF16x2Op, ConvertFloatToTF32Op, CpAsyncBulkCommitGroupOp, CpAsyncBulkGlobalToSharedClusterOp, CpAsyncBulkPrefetchOp, CpAsyncBulkSharedCTAToGlobalOp, CpAsyncBulkSharedCTAToSharedClusterOp, CpAsyncBulkTensorGlobalToSharedClusterOp, CpAsyncBulkTensorPrefetchOp, CpAsyncBulkTensorReduceOp, CpAsyncBulkTensorSharedCTAToGlobalOp, CpAsyncBulkWaitGroupOp, CpAsyncCommitGroupOp, CpAsyncMBarrierArriveOp, CpAsyncOp, CpAsyncWaitGroupOp, DotAccumulate2WayOp, DotAccumulate4WayOp, DynamicSmemSize, ElectSyncOp, EnvReg0Op, EnvReg10Op, EnvReg11Op, EnvReg12Op, EnvReg13Op, EnvReg14Op, EnvReg15Op, EnvReg16Op, EnvReg17Op, EnvReg18Op, EnvReg19Op, EnvReg1Op, EnvReg20Op, EnvReg21Op, EnvReg22Op, EnvReg23Op, EnvReg24Op, EnvReg25Op, EnvReg26Op, EnvReg27Op, EnvReg28Op, EnvReg29Op, EnvReg2Op, EnvReg30Op, EnvReg31Op, EnvReg3Op, EnvReg4Op, EnvReg5Op, EnvReg6Op, EnvReg7Op, EnvReg8Op, EnvReg9Op, Exit, FenceMbarrierInitOp, FenceProxyAcquireOp, FenceProxyOp, FenceProxyReleaseOp, FenceProxySyncRestrictOp, FenceScClusterOp, FenceSyncRestrictOp, GlobalTimerLoOp, GlobalTimerOp, GridDimXOp, GridDimYOp, GridDimZOp, GridIdOp, GriddepcontrolOp, InlinePtxOp, LaneIdOp, LaneMaskEqOp, LaneMaskGeOp, LaneMaskGtOp, LaneMaskLeOp, LaneMaskLtOp, LdMatrixOp, MBarrierArriveDropExpectTxOp, MBarrierArriveDropNocompleteOp, MBarrierArriveDropOp, MBarrierArriveExpectTxOp, MBarrierArriveNocompleteOp, MBarrierArriveOp, MBarrierCompleteTxOp, MBarrierExpectTxOp, MBarrierInitOp, MBarrierInvalOp, MBarrierTestWaitOp, MBarrierTryWaitOp, MBarrierTryWaitParityOp, MapaOp, MatchSyncOp, MembarOp, MmaBlockScaleOp, MmaOp, MmaSpBlockScaleOp, MmaSpOp, NanosleepOp, PMEventOp, PermuteOp, PrefetchOp, RcpApproxFtzF32Op, ReduxOp, SetMaxRegisterOp, ShflOp, SmDimOp, SmIdOp, StMatrixOp, SyncWarpOp, Tcgen05AllocOp, Tcgen05CommitOp, Tcgen05CpOp, Tcgen05DeallocOp, Tcgen05FenceOp, Tcgen05LdOp, Tcgen05MMABlockScaleOp, Tcgen05MMAOp, Tcgen05MMASparseBlockScaleOp, Tcgen05MMASparseOp, Tcgen05MMAWsOp, Tcgen05MMAWsSparseOp, Tcgen05MmaSmemDescOp, Tcgen05RelinquishAllocPermitOp, Tcgen05ShiftOp, Tcgen05StOp, Tcgen05WaitOp, ThreadIdXOp, ThreadIdYOp, ThreadIdZOp, TotalSmemSize, VoteSyncOp, WMMALoadOp, WMMAMmaOp, WMMAStoreOp, WarpDimOp, WarpIdOp, WarpSizeOp, WgmmaFenceAlignedOp, WgmmaGroupSyncAlignedOp, WgmmaMmaAsyncOp, WgmmaWaitGroupSyncOp],
+    ops = [AddFOp, AggrSmemSize, BarrierArriveOp, BarrierOp, BarrierReductionOp, BlockDimXOp, BlockDimYOp, BlockDimZOp, BlockIdXOp, BlockIdYOp, BlockIdZOp, BlockInClusterIdXOp, BlockInClusterIdYOp, BlockInClusterIdZOp, Breakpoint, BulkStoreOp, Clock64Op, ClockOp, ClusterArriveOp, ClusterArriveRelaxedOp, ClusterDim, ClusterDimBlocksXOp, ClusterDimBlocksYOp, ClusterDimBlocksZOp, ClusterDimXOp, ClusterDimYOp, ClusterDimZOp, ClusterId, ClusterIdXOp, ClusterIdYOp, ClusterIdZOp, ClusterLaunchControlQueryCancelOp, ClusterLaunchControlTryCancelOp, ClusterWaitOp, ConvertBF16x2ToF4x2Op, ConvertBF16x2ToF6x2Op, ConvertBF16x2ToF8x2Op, ConvertBF16x2ToS2F6x2Op, ConvertF16x2ToF4x2Op, ConvertF16x2ToF6x2Op, ConvertF16x2ToF8x2Op, ConvertF32x2ToBF16x2Op, ConvertF32x2ToF16x2Op, ConvertF32x2ToF4x2Op, ConvertF32x2ToF6x2Op, ConvertF32x2ToF8x2Op, ConvertF32x2ToS2F6x2Op, ConvertF32x4ToF4x4Op, ConvertF32x4ToF6x4Op, ConvertF32x4ToF8x4Op, ConvertF4x2ToBF16x2Op, ConvertF4x2ToF16x2Op, ConvertF6x2ToBF16x2Op, ConvertF6x2ToF16x2Op, ConvertF8x2ToBF16x2Op, ConvertF8x2ToF16x2Op, ConvertFloatToTF32Op, ConvertS2F6x2ToBF16x2Op, CosOp, CpAsyncBulkCommitGroupOp, CpAsyncBulkGlobalToSharedClusterOp, CpAsyncBulkPrefetchOp, CpAsyncBulkSharedCTAToGlobalOp, CpAsyncBulkSharedCTAToSharedClusterOp, CpAsyncBulkTensorGlobalToSharedClusterOp, CpAsyncBulkTensorPrefetchOp, CpAsyncBulkTensorReduceOp, CpAsyncBulkTensorSharedCTAToGlobalOp, CpAsyncBulkWaitGroupOp, CpAsyncCommitGroupOp, CpAsyncMBarrierArriveOp, CpAsyncOp, CpAsyncWaitGroupOp, DivFOp, DotAccumulate2WayOp, DotAccumulate4WayOp, DynamicSmemSize, ElectSyncOp, EnvReg0Op, EnvReg10Op, EnvReg11Op, EnvReg12Op, EnvReg13Op, EnvReg14Op, EnvReg15Op, EnvReg16Op, EnvReg17Op, EnvReg18Op, EnvReg19Op, EnvReg1Op, EnvReg20Op, EnvReg21Op, EnvReg22Op, EnvReg23Op, EnvReg24Op, EnvReg25Op, EnvReg26Op, EnvReg27Op, EnvReg28Op, EnvReg29Op, EnvReg2Op, EnvReg30Op, EnvReg31Op, EnvReg3Op, EnvReg4Op, EnvReg5Op, EnvReg6Op, EnvReg7Op, EnvReg8Op, EnvReg9Op, Ex2Op, Exit, FenceMbarrierInitOp, FenceProxyAcquireOp, FenceProxyOp, FenceProxyReleaseOp, FenceProxySyncRestrictOp, FenceScClusterOp, FenceSyncRestrictOp, FmaOp, GlobalTimerLoOp, GlobalTimerOp, GridDimXOp, GridDimYOp, GridDimZOp, GridIdOp, GriddepcontrolOp, InlinePtxOp, LaneIdOp, LaneMaskEqOp, LaneMaskGeOp, LaneMaskGtOp, LaneMaskLeOp, LaneMaskLtOp, LdMatrixOp, Log2Op, MBarrierArriveDropExpectTxOp, MBarrierArriveDropNocompleteOp, MBarrierArriveDropOp, MBarrierArriveExpectTxOp, MBarrierArriveNocompleteOp, MBarrierArriveOp, MBarrierCompleteTxOp, MBarrierExpectTxOp, MBarrierInitOp, MBarrierInvalOp, MBarrierTestWaitOp, MBarrierTryWaitOp, MBarrierTryWaitParityOp, MapaOp, MatchSyncOp, MembarOp, MmaBlockScaleOp, MmaOp, MmaSpBlockScaleOp, MmaSpOp, MovMatrixOp, NanosleepOp, PMEventOp, PermuteOp, PrefetchOp, RcpApproxFtzF32Op, ReduxOp, RsqrtOp, SetMaxRegisterOp, ShflOp, SinOp, SmDimOp, SmIdOp, SqrtApproxOp, SqrtOp, StMatrixOp, SubFOp, SyncWarpOp, Tcgen05AllocOp, Tcgen05CommitOp, Tcgen05CpOp, Tcgen05DeallocOp, Tcgen05FenceOp, Tcgen05LdOp, Tcgen05LdRedOp, Tcgen05MMABlockScaleOp, Tcgen05MMAOp, Tcgen05MMASparseBlockScaleOp, Tcgen05MMASparseOp, Tcgen05MMAWsOp, Tcgen05MMAWsSparseOp, Tcgen05MmaSmemDescOp, Tcgen05RelinquishAllocPermitOp, Tcgen05ShiftOp, Tcgen05StOp, Tcgen05WaitOp, TensormapReplaceOp, ThreadIdXOp, ThreadIdYOp, ThreadIdZOp, TotalSmemSize, VoteSyncOp, WMMALoadOp, WMMAMmaOp, WMMAStoreOp, WarpDimOp, WarpIdOp, WarpSizeOp, WgmmaFenceAlignedOp, WgmmaGroupSyncAlignedOp, WgmmaMmaAsyncOp, WgmmaWaitGroupSyncOp],
     dependents = ["llvm"]
 )]
 pub struct NvvmDialect;

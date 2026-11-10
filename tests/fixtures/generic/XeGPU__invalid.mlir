@@ -15,23 +15,15 @@
 // -----
 // -----
 // -----
-// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (memref<8x16xf16>) -> (), sym_name = "load_nd_vc_3"}> ({
   ^bb0(%arg0: memref<8x16xf16>):
-    %0 = "xegpu.create_nd_tdesc"(%arg0) <{const_offsets = array<i64: 0, 0>, operandSegmentSizes = array<i32: 1, 0, 0, 0>}> : (memref<8x16xf16>) -> !xegpu.tensor_desc<16xf16>
-    %1 = "xegpu.load_nd"(%0) <{l1_hint = #xegpu.cache_hint<cached>, l2_hint = #xegpu.cache_hint<uncached>, packed}> : (!xegpu.tensor_desc<16xf16>) -> vector<16xf16>
+    %0 = "xegpu.create_nd_tdesc"(%arg0) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (memref<8x16xf16>) -> !xegpu.tensor_desc<16xf16>
+    %1 = "xegpu.load_nd"(%0) <{const_offsets = array<i64: 0>, l1_hint = #xegpu.cache_hint<cached>, l2_hint = #xegpu.cache_hint<uncached>, packed}> : (!xegpu.tensor_desc<16xf16>) -> vector<16xf16>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
 
-// -----
-// -----
-// -----
-// -----
-// -----
-// -----
-// -----
 // -----
 // -----
 // -----

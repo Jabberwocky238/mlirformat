@@ -38,7 +38,7 @@
     %59 = "vector.transfer_read"(%arg36, %57, %57, %58) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x2xf32>, index, index, f32) -> vector<4x2xf32>
     %60 = "vector.transfer_read"(%arg37, %57, %57, %58) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<2x4xf32>, index, index, f32) -> vector<2x4xf32>
     %61 = "vector.transfer_read"(%arg38, %57, %57, %58) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<4x4xf32>, index, index, f32) -> vector<4x4xf32>
-    %62 = "vector.contract"(%59, %60, %61) <{indexing_maps = [#map1, #map2, #map3], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>, #vector.iterator_type<parallel>], kind = #vector.kind<add>}> : (vector<4x2xf32>, vector<2x4xf32>, vector<4x4xf32>) -> vector<4x4xf32>
+    %62 = "vector.contract"(%59, %60, %61) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map1, #map2, #map3], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>, #vector.iterator_type<parallel>], kind = #vector.kind<add>}> : (vector<4x2xf32>, vector<2x4xf32>, vector<4x4xf32>) -> vector<4x4xf32>
     "vector.transfer_write"(%62, %arg38, %57, %57) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4x4xf32>, memref<4x4xf32>, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
@@ -84,7 +84,7 @@
     %35 = "vector.transfer_read"(%arg27, %33, %33, %34) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (tensor<4x2xf32>, index, index, f32) -> vector<4x2xf32>
     %36 = "vector.transfer_read"(%arg28, %33, %33, %34) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (tensor<2x4xf32>, index, index, f32) -> vector<2x4xf32>
     %37 = "vector.transfer_read"(%arg29, %33, %33, %34) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (tensor<4x4xf32>, index, index, f32) -> vector<4x4xf32>
-    %38 = "vector.contract"(%35, %36, %37) <{indexing_maps = [#map1, #map2, #map3], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>, #vector.iterator_type<parallel>], kind = #vector.kind<add>}> : (vector<4x2xf32>, vector<2x4xf32>, vector<4x4xf32>) -> vector<4x4xf32>
+    %38 = "vector.contract"(%35, %36, %37) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map1, #map2, #map3], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<reduction>, #vector.iterator_type<parallel>], kind = #vector.kind<add>}> : (vector<4x2xf32>, vector<2x4xf32>, vector<4x4xf32>) -> vector<4x4xf32>
     %39 = "vector.transfer_write"(%38, %arg29, %33, %33) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = #map}> : (vector<4x4xf32>, tensor<4x4xf32>, index, index) -> tensor<4x4xf32>
     "func.return"(%39) : (tensor<4x4xf32>) -> ()
   }) : () -> ()

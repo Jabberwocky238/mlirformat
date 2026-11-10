@@ -22,3 +22,28 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+module {
+  func.func @fuse_pack_consumer_into_multi_output_generic(%arg0: tensor<32x1024xf32>) -> (tensor<32x1024xf32>, tensor<2x512x16x2xi8>) {
+    %c0_i8 = arith.constant 0 : i8
+    %0 = tensor.empty() : tensor<32x1024xf32>
+    %1 = tensor.empty() : tensor<32x1024xi8>
+    %2 = tensor.empty() : tensor<2x512x16x2xi8>
+    %3:2 = linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel", "parallel"]} ins(%arg0 : tensor<32x1024xf32>) outs(%0, %1 : tensor<32x1024xf32>, tensor<32x1024xi8>) {
+    ^bb0(%in: f32, %out: f32, %out_0: i8):
+      %4 = arith.fptoui %in : f32 to i8
+      linalg.yield %in, %4 : f32, i8
+    } -> (tensor<32x1024xf32>, tensor<32x1024xi8>)
+    %pack = linalg.pack %3#1 padding_value(%c0_i8 : i8) inner_dims_pos = [0, 1] inner_tiles = [16, 2] into %2 : tensor<32x1024xi8> -> tensor<2x512x16x2xi8>
+    return %3#0, %pack : tensor<32x1024xf32>, tensor<2x512x16x2xi8>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.pack"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %transfomed, %loops = transform.test.fuse_and_yield %0 [1] use_forall true : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      transform.yield 
+    }
+  }
+}
+

@@ -66,17 +66,6 @@ module {
 
 // -----
 module {
-  func.func @unknown_bound(%arg0: index) {
-    %vscale = vector.vscale
-    %0 = arith.muli %vscale, %arg0 : index
-    %1 = "test.reify_bound"(%0) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
-    "test.some_use"(%1) : (index) -> ()
-    return
-  }
-}
-
-// -----
-module {
   func.func @duplicate_vscale_values() {
     %c4 = arith.constant 4 : index
     %vscale = vector.vscale
@@ -122,32 +111,6 @@ module {
       %2 = "test.reify_bound"(%1) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
       "test.some_use"(%2) : (index) -> ()
     }
-    return
-  }
-}
-
-// -----
-#map = affine_map<()[s0] -> (s0 * s0)>
-module {
-  func.func @unsupported_semi_affine() {
-    %vscale = vector.vscale
-    %0 = affine.apply #map()[%vscale]
-    %1 = "test.reify_bound"(%0) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
-    "test.some_use"(%1) : (index) -> ()
-    return
-  }
-}
-
-// -----
-#map = affine_map<()[s0] -> (1000 mod s0)>
-module {
-  func.func @unsupported_negative_mod() {
-    %c-1 = arith.constant -1 : index
-    %vscale = vector.vscale
-    %c-1_vscale = arith.muli %vscale, %c-1 : index
-    %0 = affine.apply #map()[%c-1_vscale]
-    %1 = "test.reify_bound"(%0) <{scalable, type = "UB", vscale_max = 16 : i64, vscale_min = 1 : i64}> : (index) -> index
-    "test.some_use"(%1) : (index) -> ()
     return
   }
 }

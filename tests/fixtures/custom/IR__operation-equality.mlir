@@ -153,3 +153,49 @@ module {
   }) : () -> ()
 }
 
+// -----
+module attributes {test.includes_setup} {
+  %0:2 = "test.producer"() : () -> (i32, i32)
+  "test.commutatively_equal_permutation"() ({
+    %1 = arith.addi %0#0, %0#1 : i32
+  }) : () -> ()
+  "test.commutatively_equal_permutation"() ({
+    %1 = arith.addi %0#1, %0#0 : i32
+  }) : () -> ()
+}
+
+// -----
+module attributes {test.includes_setup} {
+  %0:2 = "test.producer"() : () -> (i32, i32)
+  "test.ignore_commutatively_equal_permutation"() ({
+    %1 = arith.addi %0#0, %0#1 : i32
+  }) {ignore_commutativity} : () -> ()
+  "test.ignore_commutatively_equal_permutation"() ({
+    %1 = arith.addi %0#1, %0#0 : i32
+  }) {ignore_commutativity} : () -> ()
+}
+
+// -----
+module {
+  "test.commutatively_equal"() ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = arith.addi %arg0, %arg1 : i32
+  }) : () -> ()
+  "test.commutatively_equal"() ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = arith.addi %arg1, %arg0 : i32
+  }) : () -> ()
+}
+
+// -----
+module {
+  "test.ignore_commutatively_equal"() ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = arith.addi %arg0, %arg1 : i32
+  }) {ignore_commutativity} : () -> ()
+  "test.ignore_commutatively_equal"() ({
+  ^bb0(%arg0: i32, %arg1: i32):
+    %0 = arith.addi %arg1, %arg0 : i32
+  }) {ignore_commutativity} : () -> ()
+}
+

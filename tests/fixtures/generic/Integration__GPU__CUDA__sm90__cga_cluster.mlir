@@ -7,7 +7,7 @@
     "func.return"() : () -> ()
   }) : () -> ()
   "gpu.module"() <{sym_name = "gpumodule"}> ({
-    "gpu.func"() <{function_type = () -> ()}> ({
+    "gpu.func"() <{function_type = () -> (), kernel}> ({
       %0 = "gpu.cluster_id"() <{dimension = #gpu<dim x>}> : () -> index
       %1 = "gpu.cluster_id"() <{dimension = #gpu<dim y>}> : () -> index
       %2 = "gpu.cluster_id"() <{dimension = #gpu<dim z>}> : () -> index
@@ -39,7 +39,7 @@
       }, {
       }) : (i1) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 4, 4, 1>, sym_name = "kernel_cluster", workgroup_attributions = 0 : i64} : () -> ()
+    }) {gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 4, 4, 1>, sym_name = "kernel_cluster"} : () -> ()
   }) : () -> ()
 }) {gpu.container_module} : () -> ()
 

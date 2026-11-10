@@ -7,12 +7,12 @@
       "gpu.printf"(%2, %3, %arg0) <{format = "Hello from %lld, %d, %f\0A"}> : (index, i8, f32) -> ()
       "func.return"() : () -> ()
     }) : () -> ()
-    "gpu.func"() <{function_type = () -> ()}> ({
+    "gpu.func"() <{function_type = () -> (), kernel}> ({
       %0 = "arith.constant"() <{value = 3.000000e+00 : f32}> : () -> f32
       %1 = "func.constant"() <{value = @hello}> : () -> ((f32) -> ())
       "func.call_indirect"(%1, %0) : ((f32) -> (), f32) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "hello_indirect", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "hello_indirect"} : () -> ()
   }) : () -> ()
 }) : () -> ()
 

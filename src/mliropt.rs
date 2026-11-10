@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use core::fmt;
 
 pub use crate::common::*;
-pub use crate::dialects::{affine, affine_ops, amx, arith, bufferization, bufferization_ops as bufferization_hand, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv, spirv_types, tensor, tosa, ub, vector, x86vector, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
+pub use crate::dialects::{affine, affine_ops, arith, bufferization, bufferization_ops as bufferization_hand, scf_ops as scf_hand, gpu_ops as gpu_hand, linalg_ops as linalg_hand, builtin, cf, complex, emitc, emitc_types, func, gpu, index, linalg, llvm, llvm_types, math, memref, pdl, r#async, scf, shape, spirv, spirv_types, tensor, tosa, ub, vector, x86, amdgpu, arm_neon, arm_sme, arm_sve, nvgpu, nvvm, rocdl, xegpu, xevm};
 pub use crate::generator::{Emit, IntoStatic, Printer, Reborrow, Sep, Shown, ShownFrom, ShownIn, Source, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
@@ -88,7 +88,7 @@ impl MlirOpt {
 
     /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
     /// `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`,
-    /// `vector`, the CPU's `x86vector`, `amx`, `arm_neon`, `arm_sve` and `arm_sme`, and the GPU
+    /// `vector`, the CPU's `x86` (AVX-512, AVX10, AMX), `arm_neon`, `arm_sve` and `arm_sme`, and the GPU
     /// vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
@@ -116,8 +116,7 @@ impl MlirOpt {
             .load(spirv::SpirvDialect)
             .load(tosa::TosaDialect)
             .load(vector::VectorDialect)
-            .load(amx::AmxDialect)
-            .load(x86vector::X86vectorDialect)
+            .load(x86::X86Dialect)
             .load(arm_neon::ArmNeonDialect)
             .load(arm_sve::ArmSveDialect)
             .load(arm_sme::ArmSmeDialect)

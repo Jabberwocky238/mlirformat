@@ -243,3 +243,14 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @unstructured_cf(%arg0: f32, %arg1: i1) -> f32 attributes {tag = "func"} {
+    cf.br ^bb2(%arg0 : f32)
+  ^bb1(%0: f32):  // no predecessors
+    return %0 : f32
+  ^bb2(%1: f32):  // pred: ^bb0
+    return %1 : f32
+  }
+}
+

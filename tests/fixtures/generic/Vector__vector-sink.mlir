@@ -97,7 +97,7 @@
     %3 = "vector.broadcast"(%0) : (f32) -> vector<2x2xf32>
     %4 = "vector.broadcast"(%1) : (f32) -> vector<2x2xf32>
     %5 = "vector.broadcast"(%2) : (f32) -> vector<2x2xf32>
-    %6 = "vector.contract"(%3, %4, %5) <{indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x2xf32>, vector<2x2xf32>, vector<2x2xf32>) -> vector<2x2xf32>
+    %6 = "vector.contract"(%3, %4, %5) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map1, #map2], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<2x2xf32>, vector<2x2xf32>, vector<2x2xf32>) -> vector<2x2xf32>
     "func.return"(%6) : (vector<2x2xf32>) -> ()
   }) : () -> ()
 }) : () -> ()

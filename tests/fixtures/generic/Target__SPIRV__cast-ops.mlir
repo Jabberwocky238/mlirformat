@@ -12,6 +12,17 @@
 
 // -----
 "builtin.module"() ({
+  "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<Vulkan>, vce_triple = #spirv.vce<v1.6, [Shader, Linkage, CooperativeMatrixKHR, VulkanMemoryModel], [SPV_KHR_cooperative_matrix, SPV_KHR_vulkan_memory_model]>}> ({
+    "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = (!spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>) -> (), sym_name = "bit_cast_coop"}> ({
+    ^bb0(%arg0: !spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>):
+      %0 = "spirv.Bitcast"(%arg0) : (!spirv.coopmatrix<4x4xf32, Subgroup, MatrixA>) -> !spirv.coopmatrix<4x4xi32, Subgroup, MatrixA>
+      "spirv.Return"() : () -> ()
+    }) : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>, vce_triple = #spirv.vce<v1.0, [Shader, Linkage, BFloat16TypeKHR, Float64, Int64], [SPV_KHR_bfloat16]>}> ({
     "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = (f32) -> i32, sym_name = "convert_f_to_s"}> ({
     ^bb0(%arg16: f32):

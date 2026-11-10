@@ -2,9 +2,9 @@
   "func.func"() <{function_type = () -> (), sym_name = "primitive"}> ({
     %54 = "some.op"() : () -> !llvm.void
     %55 = "some.op"() : () -> !llvm.ppc_fp128
-    %56 = "some.op"() : () -> !llvm.token
-    %57 = "some.op"() : () -> !llvm.label
-    %58 = "some.op"() : () -> !llvm.metadata
+    %56 = "some.op"() : () -> !llvm.label
+    %57 = "some.op"() : () -> !llvm.metadata
+    %58 = "some.op"() : () -> token
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "func"}> ({
@@ -103,6 +103,15 @@
     %2 = "some.op"() : () -> !llvm.target<"target3", i32, i64, f64>
     %3 = "some.op"() : () -> !llvm.target<"target4", 1, 0, 42>
     %4 = "some.op"() : () -> !llvm.target<"target5", i32, f64, 0, 5>
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "byte", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "some.op"() : () -> !llvm.byte<8>
+    %1 = "some.op"() : () -> !llvm.byte<1>
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

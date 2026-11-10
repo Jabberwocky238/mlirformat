@@ -18,7 +18,7 @@
       %8 = "arith.sitofp"(%7) : (i32) -> f32
       "memref.store"(%8, %1, %arg3) : (f32, memref<?xf32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%5) <{callee = @printMemrefF32}> : (memref<*xf32>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

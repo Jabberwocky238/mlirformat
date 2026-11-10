@@ -26,7 +26,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -68,7 +68,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -116,7 +116,7 @@
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
       %1:2 = "transform.split_handle"(%0) <{fail_on_payload_too_small = true, pass_through_empty_handle = true}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
-      %2:2 = "transform.structured.fuse"(%1#1) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      %2:2 = "transform.structured.fuse"(%1#1) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -158,7 +158,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -199,7 +199,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_interchange = array<i64: 1, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_interchange = array<i64: 1, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -237,7 +237,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -276,7 +276,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      %1:3 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10, 20>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -314,7 +314,7 @@
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.matmul"]}> : (!transform.any_op) -> !transform.any_op
       %1:3 = "transform.split_handle"(%0) <{fail_on_payload_too_small = true, pass_through_empty_handle = true}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
-      %2:2 = "transform.structured.fuse"(%1#2) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      %2:2 = "transform.structured.fuse"(%1#2) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -362,7 +362,7 @@
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %1:3 = "transform.split_handle"(%0) <{fail_on_payload_too_small = true, pass_through_empty_handle = true}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
-      %2:2 = "transform.structured.fuse"(%1#2) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 10>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      %2:2 = "transform.structured.fuse"(%1#2) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 10>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -391,7 +391,7 @@
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
       %1 = "transform.structured.match"(%arg0) <{ops = ["tensor.pad"]}> : (!transform.any_op) -> !transform.any_op
-      %2:2 = "transform.structured.fuse"(%1) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 8>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      %2:2 = "transform.structured.fuse"(%1) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 8>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -402,7 +402,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x1x288x8x4xf32>, tensor<1x2x1152xf32>) -> tensor<1x2x1152xf32>, sym_name = "imperfect_unpack_producer_fusion"}> ({
   ^bb0(%arg1: tensor<1x1x288x8x4xf32>, %arg2: tensor<1x2x1152xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 2>, outer_dims_perm = array<i64: 0, 1, 2>, static_inner_tiles = array<i64: 8, 4>}> : (tensor<1x1x288x8x4xf32>, tensor<1x2x1152xf32>) -> tensor<1x2x1152xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 1, 2>, outer_dims_perm = array<i64: 0, 1, 2>, static_inner_tiles = array<i64: 8, 4>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x1x288x8x4xf32>, tensor<1x2x1152xf32>) -> tensor<1x2x1152xf32>
     %3 = "tensor.empty"() : () -> tensor<1x2x1152xf32>
     %4 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
     %5 = "linalg.generic"(%2, %3) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
@@ -416,7 +416,7 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:2 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_sizes = array<i64: 0, 1, 0>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+      %1:2 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 0, 1, 0>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()
@@ -440,7 +440,36 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
-      %1:5 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0>, static_tile_interchange = array<i64: 0, 1, 2, 3>, static_tile_sizes = array<i64: 1, 16, 16, 16>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      %1:5 = "transform.structured.fuse"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_interchange = array<i64: 0, 1, 2, 3>, static_tile_sizes = array<i64: 1, 16, 16, 16>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op, !transform.any_op)
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<4x96xf32>) -> tensor<4x96xf32>, sym_name = "fuse_fill_through_rank_reducing_slice"}> ({
+  ^bb0(%arg1: tensor<4x96xf32>):
+    %2 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32
+    %3 = "tensor.empty"() : () -> tensor<4x1x96xf32>
+    %4 = "linalg.fill"(%2, %3) <{operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg4: f32, %arg5: f32):
+      "linalg.yield"(%arg4) : (f32) -> ()
+    }) : (f32, tensor<4x1x96xf32>) -> tensor<4x1x96xf32>
+    %5 = "tensor.extract_slice"(%4) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 0, 0, 0>, static_sizes = array<i64: 4, 1, 96>, static_strides = array<i64: 1, 1, 1>}> : (tensor<4x1x96xf32>) -> tensor<4x96xf32>
+    %6 = "linalg.generic"(%5, %arg1) <{indexing_maps = [#map, #map], iterator_types = [#linalg.iterator_type<parallel>, #linalg.iterator_type<parallel>], operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg2: f32, %arg3: f32):
+      %7 = "arith.addf"(%arg2, %arg3) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%7) : (f32) -> ()
+    }) : (tensor<4x96xf32>, tensor<4x96xf32>) -> tensor<4x96xf32>
+    "func.return"(%6) : (tensor<4x96xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op
+      %1:2 = "transform.structured.fuse"(%0) <{apply_cleanup, operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 0, 32>}> : (!transform.any_op) -> (!transform.any_op, !transform.op<"scf.for">)
       "transform.yield"() : () -> ()
     }) : () -> ()
   }) {transform.with_named_sequence} : () -> ()

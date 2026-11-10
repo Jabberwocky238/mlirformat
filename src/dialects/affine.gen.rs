@@ -102,12 +102,88 @@ pub struct AffineDelinearizeIndexOp<'a> {
     pub dynamic_basis: Vec<Value<'a>>,
     #[attr(dense = "i64")]
     pub static_basis: Attribute<'a>,
-    #[dtype(is = index)]
     pub linear_index_ty: Type<'a>,
     #[dtype(is = index)]
     pub dynamic_basis_ty: Type<'a>,
-    #[dtype(is = index)]
-    pub multi_index: Type<'a>,
+    pub multi_index: Vec<Type<'a>>,
+}
+
+/// `affine.dma_start`: affine dma start operation
+///
+/// The `affine.dma_start` op starts a non-blocking DMA operation that
+/// transfers data from a source memref to a destination memref. The source and
+/// destination memref need not be of the same dimensionality, but need to have
+/// the same elemental type. The operands include the source and destination
+/// memref's each followed by its indices, size of the data transfer in terms of
+/// the number of elements (of the elemental type of the memref), a tag memref
+/// with its indices, and optionally at the end, a stride and a
+/// number_of_elements_per_stride arguments. The tag location is used by an
+/// `affine.dma_wait` to check for completion. The indices of the source memref,
+/// destination memref, and the tag memref have the same restrictions as any
+/// affine.load/store. In particular, index for each memref dimension must be an
+/// affine expression of loop induction variables and symbols.
+///
+/// The optional stride arguments should be of 'index' type, and specify a
+/// stride for the slower memory space (memory space with a lower memory space
+/// id), transferring chunks of number_of_elements_per_stride every stride until
+/// %num_elements are transferred. Either both or no stride arguments should be
+/// specified. The value of 'num_elements' must be a multiple of
+/// 'number_of_elements_per_stride'. If the source and destination locations
+/// overlap the behavior of this operation is not defined.
+///
+/// Example:
+///
+/// ```mlir
+/// %num_elements = arith.constant 256
+/// %idx = arith.constant 0 : index
+/// %tag = memref.alloc() : memref<1xi32, 4>
+/// affine.dma_start %src[%i + 3, %j], %dst[%k + 7, %l], %tag[%idx],
+///   %num_elements :
+///     memref<40x128xf32, 0>, memref<2x1024xf32, 1>, memref<1xi32, 2>
+///
+/// // If %stride and %num_elt_per_stride are specified, the DMA is expected to
+/// // transfer %num_elt_per_stride elements every %stride elements apart from
+/// // memory space 0 until %num_elements are transferred.
+/// affine.dma_start %src[%i, %j], %dst[%k, %l], %tag[%idx], %num_elements,
+///   %stride, %num_elt_per_stride : ...
+/// ```
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("affine.dma_start")]
+pub struct AffineDmaStartOp<'a> {
+    #[slot(operand_ty)]
+    pub operand: Vec<Value<'a>>,
+    pub src_map: Attribute<'a>,
+    pub dst_map: Attribute<'a>,
+    pub tag_map: Attribute<'a>,
+    pub operand_ty: Vec<Type<'a>>,
+}
+
+/// `affine.dma_wait`: affine dma wait operation
+///
+/// The `affine.dma_wait` op blocks until the completion of a DMA operation
+/// associated with the tag element `%tag[%index]`. `%tag` is a memref, and
+/// `%index` has to be an index with the same restrictions as any load/store
+/// index. In particular, index for each memref dimension must be an affine
+/// expression of loop induction variables and symbols. `%num_elements` is the
+/// number of elements associated with the DMA operation.
+///
+/// Example:
+///
+/// ```mlir
+/// affine.dma_start %src[%i, %j], %dst[%k, %l], %tag[%index], %num_elements :
+///   memref<2048xf32, 0>, memref<256xf32, 1>, memref<1xi32, 2>
+/// ...
+/// affine.dma_wait %tag[%index], %num_elements : memref<1xi32, 2>
+/// ```
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("affine.dma_wait")]
+pub struct AffineDmaWaitOp<'a> {
+    #[slot(operand_ty)]
+    pub operand: Vec<Value<'a>>,
+    pub tag_map: Attribute<'a>,
+    pub operand_ty: Vec<Type<'a>>,
 }
 
 /// `affine.for`: for operation
@@ -378,7 +454,7 @@ pub struct AffineIfOp<'a> {
 /// Generic form only (directive `"{}",`).
 #[mlir::op("affine.linearize_index", results(linear_index))]
 pub struct AffineLinearizeIndexOp<'a> {
-    #[slot(multi_index_ty)]
+    #[slot(linear_index)]
     pub multi_index: Vec<Value<'a>>,
     #[slot(dynamic_basis_ty)]
     pub dynamic_basis: Vec<Value<'a>>,
@@ -386,10 +462,7 @@ pub struct AffineLinearizeIndexOp<'a> {
     pub static_basis: Attribute<'a>,
     pub disjoint: bool,
     #[dtype(is = index)]
-    pub multi_index_ty: Type<'a>,
-    #[dtype(is = index)]
     pub dynamic_basis_ty: Type<'a>,
-    #[dtype(is = index)]
     pub linear_index: Type<'a>,
 }
 
@@ -783,7 +856,7 @@ pub struct AffineYieldOp<'a> {
 /// The `affine` dialect.
 #[mlir::dialect(
     "affine",
-    ops = [AffineApplyOp, AffineDelinearizeIndexOp, AffineForOp, AffineIfOp, AffineLinearizeIndexOp, AffineLoadOp, AffineMaxOp, AffineMinOp, AffineParallelOp, AffinePrefetchOp, AffineStoreOp, AffineVectorLoadOp, AffineVectorStoreOp, AffineYieldOp],
+    ops = [AffineApplyOp, AffineDelinearizeIndexOp, AffineDmaStartOp, AffineDmaWaitOp, AffineForOp, AffineIfOp, AffineLinearizeIndexOp, AffineLoadOp, AffineMaxOp, AffineMinOp, AffineParallelOp, AffinePrefetchOp, AffineStoreOp, AffineVectorLoadOp, AffineVectorStoreOp, AffineYieldOp],
     dependents = ["arith", "ub"],
     materializer
 )]

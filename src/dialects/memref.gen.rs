@@ -198,16 +198,26 @@ pub struct GenericAtomicRMWOp<'a> {
 /// The number of indices must match the rank of the memref. The indices must
 /// be in-bounds: `0 <= idx < dim_size`.
 ///
-/// Lowerings of `memref.load` may emit attributes, e.g. `inbouds` + `nuw`
-/// when converting to LLVM's `llvm.getelementptr`, that would cause undefined
-/// behavior if indices are out of bounds or if computing the offset in the
-/// memref would cause signed overflow of the `index` type.
+/// Lowerings of `memref.load` may emit no-wrap flags on
+/// `llvm.getelementptr` when converting to LLVM. The `inbounds` flag is
+/// always emitted (valid since indices are guaranteed in-bounds) and causes
+/// undefined behavior if that precondition is violated. The `nuw` flag is
+/// emitted only when all strides of the memref are statically non-negative;
+/// with negative strides, `nuw` would propagate to intermediate `mul`
+/// operations and cause unsigned overflow (poison) even for in-bounds
+/// indices.
 ///
 /// The single result of `memref.load` is a value with the same type as the
 /// element type of the memref.
 ///
 /// A set `nontemporal` attribute indicates that this load is not expected to
 /// be reused in the cache. For details, refer to the
+/// [LLVM load instruction](https://llvm.org/docs/LangRef.html#load-instruction).
+///
+/// A set `invariant` attribute indicates that the referenced memory location
+/// contains the same value at all points in the program where it is
+/// dereferenceable, so the load may be treated as invariant. For details, refer
+/// to the
 /// [LLVM load instruction](https://llvm.org/docs/LangRef.html#load-instruction).
 ///
 /// An optional `alignment` attribute allows to specify the byte alignment of the
@@ -226,9 +236,12 @@ pub struct LoadOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
+    #[attr(default = "false", optional)]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
+    #[attr(default = "false", optional)]
+    pub invariant: Option<Attribute<'a>>,
     pub memref_ty: Type<'a>,
     #[dtype(is = index)]
     pub indices_ty: Type<'a>,
@@ -693,10 +706,11 @@ pub struct DmaWaitOp<'a> {
 ///
 /// The representation for the output shape supports a partially-static
 /// specification via attributes specified through the `static_output_shape`
-/// argument.  A special sentinel value `ShapedType::kDynamic` encodes that the
-/// corresponding entry has a dynamic value.  There must be exactly as many SSA
-/// inputs in `output_shape` as there are `ShapedType::kDynamic` entries in
-/// `static_output_shape`.
+/// argument. A special sentinel value `ShapedType::kDynamic` encodes that the
+/// corresponding entry has a dynamic value. Both the number of SSA inputs in
+/// `output_shape` and the number of `ShapedType::kDynamic` entries in
+/// `static_output_shape` match the number of dynamic dimensions in the result
+/// type.
 ///
 /// Note: This op currently assumes that the inner strides are of the
 /// source/result layout map are the faster-varying ones.
@@ -735,9 +749,7 @@ pub struct ExpandShapeOp<'a> {
 ///   %2 = llvm.inttoptr %1 : i64 to !llvm.ptr
 ///   call @foo(%2) : (!llvm.ptr) ->()
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("memref.extract_aligned_pointer_as_index", results(aligned_pointer))]
+#[mlir::op("memref.extract_aligned_pointer_as_index", format = "$source `:` type($source) `->` qualified(type($aligned_pointer)) attr-dict", results(aligned_pointer))]
 pub struct ExtractAlignedPointerAsIndexOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -1018,9 +1030,7 @@ pub struct RankOp<'a> {
 /// %4 = memref.load %new[%index] : memref<124xf32> // ok
 /// %5 = memref.load %old[%index] : memref<64xf32>  // undefined behavior
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("memref.realloc", results(result))]
+#[mlir::op("memref.realloc", format = "$source (`(` $dynamicResultSize^ `)`)? attr-dict `:` type($source) `to` qualified(type($result))", results(result))]
 pub struct ReallocOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -1202,9 +1212,7 @@ pub struct ReinterpretCastOp<'a> {
 /// %dst = memref.reshape %src(%shape)
 ///          : (memref<*xf32>, memref<?xi32>) -> memref<*xf32>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("memref.reshape", results(result))]
+#[mlir::op("memref.reshape", format = "$source `(` $shape `)` attr-dict `:` functional-type($source $shape, $result)", results(result))]
 pub struct ReshapeOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
@@ -1222,10 +1230,14 @@ pub struct ReshapeOp<'a> {
 /// The number of indices must match the rank of the memref. The indices must
 /// be in-bounds: `0 <= idx < dim_size`.
 ///
-/// Lowerings of `memref.store` may emit attributes, e.g. `inbouds` + `nuw`
-/// when converting to LLVM's `llvm.getelementptr`, that would cause undefined
-/// behavior if indices are out of bounds or if computing the offset in the
-/// memref would cause signed overflow of the `index` type.
+/// Lowerings of `memref.store` may emit no-wrap flags on
+/// `llvm.getelementptr` when converting to LLVM. The `inbounds` flag is
+/// always emitted (valid since indices are guaranteed in-bounds) and causes
+/// undefined behavior if that precondition is violated. The `nuw` flag is
+/// emitted only when all strides of the memref are statically non-negative;
+/// with negative strides, `nuw` would propagate to intermediate `mul`
+/// operations and cause unsigned overflow (poison) even for in-bounds
+/// indices.
 ///
 /// A set `nontemporal` attribute indicates that this store is not expected to
 /// be reused in the cache. For details, refer to the
@@ -1249,6 +1261,7 @@ pub struct StoreOp<'a> {
     pub memref: Value<'a>,
     #[slot(indices_ty)]
     pub indices: Vec<Value<'a>>,
+    #[attr(default = "false", optional)]
     pub nontemporal: Option<Attribute<'a>>,
     #[attr(int = "i64")]
     pub alignment: Option<Attribute<'a>>,
@@ -1317,9 +1330,7 @@ pub struct TransposeOp<'a> {
 /// %2 = memref.view %0[%offset_1024][%size0, %size1] :
 ///   memref<2048xi8> to memref<?x4x?xf32>
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("memref.view", results(result))]
+#[mlir::op("memref.view", format = "$source `[` $byte_shift `]` `` `[` $sizes `]` attr-dict `:` type($source) `to` qualified(type($result))", results(result))]
 pub struct ViewOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,

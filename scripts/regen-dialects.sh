@@ -1,10 +1,10 @@
 #!/bin/sh
-# Regenerates every tblgen dialect in src/dialects from LLVM 22.1.8's ODS.
+# Regenerates every tblgen dialect in src/dialects from LLVM 23.1.5's ODS.
 #   scripts/regen-dialects.sh [out dir]
-# `td/` is `mlir/include` as llvm-project 22.1.8 has it, cut down to what these dialects include:
+# `td/` is `mlir/include` as llvm-project 23.1.5 has it, cut down to what these dialects include:
 # the upstream files, unchanged, at their own paths, and `-I td` is the root their
 # `include "mlir/..."` lines read from. `LinalgNamedStructuredOps.yamlgen.td` is the one file a
-# 22.1.8 build generates (from the OpDSL YAML) instead of keeping in the source tree.
+# 23.1.5 build generates (from the OpDSL YAML) instead of keeping in the source tree.
 # A dialect whose ops upstream splits over several files is one run over those files.
 set -e
 cd "$(dirname "$0")/.."
@@ -18,7 +18,6 @@ while read -r ns files; do
 done <<EOF
 affine $D/Affine/IR/AffineOps.td
 amdgpu $D/AMDGPU/IR/AMDGPU.td
-amx $D/AMX/AMX.td
 arm_neon $D/ArmNeon/ArmNeon.td
 arm_sme $D/ArmSME/IR/ArmSMEOps.td $D/ArmSME/IR/ArmSMEIntrinsicOps.td
 arm_sve $D/ArmSVE/IR/ArmSVE.td
@@ -39,7 +38,7 @@ spirv $D/SPIRV/IR/SPIRVOps.td
 tensor $D/Tensor/IR/TensorOps.td
 tosa $D/Tosa/IR/TosaOps.td
 vector $D/Vector/IR/VectorOps.td
-x86vector $D/X86Vector/X86Vector.td
+x86 $D/X86/X86.td
 xegpu $D/XeGPU/IR/XeGPUOps.td
 xevm $D/LLVMIR/XeVMOps.td $D/LLVMIR/LLVMTypes.td
 EOF

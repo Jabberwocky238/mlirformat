@@ -117,3 +117,83 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @unused_alloca_store_loop() {
+    %c1_i32 = arith.constant 1 : i32
+    %alloca = memref.alloca() : memref<i32>
+    cf.br ^bb1
+  ^bb1:  // 2 preds: ^bb0, ^bb1
+    memref.store %c1_i32, %alloca[] : memref<i32>
+    cf.br ^bb1
+  }
+}
+
+// -----
+module {
+  func.func @store_back_to_alloca(%arg0: i1) -> i32 {
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %alloca = memref.alloca() : memref<i32>
+    memref.store %c0_i32, %alloca[] : memref<i32>
+    %0 = memref.load %alloca[] : memref<i32>
+    cf.cond_br %arg0, ^bb1, ^bb2
+  ^bb1:  // pred: ^bb0
+    memref.store %0, %alloca[] : memref<i32>
+    cf.br ^bb3
+  ^bb2:  // pred: ^bb0
+    memref.store %c1_i32, %alloca[] : memref<i32>
+    cf.br ^bb3
+  ^bb3:  // 2 preds: ^bb1, ^bb2
+    %1 = memref.load %alloca[] : memref<i32>
+    return %1 : i32
+  }
+}
+
+// -----
+module {
+  func.func @merge_point_used_by_erased_op(%arg0: i1) -> i32 {
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %alloca = memref.alloca() : memref<i32>
+    cf.cond_br %arg0, ^bb1, ^bb2
+  ^bb1:  // pred: ^bb0
+    memref.store %c0_i32, %alloca[] : memref<i32>
+    cf.br ^bb3
+  ^bb2:  // pred: ^bb0
+    memref.store %c1_i32, %alloca[] : memref<i32>
+    cf.br ^bb3
+  ^bb3:  // 2 preds: ^bb1, ^bb2
+    %0 = memref.load %alloca[] : memref<i32>
+    memref.store %0, %alloca[] : memref<i32>
+    return %c0_i32 : i32
+  }
+}
+
+// -----
+module {
+  func.func @two_consecutive_merge_points(%arg0: i1, %arg1: i1) -> i32 {
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %c2_i32 = arith.constant 2 : i32
+    %alloca = memref.alloca() : memref<i32>
+    cf.cond_br %arg0, ^bb2, ^bb1
+  ^bb1:  // pred: ^bb0
+    cf.cond_br %arg1, ^bb3, ^bb5
+  ^bb2:  // pred: ^bb0
+    memref.store %c0_i32, %alloca[] : memref<i32>
+    cf.br ^bb4
+  ^bb3:  // pred: ^bb1
+    memref.store %c1_i32, %alloca[] : memref<i32>
+    cf.br ^bb4
+  ^bb4:  // 2 preds: ^bb2, ^bb3
+    cf.br ^bb6
+  ^bb5:  // pred: ^bb1
+    memref.store %c2_i32, %alloca[] : memref<i32>
+    cf.br ^bb6
+  ^bb6:  // 2 preds: ^bb4, ^bb5
+    %0 = memref.load %alloca[] : memref<i32>
+    return %0 : i32
+  }
+}
+

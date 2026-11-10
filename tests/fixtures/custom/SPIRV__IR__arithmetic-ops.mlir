@@ -143,6 +143,7 @@ module {
 // -----
 // -----
 // -----
+// -----
 module {
   func.func @smul_extended_scalar(%arg0: i32) -> !spirv.struct<(i32, i32)> {
     %0 = spirv.SMulExtended %arg0, %arg0 : !spirv.struct<(i32, i32)>

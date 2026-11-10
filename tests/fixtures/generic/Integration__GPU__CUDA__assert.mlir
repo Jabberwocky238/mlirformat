@@ -1,6 +1,6 @@
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (i1, i1) -> ()}> ({
+    "gpu.func"() <{function_type = (i1, i1) -> (), kernel}> ({
     ^bb0(%arg0: i1, %arg1: i1):
       %4 = "gpu.thread_id"() <{dimension = #gpu<dim x>}> : () -> index
       "cf.assert"(%arg1) <{msg = "passing assertion"}> : (i1) -> ()
@@ -8,7 +8,7 @@
       "cf.assert"(%arg0) <{msg = "failing assertion"}> : (i1) -> ()
       "gpu.printf"(%4) <{format = "thread %lld: print after failing assertion\0A"}> : (index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "test_assert", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "test_assert"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
     %0 = "arith.constant"() <{value = 2 : index}> : () -> index

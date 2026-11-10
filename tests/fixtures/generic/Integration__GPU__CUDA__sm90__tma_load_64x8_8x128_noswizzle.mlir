@@ -51,7 +51,7 @@
       %24 = "memref.get_global"() <{name = @bufferRhsGlobal}> : () -> memref<8x128xf32, 3>
       %25 = "nvgpu.mbarrier.create"() : () -> !nvgpu.mbarrier.group<memorySpace = #gpu.address_space<workgroup>>
       "nvgpu.mbarrier.init"(%25, %21, %6) : (!nvgpu.mbarrier.group<memorySpace = #gpu.address_space<workgroup>>, index, index) -> ()
-      "gpu.barrier"() : () -> ()
+      "gpu.barrier"() <{scope = #gpu.barrier_scope<workgroup>}> : () -> ()
       %26 = "arith.cmpi"(%22, %6) <{predicate = 0 : i64}> : (index, index) -> i1
       "scf.if"(%26) ({
         "nvgpu.mbarrier.arrive.expect_tx"(%25, %1, %6) : (!nvgpu.mbarrier.group<memorySpace = #gpu.address_space<workgroup>>, index, index) -> ()
@@ -77,7 +77,7 @@
       }, {
       }) : (i1) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

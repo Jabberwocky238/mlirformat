@@ -25,12 +25,8 @@ keywords! {
     enum AttrKind {
         Layout = "layout",
         BlockTdesc = "block_tdesc_attr",
-        ScatterTdesc = "scatter_tdesc_attr",
     }
 }
-
-/// `uArch::generalPackedFormatBitSize`.
-const PACKED_FORMAT_BITS: u32 = 32;
 
 /// `#xegpu.layout<..>`'s parameters; absent ones empty (`getEffective*AsInt`).
 #[derive(Default)]
@@ -41,22 +37,6 @@ struct Layout {
     lane_layout: Option<Vec<i64>>,
     lane_data: Option<Vec<i64>>,
     order: Option<Vec<i64>>,
-}
-
-/// `computeShapeRatio`: `shape / sub`, trailing dims aligned, when every one divides.
-fn ratio(shape: &[i64], sub: &[i64]) -> Option<Vec<i64>> {
-    if shape.len() < sub.len() || sub.iter().any(|s| *s <= 0) {
-        return None;
-    }
-    let lead = shape.len() - sub.len();
-    let mut out = shape[..lead].to_vec();
-    for (s, d) in shape[lead..].iter().zip(sub) {
-        if s % d != 0 {
-            return None;
-        }
-        out.push(s / d);
-    }
-    Some(out)
 }
 
 impl Layout {
@@ -113,9 +93,9 @@ impl Layout {
             _ if differ(sl, id) => "expected sg_layout and inst_data to have the same rank",
             _ if differ(sl, ll) => "expected sg_layout and lane_layout to have the same rank",
             _ if differ(id, ll) => "expected inst_data and lane_layout to have the same rank",
-            _ if sd.is_some() && sl.is_none() => "expected sg_layout being used with sg_data",
+            _ if sl.is_some() != sd.is_some() => "sg_layout and sg_data must be used together",
             _ if differ(sd, sl) => "expected sg_data and sg_layout to have the same rank",
-            _ if ld.is_some() && ll.is_none() => "expected lane_layout being used with lane_data",
+            _ if ll.is_some() != ld.is_some() => "lane_layout and lane_data must be used together",
             _ if differ(ld, ll) => "expected lane_data and lane_layout to have the same rank",
             _ if or.is_some() && sl.is_none() && ll.is_none() => "expected sg_layout/lane_layout being used with order",
             _ if differ(or, sl) => "expected order and sg_layout to have the same rank",
@@ -130,36 +110,46 @@ impl Layout {
         [&self.sg_layout, &self.inst_data, &self.lane_layout].into_iter().find_map(|x| x.as_ref().map(Vec::len)).unwrap_or(0)
     }
 
-    /// `XeGPUDialect::isEvenlyDistributable`.
+    /// `DistributeLayoutAttr::isDistributable`: over subgroups (`sg_layout` / `sg_data`), then
+    /// instructions (`inst_data`), then lanes (`lane_layout` / `lane_data`).
     fn distributes(&self, shape: &[i64]) -> bool {
         let get = |x: &Option<Vec<i64>>| x.clone().unwrap_or_default();
-        let step = |shape: &[i64], layout: Vec<i64>, data: Vec<i64>, rr: bool| -> Option<Vec<i64>> {
-            let mut next = shape.to_vec();
-            if !layout.is_empty() {
-                if layout.len() != shape.len() {
-                    return None;
-                }
-                match ratio(shape, &layout) {
-                    Some(r) => next = r,
-                    None if rr && ratio(&layout, shape).is_some() => {}
-                    None => return None,
-                }
+        let mut cur = shape.to_vec();
+        if self.sg_layout.is_some() {
+            let Some(next) = Self::distributed(&cur, &get(&self.sg_layout), &get(&self.sg_data)) else { return false };
+            cur = next;
+            // `dropSgLayoutAndData`: nothing left.
+            if self.inst_data.is_none() && self.lane_layout.is_none() {
+                return true;
             }
-            if !data.is_empty() {
-                if data.len() != shape.len() {
-                    return None;
-                }
-                if ratio(&next, &data).is_none() && !(rr && ratio(&data, &next).is_some()) {
-                    return None;
-                }
-                next = data;
+        }
+        if let Some(inst) = &self.inst_data {
+            if inst.len() != cur.len() || cur.iter().zip(inst).any(|(d, i)| *i == 0 || d % i != 0) {
+                return false;
             }
-            Some(next)
-        };
-        step(shape, get(&self.sg_layout), get(&self.sg_data), true)
-            .and_then(|sg| step(&sg, Vec::new(), get(&self.inst_data), false))
-            .and_then(|inst| step(&inst, get(&self.lane_layout), get(&self.lane_data), false))
-            .is_some()
+            cur.clone_from(inst);
+            // `dropInstData` without a lane layout: nothing left.
+            if self.lane_layout.is_none() {
+                return true;
+            }
+        }
+        Self::distributed(&cur, &get(&self.lane_layout), &get(&self.lane_data)).is_some()
+    }
+
+    /// `computeDistributedShape`: each dim divided by its `layout` factor when `layout × sub`
+    /// divides it, or, wrapping around, exactly `sub`.
+    fn distributed(shape: &[i64], layout: &[i64], sub: &[i64]) -> Option<Vec<i64>> {
+        if sub.is_empty() || layout.len() < shape.len() || sub.len() < shape.len() {
+            return None;
+        }
+        shape
+            .iter()
+            .zip(layout.iter().zip(sub))
+            .map(|(&dim, (&l, &s))| match l.checked_mul(s).filter(|u| *u != 0) {
+                Some(unit) if dim % unit == 0 => Some(dim / l).filter(|d| d % s == 0),
+                _ => (dim == s).then_some(dim),
+            })
+            .collect()
     }
 }
 
@@ -207,9 +197,6 @@ impl XeGpu {
         if shape.is_empty() {
             return Err("expected non-zero rank tensor".into());
         }
-        let bits = elem.bit_width().unwrap_or(PACKED_FORMAT_BITS).max(1);
-        let align = if bits < PACKED_FORMAT_BITS { i64::from(PACKED_FORMAT_BITS / bits) } else { 1 };
-        let mut chunk = None;
         let mut layout = None;
         for a in &attrs {
             let Attribute::Extended { ext, .. } = a else { return Err(alloc::format!("unexpected attribute `{a}`")) };
@@ -225,32 +212,16 @@ impl XeGpu {
                         return Err("SLM is only supported for 1D block tensor".into());
                     }
                 }
-                Some(AttrKind::ScatterTdesc) => chunk = Some(params(body).iter().find(|(k, _)| *k == "chunk_size").and_then(|(_, v)| v.split(':').next()?.trim().parse::<i64>().ok()).unwrap_or(1)),
                 // An alias or another dialect's attribute: not read here.
                 None => {}
             }
         }
-        let last = *shape.last().unwrap_or(&0);
-        if let Some(c) = chunk {
-            if shape.len() == 1 && c != 1 {
-                return Err("expected non-contiguous elements for 1D tensor".into());
-            }
-            if c > 1 && last != c {
-                return Err("expected last dim of tensor to match chunk size".into());
-            }
-            if c > 1 && last % align != 0 {
-                return Err(alloc::format!("expected last dim of tensor to be a multiple of {align}"));
-            }
+        if !matches!(elem, Type::Integer { .. } | Type::Float(_)) {
+            return Err(alloc::format!("unsupported element type {elem}: expected integer or float"));
         }
         if let Some(l) = layout {
             if shape.len() != l.rank() {
                 return Err("expected layout rank to match tensor rank".into());
-            }
-            if let (Some(c), Some(ld)) = (chunk, &l.lane_data)
-                && c > 1
-                && ld.last().is_some_and(|d| d % align != 0)
-            {
-                return Err(alloc::format!("expected last dim of lane_data to be a multiple of: {align}"));
             }
             if shape.iter().all(|d| *d > 0) && !l.distributes(&shape) {
                 return Err(alloc::format!("cannot distribute {shape:?} using the layout"));
@@ -278,10 +249,6 @@ impl DialectRules for XeGpu {
         let body = ext.body.as_deref().unwrap_or("");
         let r = match AttrKind::try_from(ext.mnemonic()) {
             Ok(AttrKind::Layout) => Layout::read(v.opt, body).and_then(|l| l.verify()),
-            Ok(AttrKind::ScatterTdesc) => match params(body).iter().find(|(k, _)| *k == "chunk_size").and_then(|(_, v)| v.split(':').next()?.trim().parse::<i64>().ok()) {
-                Some(c) if c <= 0 => Err("invalid chunk size".into()),
-                _ => Ok(()),
-            },
             _ => Ok(()),
         };
         r.map_err(|why| Invalid::DialectAttr { attr: a.to_string(), why })

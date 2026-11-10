@@ -38,7 +38,7 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 /// %2 = spirv.AccessChain %1[%0] : !spirv.ptr<!spirv.struct<f32, !spirv.array<4xf32>>, Function> -> !spirv.ptr<!spirv.array<4xf32>, Function>
 /// %3 = spirv.Load "Function" %2 ["Volatile"] : !spirv.array<4xf32>
 /// ```
-#[mlir::op("spirv.AccessChain", format = "$base_ptr `[` $indices `]` attr-dict `:` type($base_ptr) `,` type($indices) `->` type($component_ptr)", results(component_ptr))]
+#[mlir::op("spirv.AccessChain", format = "$base_ptr `[` $indices `]` attr-dict `:` type($base_ptr) `,` type($indices) `->` qualified(type($component_ptr))", results(component_ptr))]
 pub struct AccessChainOp<'a> {
     #[slot(base_ptr_ty)]
     pub base_ptr: Value<'a>,
@@ -68,6 +68,50 @@ pub struct AccessChainOp<'a> {
 pub struct AddressOfOp<'a> {
     pub variable: Attribute<'a>,
     pub pointer: Type<'a>,
+}
+
+/// `spirv.All`: Result is true if all components of Vector are true.
+///
+/// Result Type must be a Boolean type scalar.
+///
+/// Vector must be a vector of Boolean type.
+///
+/// <!-- End of AutoGen section -->
+///
+/// #### Example:
+///
+/// ```mlir
+/// %result = spirv.All %vector : vector<4xi1>
+/// ```
+#[mlir::op("spirv.All", format = "$vector attr-dict `:` type($vector)", results(result))]
+pub struct AllOp<'a> {
+    #[slot(vector_ty)]
+    pub vector: Value<'a>,
+    pub vector_ty: Type<'a>,
+    #[dtype(is = i1)]
+    pub result: Type<'a>,
+}
+
+/// `spirv.Any`: Result is true if any component of Vector is true.
+///
+/// Result Type must be a Boolean type scalar.
+///
+/// Vector must be a vector of Boolean type.
+///
+/// <!-- End of AutoGen section -->
+///
+/// #### Example:
+///
+/// ```mlir
+/// %result = spirv.Any %vector : vector<4xi1>
+/// ```
+#[mlir::op("spirv.Any", format = "$vector attr-dict `:` type($vector)", results(result))]
+pub struct AnyOp<'a> {
+    #[slot(vector_ty)]
+    pub vector: Value<'a>,
+    pub vector_ty: Type<'a>,
+    #[dtype(is = i1)]
+    pub result: Type<'a>,
 }
 
 /// `spirv.AtomicAnd`: Perform the following steps atomically with respect to any other atomic     accesses within Scope to the same location:
@@ -351,8 +395,8 @@ pub struct AtomicIDecrementOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %0 = spirv.AtomicIncrement <Device> <None> %pointer :
-///                          !spirv.ptr<i32, StorageBuffer>
+/// %0 = spirv.AtomicIIncrement <Device> <None> %pointer :
+///                            !spirv.ptr<i32, StorageBuffer>
 /// ```
 #[mlir::op("spirv.AtomicIIncrement", format = "$memory_scope $semantics $pointer attr-dict `:` type($pointer)", results(result))]
 pub struct AtomicIIncrementOp<'a> {
@@ -406,6 +450,39 @@ pub struct AtomicISubOp<'a> {
     pub pointer_ty: Type<'a>,
     #[dtype(el = pointer_ty)]
     pub value_ty: Type<'a>,
+    #[dtype(el = pointer_ty)]
+    pub result: Type<'a>,
+}
+
+/// `spirv.AtomicLoad`: Atomically load through Pointer using the given Semantics.
+///
+/// All subparts of the value that is loaded are read atomically with respect
+/// to all other atomic accesses to it within Scope.
+///
+/// Result Type must be a scalar of integer type or floating-point type.
+///
+/// The type of the value pointed to by Pointer must be the same as Result
+/// Type.
+///
+/// Memory is a memory Scope.
+///
+/// <!-- End of AutoGen section -->
+///
+/// #### Example:
+///
+/// ```mlir
+/// %0 = spirv.AtomicLoad <Workgroup> <Acquire> %pointer :
+///                       !spirv.ptr<i32, Workgroup>
+/// ```
+#[mlir::op("spirv.AtomicLoad", format = "$memory_scope $semantics $pointer attr-dict `:` type($pointer)", results(result))]
+pub struct AtomicLoadOp<'a> {
+    #[slot(pointer_ty)]
+    pub pointer: Value<'a>,
+    #[attr(dialect = "spirv.scope")]
+    pub memory_scope: Attribute<'a>,
+    #[attr(dialect = "spirv.memory_semantics")]
+    pub semantics: Attribute<'a>,
+    pub pointer_ty: Type<'a>,
     #[dtype(el = pointer_ty)]
     pub result: Type<'a>,
 }
@@ -536,6 +613,39 @@ pub struct AtomicSMinOp<'a> {
     pub value_ty: Type<'a>,
     #[dtype(el = pointer_ty)]
     pub result: Type<'a>,
+}
+
+/// `spirv.AtomicStore`: Atomically store through Pointer using the given Semantics.
+///
+/// All subparts of Value are written atomically with respect to all other
+/// atomic accesses to it within Scope.
+///
+/// The type of the value pointed to by Pointer must be the same as the type
+/// of Value, and must be a scalar of integer type or floating-point type.
+///
+/// Memory is a memory Scope.
+///
+/// <!-- End of AutoGen section -->
+///
+/// #### Example:
+///
+/// ```mlir
+/// spirv.AtomicStore <Workgroup> <Release> %pointer, %value :
+///                   !spirv.ptr<i32, Workgroup>
+/// ```
+#[mlir::op("spirv.AtomicStore", format = "$memory_scope $semantics $pointer `,` $value attr-dict `:` type($pointer)")]
+pub struct AtomicStoreOp<'a> {
+    #[slot(pointer_ty)]
+    pub pointer: Value<'a>,
+    #[slot(value_ty)]
+    pub value: Value<'a>,
+    #[attr(dialect = "spirv.scope")]
+    pub memory_scope: Attribute<'a>,
+    #[attr(dialect = "spirv.memory_semantics")]
+    pub semantics: Attribute<'a>,
+    pub pointer_ty: Type<'a>,
+    #[dtype(el = pointer_ty)]
+    pub value_ty: Type<'a>,
 }
 
 /// `spirv.AtomicUMax`: Perform the following steps atomically with respect to any other atomic     accesses within Scope to the same location:
@@ -831,11 +941,11 @@ pub struct BitReverseOp<'a> {
 
 /// `spirv.Bitcast`: Bit pattern-preserving type conversion.
 ///
-/// Result Type must be an OpTypePointer, or a scalar or vector of
-/// numerical-type.
+/// Result Type must be an OpTypePointer, cooperative matrix, or a scalar or
+/// vector of numerical-type.
 ///
-/// Operand must have a type of OpTypePointer, or a scalar or vector of
-/// numerical-type. It must be a different type than Result Type.
+/// Operand must have a type of OpTypePointer, cooperative matrix, or a scalar
+/// or vector of numerical-type. It must be a different type than Result Type.
 ///
 /// If either Result Type or Operand is a pointer, the other must be a
 /// pointer (diverges from the SPIR-V spec).
@@ -1174,6 +1284,27 @@ pub struct CLAtanhOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.CL.cbrt`: Compute the cube root of x.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.cbrt %0 : f32
+/// %3 = spirv.CL.cbrt %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.cbrt", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLCbrtOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.CL.ceil`: Round x to integral value using the round to positive infinity rounding     mode.
 ///
 /// Result Type and x must be floating-point or vector(2,3,4,8,16) of
@@ -1192,6 +1323,52 @@ pub struct CLAtanhOp<'a> {
 pub struct CLCeilOp<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.clz`: Count leading zeros in operand
+///
+/// Returns the number of most-significant 0-bits in x.
+///
+/// Result Type and x must be integer or vector(2,3,4,8,16) of
+/// integer values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.clz %0 : i32
+/// %3 = spirv.CL.clz %1 : vector<3xi16>
+/// ```
+#[mlir::op("spirv.CL.clz", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLClzOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.copysign`: Computes the value with the magnitude of x and the sign of y.
+///
+/// Result Type, x and y must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.copysign %0, %1 : f32
+/// %3 = spirv.CL.copysign %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.copysign", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct CLCopysignOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
     pub result: Type<'a>,
 }
 
@@ -1258,6 +1435,69 @@ pub struct CLErfOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.CL.erfc`: Complementary error function of x.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.erfc %0 : f32
+/// %3 = spirv.CL.erfc %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.erfc", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLErfcOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.exp10`: Compute the base-10 exponential of x.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand,
+/// must be of the same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.exp10 %0 : f32
+/// %3 = spirv.CL.exp10 %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.exp10", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLExp10Op<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.exp2`: Compute the base-2 exponential of x.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand,
+/// must be of the same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.exp2 %0 : f32
+/// %3 = spirv.CL.exp2 %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.exp2", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLExp2Op<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.CL.exp`: Exponentiation of Operand 1
 ///
 /// Compute the base-e exponential of x. (i.e. ex)
@@ -1276,6 +1516,27 @@ pub struct CLErfOp<'a> {
 /// ```
 #[mlir::op("spirv.CL.exp", format = "$operand `:` type($operand) attr-dict", results(result))]
 pub struct CLExpOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.expm1`: Compute the base-e exponential of x minus 1.0.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand,
+/// must be of the same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.expm1 %0 : f32
+/// %3 = spirv.CL.expm1 %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.expm1", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLExpm1Op<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
     pub result: Type<'a>,
@@ -1354,6 +1615,31 @@ pub struct CLFMinOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.CL.fdim`: Compute the positive difference between x and y.
+///
+/// Returns x - y if x > y, otherwise it returns +0.0.
+///
+/// Result Type, x and y must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.fdim %0, %1 : f32
+/// %3 = spirv.CL.fdim %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.fdim", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct CLFdimOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.CL.floor`: Round x to the integral value using the round to negative infinity     rounding mode.
 ///
 /// Result Type and x must be floating-point or vector(2,3,4,8,16) of
@@ -1397,6 +1683,147 @@ pub struct CLFmaOp<'a> {
     pub y: Value<'a>,
     #[slot(result)]
     pub z: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.fmod`: Modulus. Returns x - y * trunc(x / y), with the same sign as x.
+///
+/// Result Type, x and y must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.fmod %0, %1 : f32
+/// %3 = spirv.CL.fmod %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.fmod", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct CLFmodOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.hypot`: Compute the square root of x^2 + y^2.
+///
+/// Result Type, x and y must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.hypot %0, %1 : f32
+/// %3 = spirv.CL.hypot %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.hypot", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct CLHypotOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.ldexp`: Builds y such that y = significand * 2^exponent.
+///
+/// Builds a floating-point number from x and the corresponding
+/// integral exponent of two in exp:
+///
+/// significand * 2^exponent
+///
+/// The operand x must be a scalar or vector whose component type is
+/// floating-point.
+///
+/// The exp operand must be a scalar or vector with integer component type.
+/// The number of components in x and exp must be the same.
+///
+/// Result Type must be the same type as the type of x. Results are computed
+/// per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %y = spirv.CL.ldexp %x, %exp : f32, i32 -> f32
+/// %y = spirv.CL.ldexp %x, %exp : vector<3xf32>, vector<3xi32> -> vector<3xf32>
+/// ```
+#[mlir::op("spirv.CL.ldexp", format = "attr-dict $x `,` $exp `:` type($x) `,` type($exp) `->` type($y)", results(y))]
+pub struct CLLdexpOp<'a> {
+    #[slot(y)]
+    pub x: Value<'a>,
+    #[slot(exp_ty)]
+    pub exp: Value<'a>,
+    pub exp_ty: Type<'a>,
+    pub y: Type<'a>,
+}
+
+/// `spirv.CL.log10`: Compute the base-10 logarithm of x.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.log10 %0 : f32
+/// %3 = spirv.CL.log10 %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.log10", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLLog10Op<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.log1p`: Compute the natural logarithm of x + 1.0.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.log1p %0 : f32
+/// %3 = spirv.CL.log1p %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.log1p", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLLog1pOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.log2`: Compute the base-2 logarithm of x.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.log2 %0 : f32
+/// %3 = spirv.CL.log2 %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.log2", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLLog2Op<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
     pub result: Type<'a>,
 }
 
@@ -1472,6 +1899,35 @@ pub struct CLPowOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.CL.pown`: Compute x to the power y, where y is an integer.
+///
+/// Result is x raised to the power y, where y is an integer.
+///
+/// The operand x must be a scalar or vector whose component type is
+/// floating-point.
+///
+/// The y operand must be a scalar or vector with integer component type.
+/// The number of components in x and y must be the same.
+///
+/// Result Type must be the same type as the type of x. Results are computed
+/// per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.pown %0, %1 : f32, i32 -> f32
+/// %2 = spirv.CL.pown %0, %1 : vector<3xf32>, vector<3xi32> -> vector<3xf32>
+/// ```
+#[mlir::op("spirv.CL.pown", format = "attr-dict $x `,` $y `:` type($x) `,` type($y) `->` type($result)", results(result))]
+pub struct CLPownOp<'a> {
+    #[slot(result)]
+    pub x: Value<'a>,
+    #[slot(y_ty)]
+    pub y: Value<'a>,
+    pub y_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.CL.printf`: The printf extended instruction writes output to an implementation-     defined stream such as stdout under control of the string pointed to by     format that specifies how subsequent arguments are converted for output.
 ///
 /// printf returns 0 if it was executed successfully and -1 otherwise.
@@ -1520,6 +1976,35 @@ pub struct CLPrintfOp<'a> {
 pub struct CLRintOp<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.CL.rootn`: Compute the n-th root of x, where n is an integer.
+///
+/// Result is the n-th root of x, where n is an integer.
+///
+/// The operand x must be a scalar or vector whose component type is
+/// floating-point.
+///
+/// The n operand must be a scalar or vector with integer component type.
+/// The number of components in x and n must be the same.
+///
+/// Result Type must be the same type as the type of x. Results are computed
+/// per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.rootn %0, %1 : f32, i32 -> f32
+/// %2 = spirv.CL.rootn %0, %1 : vector<3xf32>, vector<3xi32> -> vector<3xf32>
+/// ```
+#[mlir::op("spirv.CL.rootn", format = "attr-dict $x `,` $n `:` type($x) `,` type($n) `->` type($result)", results(result))]
+pub struct CLRootnOp<'a> {
+    #[slot(result)]
+    pub x: Value<'a>,
+    #[slot(n_ty)]
+    pub n: Value<'a>,
+    pub n_ty: Type<'a>,
     pub result: Type<'a>,
 }
 
@@ -1739,6 +2224,27 @@ pub struct CLTanhOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.CL.trunc`: Round to integral value using the round to zero rounding mode.
+///
+/// Result Type and x must be floating-point or vector(2,3,4,8,16) of
+/// floating-point values.
+///
+/// All of the operands, including the Result Type operand, must be of the
+/// same type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.CL.trunc %0 : f32
+/// %3 = spirv.CL.trunc %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.CL.trunc", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct CLTruncOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.CL.u_max`: Return maximum of two unsigned integer operands
 ///
 /// Returns y if x < y, otherwise it returns x, where x and y are treated as unsigned integers.
@@ -1818,7 +2324,7 @@ pub struct CLUMinOp<'a> {
 ///   (vector<3xf32>, !spirv.array<4xf32>, !spirv.struct<(f32)>) ->
 ///     !spirv.struct<(vector<3xf32>, !spirv.array<4xf32>, !spirv.struct<(f32)>)>
 /// ```
-#[mlir::op("spirv.CompositeConstruct", format = "$constituents attr-dict `:` `(` type($constituents) `)` `->` type($result)", results(result))]
+#[mlir::op("spirv.CompositeConstruct", format = "$constituents attr-dict `:` `(` qualified(type($constituents)) `)` `->` type($result)", results(result))]
 pub struct CompositeConstructOp<'a> {
     #[slot(constituents_ty)]
     pub constituents: Vec<Value<'a>>,
@@ -2341,7 +2847,7 @@ pub struct EXTEmitMeshTasksOp<'a> {
 /// ```mlir
 /// spirv.SetMeshOutputsEXT %vcount, %pcount : i32, i32
 /// ```
-#[mlir::op("spirv.EXT.SetMeshOutputs", format = "$vertex_count `,` $primitive_count attr-dict `:` type($vertex_count) `,` type($primitive_count)")]
+#[mlir::op("spirv.EXT.SetMeshOutputs", format = "$vertex_count `,` $primitive_count attr-dict `:` qualified(type($vertex_count)) `,` qualified(type($primitive_count))")]
 pub struct EXTSetMeshOutputsOp<'a> {
     #[slot(vertex_count_ty)]
     pub vertex_count: Value<'a>,
@@ -2450,6 +2956,43 @@ pub struct EntryPointOp<'a> {
     pub interface: Attribute<'a>,
 }
 
+/// `spirv.ExecutionModeId`: Declare an execution mode for an entry point, using <id>s as Extra     Operands.
+///
+/// Entry Point must be the Entry Point <id> operand of an OpEntryPoint
+/// instruction.
+///
+/// Mode is the execution mode. See Execution Mode.
+///
+/// This instruction is only valid if the Mode operand is an execution mode
+/// that takes Extra Operands that are <id> operands. Otherwise, use
+/// OpExecutionMode.
+///
+/// <!-- End of AutoGen section -->
+///
+/// ```text
+/// execution-mode ::= "Invocations" | "SpacingEqual" |
+///                        <and other SPIR-V execution modes...>
+/// execution-mode-id-op ::= `spirv.ExecutionMode ` ssa-use execution-mode
+///                           symbol-reference (`, ` symbol-reference)*
+/// ```
+///
+/// #### Example:
+///
+/// ```mlir
+/// spirv.ExecutionModeId @foo "LocalSizeId" @var0, @var1, @var2
+/// spirv.ExecutionModeId @bar "LocalSizeHintId" @x, @y, @z
+/// ```
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("spirv.ExecutionModeId")]
+pub struct ExecutionModeIdOp<'a> {
+    #[attr(name = "fn")]
+    pub fn_: Attribute<'a>,
+    #[attr(dialect = "spirv.execution_mode")]
+    pub execution_mode: Attribute<'a>,
+    pub values: Attribute<'a>,
+}
+
 /// `spirv.ExecutionMode`: Declare an execution mode for an entry point.
 ///
 /// Entry Point must be the Entry Point `<id>` operand of an OpEntryPoint
@@ -2486,6 +3029,21 @@ pub struct ExecutionModeOp<'a> {
     #[attr(dialect = "spirv.execution_mode")]
     pub execution_mode: Attribute<'a>,
     pub values: Attribute<'a>,
+}
+
+/// `spirv.ExperimentalML.Call`: Call an Arm experimental ML operation.
+///
+/// Calls an operation encoded using the Arm.ExperimentalMLOperations extended
+/// instruction set. The `opcode` attribute is serialized as the operation
+/// opcode literal integer operand of CALL.
+#[mlir::op("spirv.ExperimentalML.Call", format = "`opcode` `=` $opcode `,` $parameters attr-dict `:` functional-type($parameters, $output)", results(output))]
+pub struct ExperimentalMLCallOp<'a> {
+    #[slot(parameters_ty)]
+    pub parameters: Vec<Value<'a>>,
+    #[attr(int = "i32")]
+    pub opcode: Attribute<'a>,
+    pub parameters_ty: Vec<Type<'a>>,
+    pub output: Type<'a>,
 }
 
 /// `spirv.FAdd`: Floating-point addition of Operand 1 and Operand 2.
@@ -2525,8 +3083,8 @@ pub struct FAddOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %1 = spirv.FConvertOp %0 : f32 to f64
-/// %3 = spirv.FConvertOp %2 : vector<3xf32> to vector<3xf64>
+/// %1 = spirv.FConvert %0 : f32 to f64
+/// %3 = spirv.FConvert %2 : vector<3xf32> to vector<3xf64>
 /// ```
 #[mlir::op("spirv.FConvert", format = "$operand attr-dict `:` type($operand) `to` type($result)", results(result))]
 pub struct FConvertOp<'a> {
@@ -2810,8 +3368,8 @@ pub struct FOrdNotEqualOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %4 = spirv.FRemOp %0, %1 : f32
-/// %5 = spirv.FRemOp %2, %3 : vector<4xf32>
+/// %4 = spirv.FRem %0, %1 : f32
+/// %5 = spirv.FRem %2, %3 : vector<4xf32>
 /// ```
 #[mlir::op("spirv.FRem", format = "$operand1 `,` $operand2 attr-dict `:` type($result)", results(result))]
 pub struct FRemOp<'a> {
@@ -2834,8 +3392,8 @@ pub struct FRemOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %4 = spirv.FRemOp %0, %1 : f32
-/// %5 = spirv.FRemOp %2, %3 : vector<4xf32>
+/// %4 = spirv.FSub %0, %1 : f32
+/// %5 = spirv.FSub %2, %3 : vector<4xf32>
 /// ```
 #[mlir::op("spirv.FSub", format = "$operand1 `,` $operand2 attr-dict `:` type($result)", results(result))]
 pub struct FSubOp<'a> {
@@ -3094,9 +3652,7 @@ pub struct FuncOp<'a> {
 /// spirv.FunctionCall @f_void(%arg0) : (i32) ->  ()
 /// %0 = spirv.FunctionCall @f_iadd(%arg0, %arg1) : (i32, i32) -> i32
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("spirv.FunctionCall", results(return_value))]
+#[mlir::op("spirv.FunctionCall", format = "$callee `(` $arguments `)` attr-dict `:` functional-type($arguments, $return_value)", results(return_value))]
 pub struct FunctionCallOp<'a> {
     #[slot(arguments_ty)]
     pub arguments: Vec<Value<'a>>,
@@ -3112,7 +3668,7 @@ pub struct FunctionCallOp<'a> {
 /// The standard trigonometric arc cosine of x radians.
 ///
 /// Result is an angle, in radians, whose cosine is x. The range of result
-/// values is [0, π]. Result is undefined if abs x > 1.
+/// values is [0, π]. The resulting value is NaN if abs x > 1.
 ///
 /// The operand x must be a scalar or vector whose component type is 16-bit or
 /// 32-bit floating-point.
@@ -3162,7 +3718,7 @@ pub struct GLAcoshOp<'a> {
 /// The standard trigonometric arc sine of x radians.
 ///
 /// Result is an angle, in radians, whose sine is x. The range of result values
-/// is [-π / 2, π / 2]. Result is undefined if abs x > 1.
+/// is [-π / 2, π / 2]. The resulting value is NaN if abs x > 1.
 ///
 /// The operand x must be a scalar or vector whose component type is 16-bit or
 /// 32-bit floating-point.
@@ -3203,6 +3759,33 @@ pub struct GLAsinOp<'a> {
 pub struct GLAsinhOp<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GL.Atan2`: Arc tangent of y / x in radians
+///
+/// Result is the arc tangent of y / x. The signs of x and y are used to
+/// determine what quadrant the angle is in. The range of result values is
+/// [-π, π]. Result is poison if x and y are both 0.
+///
+/// The operand y and x must be a scalar or vector whose component type is
+/// 16-bit or 32-bit floating-point.
+///
+/// Result Type and the type of all operands must be the same type. Results are
+/// computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.Atan2 %0, %1 : f32
+/// %3 = spirv.GL.Atan2 %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.GL.Atan2", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct GLAtan2Op<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
     pub result: Type<'a>,
 }
 
@@ -3355,6 +3938,30 @@ pub struct GLCrossOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.GL.Degrees`: Convert a quantity in radians to degrees
+///
+/// Result is the quantity in degrees for the quantity x given in radians, i.e.,
+/// (180 / π) * x.
+///
+/// The operand x must be a scalar or vector whose component type is 16-bit or
+/// 32-bit floating-point.
+///
+/// Result Type and the type of x must be the same type. Results are computed
+/// per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.Degrees %0 : f32
+/// %3 = spirv.GL.Degrees %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.GL.Degrees", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct GLDegreesOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.GL.Distance`: Return distance between two points
 ///
 /// Result is the distance between p0 and p1, i.e., length(p0 - p1).
@@ -3454,7 +4061,7 @@ pub struct GLFAbsOp<'a> {
 
 /// `spirv.GL.FClamp`: Clamp x between min and max values.
 ///
-/// Result is min(max(x, minVal), maxVal). The resulting value is undefined if
+/// Result is min(max(x, minVal), maxVal). The resulting value is poison if
 /// minVal > maxVal. The semantics used by min() and max() are those of FMin and
 /// FMax.
 ///
@@ -3493,8 +4100,8 @@ pub struct GLFClampOp<'a> {
 
 /// `spirv.GL.FMax`: Return maximum of two floating-point operands
 ///
-/// Result is y if x < y; otherwise result is x. Which operand is the
-/// result is undefined if one of the operands is a NaN.
+/// Result is y if x < y; otherwise result is x. Which operand is the result
+/// if one of the operands is a NaN is implementation-dependent.
 ///
 /// The operands must all be a scalar or vector whose component type
 /// is floating-point.
@@ -3519,8 +4126,8 @@ pub struct GLFMaxOp<'a> {
 
 /// `spirv.GL.FMin`: Return minimum of two floating-point operands
 ///
-/// Result is y if y < x; otherwise result is x. Which operand is the result is
-/// undefined if one of the operands is a NaN.
+/// Result is y if y < x; otherwise result is x. Which operand is the result
+/// if one of the operands is a NaN is implementation-dependent.
 ///
 /// The operands must all be a scalar or vector whose component type is
 /// floating-point.
@@ -3754,7 +4361,7 @@ pub struct GLFractOp<'a> {
 /// x = significand * 2^exponent
 ///
 /// If x is a zero, the exponent is 0.0. If x is an infinity or a NaN, the
-/// exponent is undefined. If x is 0.0, the significand is 0.0. If x is -0.0,
+/// exponent is poison. If x is 0.0, the significand is 0.0. If x is -0.0,
 /// the significand is -0.0
 ///
 /// Result Type must be an OpTypeStruct with two members. Member 0 must have
@@ -3782,7 +4389,7 @@ pub struct GLFrexpStructOp<'a> {
 
 /// `spirv.GL.InverseSqrt`: Reciprocal of sqrt(operand)
 ///
-/// Result is the reciprocal of sqrt x. Result is undefined if x <= 0.
+/// Result is the reciprocal of sqrt x. The resulting value is NaN if x < 0.
 ///
 /// The operand x must be a scalar or vector whose component type is
 /// floating-point.
@@ -3810,14 +4417,14 @@ pub struct GLInverseSqrtOp<'a> {
 ///
 /// significand * 2^exponent
 ///
-/// If this product is too large to be represented in the floating-point
-/// type, the resulting value is undefined. If exp is greater than +128
-/// (single precision) or +1024 (double precision), the resulting value is
-/// undefined. If exp is less than -126 (single precision) or -1022 (double precision),
-/// the result may be flushed to zero. Additionally, splitting the value
-/// into a significand and exponent using frexp and then reconstructing a
-/// floating-point value using ldexp should yield the original input for
-/// zero and all finite non-denormalized values.
+/// If this product is too large to be finitely represented in the floating-point
+/// type, the resulting value is poison. If exp is greater than +128 (single
+/// precision), +1024 (double precision) or +16 (half precision), the resulting
+/// value is poison. If exp is less than -126 (single precision) or -1022 (double
+/// precision), the result may be flushed to zero. Additionally, splitting the
+/// value into a significand and exponent using frexp and then reconstructing a
+/// floating-point value using ldexp should yield the original input for zero and
+/// all finite non-denormalized values.
 ///
 /// The operand x must be a scalar or vector whose component type is floating-point.
 ///
@@ -3900,7 +4507,7 @@ pub struct GLLog2Op<'a> {
 /// `spirv.GL.Log`: Natural logarithm of the operand
 ///
 /// Result is the natural logarithm of x, i.e., the value y which satisfies the
-/// equation x = ey. Result is undefined if x <= 0.
+/// equation x = ey. The resulting value is NaN if x < 0.
 ///
 /// The operand x must be a scalar or vector whose component type is 16-bit or
 /// 32-bit floating-point.
@@ -3918,6 +4525,96 @@ pub struct GLLog2Op<'a> {
 pub struct GLLogOp<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GL.NClamp`: Clamp x between min and max values, NaN-aware
+///
+/// Result is min(max(x, minVal), maxVal). The resulting value is poison if
+/// minVal > maxVal. The semantics used by min() and max() are those of NMin
+/// and NMax, so NaN arguments are considered missing.
+///
+/// The operands must all be a scalar or vector whose component type is
+/// floating-point.
+///
+/// Result Type and the type of all operands must be the same type. Results are
+/// computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.NClamp %x, %min, %max : f32
+/// %3 = spirv.GL.NClamp %x, %min, %max : vector<3xf16>
+/// ```
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("spirv.GL.NClamp", results(result))]
+pub struct GLNClampOp<'a> {
+    #[slot(x_ty)]
+    pub x: Value<'a>,
+    #[slot(y_ty)]
+    pub y: Value<'a>,
+    #[slot(z_ty)]
+    pub z: Value<'a>,
+    pub x_ty: Type<'a>,
+    pub y_ty: Type<'a>,
+    pub z_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GL.NMax`: Return maximum of two floating-point operands, NaN-aware
+///
+/// Result is y if x < y; otherwise result is x, where x and y are interpreted
+/// as floating-point. NMax considers a NaN argument as missing, so if one
+/// operand is a NaN the result is the other operand. If both operands are NaNs,
+/// the result is a NaN.
+///
+/// The operands must all be a scalar or vector whose component type is
+/// floating-point.
+///
+/// Result Type and the type of all operands must be the same type. Results are
+/// computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.NMax %0, %1 : f32
+/// %3 = spirv.GL.NMax %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.GL.NMax", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct GLNMaxOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GL.NMin`: Return minimum of two floating-point operands, NaN-aware
+///
+/// Result is y if y < x; otherwise result is x, where x and y are interpreted
+/// as floating-point. NMin considers a NaN argument as missing, so if one
+/// operand is a NaN the result is the other operand. If both operands are NaNs,
+/// the result is a NaN.
+///
+/// The operands must all be a scalar or vector whose component type is
+/// floating-point.
+///
+/// Result Type and the type of all operands must be the same type. Results are
+/// computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.NMin %0, %1 : f32
+/// %3 = spirv.GL.NMin %0, %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.GL.NMin", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct GLNMinOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
     pub result: Type<'a>,
 }
 
@@ -4008,7 +4705,7 @@ pub struct GLPackSnorm4x8Op<'a> {
 ///
 /// Result is x raised to the y power; x^y.
 ///
-/// Result is undefined if x = 0 and y ≤ 0.
+/// The resulting value is poison if x < 0. Result is poison if x = 0 and y ≤ 0.
 ///
 /// The operand x and y must be a scalar or vector whose component type is
 /// 16-bit or 32-bit floating-point.
@@ -4028,6 +4725,30 @@ pub struct GLPowOp<'a> {
     pub lhs: Value<'a>,
     #[slot(result)]
     pub rhs: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GL.Radians`: Convert a quantity in degrees to radians
+///
+/// Result is the quantity in radians for the quantity x given in degrees, i.e.,
+/// (π / 180) * x.
+///
+/// The operand x must be a scalar or vector whose component type is 16-bit or
+/// 32-bit floating-point.
+///
+/// Result Type and the type of x must be the same type. Results are computed
+/// per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.Radians %0 : f32
+/// %3 = spirv.GL.Radians %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.GL.Radians", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct GLRadiansOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
     pub result: Type<'a>,
 }
 
@@ -4134,7 +4855,7 @@ pub struct GLSAbsOp<'a> {
 /// `spirv.GL.SClamp`: Clamp x between min and max values.
 ///
 /// Result is min(max(x, minVal), maxVal), where x, minVal and maxVal are
-/// interpreted as signed integers. The resulting value is undefined if
+/// interpreted as signed integers. The resulting value is poison if
 /// minVal > maxVal.
 ///
 /// Result Type and the type of the operands must both be integer scalar or
@@ -4287,9 +5008,47 @@ pub struct GLSinhOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.GL.SmoothStep`: Return smooth Hermite interpolation between 0 and 1
+///
+/// Result is 0.0 if x <= edge0 and 1.0 if x >= edge1 and performs smooth
+/// Hermite interpolation between 0 and 1 when edge0 < x < edge1. This is
+/// equivalent to:
+///   t = clamp((x - edge0) / (edge1 - edge0), 0, 1)
+///   t * t * (3 - 2 * t)
+///
+/// The resulting value is undefined if edge0 >= edge1.
+///
+/// The operands must all be a scalar or vector whose component type is
+/// floating-point.
+///
+/// Result Type and the type of all operands must be the same type. Results
+/// are computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.SmoothStep %edge0, %edge1, %x : f32
+/// %3 = spirv.GL.SmoothStep %edge0, %edge1, %x : vector<3xf32>
+/// ```
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("spirv.GL.SmoothStep", results(result))]
+pub struct GLSmoothStepOp<'a> {
+    #[slot(x_ty)]
+    pub x: Value<'a>,
+    #[slot(y_ty)]
+    pub y: Value<'a>,
+    #[slot(z_ty)]
+    pub z: Value<'a>,
+    pub x_ty: Type<'a>,
+    pub y_ty: Type<'a>,
+    pub z_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.GL.Sqrt`: Returns the square root of the operand
 ///
-/// Result is the square root of x. Result is undefined if x < 0.
+/// Result is the square root of x. The resulting value is NaN if x < 0.
 ///
 /// The operand x must be a scalar or vector whose component type is
 /// floating-point.
@@ -4307,6 +5066,31 @@ pub struct GLSinhOp<'a> {
 pub struct GLSqrtOp<'a> {
     #[slot(result)]
     pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GL.Step`: Return 0.0 if x < edge, else 1.0
+///
+/// Result is 0.0 if x < edge; otherwise result is 1.0.
+///
+/// The operands must all be a scalar or vector whose component type is
+/// floating-point.
+///
+/// Result Type and the type of all operands must be the same type. Results
+/// are computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.Step %edge, %x : f32
+/// %3 = spirv.GL.Step %edge, %x : vector<3xf32>
+/// ```
+#[mlir::op("spirv.GL.Step", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
+pub struct GLStepOp<'a> {
+    #[slot(result)]
+    pub lhs: Value<'a>,
+    #[slot(result)]
+    pub rhs: Value<'a>,
     pub result: Type<'a>,
 }
 
@@ -4356,10 +5140,34 @@ pub struct GLTanhOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.GL.Trunc`: Rounds to the nearest whole number toward zero
+///
+/// Result is the value equal to the nearest whole number to x whose absolute
+/// value is not larger than the absolute value of x.
+///
+/// The operand x must be a scalar or vector whose component type is
+/// floating-point.
+///
+/// Result Type and the type of x must be the same type. Results are computed
+/// per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.GL.Trunc %0 : f32
+/// %3 = spirv.GL.Trunc %1 : vector<3xf16>
+/// ```
+#[mlir::op("spirv.GL.Trunc", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct GLTruncOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.GL.UClamp`: Clamp x between min and max values.
 ///
 /// Result is min(max(x, minVal), maxVal), where x, minVal and maxVal are
-/// interpreted as unsigned integers. The resulting value is undefined if
+/// interpreted as unsigned integers. The resulting value is poison if
 /// minVal > maxVal.
 ///
 /// Result Type and the type of the operands must both be integer scalar or
@@ -4527,8 +5335,8 @@ pub struct GLUnpackSnorm4x8Op<'a> {
 /// #### Example:
 ///
 /// ```mlir
-///    %1 = spirv.GenericCastToPtrExplicitOp %0 : !spirv.ptr<f32, Generic> to
-///    !spirv.ptr<f32, CrossWorkGroup>
+/// %1 = spirv.GenericCastToPtrExplicit %0 : !spirv.ptr<f32, Generic> to
+///      !spirv.ptr<f32, CrossWorkgroup>
 /// ```
 #[mlir::op("spirv.GenericCastToPtrExplicit", format = "$pointer attr-dict `:` type($pointer) `to` type($result)", results(result))]
 pub struct GenericCastToPtrExplicitOp<'a> {
@@ -4552,8 +5360,8 @@ pub struct GenericCastToPtrExplicitOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-///    %1 = spirv.GenericCastToPtrOp %0 : !spirv.ptr<f32, Generic> to
-///    !spirv.ptr<f32, CrossWorkGroup>
+/// %1 = spirv.GenericCastToPtr %0 : !spirv.ptr<f32, Generic> to
+///      !spirv.ptr<f32, CrossWorkgroup>
 /// ```
 #[mlir::op("spirv.GenericCastToPtr", format = "$pointer attr-dict `:` type($pointer) `to` type($result)", results(result))]
 pub struct GenericCastToPtrOp<'a> {
@@ -4596,7 +5404,7 @@ pub struct GenericCastToPtrOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// spirv.GlobalVariable @var0 : !spirv.ptr<f32, Input> @var0
+/// spirv.GlobalVariable @var0 : !spirv.ptr<f32, Input>
 /// spirv.GlobalVariable @var1 initializer(@var0) : !spirv.ptr<f32, Output>
 /// spirv.GlobalVariable @var2 bind(1, 2) : !spirv.ptr<f32, Uniform>
 /// spirv.GlobalVariable @var3 built_in("GlobalInvocationId") : !spirv.ptr<vector<3xi32>, Input>
@@ -4768,8 +5576,8 @@ pub struct GraphOutputsARMOp<'a> {
 /// %vector_value = ... : vector<4xf32>
 /// %scalar_localid = ... : i32
 /// %vector_localid = ... : vector<3xi32>
-/// %0 = spirv.GroupBroadcast "Subgroup" %scalar_value, %scalar_localid : f32, i32
-/// %1 = spirv.GroupBroadcast "Workgroup" %vector_value, %vector_localid :
+/// %0 = spirv.GroupBroadcast <Subgroup> %scalar_value, %scalar_localid : f32, i32
+/// %1 = spirv.GroupBroadcast <Workgroup> %vector_value, %vector_localid :
 ///   vector<4xf32>, vector<3xi32>
 /// ```
 #[mlir::op("spirv.GroupBroadcast", format = "$execution_scope $value `,` $localid attr-dict `:` type($value) `,` type($localid)", results(result))]
@@ -5032,7 +5840,7 @@ pub struct GroupNonUniformAllEqualOp<'a> {
 ///
 /// ```mlir
 /// %predicate = ... : i1
-/// %0 = spirv.GroupNonUniformAll "Subgroup" %predicate : i1
+/// %0 = spirv.GroupNonUniformAll <Subgroup> %predicate : i1
 /// ```
 #[mlir::op("spirv.GroupNonUniformAll", format = "$execution_scope $predicate attr-dict `:` type($result)", results(result))]
 pub struct GroupNonUniformAllOp<'a> {
@@ -5065,7 +5873,7 @@ pub struct GroupNonUniformAllOp<'a> {
 ///
 /// ```mlir
 /// %predicate = ... : i1
-/// %0 = spirv.GroupNonUniformAny "Subgroup" %predicate : i1
+/// %0 = spirv.GroupNonUniformAny <Subgroup> %predicate : i1
 /// ```
 #[mlir::op("spirv.GroupNonUniformAny", format = "$execution_scope $predicate attr-dict `:` type($result)", results(result))]
 pub struct GroupNonUniformAnyOp<'a> {
@@ -5247,7 +6055,7 @@ pub struct GroupNonUniformBallotOp<'a> {
 /// %1 = spirv.GroupNonUniformBitwiseAnd <Subgroup> <ClusteredReduce>
 ///        %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformBitwiseAnd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformBitwiseAnd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformBitwiseAndOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5291,7 +6099,7 @@ pub struct GroupNonUniformBitwiseAndOp<'a> {
 /// %1 = spirv.GroupNonUniformBitwiseOr <Subgroup> <ClusteredReduce>
 ///        %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformBitwiseOr", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformBitwiseOr", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformBitwiseOrOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5335,7 +6143,7 @@ pub struct GroupNonUniformBitwiseOrOp<'a> {
 /// %1 = spirv.GroupNonUniformBitwiseXor <Subgroup> <ClusteredReduce>
 ///        %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformBitwiseXor", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformBitwiseXor", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformBitwiseXorOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5347,6 +6155,36 @@ pub struct GroupNonUniformBitwiseXorOp<'a> {
     pub group_operation: Attribute<'a>,
     pub value_ty: Type<'a>,
     pub cluster_size_ty: Vec<Type<'a>>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.GroupNonUniformBroadcastFirst`: Broadcast the value from the active invocation with the lowest id in     the subgroup.
+///
+/// Result is the Value of the invocation from the active invocations with
+/// the lowest id within the Execution scope to all active invocations
+/// within the Execution scope.
+///
+/// Result Type must be a scalar or vector of floating-point type, integer
+/// type, or Boolean type.
+///
+/// Execution must be Subgroup Scope.
+///
+/// The type of Value must be the same as Result Type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %scalar_value = ... : f32
+/// %vector_value = ... : vector<4xf32>
+/// %0 = spirv.GroupNonUniformBroadcastFirst <Subgroup> %scalar_value : f32
+/// %1 = spirv.GroupNonUniformBroadcastFirst <Subgroup> %vector_value : vector<4xf32>
+/// ```
+#[mlir::op("spirv.GroupNonUniformBroadcastFirst", format = "$execution_scope $value attr-dict `:` type($value)", results(result))]
+pub struct GroupNonUniformBroadcastFirstOp<'a> {
+    #[slot(result)]
+    pub value: Value<'a>,
+    #[attr(dialect = "spirv.scope")]
+    pub execution_scope: Attribute<'a>,
     pub result: Type<'a>,
 }
 
@@ -5373,8 +6211,8 @@ pub struct GroupNonUniformBitwiseXorOp<'a> {
 /// %scalar_value = ... : f32
 /// %vector_value = ... : vector<4xf32>
 /// %id = ... : i32
-/// %0 = spirv.GroupNonUniformBroadcast "Subgroup" %scalar_value, %id : f32, i32
-/// %1 = spirv.GroupNonUniformBroadcast "Workgroup" %vector_value, %id :
+/// %0 = spirv.GroupNonUniformBroadcast <Subgroup> %scalar_value, %id : f32, i32
+/// %1 = spirv.GroupNonUniformBroadcast <Workgroup> %vector_value, %id :
 ///   vector<4xf32>, i32
 /// ```
 #[mlir::op("spirv.GroupNonUniformBroadcast", format = "$execution_scope $value `,` $id attr-dict `:` type($value) `,` type($id)", results(result))]
@@ -5398,7 +6236,7 @@ pub struct GroupNonUniformBroadcastOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %0 = spirv.GroupNonUniformElect : i1
+/// %0 = spirv.GroupNonUniformElect <Workgroup> : i1
 /// ```
 #[mlir::op("spirv.GroupNonUniformElect", format = "$execution_scope attr-dict `:` type($result)", results(result))]
 pub struct GroupNonUniformElectOp<'a> {
@@ -5438,7 +6276,7 @@ pub struct GroupNonUniformElectOp<'a> {
 /// %0 = spirv.GroupNonUniformFAdd <Workgroup> <Reduce> %scalar : f32 -> f32
 /// %1 = spirv.GroupNonUniformFAdd <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xf32>, i32 -> vector<4xf32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformFAdd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformFAdd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformFAddOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5486,7 +6324,7 @@ pub struct GroupNonUniformFAddOp<'a> {
 /// %0 = spirv.GroupNonUniformFMax <Workgroup> <Reduce> %scalar : f32 -> f32
 /// %1 = spirv.GroupNonUniformFMax <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xf32>, i32 -> vector<4xf32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformFMax", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformFMax", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformFMaxOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5534,7 +6372,7 @@ pub struct GroupNonUniformFMaxOp<'a> {
 /// %0 = spirv.GroupNonUniformFMin <Workgroup> <Reduce> %scalar : f32 -> i32
 /// %1 = spirv.GroupNonUniformFMin <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xf32>, i32 -> vector<4xf32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformFMin", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformFMin", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformFMinOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5579,7 +6417,7 @@ pub struct GroupNonUniformFMinOp<'a> {
 /// %0 = spirv.GroupNonUniformFMul <Workgroup> <Reduce> %scalar : f32 -> f32
 /// %1 = spirv.GroupNonUniformFMul <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xf32>, i32 -> vector<4xf32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformFMul", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformFMul", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformFMulOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5622,7 +6460,7 @@ pub struct GroupNonUniformFMulOp<'a> {
 /// %0 = spirv.GroupNonUniformIAdd <Workgroup> <Reduce> %scalar : i32 -> i32
 /// %1 = spirv.GroupNonUniformIAdd <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformIAdd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformIAdd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformIAddOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5665,7 +6503,7 @@ pub struct GroupNonUniformIAddOp<'a> {
 /// %0 = spirv.GroupNonUniformIMul <Workgroup> <Reduce> %scalar : i32 -> i32
 /// %1 = spirv.GroupNonUniformIMul <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformIMul", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformIMul", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformIMulOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5709,7 +6547,7 @@ pub struct GroupNonUniformIMulOp<'a> {
 /// %1 = spirv.GroupNonUniformLogicalAnd <Subgroup> <ClusteredReduce>
 ///        %vector cluster_size(%four) : vector<4xi1>, i32 -> vector<4xi1>
 /// ```
-#[mlir::op("spirv.GroupNonUniformLogicalAnd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformLogicalAnd", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformLogicalAndOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5753,7 +6591,7 @@ pub struct GroupNonUniformLogicalAndOp<'a> {
 /// %1 = spirv.GroupNonUniformLogicalOr <Subgroup> <ClusteredReduce>
 ///        %vector cluster_size(%four) : vector<4xi1>, i32 -> vector<4xi1>
 /// ```
-#[mlir::op("spirv.GroupNonUniformLogicalOr", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformLogicalOr", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformLogicalOrOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5797,7 +6635,7 @@ pub struct GroupNonUniformLogicalOrOp<'a> {
 /// %1 = spirv.GroupNonUniformLogicalXor <Subgroup> <ClusteredReduce>
 ///        %vector cluster_size(%four) : vector<4xi1>, i32 -> vector<4xi1>
 /// ```
-#[mlir::op("spirv.GroupNonUniformLogicalXor", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformLogicalXor", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformLogicalXorOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5854,18 +6692,17 @@ pub struct GroupNonUniformLogicalXorOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %0 = spirv.GroupNonUniformQuadSwap <Subgroup> %value %dir : f32, i32
-/// %1 = spirv.GroupNonUniformQuadSwap <Subgroup> %value %dir : vector<4xf32>, i32
+/// %0 = spirv.GroupNonUniformQuadSwap <Subgroup> <Horizontal> %value : f32
+/// %1 = spirv.GroupNonUniformQuadSwap <Subgroup> <Vertical> %value : vector<4xf32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformQuadSwap", format = "$execution_scope $value $direction attr-dict `:` type($value) `,` type($direction)", results(result))]
+#[mlir::op("spirv.GroupNonUniformQuadSwap", format = "$execution_scope $direction $value attr-dict `:` type($value)", results(result))]
 pub struct GroupNonUniformQuadSwapOp<'a> {
     #[slot(result)]
     pub value: Value<'a>,
-    #[slot(direction_ty)]
-    pub direction: Value<'a>,
     #[attr(dialect = "spirv.scope")]
     pub execution_scope: Attribute<'a>,
-    pub direction_ty: Type<'a>,
+    #[attr(dialect = "spirv.quad_swap_direction")]
+    pub direction: Attribute<'a>,
     pub result: Type<'a>,
 }
 
@@ -5909,9 +6746,9 @@ pub struct GroupNonUniformQuadSwapOp<'a> {
 /// %four = spirv.Constant 4 : i32
 /// %0 = spirv.GroupNonUniformRotateKHR <Subgroup> %value, %delta : f32, i32 -> f32
 /// %1 = spirv.GroupNonUniformRotateKHR <Workgroup> %value, %delta,
-///      clustersize(%four) : f32, i32, i32 -> f32
+///      cluster_size(%four) : f32, i32, i32 -> f32
 /// ```
-#[mlir::op("spirv.GroupNonUniformRotateKHR", format = "$execution_scope $value `,` $delta (`,` `cluster_size` `(` $cluster_size^ `)`)? attr-dict `:` type($value) `,` type($delta) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformRotateKHR", format = "$execution_scope $value `,` $delta (`,` `cluster_size` `(` $cluster_size^ `)`)? attr-dict `:` type($value) `,` type($delta) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformRotateKHROp<'a> {
     #[slot(result)]
     pub value: Value<'a>,
@@ -5954,7 +6791,7 @@ pub struct GroupNonUniformRotateKHROp<'a> {
 /// %0 = spirv.GroupNonUniformSMax <Workgroup> <Reduce> %scalar : i32
 /// %1 = spirv.GroupNonUniformSMax <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformSMax", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformSMax", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformSMaxOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -5997,7 +6834,7 @@ pub struct GroupNonUniformSMaxOp<'a> {
 /// %0 = spirv.GroupNonUniformSMin <Workgroup> <Reduce> %scalar : i32 -> i32
 /// %1 = spirv.GroupNonUniformSMin <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformSMin", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformSMin", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformSMinOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -6177,7 +7014,7 @@ pub struct GroupNonUniformShuffleXorOp<'a> {
 /// %0 = spirv.GroupNonUniformUMax <Workgroup> <Reduce> %scalar : i32 -> i32
 /// %1 = spirv.GroupNonUniformUMax <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformUMax", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformUMax", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformUMaxOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -6221,7 +7058,7 @@ pub struct GroupNonUniformUMaxOp<'a> {
 /// %0 = spirv.GroupNonUniformUMin <Workgroup> <Reduce> %scalar : i32 -> i32
 /// %1 = spirv.GroupNonUniformUMin <Subgroup> <ClusteredReduce> %vector cluster_size(%four) : vector<4xi32>, i32 -> vector<4xi32>
 /// ```
-#[mlir::op("spirv.GroupNonUniformUMin", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` type($result)", results(result))]
+#[mlir::op("spirv.GroupNonUniformUMin", format = "$execution_scope $group_operation $value (`cluster_size``(` $cluster_size^ `)`)? attr-dict `:` type($value) (`,` type($cluster_size)^)? `->` qualified(type($result))", results(result))]
 pub struct GroupNonUniformUMinOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -6611,6 +7448,91 @@ pub struct INTELConvertFToBF16Op<'a> {
     pub operand: Value<'a>,
     pub operand_ty: Type<'a>,
     pub result: Type<'a>,
+}
+
+/// `spirv.INTEL.MaskedGather`: Gather values from memory using a vector of pointers and a mask
+///
+/// Reads values from a vector of pointers gathering them into a result
+/// vector. Lanes where the mask is false receive the corresponding
+/// FillEmpty value.
+///
+/// Result Type must be a vector of numerical type.
+///
+/// PtrVector must be a vector of pointers to the scalar element type of
+/// Result Type. It must have the same number of components as Result Type.
+///
+/// Alignment is the known minimum alignment in bytes of each pointer in
+/// PtrVector.
+///
+/// Mask must be a vector of boolean type with the same number of components
+/// as Result Type.
+///
+/// FillEmpty must have the same type as Result Type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %result = spirv.INTEL.MaskedGather %ptrs, %alignment, %mask, %fill
+///           : vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32,
+///             vector<4xi1>, vector<4xf32> -> vector<4xf32>
+/// ```
+#[mlir::op("spirv.INTEL.MaskedGather", format = "$ptr_vector `,` $alignment `,` $mask `,` $fill_empty attr-dict `:` type($ptr_vector) `,` type($alignment) `,` type($mask) `,` type($fill_empty) `->` type($result)", results(result))]
+pub struct INTELMaskedGatherOp<'a> {
+    #[slot(ptr_vector_ty)]
+    pub ptr_vector: Value<'a>,
+    #[slot(alignment_ty)]
+    pub alignment: Value<'a>,
+    #[slot(mask_ty)]
+    pub mask: Value<'a>,
+    #[slot(result)]
+    pub fill_empty: Value<'a>,
+    pub ptr_vector_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub alignment_ty: Type<'a>,
+    #[dtype(i1 = result)]
+    pub mask_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
+/// `spirv.INTEL.MaskedScatter`: Scatter values to memory using a vector of pointers and a mask
+///
+/// Writes values from a vector into memory locations pointed to by a
+/// vector of pointers. Only lanes where the mask is true are written.
+///
+/// PtrVector must be a vector of pointers to the scalar element type of
+/// InputVector. It must have the same number of components as InputVector.
+///
+/// Alignment is the known minimum alignment in bytes of each pointer in
+/// PtrVector.
+///
+/// Mask must be a vector of boolean type with the same number of components
+/// as InputVector.
+///
+/// InputVector is the vector of values to scatter into memory.
+///
+/// #### Example:
+///
+/// ```mlir
+/// spirv.INTEL.MaskedScatter %ptrs, %alignment, %mask, %values
+///           : vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32,
+///             vector<4xi1>, vector<4xf32>
+/// ```
+#[mlir::op("spirv.INTEL.MaskedScatter", format = "$ptr_vector `,` $alignment `,` $mask `,` $input_vector attr-dict `:` type($ptr_vector) `,` type($alignment) `,` type($mask) `,` type($input_vector)")]
+pub struct INTELMaskedScatterOp<'a> {
+    #[slot(ptr_vector_ty)]
+    pub ptr_vector: Value<'a>,
+    #[slot(alignment_ty)]
+    pub alignment: Value<'a>,
+    #[slot(mask_ty)]
+    pub mask: Value<'a>,
+    #[slot(input_vector_ty)]
+    pub input_vector: Value<'a>,
+    pub ptr_vector_ty: Type<'a>,
+    #[dtype(is = i32)]
+    pub alignment_ty: Type<'a>,
+    #[dtype(i1 = input_vector_ty)]
+    pub mask_ty: Type<'a>,
+    pub input_vector_ty: Type<'a>,
 }
 
 /// `spirv.INTEL.RoundFToTF32`: See extension SPV_INTEL_tensor_float32_conversion
@@ -7323,13 +8245,33 @@ pub struct IsNanOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.IsNormal`: Result is true if x is an IEEE normal number, otherwise result is false
+///
+/// Result Type must be a scalar or vector of Boolean type.
+///
+/// x must be a scalar or vector of floating-point type.  It must have the
+/// same number of components as Result Type.
+///
+/// Results are computed per component.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.IsNormal %0: f32
+/// %3 = spirv.IsNormal %1: vector<4xf32>
+/// ```
+#[mlir::op("spirv.IsNormal", format = "$operand `:` type($operand) attr-dict", results(result))]
+pub struct IsNormalOp<'a> {
+    #[slot(operand_ty)]
+    pub operand: Value<'a>,
+    pub operand_ty: Type<'a>,
+    #[dtype(i1 = operand_ty)]
+    pub result: Type<'a>,
+}
+
 /// `spirv.KHR.AssumeTrue`: TBD
 ///
 /// <!-- End of AutoGen section -->
-///
-/// ```text
-/// assumetruekhr-op ::= `spirv.KHR.AssumeTrue` ssa-use
-/// ```
 ///
 /// #### Example:
 ///
@@ -7409,7 +8351,7 @@ pub struct KHRCooperativeMatrixLengthOp<'a> {
 ///      : !spirv.ptr<f32, StorageBuffer>, i64
 ///          -> !spirv.KHR.coopmatrix<8x8xf32, Subgroup, MatrixAcc>
 /// ```
-#[mlir::op("spirv.KHR.CooperativeMatrixLoad", format = "$pointer `,` $stride `,` $matrix_layout ( `,` $memory_operand^ )? ( `,` $alignment^ )? attr-dict `:` type($pointer) `,` type($stride) `->` type($result)", results(result))]
+#[mlir::op("spirv.KHR.CooperativeMatrixLoad", format = "$pointer `,` $stride `,` $matrix_layout ( `,` $memory_operand^ )? ( `,` $alignment^ )? attr-dict `:` qualified(type($pointer)) `,` qualified(type($stride)) `->` type($result)", results(result))]
 pub struct KHRCooperativeMatrixLoadOp<'a> {
     #[slot(pointer_ty)]
     pub pointer: Value<'a>,
@@ -7559,7 +8501,7 @@ pub struct KHRCooperativeMatrixMulAddOp<'a> {
 ///   spirv.KHR.CooperativeMatrixStore %ptr, %obj, %stride, <ColumnMajor>, <Volatile> :
 ///     !spirv.ptr<f32, StorageBuffer>, !spirv.coopmatrix<8x8xf32, Subgroup, MatrixAcc>, i64
 /// ```
-#[mlir::op("spirv.KHR.CooperativeMatrixStore", format = "$pointer `,` $object `,` $stride `,` $matrix_layout ( `,` $memory_operand^ )? ( `,` $alignment^ )? attr-dict `:` type($pointer) `,` type($object) `,` type($stride)")]
+#[mlir::op("spirv.KHR.CooperativeMatrixStore", format = "$pointer `,` $object `,` $stride `,` $matrix_layout ( `,` $memory_operand^ )? ( `,` $alignment^ )? attr-dict `:` qualified(type($pointer)) `,` qualified(type($object)) `,` qualified(type($stride))")]
 pub struct KHRCooperativeMatrixStoreOp<'a> {
     #[slot(pointer_ty)]
     pub pointer: Value<'a>,
@@ -7576,6 +8518,30 @@ pub struct KHRCooperativeMatrixStoreOp<'a> {
     pub pointer_ty: Type<'a>,
     pub object_ty: Type<'a>,
     pub stride_ty: Type<'a>,
+}
+
+/// `spirv.KHR.Expect`: Provides a hint to the optimizer that the value is likely to equal the expected value.
+///
+/// Result Type must be a scalar or vector of integer type or Boolean type.
+///
+/// Value and Expected Value must be of Result Type. Result is the same as
+/// Value.
+///
+/// <!-- End of AutoGen section -->
+///
+/// #### Example:
+///
+/// ```mlir
+/// %2 = spirv.KHR.Expect %0, %1 : i32
+/// %5 = spirv.KHR.Expect %3, %4 : vector<4xi1>
+/// ```
+#[mlir::op("spirv.KHR.Expect", format = "$value `,` $expectedValue attr-dict `:` type($result)", results(result))]
+pub struct KHRExpectOp<'a> {
+    #[slot(result)]
+    pub value: Value<'a>,
+    #[slot(result, name = "expectedValue")]
+    pub expected_value: Value<'a>,
+    pub result: Type<'a>,
 }
 
 /// `spirv.KHR.SubgroupBallot`: See extension SPV_KHR_shader_ballot
@@ -7966,6 +8932,41 @@ pub struct MemoryBarrierOp<'a> {
     pub memory_semantics: Attribute<'a>,
 }
 
+/// `spirv.MemoryNamedBarrier`: Wait on a named barrier and apply a memory barrier.
+///
+/// Wait for other invocations of this module to reach the current point
+/// of execution.
+///
+/// Named Barrier must be the type OpTypeNamedBarrier.
+///
+/// If Semantics is not None, this instruction also serves as an
+/// OpMemoryBarrier instruction, and also performs and adheres to the
+/// description and semantics of an OpMemoryBarrier instruction with the
+/// same Memory and Semantics operands. This allows atomically specifying
+/// both a control barrier and a memory barrier (that is, without needing
+/// two instructions). If Semantics is None, Memory is ignored.
+///
+/// Capability: NamedBarrier
+///
+/// Missing before version 1.1.
+///
+/// #### Example:
+///
+/// ```mlir
+/// spirv.MemoryNamedBarrier %nb, <Workgroup>, <AcquireRelease|WorkgroupMemory>
+///     : !spirv.named_barrier
+/// ```
+#[mlir::op("spirv.MemoryNamedBarrier", format = "$named_barrier `,` $memory_scope `,` $memory_semantics attr-dict `:` type($named_barrier)")]
+pub struct MemoryNamedBarrierOp<'a> {
+    #[slot(named_barrier_ty)]
+    pub named_barrier: Value<'a>,
+    #[attr(dialect = "spirv.scope")]
+    pub memory_scope: Attribute<'a>,
+    #[attr(dialect = "spirv.memory_semantics")]
+    pub memory_semantics: Attribute<'a>,
+    pub named_barrier_ty: Type<'a>,
+}
+
 /// `spirv.mlir.merge`: A special terminator for merging a structured selection/loop.
 ///
 /// We use `spirv.mlir.selection`/`spirv.mlir.loop` for modelling structured selection/loop.
@@ -8037,6 +9038,33 @@ pub struct ModuleOp<'a> {
     pub region: Region<'a>,
 }
 
+/// `spirv.NamedBarrierInitialize`: Initialize a named barrier with a subgroup count.
+///
+/// Declare a new named-barrier object.
+///
+/// Result Type must be the type OpTypeNamedBarrier.
+///
+/// Subgroup Count must be a 32-bit integer type scalar representing the
+/// number of subgroups that must reach the current point of execution.
+///
+/// Capability: NamedBarrier
+///
+/// Missing before version 1.1.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %nb = spirv.NamedBarrierInitialize %subgroup_count : i32 -> !spirv.named_barrier
+/// ```
+#[mlir::op("spirv.NamedBarrierInitialize", format = "$subgroup_count attr-dict `:` type($subgroup_count) `->` type($result)", results(result))]
+pub struct NamedBarrierInitializeOp<'a> {
+    #[slot(subgroup_count_ty)]
+    pub subgroup_count: Value<'a>,
+    #[dtype(is = i32)]
+    pub subgroup_count_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.Not`: Complement the bits of Operand.
 ///
 /// Results are computed per component, and within each component, per bit.
@@ -8085,6 +9113,34 @@ pub struct OrderedOp<'a> {
     pub operand2: Value<'a>,
     pub operand1_ty: Type<'a>,
     #[dtype(i1 = operand1_ty)]
+    pub result: Type<'a>,
+}
+
+/// `spirv.OuterProduct`: Linear-algebraic outer product of vector1 and vector2.
+///
+/// Result Type must be a Matrix Type whose Column Type is a vector of
+/// floating-point type.
+///
+/// Vector1 must have the same type as the Column Type in Result Type.
+///
+/// Vector2 must be a vector with the same Component Type as the Component
+/// Type in Result Type. Its number of components must equal the number of
+/// columns in Result Type.
+///
+/// #### Example:
+///
+/// ```mlir
+/// %0 = spirv.OuterProduct %vector1, %vector2 :
+///     vector<3xf32>, vector<2xf32> -> !spirv.matrix<2 x vector<3xf32>>
+/// ```
+#[mlir::op("spirv.OuterProduct", format = "$vector1 `,` $vector2 attr-dict `:` type($vector1) `,` type($vector2) `->` type($result)", results(result))]
+pub struct OuterProductOp<'a> {
+    #[slot(vector1_ty)]
+    pub vector1: Value<'a>,
+    #[slot(vector2_ty)]
+    pub vector2: Value<'a>,
+    pub vector1_ty: Type<'a>,
+    pub vector2_ty: Type<'a>,
     pub result: Type<'a>,
 }
 
@@ -8153,7 +9209,7 @@ pub struct PtrAccessChainOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %1 = spirv.PtrCastToGenericOp %0 : !spirv.ptr<f32, CrossWorkGroup> to
+/// %1 = spirv.PtrCastToGeneric %0 : !spirv.ptr<f32, CrossWorkgroup> to
 ///      !spirv.ptr<f32, Generic>
 /// ```
 #[mlir::op("spirv.PtrCastToGeneric", format = "$pointer attr-dict `:` type($pointer) `to` type($result)", results(result))]
@@ -8232,8 +9288,8 @@ pub struct ReturnValueOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %1 = spirv.SConvertOp %0 : i32 to i64
-/// %3 = spirv.SConvertOp %2 : vector<3xi32> to vector<3xi64>
+/// %1 = spirv.SConvert %0 : i32 to i64
+/// %3 = spirv.SConvert %2 : vector<3xi32> to vector<3xi64>
 /// ```
 #[mlir::op("spirv.SConvert", format = "$operand attr-dict `:` type($operand) `to` type($result)", results(result))]
 pub struct SConvertOp<'a> {
@@ -8693,6 +9749,37 @@ pub struct SUDotOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `spirv.SampledImage`: Create a sampled image, containing both a sampler and an image.
+///
+/// Result Type must be OpTypeSampledImage whose Image Type is the same as
+/// the type of the Image operand.
+///
+/// Image must be an object whose type is an OpTypeImage, whose Sampled
+/// operand is 0 or 1. The Dim operand of the underlying OpTypeImage must
+/// not be SubpassData. Additionally, starting with version 1.6, the Dim
+/// operand must not be Buffer.
+///
+/// Sampler must be an object of a type made by OpTypeSampler.
+///
+/// <!-- End of AutoGen section -->
+///
+/// #### Example:
+///
+/// ```mlir
+/// %0 = spirv.SampledImage %image, %sampler : !spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>, !spirv.sampler -> !spirv.sampled_image<!spirv.image<f32, Dim2D, NoDepth, NonArrayed, SingleSampled, NeedSampler, Unknown>>
+/// ```
+#[mlir::op("spirv.SampledImage", format = "$image `,` $sampler attr-dict `:` type($image) `,` type($sampler) `->` type($result)", results(result))]
+pub struct SampledImageOp<'a> {
+    #[slot(image_ty)]
+    pub image: Value<'a>,
+    #[slot(sampler_ty)]
+    pub sampler: Value<'a>,
+    #[dtype(el = result)]
+    pub image_ty: Type<'a>,
+    pub sampler_ty: Type<'a>,
+    pub result: Type<'a>,
+}
+
 /// `spirv.Select`: Select between two objects. Before version 1.4, results are only     computed per component.
 ///
 /// Before version 1.4, Result Type must be a pointer, scalar, or vector.
@@ -9107,6 +10194,1926 @@ pub struct SwitchOp<'a> {
     pub target_operands_ty: Vec<Type<'a>>,
 }
 
+/// `spirv.Tosa.Abs`: Absolute value operation.
+///
+/// Elementwise Absolute value operation. Input and Output types must match.
+/// Integer element types are always interpreted as signed. The behaviour is
+/// undefined if the input value is min_value<si32>.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_abs
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_abs
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Abs %input1 : !spirv.arm.tensor<5x1x4x4xi32> -> !spirv.arm.tensor<5x1x4x4xi32>
+/// %0 = spirv.Tosa.Abs %input1 : !spirv.arm.tensor<3x6x14x8xf16> -> !spirv.arm.tensor<3x6x14x8xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Abs", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaAbsOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Add`: Addition operator.
+///
+/// Elementwise Addition of input1 and input2. Axis of size 1 will be broadcast,
+/// as necessary. Rank of input tensors must match. Integer element types are
+/// always interpreted as signed. The behavior is undefined if the integer
+/// addition overflows or underflows the signed integer range.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_add
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_add
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Add %input1, %input2 : !spirv.arm.tensor<4x7x3x10xi32>, !spirv.arm.tensor<4x7x3x1xi32> -> !spirv.arm.tensor<4x7x3x10xi32>
+/// %0 = spirv.Tosa.Add %input1, %input2 : !spirv.arm.tensor<26x37x18xf16>, !spirv.arm.tensor<1x37x18xf16> -> !spirv.arm.tensor<26x37x18xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Add", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaAddOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ArgMax`: Perform argmax on the input.
+///
+/// Returns the index with the largest value across the given axis of the
+/// input tensor. If multiple locations have equal values, returns the first
+/// match along the search axis.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_argmax
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_argmax
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.ArgMax axis = 3, nan_mode = <Propagate>, %input : !spirv.arm.tensor<3x28x17x17xi8> -> !spirv.arm.tensor<3x28x17xi32>
+/// %2 = spirv.Tosa.ArgMax axis = 2, nan_mode = <Propagate>, %input : !spirv.arm.tensor<2x2x7x14xf32> -> !spirv.arm.tensor<2x2x14xi32>
+/// ```
+#[mlir::op("spirv.Tosa.ArgMax", format = "`axis` `=` $axis `,` `nan_mode` `=` $nan_mode `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaArgMaxOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ArithmeticRightShift`: Arithmetic Right Shift.
+///
+/// Elementwise Arithmetic Right Shift of input1 by the amount specified in
+/// input2. Axis of size 1 will be broadcast, as necessary. Rank of input
+/// tensors must match. Integer element types are always interpreted as signed.
+/// The behavior is undefined if the shift value is negative or greater or
+/// equal to the bitwidth of the element type.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_arithmetic_right_shift
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_arithmetic_right_shift
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.ArithmeticRightShift round = true, %input1, %shift : !spirv.arm.tensor<1x47x22xi16>, !spirv.arm.tensor<49x47x22xi16> -> !spirv.arm.tensor<49x47x22xi16>
+/// ```
+///
+/// If an element of `%shift` is `3`, the matching element of `%input1` is
+/// shifted right by 3 bits; because this is an arithmetic shift, the sign bit
+/// is preserved.
+#[mlir::op("spirv.Tosa.ArithmeticRightShift", format = "`round` `=` $round `,` $input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaArithmeticRightShiftOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub round: Attribute<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.AvgPool2D`: Performs average pooling on the input.
+///
+/// Performs an average pooling over the given input tensor. A sliding
+/// window of size given by <kernel size> is passed over the input tensor, with
+/// the mean value being placed in the output tensor. When calculating the
+/// average, only the number of valid input tensor values, but not padding, are
+/// used to calculate the divisor. The behaviour is undefined if the accumulated
+/// result overflows or underflows.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_avg_pool2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_avg_pool2d
+///
+/// #### Example:
+/// ```mlir
+/// %6 = spirv.Tosa.AvgPool2D kernel = [3, 3], stride = [1, 2], pad = [0, 1, 0, 0], acc_type = <INT32>, %input, %input_zp, %output_zp : !spirv.arm.tensor<1x3x65537x1xi8>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<1x2x32768x1xi8>
+/// %6 = spirv.Tosa.AvgPool2D kernel = [2, 2], stride = [1, 1], pad = [1, 0, 0, 0], acc_type = <FP32>, %input, %input_zp, %output_zp : !spirv.arm.tensor<1x2x65533x2xf32>, !spirv.arm.tensor<1xf32>, !spirv.arm.tensor<1xf32> -> !spirv.arm.tensor<1x2x65532x2xf32>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.AvgPool2D", results(output))]
+pub struct TosaAvgPool2DOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(output_zp_ty)]
+    pub output_zp: Value<'a>,
+    pub kernel: Attribute<'a>,
+    pub stride: Attribute<'a>,
+    pub pad: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_acc_type")]
+    pub acc_type: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub output_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.BitwiseAnd`: Bitwise AND operator.
+///
+/// Elementwise Bitwise AND of input1 and input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match. Integer element
+/// types are always interpreted as signed.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_bitwise_and
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_bitwise_and
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.BitwiseAnd %input1, %input2 : !spirv.arm.tensor<4x1x7x12xi16>, !spirv.arm.tensor<4x13x7x12xi16> -> !spirv.arm.tensor<4x13x7x12xi16>
+/// ```
+#[mlir::op("spirv.Tosa.BitwiseAnd", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaBitwiseAndOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.BitwiseNot`: Bitwise NOT operator.
+///
+/// Elementwise Bitwise NOT of input tensor. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_bitwise_not
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_bitwise_not
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.BitwiseNot %input1 : !spirv.arm.tensor<12x56x50xi32> -> !spirv.arm.tensor<12x56x50xi32>
+/// ```
+#[mlir::op("spirv.Tosa.BitwiseNot", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaBitwiseNotOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.BitwiseOr`: Bitwise OR operator.
+///
+/// Elementwise Bitwise OR of input1 and input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match. Integer element
+/// types are always interpreted as signed.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_bitwise_or
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_bitwise_or
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.BitwiseOr %input1, %input2 : !spirv.arm.tensor<11x30x23xi32>, !spirv.arm.tensor<1x30x23xi32> -> !spirv.arm.tensor<11x30x23xi32>
+/// ```
+#[mlir::op("spirv.Tosa.BitwiseOr", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaBitwiseOrOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.BitwiseXor`: Bitwise XOR operator.
+///
+/// Elementwise Bitwise XOR of input1 and input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match. Integer element
+/// types are always interpreted as signed.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_bitwise_xor
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_bitwise_xor
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.BitwiseXor %input1, %input2 : !spirv.arm.tensor<4x8x13x9xi16>, !spirv.arm.tensor<4x8x1x9xi16> -> !spirv.arm.tensor<4x8x13x9xi16>
+/// ```
+#[mlir::op("spirv.Tosa.BitwiseXor", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaBitwiseXorOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Cast`: Cast operation.
+///
+/// Casts a tensor from one data type to another.
+///
+/// Valid casting combinations are defined in the following table:
+///
+/// | From    | To      |
+/// |---------|---------|
+/// | float16 | float32 |
+/// | float16 | int16   |
+/// | float16 | int32   |
+/// | float16 | int8    |
+/// | float32 | float16 |
+/// | float32 | int16   |
+/// | float32 | int32   |
+/// | float32 | int8    |
+/// | int16   | float16 |
+/// | int16   | float32 |
+/// | int32   | float16 |
+/// | int32   | float32 |
+/// | int8    | float16 |
+/// | int8    | float32 |
+/// | Boolean | int16   |
+/// | Boolean | int32   |
+/// | Boolean | int8    |
+/// | int16   | Boolean |
+/// | int16   | int32   |
+/// | int16   | int8    |
+/// | int32   | Boolean |
+/// | int32   | int16   |
+/// | int32   | int8    |
+/// | int8    | Boolean |
+/// | int8    | int16   |
+/// | int8    | int32   |
+/// | bf16    | float32 |
+/// | bf16    | int16   |
+/// | bf16    | int32   |
+/// | bf16    | int8    |
+/// | float32 | bf16    |
+/// | int16   | bf16    |
+/// | int32   | bf16    |
+/// | int8    | bf16    |
+/// | bf16    | fp8e4m3 |
+/// | fp8e4m3 | bf16    |
+/// | bf16    | fp8e5m2 |
+/// | fp8e5m2 | bf16    |
+/// | float16 | fp8e4m3 |
+/// | float32 | fp8e4m3 |
+/// | fp8e4m3 | float16 |
+/// | fp8e4m3 | float32 |
+/// | float16 | fp8e5m2 |
+/// | float32 | fp8e5m2 |
+/// | fp8e5m2 | float16 |
+/// | fp8e5m2 | float32 |
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_cast
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_cast
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Cast %input : !spirv.arm.tensor<1x65538x1x2xi8> -> !spirv.arm.tensor<1x65538x1x2xi32>
+/// %0 = spirv.Tosa.Cast %input : !spirv.arm.tensor<11x5x14x4xf32> -> !spirv.arm.tensor<11x5x14x4xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Cast", format = "$input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaCastOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Ceil`: Ceil operator.
+///
+/// Elementwise Ceiling operation. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_ceil
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_ceil
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Ceil %input1 : !spirv.arm.tensor<46x55x53xf16> -> !spirv.arm.tensor<46x55x53xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Ceil", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaCeilOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Clamp`: Computes Clamp(min, max).
+///
+/// Clamp to an arbitrary minimum and maximum value. Maximum and minimum values
+/// are specified as values in the range of the input type. Integer element
+/// types are always interpreted as signed.
+/// No zero point subtraction is done to the values, thus to clamp to the zero
+/// point value, the zero point itself should be supplied as the minimum value.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_clamp
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_clamp
+///
+/// #### Example:
+/// ```mlir
+/// %3 = spirv.Tosa.Clamp min_val = -102 : i8, max_val = -100 : i8, nan_mode = <Propagate>, %input : !spirv.arm.tensor<27x44x55xi8> -> !spirv.arm.tensor<27x44x55xi8>
+/// %3 = spirv.Tosa.Clamp min_val = -1.19339396E+38 : f32, max_val = 2.38255944E+38 : f32, nan_mode = <Ignore>, %input : !spirv.arm.tensor<18x5x17x6xf32> -> !spirv.arm.tensor<18x5x17x6xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Clamp", format = "`min_val` `=` $min_val `,` `max_val` `=` $max_val `,` `nan_mode` `=` $nan_mode `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaClampOp<'a> {
+    #[slot(output)]
+    pub input: Value<'a>,
+    pub min_val: Attribute<'a>,
+    pub max_val: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Clz`: Count Leading Zero operator.
+///
+/// Elementwise Count Leading Zeros operation. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_clz
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_clz
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Clz %input1 : !spirv.arm.tensor<14x10x7x5xi32> -> !spirv.arm.tensor<14x10x7x5xi32>
+/// ```
+#[mlir::op("spirv.Tosa.Clz", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaClzOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Concat`: Concatenates tensors along one dimension.
+///
+/// Concatenates a list of tensors along a given axis.
+/// No data conversion happens during a concat operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_concat
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_concat
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Concat axis = 2, %input1, %input2, %input3, %input4 : !spirv.arm.tensor<12x13x3x14xi8>, !spirv.arm.tensor<12x13x3x14xi8>, !spirv.arm.tensor<12x13x3x14xi8>, !spirv.arm.tensor<12x13x3x14xi8> -> !spirv.arm.tensor<12x13x12x14xi8>
+/// %1 = spirv.Tosa.Concat axis = 1, %input1, %input2, %input3 : !spirv.arm.tensor<40x31x19xf32>, !spirv.arm.tensor<40x15x19xf32>, !spirv.arm.tensor<40x16x19xf32> -> !spirv.arm.tensor<40x62x19xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Concat", format = "`axis` `=` $axis `,` $input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaConcatOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Vec<Value<'a>>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    pub input1_ty: Vec<Type<'a>>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Conv2D`: 2D Convolution operator.
+///
+/// Performs a 2D convolution over the given tensor input, using the weight
+/// tensor. Implementations may choose to skip calculation of multiplies in
+/// the padding area.
+///
+/// Input and weight have respective zero point values provided in input_zp and weight_zp.
+///
+/// The behaviour is undefined if the accumulated result overflows or underflows.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_conv2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_conv2d
+///
+/// #### Example:
+/// ```mlir
+/// %7 = spirv.Tosa.Conv2D pad = [1, 0, 0, 0], stride = [1, 2], dilation = [7, 1], acc_type = <INT32>, local_bound = false, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x65535x3x1xi8>, !spirv.arm.tensor<7x1x1x1xi8>, !spirv.arm.tensor<1xi32>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<1x65536x2x7xi32>
+/// %7 = spirv.Tosa.Conv2D pad = [0, 0, 0, 0], stride = [1, 1], dilation = [1, 1], acc_type = <FP16>, local_bound = true, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x34x18x27xf16>, !spirv.arm.tensor<11x1x1x27xf16>, !spirv.arm.tensor<11xf16>, !spirv.arm.tensor<1xf16>, !spirv.arm.tensor<1xf16> -> !spirv.arm.tensor<1x34x18x11xf16>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.Conv2D", results(output))]
+pub struct TosaConv2DOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(weight_ty)]
+    pub weight: Value<'a>,
+    #[slot(bias_ty)]
+    pub bias: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(weight_zp_ty)]
+    pub weight_zp: Value<'a>,
+    pub pad: Attribute<'a>,
+    pub stride: Attribute<'a>,
+    pub dilation: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_acc_type")]
+    pub acc_type: Attribute<'a>,
+    pub local_bound: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub weight_ty: Type<'a>,
+    pub bias_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub weight_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Conv3D`: 3D Convolution operator.
+///
+/// Performs a 3D convolution over the given input tensor. Implementations
+/// may choose to skip calculation of multiplies in the padding area.
+///
+/// Input and weight have respective zero point values provided in input_zp and weight_zp.
+///
+/// The behaviour is undefined if the accumulated result overflows or underflows.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_conv3d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_conv3d
+///
+/// #### Example:
+/// ```mlir
+/// %7 = spirv.Tosa.Conv3D pad = [0, 0, 0, 0, 0, 0], stride = [1, 1, 1], dilation = [1, 1, 1], acc_type = <INT32>, local_bound = false, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x9x21x14x1xi8>, !spirv.arm.tensor<2x1x2x1x1xi8>, !spirv.arm.tensor<1xi32>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<1x9x20x14x2xi32>
+/// %7 = spirv.Tosa.Conv3D pad = [0, 1, 1, 0, 0, 1], stride = [1, 1, 1], dilation = [1, 1, 7], acc_type = <FP32>, local_bound = false, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x2x65539x1x2xf32>, !spirv.arm.tensor<1x1x1x1x2xf32>, !spirv.arm.tensor<1xf32>, !spirv.arm.tensor<1xf32>, !spirv.arm.tensor<1xf32> -> !spirv.arm.tensor<1x3x65540x2x1xf32>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.Conv3D", results(output))]
+pub struct TosaConv3DOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(weight_ty)]
+    pub weight: Value<'a>,
+    #[slot(bias_ty)]
+    pub bias: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(weight_zp_ty)]
+    pub weight_zp: Value<'a>,
+    pub pad: Attribute<'a>,
+    pub stride: Attribute<'a>,
+    pub dilation: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_acc_type")]
+    pub acc_type: Attribute<'a>,
+    pub local_bound: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub weight_ty: Type<'a>,
+    pub bias_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub weight_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Cos`: Cosine operator.
+///
+/// Elementwise Cosine operation for values given in radians. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_cos
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_cos
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Cos %input1 : !spirv.arm.tensor<44x49x51xf32> -> !spirv.arm.tensor<44x49x51xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Cos", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaCosOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.DepthwiseConv2D`: Depthwise 2D Convolution operator.
+///
+/// Performs 2D convolutions separately over each channel of the given tensor
+/// input, using the weight tensor. Implementations may choose to skip
+/// calculation of multiplies in the padding area.
+///
+/// Input and weight have respective zero point values provided in input_zp and weight_zp.
+///
+/// The behaviour is undefined if the accumulated result overflows or underflows.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_depthwise_conv2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_depthwise_conv2d
+///
+/// #### Example:
+/// ```mlir
+/// %7 = spirv.Tosa.DepthwiseConv2D pad = [0, 0, 0, 0], stride = [1, 2], dilation = [7, 7], acc_type = <INT32>, local_bound = false, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x4x65537x1xi8>, !spirv.arm.tensor<1x3x1x4xi8>, !spirv.arm.tensor<4xi32>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<1x4x32762x4xi32>
+/// %7 = spirv.Tosa.DepthwiseConv2D pad = [0, 1, 1, 1], stride = [1, 2], dilation = [1, 7], acc_type = <FP32>, local_bound = true, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x65540x1x3xf32>, !spirv.arm.tensor<1x1x3x1xf32>, !spirv.arm.tensor<1xf32>, !spirv.arm.tensor<1xf32>, !spirv.arm.tensor<1xf32> -> !spirv.arm.tensor<1x65541x2x3xf32>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.DepthwiseConv2D", results(output))]
+pub struct TosaDepthwiseConv2DOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(weight_ty)]
+    pub weight: Value<'a>,
+    #[slot(bias_ty)]
+    pub bias: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(weight_zp_ty)]
+    pub weight_zp: Value<'a>,
+    pub pad: Attribute<'a>,
+    pub stride: Attribute<'a>,
+    pub dilation: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_acc_type")]
+    pub acc_type: Attribute<'a>,
+    pub local_bound: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub weight_ty: Type<'a>,
+    pub bias_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub weight_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Equal`: Equal comparison operation
+///
+/// Elementwise Equal comparison operation: returns the truth value of
+/// (input1 == input2) element-wise.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_equal
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_equal
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Equal %input1, %input2 : !spirv.arm.tensor<51x28x59xi32>, !spirv.arm.tensor<51x1x59xi32> -> !spirv.arm.tensor<51x28x59xi1>
+/// %0 = spirv.Tosa.Equal %input1, %input2 : !spirv.arm.tensor<16x11x5x3xf32>, !spirv.arm.tensor<16x1x5x3xf32> -> !spirv.arm.tensor<16x11x5x3xi1>
+/// ```
+#[mlir::op("spirv.Tosa.Equal", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaEqualOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Erf`: Gauss Error Function.
+///
+/// Gauss Error Function: $ erf(x) = \frac{2}{\sqrt{\pi}} \int_{0}^{x} e^{-t^2} dt $
+/// For quantized integer data types, the `spirv.Tosa.Table` operator should be used instead.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_erf
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_erf
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Erf %input : !spirv.arm.tensor<47x38x51xf32> -> !spirv.arm.tensor<47x38x51xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Erf", format = "$input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaErfOp<'a> {
+    #[slot(output)]
+    pub input: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Exp`: Exp operator.
+///
+/// Elementwise e to the power of x operation. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_exp
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_exp
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Exp %input1 : !spirv.arm.tensor<37x53x47xf32> -> !spirv.arm.tensor<37x53x47xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Exp", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaExpOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.FFT2D`: Performs FFT2D operation on the input.
+///
+/// Performs a batched complex 2D Fast Fourier Transform over the input. The
+/// complex input values are constructed from the corresponding values in the
+/// input_real and input_imag tensors. The resulting values in the output are
+/// split into the output_real and output_imag tensors. No normalization is
+/// applied on either the forward or inverse versions of the operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_fft2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_fft2d
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.FFT2D inverse = true, local_bound = false, %input_real, %input_imag : !spirv.arm.tensor<1x32x32xf32>, !spirv.arm.tensor<1x32x32xf32> -> !spirv.struct<(!spirv.arm.tensor<1x32x32xf32>, !spirv.arm.tensor<1x32x32xf32>)>
+/// %1 = spirv.CompositeExtract %0[0 : i32] : !spirv.struct<(!spirv.arm.tensor<1x32x32xf32>, !spirv.arm.tensor<1x32x32xf32>)>
+/// %2 = spirv.CompositeExtract %0[1 : i32] : !spirv.struct<(!spirv.arm.tensor<1x32x32xf32>, !spirv.arm.tensor<1x32x32xf32>)>
+/// ```
+#[mlir::op("spirv.Tosa.FFT2D", format = "`inverse` `=` $inverse `,` `local_bound` `=` $local_bound `,` $input_real `,` $input_imag attr-dict `:` qualified(type($input_real)) `,` qualified(type($input_imag)) `->` qualified(type($output))", results(output))]
+pub struct TosaFFT2DOp<'a> {
+    #[slot(input_real_ty)]
+    pub input_real: Value<'a>,
+    #[slot(input_imag_ty)]
+    pub input_imag: Value<'a>,
+    pub inverse: Attribute<'a>,
+    pub local_bound: Attribute<'a>,
+    pub input_real_ty: Type<'a>,
+    pub input_imag_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Floor`: Floor operator.
+///
+/// Elementwise Floor operation. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_floor
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_floor
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Floor %input1 : !spirv.arm.tensor<40x52x42xf32> -> !spirv.arm.tensor<40x52x42xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Floor", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaFloorOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Gather`: Gather operation.
+///
+/// Generate a tensor for which each element in the output is a subtensor of the
+/// values tensor based on the indices. Undefined behaviour may occur if the
+/// specified indices are out of range.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_gather
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_gather
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Gather %values, %indices : !spirv.arm.tensor<31x11x45xi32>, !spirv.arm.tensor<31x15xi32> -> !spirv.arm.tensor<31x15x45xi32>
+/// %0 = spirv.Tosa.Gather %values, %indices : !spirv.arm.tensor<59x61x19xf32>, !spirv.arm.tensor<59x65xi32> -> !spirv.arm.tensor<59x65x19xf32>
+/// ```
+///
+/// If a row of `%indices` is `[4, 4, 0]`, the corresponding output row copies
+/// slices 4, 4, and 0 from the matching batch of `%values`.
+#[mlir::op("spirv.Tosa.Gather", format = "$values `,` $indices attr-dict `:` qualified(type($values)) `,` qualified(type($indices)) `->` qualified(type($output))", results(output))]
+pub struct TosaGatherOp<'a> {
+    #[slot(values_ty)]
+    pub values: Value<'a>,
+    #[slot(indices_ty)]
+    pub indices: Value<'a>,
+    pub values_ty: Type<'a>,
+    pub indices_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.GreaterEqual`: Greater or Equal comparison operation
+///
+/// Elementwise Greater or Equal than comparison operation: returns the truth value of
+/// (input1 >= input2) element-wise.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_greater_equal
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_greater_equal
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.GreaterEqual %input1, %input2 : !spirv.arm.tensor<10x17x7x1xi32>, !spirv.arm.tensor<10x17x7x16xi32> -> !spirv.arm.tensor<10x17x7x16xi1>
+/// %0 = spirv.Tosa.GreaterEqual %input1, %input2 : !spirv.arm.tensor<3x17x6x3xf32>, !spirv.arm.tensor<1x17x6x3xf32> -> !spirv.arm.tensor<3x17x6x3xi1>
+/// ```
+#[mlir::op("spirv.Tosa.GreaterEqual", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaGreaterEqualOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Greater`: Greater comparison operation
+///
+/// Elementwise Greater than comparison operation: returns the truth value of
+/// (input1 > input2) element-wise.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_greater
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_greater
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Greater %input1, %input2 : !spirv.arm.tensor<11x10x10x2xi32>, !spirv.arm.tensor<11x10x10x1xi32> -> !spirv.arm.tensor<11x10x10x2xi1>
+/// %0 = spirv.Tosa.Greater %input1, %input2 : !spirv.arm.tensor<6x3x12x4xf16>, !spirv.arm.tensor<6x3x1x4xf16> -> !spirv.arm.tensor<6x3x12x4xi1>
+/// ```
+#[mlir::op("spirv.Tosa.Greater", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaGreaterOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.IntDiv`: Integer Divide operator.
+///
+/// Elementwise Integer Divide of input1 by input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match.  Integer element
+/// types are always interpreted as signed. The behavior is undefined if the
+/// divisor value is equal to zero and if the divisor value is min_value<si32>
+/// and the dividend is -1.
+///
+/// The result of the divide is truncated towards zero. Expected use is for
+/// operations on non-scaled integers. Floating point divide should use
+/// `spirv.Tosa.Reciprocal` and `spirv.Tosa.Mul`. Quantized integer divide
+/// should use `spirv.Tosa.Table`(for $ 1/x $) and `spirv.Tosa.Mul`.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_intdiv
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_intdiv
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.IntDiv %input1, %input2 : !spirv.arm.tensor<1x65533x1xi32>, !spirv.arm.tensor<2x65533x1xi32> -> !spirv.arm.tensor<2x65533x1xi32>
+/// ```
+#[mlir::op("spirv.Tosa.IntDiv", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaIntDivOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Log`: Log operator.
+///
+/// Elementwise Natural Logarithm operation. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_log
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_log
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Log %input1 : !spirv.arm.tensor<45x43x36xf16> -> !spirv.arm.tensor<45x43x36xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Log", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.LogicalAnd`: Logical AND operator.
+///
+/// Elementwise Logical AND of input1 and input2. Axis of size 1 will be
+/// broadcast, as necessary. Rank of input tensors must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_logical_and
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_logical_and
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.LogicalAnd %input1, %input2 : !spirv.arm.tensor<2x1x7x11xi1>, !spirv.arm.tensor<2x4x7x11xi1> -> !spirv.arm.tensor<2x4x7x11xi1>
+/// ```
+#[mlir::op("spirv.Tosa.LogicalAnd", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogicalAndOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.LogicalLeftShift`: Logical Left Shift operator.
+///
+/// Elementwise Logical Left Shift of input1 by the amount specified in input2.
+/// Axis of size 1 will be broadcast, as necessary. Rank of input tensors
+/// must match.  Integer element types are always interpreted as signed. The
+/// behavior is undefined if the shift value is negative or greater or equal to
+/// the bitwidth of the element type.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_logical_left_shift
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_logical_left_shift
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.LogicalLeftShift %input1, %shift : !spirv.arm.tensor<7x1x11x4xi8>, !spirv.arm.tensor<7x8x11x4xi8> -> !spirv.arm.tensor<7x8x11x4xi8>
+/// ```
+///
+/// If an element of `%shift` is `2`, the matching element of `%input1` is
+/// shifted left by 2 bits.
+#[mlir::op("spirv.Tosa.LogicalLeftShift", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogicalLeftShiftOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.LogicalNot`: Logical NOT operator.
+///
+/// Elementwise Logical NOT of input. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_logical_not
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_logical_not
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.LogicalNot %input1 : !spirv.arm.tensor<54x26x10xi1> -> !spirv.arm.tensor<54x26x10xi1>
+/// ```
+#[mlir::op("spirv.Tosa.LogicalNot", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogicalNotOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.LogicalOr`: Logical OR operator.
+///
+/// Elementwise logical OR of input1 and input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_logical_or
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_logical_or
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.LogicalOr %input1, %input2 : !spirv.arm.tensor<3x6x12x5xi1>, !spirv.arm.tensor<3x6x1x5xi1> -> !spirv.arm.tensor<3x6x12x5xi1>
+/// ```
+#[mlir::op("spirv.Tosa.LogicalOr", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogicalOrOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.LogicalRightShift`: Logical Right Shift operator.
+///
+/// Elementwise Logical Right Shift of input1 by the amount specified in input2.
+/// Axis of size 1 will be broadcast, as necessary. Rank of input tensors must
+/// match.  Integer element types are always interpreted as signed. The
+/// behavior is undefined if the shift value is negative or greater or equal to
+/// the bitwidth of the element type.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_logical_right_shift
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_logical_right_shift
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.LogicalRightShift %input1, %shift : !spirv.arm.tensor<6x13x1x19xi8>, !spirv.arm.tensor<6x13x6x19xi8> -> !spirv.arm.tensor<6x13x6x19xi8>
+/// ```
+///
+/// If an element of `%shift` is `2`, the matching element of `%input1` is
+/// shifted right by 2 bits, filling the new high bits with zero.
+#[mlir::op("spirv.Tosa.LogicalRightShift", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogicalRightShiftOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.LogicalXor`: Logical XOR operator.
+///
+/// Elementwise logical XOR of input1 and input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_logical_xor
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_logical_xor
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.LogicalXor %input1, %input2 : !spirv.arm.tensor<11x4x9x12xi1>, !spirv.arm.tensor<11x4x9x1xi1> -> !spirv.arm.tensor<11x4x9x12xi1>
+/// ```
+#[mlir::op("spirv.Tosa.LogicalXor", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaLogicalXorOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.MatMul`: Matrix Multiplication operator.
+///
+/// Performs two dimensional matrix multiplications.
+///
+/// A, B are the inputs with respective zero point values in A_zp, B_zp.
+///
+/// The behaviour is undefined if the accumulated result overflows or underflows.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_matmul
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_matmul
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.MatMul %A, %B, %A_zp, %B_zp : !spirv.arm.tensor<8x2x3xi8>, !spirv.arm.tensor<8x3x8xi8>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<8x2x8xi32>
+/// %2 = spirv.Tosa.MatMul %A, %B, %A_zp, %B_zp : !spirv.arm.tensor<15x39x50xf16>, !spirv.arm.tensor<15x50x24xf16>, !spirv.arm.tensor<1xf16>, !spirv.arm.tensor<1xf16> -> !spirv.arm.tensor<15x39x24xf16>
+/// ```
+#[mlir::op("spirv.Tosa.MatMul", format = "$A `,` $B `,` $A_zp `,` $B_zp attr-dict `:` qualified(type($A)) `,` qualified(type($B)) `,` qualified(type($A_zp)) `,` qualified(type($B_zp)) `->` qualified(type($output))", results(output))]
+pub struct TosaMatMulOp<'a> {
+    #[slot(a_ty, name = "A")]
+    pub a: Value<'a>,
+    #[slot(b_ty, name = "B")]
+    pub b: Value<'a>,
+    #[slot(a_zp_ty, name = "A_zp")]
+    pub a_zp: Value<'a>,
+    #[slot(b_zp_ty, name = "B_zp")]
+    pub b_zp: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub a_zp_ty: Type<'a>,
+    pub b_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.MaxPool2D`: Performs max pooling on the input.
+///
+/// Performs a max pooling over the given input tensor. A sliding window of
+/// size given by <kernel size> is passed over the input tensor, with the
+/// maximum value being placed in the output tensor.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_max_pool2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_max_pool2d
+///
+/// #### Example:
+/// ```mlir
+/// %4 = spirv.Tosa.MaxPool2D kernel = [3, 2], stride = [1, 2], pad = [1, 0, 0, 1], nan_mode = <Propagate>, %input : !spirv.arm.tensor<1x3x65537x1xi8> -> !spirv.arm.tensor<1x2x32769x1xi8>
+/// %4 = spirv.Tosa.MaxPool2D kernel = [3, 2], stride = [2, 2], pad = [1, 0, 1, 1], nan_mode = <Propagate>, %input : !spirv.arm.tensor<1x6x65536x1xf32> -> !spirv.arm.tensor<1x3x32769x1xf32>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.MaxPool2D", results(output))]
+pub struct TosaMaxPool2DOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    pub kernel: Attribute<'a>,
+    pub stride: Attribute<'a>,
+    pub pad: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Maximum`: Maximum.
+///
+/// Elementwise maximum of input1 and input2. Axis of size 1 will be broadcast,
+/// as necessary. Rank of input tensors must match. Integer element types are
+/// always interpreted as signed.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_maximum
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_maximum
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Maximum nan_mode = <Propagate>, %input1, %input2 : !spirv.arm.tensor<1x2x65533x1xi32>, !spirv.arm.tensor<1x2x65533x2xi32> -> !spirv.arm.tensor<1x2x65533x2xi32>
+/// %1 = spirv.Tosa.Maximum nan_mode = <Ignore>, %input1, %input2 : !spirv.arm.tensor<1x12x14x7xf16>, !spirv.arm.tensor<11x12x14x7xf16> -> !spirv.arm.tensor<11x12x14x7xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Maximum", format = "`nan_mode` `=` $nan_mode `,` $input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaMaximumOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Minimum`: Minimum.
+///
+/// Elementwise minimum of input1 and input2. Axis of size 1 will be broadcast,
+/// as necessary. Rank of input tensors must match. Integer element types are
+/// always interpreted as signed.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_minimum
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_minimum
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Minimum nan_mode = <Propagate>, %input1, %input2 : !spirv.arm.tensor<15x2x10x11xi32>, !spirv.arm.tensor<15x1x10x11xi32> -> !spirv.arm.tensor<15x2x10x11xi32>
+/// %1 = spirv.Tosa.Minimum nan_mode = <Propagate>, %input1, %input2 : !spirv.arm.tensor<1x65531x2x1xf32>, !spirv.arm.tensor<1x1x2x1xf32> -> !spirv.arm.tensor<1x65531x2x1xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Minimum", format = "`nan_mode` `=` $nan_mode `,` $input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaMinimumOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Mul`: Multiplication operator.
+///
+/// Elementwise Multiplication (Hadamard product) of input1 and input2.
+/// Axis of size 1 will be broadcast, as necessary. Rank of input tensors must
+/// match.  Integer element types are always interpreted as signed.
+/// The shift value is used to right shift the result (rounded up) and
+/// it is used only if input element type is i32 and it must be zero for the
+/// other element types. The behavior is undefined if the integer
+/// multiplication overflows or underflows the signed integer range or the
+/// shift value exceeds the bitwidth of i32.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_mul
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_mul
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Mul %input1, %input2, %shift : !spirv.arm.tensor<34x21x39xi32>, !spirv.arm.tensor<34x21x1xi32>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<34x21x39xi32>
+/// %1 = spirv.Tosa.Mul %input1, %input2, %shift : !spirv.arm.tensor<57x1x55xf16>, !spirv.arm.tensor<57x37x55xf16>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<57x37x55xf16>
+/// ```
+///
+/// For integer multiplication, `%shift = [7]` would round the product and
+/// shift it right by 7 bits; for floating-point inputs the shift tensor must
+/// be `[0]`.
+#[mlir::op("spirv.Tosa.Mul", format = "$input1 `,` $input2 `,` $shift attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `,` qualified(type($shift)) `->` qualified(type($output))", results(output))]
+pub struct TosaMulOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    #[slot(shift_ty)]
+    pub shift: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub shift_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Negate`: Negate operator.
+///
+/// Elementwise Negation operation. Input and Output types must match. Integer
+/// element types are always interpreted as signed. The behaviour is undefined
+/// if the input value is min_value<si32>.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_negate
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_negate
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.Negate %input1, %input1_zp, %output_zp : !spirv.arm.tensor<3x1x65540x1xi8>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<3x1x65540x1xi8>
+/// %2 = spirv.Tosa.Negate %input1, %input1_zp, %output_zp : !spirv.arm.tensor<2x7x15x13xf16>, !spirv.arm.tensor<1xf16>, !spirv.arm.tensor<1xf16> -> !spirv.arm.tensor<2x7x15x13xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Negate", format = "$input1 `,` $input1_zp `,` $output_zp attr-dict `:` qualified(type($input1)) `,` qualified(type($input1_zp)) `,` qualified(type($output_zp)) `->` qualified(type($output))", results(output))]
+pub struct TosaNegateOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    #[slot(input1_zp_ty)]
+    pub input1_zp: Value<'a>,
+    #[slot(output_zp_ty)]
+    pub output_zp: Value<'a>,
+    pub input1_zp_ty: Type<'a>,
+    pub output_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Pad`: Pads a tensor with value specified.
+///
+/// Pads a tensor along the borders of each dimension with a supplied value.
+/// Returns a new tensor with the padding included. The pad_const value includes
+/// the zero point if the tensor uses a zero point.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_pad
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_pad
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.Pad %input1, %padding, %pad_const : !spirv.arm.tensor<4x7xi8>, !spirv.arm.tensor<4xi32>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<21x19xi8>
+/// %2 = spirv.Tosa.Pad %input1, %padding, %pad_const : !spirv.arm.tensor<2x9x2x3xf32>, !spirv.arm.tensor<8xi32>, !spirv.arm.tensor<1xf32> -> !spirv.arm.tensor<4x9x4x4xf32>
+/// ```
+///
+/// For the first example, `%padding = [8, 9, 6, 6]` pads dimension 0 by 8
+/// before and 9 after, and dimension 1 by 6 on both sides.
+#[mlir::op("spirv.Tosa.Pad", format = "$input1 `,` $padding `,` $pad_const attr-dict `:` qualified(type($input1)) `,` qualified(type($padding)) `,` qualified(type($pad_const)) `->` qualified(type($output))", results(output))]
+pub struct TosaPadOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(padding_ty)]
+    pub padding: Value<'a>,
+    #[slot(pad_const_ty)]
+    pub pad_const: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub padding_ty: Type<'a>,
+    pub pad_const_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Pow`: Power operator.
+///
+/// Elementwise input1 value raised to the Power of input2.
+/// Axis of size 1 will be broadcast, as necessary. Rank of input tensors must
+/// match. The behavior is undefined if the the input1 value is negative, or
+/// both input values are zero or negative, or both input values are NaN or
+/// infinite.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_pow
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_pow
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Pow %input1, %input2 : !spirv.arm.tensor<1x52x53xf16>, !spirv.arm.tensor<44x52x53xf16> -> !spirv.arm.tensor<44x52x53xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Pow", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaPowOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.RFFT2D`: Performs RFFT2D operation on the input.
+///
+/// Performs a batched 2D real-valued Fast Fourier Transform over the input where
+/// the input tensor consists of real values producing complex valued output. The
+/// complex output values will be split into the output_real and output_imag
+/// tensor arguments. This operator takes advantage of Hermitian symmetry to only
+/// calculate the first half of the final output axis. Implementations may choose
+/// to skip calculation of the imaginary values at (0,0), (0,W/2), (H/2,0), and
+/// (H/2, W/2). If the calculation is skipped, the result at that location must be
+/// zero.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_rfft2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_rfft2d
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.RFFT2D local_bound = false, %input_real : !spirv.arm.tensor<1x32x32xf32> -> !spirv.struct<(!spirv.arm.tensor<1x32x17xf32>, !spirv.arm.tensor<1x32x17xf32>)>
+/// %1 = spirv.CompositeExtract %0[0 : i32] : !spirv.struct<(!spirv.arm.tensor<1x32x17xf32>, !spirv.arm.tensor<1x32x17xf32>)>
+/// %2 = spirv.CompositeExtract %0[1 : i32] : !spirv.struct<(!spirv.arm.tensor<1x32x17xf32>, !spirv.arm.tensor<1x32x17xf32>)>
+/// ```
+#[mlir::op("spirv.Tosa.RFFT2D", format = "`local_bound` `=` $local_bound `,` $input_real attr-dict `:` qualified(type($input_real)) `->` qualified(type($output))", results(output))]
+pub struct TosaRFFT2DOp<'a> {
+    #[slot(input_real_ty)]
+    pub input_real: Value<'a>,
+    pub local_bound: Attribute<'a>,
+    pub input_real_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Reciprocal`: Reciprocal operator.
+///
+/// Elementwise Reciprocal operation. Input and Output types must match. For
+/// integer operation, a table should be used with the appropriate ranges.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reciprocal
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reciprocal
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Reciprocal %input1 : !spirv.arm.tensor<38x47x44xf32> -> !spirv.arm.tensor<38x47x44xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Reciprocal", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaReciprocalOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ReduceAll`: Reduce All operator.
+///
+/// Reduces a tensor along the given axis with a Logical AND operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reduce_all
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reduce_all
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.ReduceAll axis = 2, %input1 : !spirv.arm.tensor<18x22x23x12xi1> -> !spirv.arm.tensor<18x22x1x12xi1>
+/// ```
+#[mlir::op("spirv.Tosa.ReduceAll", format = "`axis` `=` $axis `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaReduceAllOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ReduceAny`: Reduce Any operator.
+///
+/// Reduces a tensor along the given axis with a Logical OR operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reduce_any
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reduce_any
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.ReduceAny axis = 2, %input1 : !spirv.arm.tensor<25x13x30x8xi1> -> !spirv.arm.tensor<25x13x1x8xi1>
+/// ```
+#[mlir::op("spirv.Tosa.ReduceAny", format = "`axis` `=` $axis `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaReduceAnyOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ReduceMax`: Reduce Max operator.
+///
+/// Reduces a tensor along the given axis with a Maximum operation.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reduce_max
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reduce_max
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.ReduceMax axis = 2, nan_mode = <Propagate>, %input1 : !spirv.arm.tensor<8x30x12x3xi8> -> !spirv.arm.tensor<8x30x1x3xi8>
+/// %2 = spirv.Tosa.ReduceMax axis = 2, nan_mode = <Propagate>, %input1 : !spirv.arm.tensor<16x20x10xf16> -> !spirv.arm.tensor<16x20x1xf16>
+/// ```
+#[mlir::op("spirv.Tosa.ReduceMax", format = "`axis` `=` $axis `,` `nan_mode` `=` $nan_mode `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaReduceMaxOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ReduceMin`: Reduce Min operator.
+///
+/// Reduces a tensor along the given axis with a Minimum operation.
+/// NaN Propagation Mode is ignored for inputs using integer element types.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reduce_min
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reduce_min
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.ReduceMin axis = 2, nan_mode = <Propagate>, %input1 : !spirv.arm.tensor<2x5x5x1xi8> -> !spirv.arm.tensor<2x5x1x1xi8>
+/// %2 = spirv.Tosa.ReduceMin axis = 2, nan_mode = <Propagate>, %input1 : !spirv.arm.tensor<27x10x25x9xf16> -> !spirv.arm.tensor<27x10x1x9xf16>
+/// ```
+#[mlir::op("spirv.Tosa.ReduceMin", format = "`axis` `=` $axis `,` `nan_mode` `=` $nan_mode `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaReduceMinOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_nan_propagation_mode_type")]
+    pub nan_mode: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ReduceProduct`: Reduce Product operator.
+///
+/// Reduces a tensor along the given axis by computing the Product of the axis.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reduce_product
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reduce_product
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.ReduceProduct axis = 2, %input1 : !spirv.arm.tensor<2x16x25xf16> -> !spirv.arm.tensor<2x16x1xf16>
+/// ```
+#[mlir::op("spirv.Tosa.ReduceProduct", format = "`axis` `=` $axis `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaReduceProductOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.ReduceSum`: Reduce Sum operator.
+///
+/// Reduces a tensor along the given axis by computing the Sum of the axis.
+/// Integer element types are always interpreted as signed. The behavior is
+/// undefined if the integer addition overflows or underflows the signed
+/// integer range.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reduce_sum
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reduce_sum
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.ReduceSum axis = 1, %input1 : !spirv.arm.tensor<20x24x22xi32> -> !spirv.arm.tensor<20x1x22xi32>
+/// %1 = spirv.Tosa.ReduceSum axis = 1, %input1 : !spirv.arm.tensor<32x32x33xf32> -> !spirv.arm.tensor<32x1x33xf32>
+/// ```
+#[mlir::op("spirv.Tosa.ReduceSum", format = "`axis` `=` $axis `,` $input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaReduceSumOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Rescale`: Rescale operator.
+///
+/// Rescale is defined using an integer multiply, add, and shift.
+///
+/// Rescale supports two precisions of multiplier: 16-bit and 32-bit. The
+/// 32-bit multiplier version supports two rounding modes to enable simpler
+/// lowering of existing frameworks that use two stage rounding. All arithmetic
+/// is designed so that it does not overflow a 64-bit accumulator and that the
+/// result fits in 32 bits. In particular, a 48-bit value (represented as a
+/// 64-bit value in SPIR-V) cannot be scaled with the 32-bit multiplier because
+/// the accumulator would need to have 80 bits.
+///
+/// The shift and value range are limited to allow a variety of implementations.
+/// The limit of 62 on shift allows the shift to be decomposed as two right
+/// shifts of 31.
+///
+/// Unsigned 8- and 16-bit values are only allowed in the Rescale operation,
+/// to allow for compatibility with networks which expect unsigned 8-bit or
+/// 16-bit tensors for input and output.
+///
+/// Undefined behaviour may occur if the calculated result underflows or overflows
+/// their integer ranges.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_rescale
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_rescale
+///
+/// #### Example:
+/// ```mlir
+/// %9 = spirv.Tosa.Rescale scale32 = true, rounding_mode = <DoubleRound>, per_channel = false, input_unsigned = false, output_unsigned = true, %input, %multiplier, %shift, %input_zp, %output_zp : !spirv.arm.tensor<17x29x19xi16>, !spirv.arm.tensor<1xi32>, !spirv.arm.tensor<1xi8>, !spirv.arm.tensor<1xi16>, !spirv.arm.tensor<1xi16> -> !spirv.arm.tensor<17x29x19xi16>
+/// ```
+///
+/// With `per_channel = false`, `%multiplier` and `%shift` are 1D tensors with
+/// a single value, so they define one global scale for the whole tensor, while
+/// `%input_zp` and `%output_zp` are scalar zero points. For example,
+/// `%multiplier = [1073741824]`, `%shift = [30]`, `%input_zp = [0]`, and
+/// `%output_zp = [128]` mean "apply one global rescale to every element, then
+/// store the result using output zero point 128".
+#[mlir::op("spirv.Tosa.Rescale", format = "`scale32` `=` $scale32 `,` `rounding_mode` `=` $rounding_mode `,` `per_channel` `=` $per_channel `,` `input_unsigned` `=` $input_unsigned `,` `output_unsigned` `=` $output_unsigned `,` $input `,` $multiplier `,` $shift `,` $input_zp `,` $output_zp attr-dict `:` qualified(type($input)) `,` qualified(type($multiplier)) `,` qualified(type($shift)) `,` qualified(type($input_zp)) `,` qualified(type($output_zp)) `->` qualified(type($output))", results(output))]
+pub struct TosaRescaleOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(multiplier_ty)]
+    pub multiplier: Value<'a>,
+    #[slot(shift_ty)]
+    pub shift: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(output_zp_ty)]
+    pub output_zp: Value<'a>,
+    pub scale32: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_rounding_mode_type")]
+    pub rounding_mode: Attribute<'a>,
+    pub per_channel: Attribute<'a>,
+    pub input_unsigned: Attribute<'a>,
+    pub output_unsigned: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub multiplier_ty: Type<'a>,
+    pub shift_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub output_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Reshape`: Reshape operator.
+///
+/// Returns a tensor with the same type/values as the input, with a new shape
+/// specified by the shape argument. Reshape may operate on tensors of any rank.
+/// No data conversion happens during a reshape operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reshape
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reshape
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Reshape %input1, %shape : !spirv.arm.tensor<25x6x29x35xi16>, !spirv.arm.tensor<4xi32> -> !spirv.arm.tensor<125x6x7x29xi16>
+/// %1 = spirv.Tosa.Reshape %input1, %shape : !spirv.arm.tensor<1x2x7x2xf32>, !spirv.arm.tensor<3xi32> -> !spirv.arm.tensor<2x1x14xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Reshape", format = "$input1 `,` $shape attr-dict `:` qualified(type($input1)) `,` qualified(type($shape)) `->` qualified(type($output))", results(output))]
+pub struct TosaReshapeOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(shape_ty)]
+    pub shape: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub shape_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Resize`: Resize operation, supports various resize/upsample modes.
+///
+/// Resizes a tensor. Resize is only allowed in the H and W dimensions, given the input
+/// shape = [N,H,W,C].
+///
+/// The height dimension (H) is scaled by factor ($ scale_y_n/scale_y_d $). The width
+/// dimension (W) is scaled by factor ($ scale_x_n/scale_x_d $).
+///
+/// The NearestNeighbor mode returns the value of the input tensor closest to
+/// the calculated sample position for both floating-point and integer data
+/// formats.
+///
+/// Floating-point Bilinear mode returns a bilinearly interpolated output value
+/// based on the four closest input sample positions.
+///
+/// For integer Bilinear interpolation mode, the output value must be scaled by
+/// $ 1/(scale_y_n * scale_x_n) $ in a following operation to complete the
+/// interpolation (for example with a rescale operator).
+///
+/// The output dimensions can be derived from the input dimensions by inverting
+/// the scale. The [border_y, border_x] values adjust the output size to allow
+/// fractional sampling beyond integer input position (H - 1,W - 1).
+///
+/// The limit MAX_SCALE=256 is applied to each scale ratio after reduction of the
+/// ratio. Individual scale numerator and denominator values are allowed to be
+/// larger than MAX_SCALE.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_resize
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_resize
+///
+/// #### Example:
+/// ```mlir
+/// %4 = spirv.Tosa.Resize mode = <NearestNeighbor>, %input, %scale, %offset, %border : !spirv.arm.tensor<1x1x31x55xi8>, !spirv.arm.tensor<4xi32>, !spirv.arm.tensor<2xi32>, !spirv.arm.tensor<2xi32> -> !spirv.arm.tensor<1x1x278x55xi8>
+/// %4 = spirv.Tosa.Resize mode = <Bilinear>, %input, %scale, %offset, %border : !spirv.arm.tensor<1x48x33x63xf32>, !spirv.arm.tensor<4xi32>, !spirv.arm.tensor<2xi32>, !spirv.arm.tensor<2xi32> -> !spirv.arm.tensor<1x753x297x63xf32>
+/// ```
+///
+/// The resize tensors are ordered as
+/// `%scale = [scale_y_n, scale_y_d, scale_x_n, scale_x_d]`,
+/// `%offset = [offset_y, offset_x]`, and `%border = [border_y, border_x]`;
+/// for example, `%scale = [2, 1, 3, 2]` means "double height and scale width
+/// by 3/2".
+#[mlir::op("spirv.Tosa.Resize", format = "`mode` `=` $mode `,` $input `,` $scale `,` $offset `,` $border attr-dict `:` qualified(type($input)) `,` qualified(type($scale)) `,` qualified(type($offset)) `,` qualified(type($border)) `->` qualified(type($output))", results(output))]
+pub struct TosaResizeOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(scale_ty)]
+    pub scale: Value<'a>,
+    #[slot(offset_ty)]
+    pub offset: Value<'a>,
+    #[slot(border_ty)]
+    pub border: Value<'a>,
+    #[attr(dialect = "spirv.tosa_ext_resize_mode_type")]
+    pub mode: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub scale_ty: Type<'a>,
+    pub offset_ty: Type<'a>,
+    pub border_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Reverse`: Reverse operator.
+///
+/// Returns a tensor with the same type/values as the input, with the data
+/// reversed along the given axis. No data conversion happens during a reverse
+/// operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_reverse
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_reverse
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Reverse axis = 2, %input1 : !spirv.arm.tensor<20x5x28x31xi32> -> !spirv.arm.tensor<20x5x28x31xi32>
+/// %1 = spirv.Tosa.Reverse axis = 1, %input1 : !spirv.arm.tensor<21x34x47xf32> -> !spirv.arm.tensor<21x34x47xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Reverse", format = "`axis` `=` $axis `,` $input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaReverseOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    #[attr(int = "i32")]
+    pub axis: Attribute<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Rsqrt`: Reverse Square Root operator.
+///
+/// Elementwise Reciprocal Square Root operation ($ 1/sqrt $). Input and
+/// Output types must match. For integer operation, a table should be used
+/// with the appropriate ranges.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_rsqrt
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_rsqrt
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Rsqrt %input1 : !spirv.arm.tensor<40x57x56xf32> -> !spirv.arm.tensor<40x57x56xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Rsqrt", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaRsqrtOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Scatter`: Scatter operation.
+///
+/// The values_out tensor is set to the values_in tensor with data modified as
+/// follows: data from the input tensor is inserted at the positions specified
+/// by the indices tensor. In use cases that require multiple updates to the
+/// same output position, these must be decomposed into multiple scatter
+/// operations.  Undefined behaviour may occur if the specified indices are
+/// out of range or duplicate indices are provided.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_scatter
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_scatter
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Scatter %values_in, %indices, %input1 : !spirv.arm.tensor<34x28x54xi32>, !spirv.arm.tensor<34x18xi32>, !spirv.arm.tensor<34x18x54xi32> -> !spirv.arm.tensor<34x28x54xi32>
+/// %0 = spirv.Tosa.Scatter %values_in, %indices, %input1 : !spirv.arm.tensor<18x34x25xf16>, !spirv.arm.tensor<18x20xi32>, !spirv.arm.tensor<18x20x25xf16> -> !spirv.arm.tensor<18x34x25xf16>
+/// ```
+///
+/// If a row of `%indices` is `[4, 9]`, the two subtensors from `%input1` are
+/// written into slices 4 and 9 of `%values_in` for that batch.
+#[mlir::op("spirv.Tosa.Scatter", format = "$values_in `,` $indices `,` $input attr-dict `:` qualified(type($values_in)) `,` qualified(type($indices)) `,` qualified(type($input)) `->` qualified(type($values_out))", results(values_out))]
+pub struct TosaScatterOp<'a> {
+    #[slot(values_out)]
+    pub values_in: Value<'a>,
+    #[slot(indices_ty)]
+    pub indices: Value<'a>,
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    pub indices_ty: Type<'a>,
+    pub input_ty: Type<'a>,
+    pub values_out: Type<'a>,
+}
+
+/// `spirv.Tosa.Select`: Select operator.
+///
+/// Elementwise Select of the output based on a condition.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_select
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_select
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Select %cond, %trueVal, %falseVal : !spirv.arm.tensor<4x1x4x5xi1>, !spirv.arm.tensor<4x6x4x5xi8>, !spirv.arm.tensor<4x6x4x5xi8> -> !spirv.arm.tensor<4x6x4x5xi8>
+/// %0 = spirv.Tosa.Select %cond, %trueVal, %falseVal : !spirv.arm.tensor<9x2x15x8xi1>, !spirv.arm.tensor<9x2x15x8xf16>, !spirv.arm.tensor<9x1x15x8xf16> -> !spirv.arm.tensor<9x2x15x8xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Select", format = "$condition `,` $true_value `,` $false_value attr-dict `:` qualified(type($condition)) `,` qualified(type($true_value)) `,` qualified(type($false_value)) `->` qualified(type($output))", results(output))]
+pub struct TosaSelectOp<'a> {
+    #[slot(condition_ty)]
+    pub condition: Value<'a>,
+    #[slot(true_value_ty)]
+    pub true_value: Value<'a>,
+    #[slot(false_value_ty)]
+    pub false_value: Value<'a>,
+    pub condition_ty: Type<'a>,
+    pub true_value_ty: Type<'a>,
+    pub false_value_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Sigmoid`: Sigmoid operator.
+///
+/// Applies the sigmoid logistic function to each element of the input tensor:
+/// $ sigmoid(x) = \frac{1}{1 + e^{-x}} $.
+///
+/// For quantized integer data types, the `spirv.Tosa.Table` operator should be used instead.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_sigmoid
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_sigmoid
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Sigmoid %input : !spirv.arm.tensor<28x43x45xf32> -> !spirv.arm.tensor<28x43x45xf32>
+/// ```
+#[mlir::op("spirv.Tosa.Sigmoid", format = "$input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaSigmoidOp<'a> {
+    #[slot(output)]
+    pub input: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Sin`: Sin operator.
+///
+/// Elementwise Sine operation for values given in radians. Input and Output types must match.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_sin
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_sin
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Sin %input1 : !spirv.arm.tensor<49x38x58xf16> -> !spirv.arm.tensor<49x38x58xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Sin", format = "$input1 attr-dict `:` qualified(type($input1)) `->` qualified(type($output))", results(output))]
+pub struct TosaSinOp<'a> {
+    #[slot(output)]
+    pub input1: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Slice`: Slice operator.
+///
+/// Extracts a slice of input1, beginning at the start coordinates,
+/// and extending for size elements in each direction.
+/// No data conversion happens during a slice operation.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_slice
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_slice
+///
+/// #### Example:
+/// ```mlir
+/// %2 = spirv.Tosa.Slice %input1, %start, %size : !spirv.arm.tensor<32x19x41xi8>, !spirv.arm.tensor<3xi32>, !spirv.arm.tensor<3xi32> -> !spirv.arm.tensor<21x5x2xi8>
+/// %2 = spirv.Tosa.Slice %input1, %start, %size : !spirv.arm.tensor<30x45x29xf32>, !spirv.arm.tensor<3xi32>, !spirv.arm.tensor<3xi32> -> !spirv.arm.tensor<5x12x11xf32>
+/// ```
+///
+/// For the first example, `%start = [3, 10, 20]` and `%size = [21, 5, 2]`
+/// extract `%input1[3:24, 10:15, 20:22]`.
+#[mlir::op("spirv.Tosa.Slice", format = "$input1 `,` $start `,` $size attr-dict `:` qualified(type($input1)) `,` qualified(type($start)) `,` qualified(type($size)) `->` qualified(type($output))", results(output))]
+pub struct TosaSliceOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(start_ty)]
+    pub start: Value<'a>,
+    #[slot(size_ty)]
+    pub size: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub start_ty: Type<'a>,
+    pub size_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Sub`: Subtraction operator.
+///
+/// Elementwise Subtraction of input1 and input2. Axis of size 1 will be
+/// broadcast as necessary. Rank of input tensors must match. Integer element
+/// types are always interpreted as signed. The behavior is undefined if the
+/// integer subtraction overflows or underflows the signed integer range.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_sub
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_sub
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Sub %input1, %input2 : !spirv.arm.tensor<6x10x6x6xi32>, !spirv.arm.tensor<1x10x6x6xi32> -> !spirv.arm.tensor<6x10x6x6xi32>
+/// %0 = spirv.Tosa.Sub %input1, %input2 : !spirv.arm.tensor<1x10x13x12xf16>, !spirv.arm.tensor<6x10x13x12xf16> -> !spirv.arm.tensor<6x10x13x12xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Sub", format = "$input1 `,` $input2 attr-dict `:` qualified(type($input1)) `,` qualified(type($input2)) `->` qualified(type($output))", results(output))]
+pub struct TosaSubOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub input2_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Table`: Table lookup operator.
+///
+/// Table lookup operation. For int8_t, perform a 256 entry table lookup
+/// returning an int8_t value. For int16_t tables, the int16_t input is treated
+/// as a fixed-point 9.7 value. The most significant 9 bits are used to index
+/// into the table. The fractional 7 bits are used to interpolate based on
+/// table[index] and table[index+1]. The behavior is undefined if during the
+/// interpolation step, the integer subtraction table[index+1] - table[index]
+/// overflows or underflows the signed int16 range.
+///
+/// For int16_t inputs, this operator returns a 16.7 interpolated value in an
+/// int32_t. This value can then be input to the `spirv.Tosa.Rescale` operator
+/// to scale to the required output data type. Note that int16_t table has 513
+/// values to handle table[index+1] when index=511.
+///
+/// An int16_t to int16_t table lookup can be constructed as follows:
+/// * Use the table operator to produce a fixed point 16.7 interpolated result
+/// * Use `spirv.Tosa.Rescale` (in_t=int32_t, out_t=int16_t, scale=1<<14, shift=21)
+///   to scale the output to int16_t range (or alternate scale as required)
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_table
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_table
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Table %input, %table : !spirv.arm.tensor<3x2x15x7xi8>, !spirv.arm.tensor<256xi8> -> !spirv.arm.tensor<3x2x15x7xi8>
+/// ```
+///
+/// In the example, `%table` is the 256-entry lookup table, such as a
+/// precomputed quantized activation curve.
+#[mlir::op("spirv.Tosa.Table", format = "$input1 `,` $table attr-dict `:` qualified(type($input1)) `,` qualified(type($table)) `->` qualified(type($output))", results(output))]
+pub struct TosaTableOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(table_ty)]
+    pub table: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub table_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Tanh`: Hyperbolic Tangent operator.
+///
+/// Elementwise Parameterized Hyperbolic Tangent: $ tanh(x) = \frac{1 - e^{-2x}}{1 + e^{-2x}} $.
+///
+/// For quantized integer data types, the `spirv.Tosa.Table` operator should be used instead.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_tanh
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_tanh
+///
+/// #### Example:
+/// ```mlir
+/// %0 = spirv.Tosa.Tanh %input : !spirv.arm.tensor<46x50x36xf16> -> !spirv.arm.tensor<46x50x36xf16>
+/// ```
+#[mlir::op("spirv.Tosa.Tanh", format = "$input attr-dict `:` qualified(type($input)) `->` qualified(type($output))", results(output))]
+pub struct TosaTanhOp<'a> {
+    #[slot(output)]
+    pub input: Value<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Tile`: Tile operator.
+///
+/// Replicates input1 multiples times along each dimension.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_tile
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_tile
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Tile %input1, %multiples : !spirv.arm.tensor<10x28x21xi16>, !spirv.arm.tensor<3xi32> -> !spirv.arm.tensor<10x28x63xi16>
+/// %1 = spirv.Tosa.Tile %input1, %multiples : !spirv.arm.tensor<31x19x5xf16>, !spirv.arm.tensor<3xi32> -> !spirv.arm.tensor<62x57x10xf16>
+/// ```
+///
+/// For `%multiples = [1, 1, 3]`, the first two dimensions will be tiled once,
+/// while the third will be tiled 3 times.
+#[mlir::op("spirv.Tosa.Tile", format = "$input1 `,` $multiples attr-dict `:` qualified(type($input1)) `,` qualified(type($multiples)) `->` qualified(type($output))", results(output))]
+pub struct TosaTileOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(multiples_ty)]
+    pub multiples: Value<'a>,
+    pub input1_ty: Type<'a>,
+    pub multiples_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.TransposeConv2D`: Transpose 2D Convolution operator.
+///
+/// Performs a 2D transposed convolution over the given tensor input, using the
+/// weights tensor. Implementations may choose to skip calculation of multiplies
+/// by zero at fractional input positions.
+///
+/// Input and weight have respective zero point values provided in input_zp and weight_zp.
+///
+/// The behaviour is undefined if the accumulated result overflows or underflows.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_transpose_conv2d
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_transpose_conv2d
+///
+/// #### Example:
+/// ```mlir
+/// %6 = spirv.Tosa.TransposeConv2D out_pad = [0, 0, 0, 0], stride = [1, 1], acc_type = <INT48>, local_bound = false, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<1x13x33x3xi16>, !spirv.arm.tensor<11x1x3x3xi8>, !spirv.arm.tensor<1xi64>, !spirv.arm.tensor<1xi16>, !spirv.arm.tensor<1xi8> -> !spirv.arm.tensor<1x13x35x11xi64>
+/// %6 = spirv.Tosa.TransposeConv2D out_pad = [0, 1, 0, 0], stride = [1, 8], acc_type = <FP16>, local_bound = true, %input, %weight, %bias, %input_zp, %weight_zp : !spirv.arm.tensor<10x24x9x13xf16>, !spirv.arm.tensor<14x1x1x13xf16>, !spirv.arm.tensor<14xf16>, !spirv.arm.tensor<1xf16>, !spirv.arm.tensor<1xf16> -> !spirv.arm.tensor<10x25x65x14xf16>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.TransposeConv2D", results(output))]
+pub struct TosaTransposeConv2DOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(weight_ty)]
+    pub weight: Value<'a>,
+    #[slot(bias_ty)]
+    pub bias: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(weight_zp_ty)]
+    pub weight_zp: Value<'a>,
+    pub out_pad: Attribute<'a>,
+    pub stride: Attribute<'a>,
+    #[attr(dialect = "spirv.tosa_ext_acc_type")]
+    pub acc_type: Attribute<'a>,
+    pub local_bound: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub weight_ty: Type<'a>,
+    pub bias_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub weight_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `spirv.Tosa.Transpose`: Transpose operator.
+///
+/// Permutes the dimensions of the input tensor input1 based on the perms
+/// argument. Each value in the perms list must be a valid dimension of the
+/// input tensor and may not be repeated.
+///
+/// References:
+///   * https://github.khronos.org/SPIRV-Registry/extended/TOSA.001000.1.html#_transpose
+///   * https://www.mlplatform.org/tosa/tosa_spec_1_0_1.html#_transpose
+///
+/// #### Example:
+/// ```mlir
+/// %1 = spirv.Tosa.Transpose perms = [2, 0, 1, 3], %input1 : !spirv.arm.tensor<14x28x1x61xi16> -> !spirv.arm.tensor<1x14x28x61xi16>
+/// %1 = spirv.Tosa.Transpose perms = [2, 0, 1], %input1 : !spirv.arm.tensor<42x22x49xi1> -> !spirv.arm.tensor<49x42x22xi1>
+/// ```
+///
+/// Generic form only (directive `custom<SPIRV_I32_1DArmTensor>`).
+#[mlir::op("spirv.Tosa.Transpose", results(output))]
+pub struct TosaTransposeOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    pub perms: Attribute<'a>,
+    pub input1_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
 /// `spirv.Transpose`: Transpose a matrix.
 ///
 /// Result Type must be an OpTypeMatrix.
@@ -9146,8 +12153,8 @@ pub struct TransposeOp<'a> {
 /// #### Example:
 ///
 /// ```mlir
-/// %1 = spirv.UConvertOp %0 : i32 to i64
-/// %3 = spirv.UConvertOp %2 : vector<3xi32> to vector<3xi64>
+/// %1 = spirv.UConvert %0 : i32 to i64
+/// %3 = spirv.UConvert %2 : vector<3xi32> to vector<3xi64>
 /// ```
 #[mlir::op("spirv.UConvert", format = "$operand attr-dict `:` type($operand) `to` type($result)", results(result))]
 pub struct UConvertOp<'a> {
@@ -9611,7 +12618,7 @@ pub struct VectorExtractDynamicOp<'a> {
 ///
 /// ```mlir
 /// %scalar = ... : f32
-/// %2 = spirv.VectorInsertDynamic %scalar %0[%1] : f32, vector<8xf32>, i32
+/// %2 = spirv.VectorInsertDynamic %scalar, %0[%1] : vector<8xf32>, i32
 /// ```
 #[mlir::op("spirv.VectorInsertDynamic", format = "$component `,` $vector `[` $index `]` attr-dict `:` type($vector) `,` type($index)", results(result))]
 pub struct VectorInsertDynamicOp<'a> {
@@ -9719,7 +12726,7 @@ pub struct VectorTimesMatrixOp<'a> {
 /// ```mlir
 /// %0 = spirv.VectorTimesScalar %vector, %scalar : vector<4xf32>
 /// ```
-#[mlir::op("spirv.VectorTimesScalar", format = "$vector `,` $scalar attr-dict `:` `(` type($vector) `,` type($scalar) `)` `->` type($result)", results(result))]
+#[mlir::op("spirv.VectorTimesScalar", format = "$vector `,` $scalar attr-dict `:` `(` qualified(type($vector)) `,` qualified(type($scalar)) `)` `->` type($result)", results(result))]
 pub struct VectorTimesScalarOp<'a> {
     #[slot(vector_ty)]
     pub vector: Value<'a>,
@@ -9754,7 +12761,7 @@ pub struct YieldOp<'a> {
 /// The `spirv` dialect.
 #[mlir::dialect(
     "spirv",
-    ops = [AccessChainOp, AddressOfOp, AtomicAndOp, AtomicCompareExchangeOp, AtomicCompareExchangeWeakOp, AtomicExchangeOp, AtomicIAddOp, AtomicIDecrementOp, AtomicIIncrementOp, AtomicISubOp, AtomicOrOp, AtomicSMaxOp, AtomicSMinOp, AtomicUMaxOp, AtomicUMinOp, AtomicXorOp, BitCountOp, BitFieldInsertOp, BitFieldSExtractOp, BitFieldUExtractOp, BitReverseOp, BitcastOp, BitwiseAndOp, BitwiseOrOp, BitwiseXorOp, BranchConditionalOp, BranchOp, CLAcosOp, CLAcoshOp, CLAsinOp, CLAsinhOp, CLAtan2Op, CLAtanOp, CLAtanhOp, CLCeilOp, CLCosOp, CLCoshOp, CLErfOp, CLExpOp, CLFAbsOp, CLFMaxOp, CLFMinOp, CLFloorOp, CLFmaOp, CLLogOp, CLMixOp, CLPowOp, CLPrintfOp, CLRintOp, CLRoundOp, CLRsqrtOp, CLSAbsOp, CLSMaxOp, CLSMinOp, CLSinOp, CLSinhOp, CLSqrtOp, CLTanOp, CLTanhOp, CLUMaxOp, CLUMinOp, CompositeConstructOp, CompositeExtractOp, CompositeInsertOp, ConstantOp, ControlBarrierOp, ConvertFToSOp, ConvertFToUOp, ConvertPtrToUOp, ConvertSToFOp, ConvertUToFOp, ConvertUToPtrOp, CopyMemoryOp, DotOp, EXTAtomicFAddOp, EXTConstantCompositeReplicateOp, EXTEmitMeshTasksOp, EXTSetMeshOutputsOp, EXTSpecConstantCompositeReplicateOp, EmitVertexOp, EndPrimitiveOp, EntryPointOp, ExecutionModeOp, FAddOp, FConvertOp, FDivOp, FModOp, FMulOp, FNegateOp, FOrdEqualOp, FOrdGreaterThanEqualOp, FOrdGreaterThanOp, FOrdLessThanEqualOp, FOrdLessThanOp, FOrdNotEqualOp, FRemOp, FSubOp, FUnordEqualOp, FUnordGreaterThanEqualOp, FUnordGreaterThanOp, FUnordLessThanEqualOp, FUnordLessThanOp, FUnordNotEqualOp, FuncOp, FunctionCallOp, GLAcosOp, GLAcoshOp, GLAsinOp, GLAsinhOp, GLAtanOp, GLAtanhOp, GLCeilOp, GLCosOp, GLCoshOp, GLCrossOp, GLDistanceOp, GLExp2Op, GLExpOp, GLFAbsOp, GLFClampOp, GLFMaxOp, GLFMinOp, GLFMixOp, GLFSignOp, GLFindILsbOp, GLFindSMsbOp, GLFindUMsbOp, GLFloorOp, GLFmaOp, GLFractOp, GLFrexpStructOp, GLInverseSqrtOp, GLLdexpOp, GLLengthOp, GLLog2Op, GLLogOp, GLNormalizeOp, GLPackHalf2x16Op, GLPackSnorm4x8Op, GLPowOp, GLReflectOp, GLRoundEvenOp, GLRoundOp, GLSAbsOp, GLSClampOp, GLSMaxOp, GLSMinOp, GLSSignOp, GLSinOp, GLSinhOp, GLSqrtOp, GLTanOp, GLTanhOp, GLUClampOp, GLUMaxOp, GLUMinOp, GLUnpackHalf2x16Op, GLUnpackSnorm4x8Op, GenericCastToPtrExplicitOp, GenericCastToPtrOp, GlobalVariableOp, GraphARMOp, GraphConstantARMOp, GraphEntryPointARMOp, GraphOutputsARMOp, GroupBroadcastOp, GroupFAddOp, GroupFMaxOp, GroupFMinOp, GroupFMulKHROp, GroupIAddOp, GroupIMulKHROp, GroupNonUniformAllEqualOp, GroupNonUniformAllOp, GroupNonUniformAnyOp, GroupNonUniformBallotBitCountOp, GroupNonUniformBallotFindLSBOp, GroupNonUniformBallotFindMSBOp, GroupNonUniformBallotOp, GroupNonUniformBitwiseAndOp, GroupNonUniformBitwiseOrOp, GroupNonUniformBitwiseXorOp, GroupNonUniformBroadcastOp, GroupNonUniformElectOp, GroupNonUniformFAddOp, GroupNonUniformFMaxOp, GroupNonUniformFMinOp, GroupNonUniformFMulOp, GroupNonUniformIAddOp, GroupNonUniformIMulOp, GroupNonUniformLogicalAndOp, GroupNonUniformLogicalOrOp, GroupNonUniformLogicalXorOp, GroupNonUniformQuadSwapOp, GroupNonUniformRotateKHROp, GroupNonUniformSMaxOp, GroupNonUniformSMinOp, GroupNonUniformShuffleDownOp, GroupNonUniformShuffleOp, GroupNonUniformShuffleUpOp, GroupNonUniformShuffleXorOp, GroupNonUniformUMaxOp, GroupNonUniformUMinOp, GroupSMaxOp, GroupSMinOp, GroupUMaxOp, GroupUMinOp, IAddCarryOp, IAddOp, IEqualOp, IMulOp, INTELControlBarrierArriveOp, INTELControlBarrierWaitOp, INTELConvertBF16ToFOp, INTELConvertFToBF16Op, INTELRoundFToTF32Op, INTELSubgroupBlockReadOp, INTELSubgroupBlockWriteOp, INotEqualOp, ISubBorrowOp, ISubOp, ImageDrefGatherOp, ImageFetchOp, ImageOp, ImageQuerySizeOp, ImageReadOp, ImageSampleExplicitLodOp, ImageSampleImplicitLodOp, ImageSampleProjDrefImplicitLodOp, ImageWriteOp, InBoundsPtrAccessChainOp, IsFiniteOp, IsInfOp, IsNanOp, KHRAssumeTrueOp, KHRCooperativeMatrixLengthOp, KHRCooperativeMatrixLoadOp, KHRCooperativeMatrixMulAddOp, KHRCooperativeMatrixStoreOp, KHRSubgroupBallotOp, KillOp, LoadOp, LogicalAndOp, LogicalEqualOp, LogicalNotEqualOp, LogicalNotOp, LogicalOrOp, LoopOp, MatrixTimesMatrixOp, MatrixTimesScalarOp, MatrixTimesVectorOp, MemoryBarrierOp, MergeOp, ModuleOp, NotOp, OrderedOp, PtrAccessChainOp, PtrCastToGenericOp, ReferenceOfOp, ReturnOp, ReturnValueOp, SConvertOp, SDivOp, SDotAccSatOp, SDotOp, SGreaterThanEqualOp, SGreaterThanOp, SLessThanEqualOp, SLessThanOp, SModOp, SMulExtendedOp, SNegateOp, SRemOp, SUDotAccSatOp, SUDotOp, SelectOp, SelectionOp, ShiftLeftLogicalOp, ShiftRightArithmeticOp, ShiftRightLogicalOp, SpecConstantCompositeOp, SpecConstantOp, SpecConstantOperationOp, StoreOp, SwitchOp, TransposeOp, UConvertOp, UDivOp, UDotAccSatOp, UDotOp, UGreaterThanEqualOp, UGreaterThanOp, ULessThanEqualOp, ULessThanOp, UModOp, UMulExtendedOp, UndefOp, UnorderedOp, UnreachableOp, VariableOp, VectorExtractDynamicOp, VectorInsertDynamicOp, VectorShuffleOp, VectorTimesMatrixOp, VectorTimesScalarOp, YieldOp],
+    ops = [AccessChainOp, AddressOfOp, AllOp, AnyOp, AtomicAndOp, AtomicCompareExchangeOp, AtomicCompareExchangeWeakOp, AtomicExchangeOp, AtomicIAddOp, AtomicIDecrementOp, AtomicIIncrementOp, AtomicISubOp, AtomicLoadOp, AtomicOrOp, AtomicSMaxOp, AtomicSMinOp, AtomicStoreOp, AtomicUMaxOp, AtomicUMinOp, AtomicXorOp, BitCountOp, BitFieldInsertOp, BitFieldSExtractOp, BitFieldUExtractOp, BitReverseOp, BitcastOp, BitwiseAndOp, BitwiseOrOp, BitwiseXorOp, BranchConditionalOp, BranchOp, CLAcosOp, CLAcoshOp, CLAsinOp, CLAsinhOp, CLAtan2Op, CLAtanOp, CLAtanhOp, CLCbrtOp, CLCeilOp, CLClzOp, CLCopysignOp, CLCosOp, CLCoshOp, CLErfOp, CLErfcOp, CLExp10Op, CLExp2Op, CLExpOp, CLExpm1Op, CLFAbsOp, CLFMaxOp, CLFMinOp, CLFdimOp, CLFloorOp, CLFmaOp, CLFmodOp, CLHypotOp, CLLdexpOp, CLLog10Op, CLLog1pOp, CLLog2Op, CLLogOp, CLMixOp, CLPowOp, CLPownOp, CLPrintfOp, CLRintOp, CLRootnOp, CLRoundOp, CLRsqrtOp, CLSAbsOp, CLSMaxOp, CLSMinOp, CLSinOp, CLSinhOp, CLSqrtOp, CLTanOp, CLTanhOp, CLTruncOp, CLUMaxOp, CLUMinOp, CompositeConstructOp, CompositeExtractOp, CompositeInsertOp, ConstantOp, ControlBarrierOp, ConvertFToSOp, ConvertFToUOp, ConvertPtrToUOp, ConvertSToFOp, ConvertUToFOp, ConvertUToPtrOp, CopyMemoryOp, DotOp, EXTAtomicFAddOp, EXTConstantCompositeReplicateOp, EXTEmitMeshTasksOp, EXTSetMeshOutputsOp, EXTSpecConstantCompositeReplicateOp, EmitVertexOp, EndPrimitiveOp, EntryPointOp, ExecutionModeIdOp, ExecutionModeOp, ExperimentalMLCallOp, FAddOp, FConvertOp, FDivOp, FModOp, FMulOp, FNegateOp, FOrdEqualOp, FOrdGreaterThanEqualOp, FOrdGreaterThanOp, FOrdLessThanEqualOp, FOrdLessThanOp, FOrdNotEqualOp, FRemOp, FSubOp, FUnordEqualOp, FUnordGreaterThanEqualOp, FUnordGreaterThanOp, FUnordLessThanEqualOp, FUnordLessThanOp, FUnordNotEqualOp, FuncOp, FunctionCallOp, GLAcosOp, GLAcoshOp, GLAsinOp, GLAsinhOp, GLAtan2Op, GLAtanOp, GLAtanhOp, GLCeilOp, GLCosOp, GLCoshOp, GLCrossOp, GLDegreesOp, GLDistanceOp, GLExp2Op, GLExpOp, GLFAbsOp, GLFClampOp, GLFMaxOp, GLFMinOp, GLFMixOp, GLFSignOp, GLFindILsbOp, GLFindSMsbOp, GLFindUMsbOp, GLFloorOp, GLFmaOp, GLFractOp, GLFrexpStructOp, GLInverseSqrtOp, GLLdexpOp, GLLengthOp, GLLog2Op, GLLogOp, GLNClampOp, GLNMaxOp, GLNMinOp, GLNormalizeOp, GLPackHalf2x16Op, GLPackSnorm4x8Op, GLPowOp, GLRadiansOp, GLReflectOp, GLRoundEvenOp, GLRoundOp, GLSAbsOp, GLSClampOp, GLSMaxOp, GLSMinOp, GLSSignOp, GLSinOp, GLSinhOp, GLSmoothStepOp, GLSqrtOp, GLStepOp, GLTanOp, GLTanhOp, GLTruncOp, GLUClampOp, GLUMaxOp, GLUMinOp, GLUnpackHalf2x16Op, GLUnpackSnorm4x8Op, GenericCastToPtrExplicitOp, GenericCastToPtrOp, GlobalVariableOp, GraphARMOp, GraphConstantARMOp, GraphEntryPointARMOp, GraphOutputsARMOp, GroupBroadcastOp, GroupFAddOp, GroupFMaxOp, GroupFMinOp, GroupFMulKHROp, GroupIAddOp, GroupIMulKHROp, GroupNonUniformAllEqualOp, GroupNonUniformAllOp, GroupNonUniformAnyOp, GroupNonUniformBallotBitCountOp, GroupNonUniformBallotFindLSBOp, GroupNonUniformBallotFindMSBOp, GroupNonUniformBallotOp, GroupNonUniformBitwiseAndOp, GroupNonUniformBitwiseOrOp, GroupNonUniformBitwiseXorOp, GroupNonUniformBroadcastFirstOp, GroupNonUniformBroadcastOp, GroupNonUniformElectOp, GroupNonUniformFAddOp, GroupNonUniformFMaxOp, GroupNonUniformFMinOp, GroupNonUniformFMulOp, GroupNonUniformIAddOp, GroupNonUniformIMulOp, GroupNonUniformLogicalAndOp, GroupNonUniformLogicalOrOp, GroupNonUniformLogicalXorOp, GroupNonUniformQuadSwapOp, GroupNonUniformRotateKHROp, GroupNonUniformSMaxOp, GroupNonUniformSMinOp, GroupNonUniformShuffleDownOp, GroupNonUniformShuffleOp, GroupNonUniformShuffleUpOp, GroupNonUniformShuffleXorOp, GroupNonUniformUMaxOp, GroupNonUniformUMinOp, GroupSMaxOp, GroupSMinOp, GroupUMaxOp, GroupUMinOp, IAddCarryOp, IAddOp, IEqualOp, IMulOp, INTELControlBarrierArriveOp, INTELControlBarrierWaitOp, INTELConvertBF16ToFOp, INTELConvertFToBF16Op, INTELMaskedGatherOp, INTELMaskedScatterOp, INTELRoundFToTF32Op, INTELSubgroupBlockReadOp, INTELSubgroupBlockWriteOp, INotEqualOp, ISubBorrowOp, ISubOp, ImageDrefGatherOp, ImageFetchOp, ImageOp, ImageQuerySizeOp, ImageReadOp, ImageSampleExplicitLodOp, ImageSampleImplicitLodOp, ImageSampleProjDrefImplicitLodOp, ImageWriteOp, InBoundsPtrAccessChainOp, IsFiniteOp, IsInfOp, IsNanOp, IsNormalOp, KHRAssumeTrueOp, KHRCooperativeMatrixLengthOp, KHRCooperativeMatrixLoadOp, KHRCooperativeMatrixMulAddOp, KHRCooperativeMatrixStoreOp, KHRExpectOp, KHRSubgroupBallotOp, KillOp, LoadOp, LogicalAndOp, LogicalEqualOp, LogicalNotEqualOp, LogicalNotOp, LogicalOrOp, LoopOp, MatrixTimesMatrixOp, MatrixTimesScalarOp, MatrixTimesVectorOp, MemoryBarrierOp, MemoryNamedBarrierOp, MergeOp, ModuleOp, NamedBarrierInitializeOp, NotOp, OrderedOp, OuterProductOp, PtrAccessChainOp, PtrCastToGenericOp, ReferenceOfOp, ReturnOp, ReturnValueOp, SConvertOp, SDivOp, SDotAccSatOp, SDotOp, SGreaterThanEqualOp, SGreaterThanOp, SLessThanEqualOp, SLessThanOp, SModOp, SMulExtendedOp, SNegateOp, SRemOp, SUDotAccSatOp, SUDotOp, SampledImageOp, SelectOp, SelectionOp, ShiftLeftLogicalOp, ShiftRightArithmeticOp, ShiftRightLogicalOp, SpecConstantCompositeOp, SpecConstantOp, SpecConstantOperationOp, StoreOp, SwitchOp, TosaAbsOp, TosaAddOp, TosaArgMaxOp, TosaArithmeticRightShiftOp, TosaAvgPool2DOp, TosaBitwiseAndOp, TosaBitwiseNotOp, TosaBitwiseOrOp, TosaBitwiseXorOp, TosaCastOp, TosaCeilOp, TosaClampOp, TosaClzOp, TosaConcatOp, TosaConv2DOp, TosaConv3DOp, TosaCosOp, TosaDepthwiseConv2DOp, TosaEqualOp, TosaErfOp, TosaExpOp, TosaFFT2DOp, TosaFloorOp, TosaGatherOp, TosaGreaterEqualOp, TosaGreaterOp, TosaIntDivOp, TosaLogOp, TosaLogicalAndOp, TosaLogicalLeftShiftOp, TosaLogicalNotOp, TosaLogicalOrOp, TosaLogicalRightShiftOp, TosaLogicalXorOp, TosaMatMulOp, TosaMaxPool2DOp, TosaMaximumOp, TosaMinimumOp, TosaMulOp, TosaNegateOp, TosaPadOp, TosaPowOp, TosaRFFT2DOp, TosaReciprocalOp, TosaReduceAllOp, TosaReduceAnyOp, TosaReduceMaxOp, TosaReduceMinOp, TosaReduceProductOp, TosaReduceSumOp, TosaRescaleOp, TosaReshapeOp, TosaResizeOp, TosaReverseOp, TosaRsqrtOp, TosaScatterOp, TosaSelectOp, TosaSigmoidOp, TosaSinOp, TosaSliceOp, TosaSubOp, TosaTableOp, TosaTanhOp, TosaTileOp, TosaTransposeConv2DOp, TosaTransposeOp, TransposeOp, UConvertOp, UDivOp, UDotAccSatOp, UDotOp, UGreaterThanEqualOp, UGreaterThanOp, ULessThanEqualOp, ULessThanOp, UModOp, UMulExtendedOp, UndefOp, UnorderedOp, UnreachableOp, VariableOp, VectorExtractDynamicOp, VectorInsertDynamicOp, VectorShuffleOp, VectorTimesMatrixOp, VectorTimesScalarOp, YieldOp],
     materializer
 )]
 pub struct SpirvDialect;

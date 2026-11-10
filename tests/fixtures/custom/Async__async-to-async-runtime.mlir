@@ -156,3 +156,10 @@ module {
   }
 }
 
+// -----
+module {
+  async.func @async_func_empty() -> !async.token {
+    return
+  }
+}
+

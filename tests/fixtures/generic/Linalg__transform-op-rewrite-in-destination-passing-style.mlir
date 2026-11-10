@@ -77,7 +77,7 @@
     ^bb0(%arg5: index, %arg6: index):
       %3 = "arith.muli"(%arg5, %arg6) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
       "tensor.yield"(%3) : (index) -> ()
-    }) : (tensor<?x10xindex>, index, index, index) -> tensor<?x?xindex>
+    }) {test.discardable.attr = 1 : i64} : (tensor<?x10xindex>, index, index, index) -> tensor<?x?xindex>
     "func.return"(%2) : (tensor<?x?xindex>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -98,7 +98,7 @@
     ^bb0(%arg5: index, %arg6: index):
       %3 = "arith.constant"() <{value = 50 : index}> : () -> index
       "tensor.yield"(%3) : (index) -> ()
-    }) : (tensor<?x10xindex>, index, index, index) -> tensor<?x?xindex>
+    }) {test.discardable.attr = 1 : i64} : (tensor<?x10xindex>, index, index, index) -> tensor<?x?xindex>
     "func.return"(%2) : (tensor<?x?xindex>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -118,7 +118,7 @@
     %2 = "tensor.pad"(%arg1, %arg2, %arg3, %arg4) <{operandSegmentSizes = array<i32: 1, 1, 2>, static_high = array<i64: -9223372036854775808, -9223372036854775808>, static_low = array<i64: 5, -9223372036854775808>}> ({
     ^bb0(%arg6: index, %arg7: index):
       "tensor.yield"(%arg5) : (index) -> ()
-    }) : (tensor<?x10xindex>, index, index, index) -> tensor<?x?xindex>
+    }) {test.discardable.attr = 1 : i64} : (tensor<?x10xindex>, index, index, index) -> tensor<?x?xindex>
     "func.return"(%2) : (tensor<?x?xindex>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -146,6 +146,27 @@
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
     ^bb0(%arg0: !transform.any_op):
       %0 = "transform.structured.match"(%arg0) <{ops = ["tensor.pad"]}> : (!transform.any_op) -> !transform.any_op
+      %1 = "transform.structured.rewrite_in_destination_passing_style"(%0) : (!transform.any_op) -> !transform.any_op
+      "transform.yield"() : () -> ()
+    }) : () -> ()
+  }) {transform.with_named_sequence} : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<134217728xf32>, tensor<134217728xf32>) -> tensor<134217728xf32>, sym_name = "already_destination_passing_style"}> ({
+  ^bb0(%arg1: tensor<134217728xf32>, %arg2: tensor<134217728xf32>):
+    %2 = "linalg.add"(%arg1, %arg2, %arg1) <{operandSegmentSizes = array<i32: 2, 1>}> ({
+    ^bb0(%arg3: f32, %arg4: f32, %arg5: f32):
+      %3 = "arith.addf"(%arg3, %arg4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "linalg.yield"(%3) : (f32) -> ()
+    }) : (tensor<134217728xf32>, tensor<134217728xf32>, tensor<134217728xf32>) -> tensor<134217728xf32>
+    "func.return"(%2) : (tensor<134217728xf32>) -> ()
+  }) : () -> ()
+  "builtin.module"() ({
+    "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> (), sym_name = "__transform_main"}> ({
+    ^bb0(%arg0: !transform.any_op):
+      %0 = "transform.structured.match"(%arg0) <{ops = ["linalg.add"]}> : (!transform.any_op) -> !transform.any_op
       %1 = "transform.structured.rewrite_in_destination_passing_style"(%0) : (!transform.any_op) -> !transform.any_op
       "transform.yield"() : () -> ()
     }) : () -> ()

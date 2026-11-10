@@ -1,13 +1,13 @@
 "builtin.module"() <{sym_name = "gemm"}> ({
   "gpu.module"() <{sym_name = "kernel"}> ({
-    "gpu.func"() <{function_type = (!llvm.ptr<1>, !llvm.ptr<1>) -> ()}> ({
+    "gpu.func"() <{function_type = (!llvm.ptr<1>, !llvm.ptr<1>) -> (), kernel}> ({
     ^bb0(%arg3: !llvm.ptr<1>, %arg4: !llvm.ptr<1>):
       %22 = "arith.constant"() <{value = 64 : i32}> : () -> i32
       %23 = "arith.constant"() <{value = 8 : i32}> : () -> i32
       %24 = "arith.constant"() <{value = 64 : i32}> : () -> i32
       %25 = "arith.constant"() <{value = 0 : i32}> : () -> i32
       %26 = "arith.constant"() <{value = 0 : i32}> : () -> i32
-      %27 = "xevm.blockload2d"(%arg3, %22, %23, %24, %25, %26) <{elem_size_in_bits = 32 : i32, pack_register = false, tile_height = 8 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi32>
+      %27 = "xevm.blockload2d"(%arg3, %22, %23, %24, %25, %26) <{cache_control = #xevm.load_cache_control<L1c_L2c_L3c>, elem_size_in_bits = 32 : i32, pack_register = false, tile_height = 8 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi32>
       %28 = "vector.bitcast"(%27) : (vector<8xi32>) -> vector<8xf32>
       %29 = "arith.constant"() <{value = 0 : index}> : () -> index
       %30 = "gpu.thread_id"() <{dimension = #gpu<dim x>}> : () -> index
@@ -16,9 +16,9 @@
       %33 = "arith.sitofp"(%32) : (i32) -> f32
       %34 = "vector.insert"(%33, %28, %29) <{static_position = array<i64: -9223372036854775808>}> : (f32, vector<8xf32>, index) -> vector<8xf32>
       %35 = "vector.bitcast"(%34) : (vector<8xf32>) -> vector<8xi32>
-      "xevm.blockstore2d"(%arg4, %22, %23, %24, %25, %26, %35) <{elem_size_in_bits = 32 : i32, tile_height = 8 : i32, tile_width = 16 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>) -> ()
+      "xevm.blockstore2d"(%arg4, %22, %23, %24, %25, %26, %35) <{cache_control = #xevm.store_cache_control<L1wt_L2uc_L3wb>, elem_size_in_bits = 32 : i32, tile_height = 8 : i32, tile_width = 16 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "block_load_store", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "block_load_store"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (memref<8x16xf32>) -> memref<8x16xf32>, sym_name = "test"}> ({
   ^bb0(%arg2: memref<8x16xf32>):

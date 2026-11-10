@@ -10,48 +10,29 @@
   "emitc.global"() <{const_specifier, initial_value = 3.000000e+00 : f32, static_specifier, sym_name = "static_const", type = f32}> : () -> ()
   "emitc.global"() <{initial_value = #emitc.opaque<"CHAR_MIN">, sym_name = "opaque_init", type = !emitc.opaque<"char">}> : () -> ()
   "func.func"() <{function_type = () -> i32, sym_name = "use_global_scalar_read"}> ({
-    %22 = "emitc.get_global"() <{name = @myglobal_int}> : () -> !emitc.lvalue<i32>
-    %23 = "emitc.load"(%22) : (!emitc.lvalue<i32>) -> i32
-    "func.return"(%23) : (i32) -> ()
+    %14 = "emitc.get_global"() <{name = @myglobal_int}> : () -> !emitc.lvalue<i32>
+    %15 = "emitc.load"(%14) : (!emitc.lvalue<i32>) -> i32
+    "func.return"(%15) : (i32) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32) -> (), sym_name = "use_global_scalar_write"}> ({
-  ^bb0(%arg9: i32):
-    %21 = "emitc.get_global"() <{name = @myglobal_int}> : () -> !emitc.lvalue<i32>
-    "emitc.assign"(%21, %arg9) : (!emitc.lvalue<i32>, i32) -> ()
+  ^bb0(%arg6: i32):
+    %13 = "emitc.get_global"() <{name = @myglobal_int}> : () -> !emitc.lvalue<i32>
+    "emitc.assign"(%13, %arg6) : (!emitc.lvalue<i32>, i32) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> f32, sym_name = "use_global_array_read"}> ({
-  ^bb0(%arg8: index):
-    %18 = "emitc.get_global"() <{name = @myglobal}> : () -> !emitc.array<2xf32>
-    %19 = "emitc.subscript"(%18, %arg8) : (!emitc.array<2xf32>, index) -> !emitc.lvalue<f32>
-    %20 = "emitc.load"(%19) : (!emitc.lvalue<f32>) -> f32
-    "func.return"(%20) : (f32) -> ()
+  ^bb0(%arg5: index):
+    %10 = "emitc.get_global"() <{name = @myglobal}> : () -> !emitc.array<2xf32>
+    %11 = "emitc.subscript"(%10, %arg5) : (!emitc.array<2xf32>, index) -> !emitc.lvalue<f32>
+    %12 = "emitc.load"(%11) : (!emitc.lvalue<f32>) -> f32
+    "func.return"(%12) : (f32) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, f32) -> (), sym_name = "use_global_array_write"}> ({
-  ^bb0(%arg6: index, %arg7: f32):
-    %16 = "emitc.get_global"() <{name = @myglobal}> : () -> !emitc.array<2xf32>
-    %17 = "emitc.subscript"(%16, %arg6) : (!emitc.array<2xf32>, index) -> !emitc.lvalue<f32>
-    "emitc.assign"(%17, %arg7) : (!emitc.lvalue<f32>, f32) -> ()
+  ^bb0(%arg3: index, %arg4: f32):
+    %8 = "emitc.get_global"() <{name = @myglobal}> : () -> !emitc.array<2xf32>
+    %9 = "emitc.subscript"(%8, %arg3) : (!emitc.array<2xf32>, index) -> !emitc.lvalue<f32>
+    "emitc.assign"(%9, %arg4) : (!emitc.lvalue<f32>, f32) -> ()
     "func.return"() : () -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (index) -> !emitc.ptr<i16>, sym_name = "use_const_global_array_pointer"}> ({
-  ^bb0(%arg5: index):
-    %13 = "emitc.get_global"() <{name = @myconstant}> : () -> !emitc.array<2xi16>
-    %14 = "emitc.subscript"(%13, %arg5) : (!emitc.array<2xi16>, index) -> !emitc.lvalue<i16>
-    %15 = "emitc.apply"(%14) <{applicableOperator = "&"}> : (!emitc.lvalue<i16>) -> !emitc.ptr<i16>
-    "func.return"(%15) : (!emitc.ptr<i16>) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = () -> !emitc.ptr<f32>, sym_name = "use_const_global_scalar_pointer"}> ({
-    %11 = "emitc.get_global"() <{name = @static_const}> : () -> !emitc.lvalue<f32>
-    %12 = "emitc.apply"(%11) <{applicableOperator = "&"}> : (!emitc.lvalue<f32>) -> !emitc.ptr<f32>
-    "func.return"(%12) : (!emitc.ptr<f32>) -> ()
-  }) : () -> ()
-  "func.func"() <{function_type = (index, index) -> !emitc.ptr<i16>, sym_name = "use_const_global_2d_array_pointer"}> ({
-  ^bb0(%arg3: index, %arg4: index):
-    %8 = "emitc.get_global"() <{name = @myconstant_2d}> : () -> !emitc.array<2x3xi16>
-    %9 = "emitc.subscript"(%8, %arg3, %arg4) : (!emitc.array<2x3xi16>, index, index) -> !emitc.lvalue<i16>
-    %10 = "emitc.apply"(%9) <{applicableOperator = "&"}> : (!emitc.lvalue<i16>) -> !emitc.ptr<i16>
-    "func.return"(%10) : (!emitc.ptr<i16>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> !emitc.ptr<i16>, sym_name = "use_const_global_array_pointer_address_of"}> ({
   ^bb0(%arg2: index):

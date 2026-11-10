@@ -6,12 +6,12 @@ module {
     return
   }
   func.func @test_op_with_enum() {
-    test.op_with_enum  third
+    test.op_with_enum third
     return
   }
   func.func @test_match_op_with_enum() {
-    test.op_with_enum  third tag 0 : i32
-    test.op_with_enum  first tag 0 : i32
+    test.op_with_enum third tag 0 : i32
+    test.op_with_enum first tag 0 : i32
     return
   }
   func.func @test_match_op_with_bit_enum() {
@@ -26,6 +26,20 @@ module {
     test.op_with_enum_prop_attr_form <{value = 1 : i32}>
     test.op_with_enum_prop_attr_form_always <{value = #test<enum first>}>
     test.op_with_enum_prop_attr_form_always <{value = #test<enum second>}>
+    return
+  }
+  func.func @test_two_default_enum_props() {
+    test.op_with_two_default_enum_props
+    test.op_with_two_default_enum_props second
+    test.op_with_two_default_enum_props cat
+    test.op_with_two_default_enum_props second cat
+    return
+  }
+  func.func @test_two_default_bit_enum_props() {
+    test.op_with_two_default_bit_enum_props
+    test.op_with_two_default_bit_enum_props write
+    test.op_with_two_default_bit_enum_props group
+    test.op_with_two_default_bit_enum_props write group
     return
   }
   func.func @test_bit_enum_prop() {

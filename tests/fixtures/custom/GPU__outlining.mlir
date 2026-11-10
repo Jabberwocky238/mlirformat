@@ -331,13 +331,26 @@ module {
 }
 
 // -----
-module {
-  func.func @nested_launch(%arg0: index) {
+module attributes {gpu.container_module} {
+  gpu.module @some_kernels {
+    gpu.func @some_kernel() kernel {
+      gpu.return
+    }
+  }
+  func.func @launch_with_launch_func_body(%arg0: index) {
     gpu.launch blocks(%arg1, %arg2, %arg3) in (%arg7 = %arg0, %arg8 = %arg0, %arg9 = %arg0) threads(%arg4, %arg5, %arg6) in (%arg10 = %arg0, %arg11 = %arg0, %arg12 = %arg0) {
-      gpu.launch blocks(%arg13, %arg14, %arg15) in (%arg19 = %arg0, %arg20 = %arg0, %arg21 = %arg0) threads(%arg16, %arg17, %arg18) in (%arg22 = %arg0, %arg23 = %arg0, %arg24 = %arg0) {
-        "some_op"(%arg13, %arg16) : (index, index) -> ()
-        gpu.terminator
-      }
+      "test.use_nested"() {uses = [@public_module::@nested_function]} : () -> ()
+      gpu.terminator
+    }
+    return
+  }
+}
+
+// -----
+module {
+  func.func @launch_cooperative() {
+    %c8 = arith.constant 8 : index
+    gpu.launch blocks(%arg0, %arg1, %arg2) in (%arg6 = %c8, %arg7 = %c8, %arg8 = %c8) threads(%arg3, %arg4, %arg5) in (%arg9 = %c8, %arg10 = %c8, %arg11 = %c8) cooperative {
       gpu.terminator
     }
     return

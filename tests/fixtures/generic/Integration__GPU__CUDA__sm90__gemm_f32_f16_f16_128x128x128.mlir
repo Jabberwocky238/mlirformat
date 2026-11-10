@@ -146,7 +146,7 @@
         "scf.yield"() : () -> ()
       }) : (index, index, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index, i32) -> ()
+    }) : (index, index, index, index, index, index, i32) -> ()
     %25 = "gpu.memcpy"(%15, %13, %18#0) : (!gpu.async.token, memref<128x128xf32>, memref<128x128xf32>) -> !gpu.async.token
     "gpu.wait"(%15) : (!gpu.async.token) -> ()
     "linalg.matmul"(%11, %12, %14) <{indexing_maps = [#map, #map1, #map2], operandSegmentSizes = array<i32: 2, 1>}> ({

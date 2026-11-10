@@ -7,14 +7,15 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 ///
 /// Elementwise absolute value operation.
 ///
+/// This operation is not pure. Undefined behaviour may occur if the
+/// calculated result underflows.
+///
 /// Example:
 ///
 /// ```mlir
 /// %output = tosa.abs(%input1) : (tensor<21x3xf32>) -> tensor<21x3xf32>
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.abs", results(output))]
+#[mlir::op("tosa.abs", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct AbsOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -27,6 +28,9 @@ pub struct AbsOp<'a> {
 /// Elementwise addition of input1 and input2. Axis of size 1 will be broadcast,
 /// as necessary. Rank of input tensors must match.
 ///
+/// This operation is not pure. Undefined behaviour may occur if the calculated
+/// result overflows.
+///
 /// Example:
 ///
 /// ```mlir
@@ -36,9 +40,7 @@ pub struct AbsOp<'a> {
 /// // Elementwise addition with broadcasting.
 /// %out = tosa.add %input1, %input2 : tensor<12x6xsi32>, tensor<1x1xsi32> -> tensor<12x6xsi32>
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.add", results(output))]
+#[mlir::op("tosa.add", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct AddOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -52,9 +54,7 @@ pub struct AddOp<'a> {
 /// `tosa.add_shape`: Elementwise addition of shapes.
 ///
 /// Elementwise addition of input1 and input2. Size of shapes must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.add_shape", results(output))]
+#[mlir::op("tosa.add_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct AddShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -100,6 +100,9 @@ pub struct ApplyScaleOp<'a> {
 /// input tensor. If multiple locations have equal values, returns the first
 /// match along the search axis.
 ///
+/// This operation is not pure. Undefined behaviour may occur if the max index
+/// is out of bounds for the output data type.
+///
 /// Generic form only (custom C++ syntax).
 #[mlir::op("tosa.argmax", results(output))]
 pub struct ArgMaxOp<'a> {
@@ -119,8 +122,9 @@ pub struct ArgMaxOp<'a> {
 /// input2. Axis of size 1 will be broadcast, as necessary. Rank of input tensors
 /// must match.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.arithmetic_right_shift", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// shift is out of range.
+#[mlir::op("tosa.arithmetic_right_shift", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct ArithmeticRightShiftOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -132,6 +136,57 @@ pub struct ArithmeticRightShiftOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.assert_equal_shape`: Verify two shapes are equal.
+///
+/// Verify input1 and input2 are equal. If allow_broadcast is set, shapes which
+/// are broadcast compatible are allowed.
+///
+/// Generic form only (directive `results)`).
+#[mlir::op("tosa.assert_equal_shape")]
+pub struct AssertEqualShapeOp<'a> {
+    #[slot(input1_ty)]
+    pub input1: Value<'a>,
+    #[slot(input2_ty)]
+    pub input2: Value<'a>,
+    pub allow_broadcast: Attribute<'a>,
+    #[dtype(strip = "tosa.shape")]
+    pub input1_ty: Type<'a>,
+    #[dtype(strip = "tosa.shape")]
+    pub input2_ty: Type<'a>,
+}
+
+/// `tosa.avg_pool2d_adaptive`: Performs average pooling on the input with shape operands.
+///
+/// This performs an average pooling over the given input tensor. A sliding
+/// window of size given by <kernel size> is passed over the input tensor, with
+/// the mean value being placed in the output tensor. When calculating the
+/// average, only the number of valid input tensor values, but not padding, are
+/// used to calculate the divisor. Compared to avg_pool2d, the kernel/stride/
+/// pad values are provided as inputs.
+#[mlir::op("tosa.avg_pool2d_adaptive", format = "$input `,` $input_zp `,` $output_zp `,` $kernel `,` $stride `,` $pad attr-dict `:` functional-type($input $input_zp $output_zp $kernel $stride $pad, $output)", results(output))]
+pub struct AvgPool2dAdaptiveOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(input_zp_ty)]
+    pub input_zp: Value<'a>,
+    #[slot(output_zp_ty)]
+    pub output_zp: Value<'a>,
+    #[slot(kernel_ty)]
+    pub kernel: Value<'a>,
+    #[slot(stride_ty)]
+    pub stride: Value<'a>,
+    #[slot(pad_ty)]
+    pub pad: Value<'a>,
+    pub acc_type: Attribute<'a>,
+    pub input_ty: Type<'a>,
+    pub input_zp_ty: Type<'a>,
+    pub output_zp_ty: Type<'a>,
+    pub kernel_ty: Type<'a>,
+    pub stride_ty: Type<'a>,
+    pub pad_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
 /// `tosa.avg_pool2d`: Performs average pooling on the input.
 ///
 /// This performs an average pooling over the given input tensor. A sliding
@@ -140,8 +195,9 @@ pub struct ArithmeticRightShiftOp<'a> {
 /// average, only the number of valid input tensor values, but not padding, are
 /// used to calculate the divisor.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.avg_pool2d", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.avg_pool2d", format = "$input `,` $input_zp `,` $output_zp attr-dict `:` functional-type($input $input_zp $output_zp, $output)", results(output))]
 pub struct AvgPool2dOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -166,9 +222,7 @@ pub struct AvgPool2dOp<'a> {
 ///
 /// Elementwise bitwise AND of input1 and input2. Axis of size 1
 /// will be broadcast as necessary. Rank of input tensors must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_and", results(output))]
+#[mlir::op("tosa.bitwise_and", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct BitwiseAndOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -182,9 +236,7 @@ pub struct BitwiseAndOp<'a> {
 /// `tosa.bitwise_not`: Bitwise NOT operator.
 ///
 /// Elementwise bitwise NOT of input tensor.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_not", results(output))]
+#[mlir::op("tosa.bitwise_not", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct BitwiseNotOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -196,9 +248,7 @@ pub struct BitwiseNotOp<'a> {
 ///
 /// Elementwise bitwise OR of input1 and input2. Axis of size 1 will be
 /// broadcast as necessary. Rank of input tensors must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_or", results(output))]
+#[mlir::op("tosa.bitwise_or", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct BitwiseOrOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -213,9 +263,7 @@ pub struct BitwiseOrOp<'a> {
 ///
 /// Elementwise bitwise XOR of input1 and input2. Axis of size 1 will be
 /// broadcast as necessary. Rank of input tensors must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.bitwise_xor", results(output))]
+#[mlir::op("tosa.bitwise_xor", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct BitwiseXorOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -231,6 +279,8 @@ pub struct BitwiseXorOp<'a> {
 /// Apply the scales from a scale tensor to the values in a value tensor, casting
 /// the result to the output type. The block dimension must be the last dimension
 /// of the tensor.
+///
+/// Note: This operation is deprecated. It will be removed in the future.
 ///
 /// Generic form only (custom C++ syntax).
 #[mlir::op("tosa.cast_from_block_scaled", results(output_data))]
@@ -249,60 +299,7 @@ pub struct CastFromBlockScaledOp<'a> {
 /// `tosa.cast`: Cast operation.
 ///
 /// Casts a tensor from one data type to another.
-/// * This table is showing the supported conversions from the TOSA Specification.
-/// * The MLIR dialect here can be used to represent other conversions.
-///
-/// | Mode                     | Input   | Output  |
-/// |--------------------------|---------|---------|
-/// | fp16 to fp32             | float16 | float32 |
-/// | fp16 to int 16           | float16 | int16   |
-/// | fp16 to int 32           | float16 | int32   |
-/// | fp16 to int 8            | float16 | int8    |
-/// | fp32 to fp16             | float32 | float16 |
-/// | fp32 to int 16           | float32 | int16   |
-/// | fp32 to int 32           | float32 | int32   |
-/// | fp32 to int 8            | float32 | int8    |
-/// | int 16 to fp16           | int16   | float16 |
-/// | int 16 to fp32           | int16   | float32 |
-/// | int 32 to fp16           | int32   | float16 |
-/// | int 32 to fp32           | int32   | float32 |
-/// | int 8 to fp16            | int8    | float16 |
-/// | int 8 to fp32            | int8    | float32 |
-/// | bool to int 16           | Boolean | int16   |
-/// | bool to int 32           | Boolean | int32   |
-/// | bool to int 8            | Boolean | int8    |
-/// | int 16 to bool           | int16   | Boolean |
-/// | int 16 to int 32         | int16   | int32   |
-/// | int 16 to int 8          | int16   | int8    |
-/// | int 32 to bool           | int32   | Boolean |
-/// | int 32 to int 16         | int32   | int16   |
-/// | int 32 to int 8          | int32   | int8    |
-/// | int 8 to bool            | int8    | Boolean |
-/// | int 8 to int 16          | int8    | int16   |
-/// | int 8 to int 32          | int8    | int32   |
-/// | bf16 to fp32             | bf16    | float32 |
-/// | bf16 to int 16           | bf16    | int16   |
-/// | bf16 to int 32           | bf16    | int32   |
-/// | bf16 to int 8            | bf16    | int8    |
-/// | fp32 to bf16             | float32 | bf16    |
-/// | int 16 to bf16           | int16   | bf16    |
-/// | int 32 to bf16           | int32   | bf16    |
-/// | int 8 to bf16            | int8    | bf16    |
-/// | bf16 to fp8e4m3          | bf16    | fp8e4m3 |
-/// | fp8e4m3 to bf16          | fp8e4m3 | bf16    |
-/// | bf16 to fp8e5m2          | bf16    | fp8e5m2 |
-/// | fp8e5m2 to bf16          | fp8e5m2 | bf16    |
-/// | fp16 to fp8e4m3          | float16 | fp8e4m3 |
-/// | fp32 to fp8e4m3          | float32 | fp8e4m3 |
-/// | fp8e4m3 to fp16          | fp8e4m3 | float16 |
-/// | fp8e4m3 to fp32          | fp8e4m3 | float32 |
-/// | fp16 to fp8e5m2          | float16 | fp8e5m2 |
-/// | fp32 to fp8e5m2          | float32 | fp8e5m2 |
-/// | fp8e5m2 to fp16          | fp8e5m2 | float16 |
-/// | fp8e5m2 to fp32          | fp8e5m2 | float32 |
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.cast", results(output))]
+#[mlir::op("tosa.cast", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct CastOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -316,6 +313,8 @@ pub struct CastOp<'a> {
 /// scaled data values from an input tensor. The output tensors are cast to the
 /// specified scale and value types. The block dimension will be the last dimension
 /// of the tensor.
+///
+/// Note: This operation is deprecated. It will be removed in the future.
 ///
 /// Generic form only (custom C++ syntax).
 #[mlir::op("tosa.cast_to_block_scaled", results(output_data, output_scale))]
@@ -332,9 +331,7 @@ pub struct CastToBlockScaledOp<'a> {
 /// `tosa.ceil`: Elementwise ceil operator.
 ///
 /// Elementwise ceiling operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.ceil", results(output))]
+#[mlir::op("tosa.ceil", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct CeilOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -366,9 +363,7 @@ pub struct ClampOp<'a> {
 /// `tosa.clz`: Elementwise count leading zero operator.
 ///
 /// Elementwise count leading zeros operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.clz", results(output))]
+#[mlir::op("tosa.clz", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct ClzOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -380,9 +375,7 @@ pub struct ClzOp<'a> {
 ///
 /// Concatenate a list of tensors along a given axis.
 /// No data conversion happens during a concat operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.concat", results(output))]
+#[mlir::op("tosa.concat", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct ConcatOp<'a> {
     #[slot(input1_ty)]
     pub input1: Vec<Value<'a>>,
@@ -396,9 +389,7 @@ pub struct ConcatOp<'a> {
 ///
 /// Concatenates a list of shapes into a new shape with length equal to the sum
 /// of the lengths of the inputs.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.concat_shape", results(output))]
+#[mlir::op("tosa.concat_shape", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct ConcatShapeOp<'a> {
     #[slot(input_ty)]
     pub input: Vec<Value<'a>>,
@@ -438,11 +429,52 @@ pub struct ConstOp<'a> {
 /// %out = "tosa.const_shape"() {values = dense<0> : tensor<4xindex>} : () -> !tosa.shape<4>
 /// ```
 ///
-/// Generic form only (directive `operands`).
+/// Generic form only (directive `operands,`).
 #[mlir::op("tosa.const_shape", results(output))]
 pub struct ConstShapeOp<'a> {
     pub values: Attribute<'a>,
     #[dtype(strip = "tosa.shape")]
+    pub output: Type<'a>,
+}
+
+/// `tosa.conv2d_block_scaled`: Performs two dimensional convolution using block scaled tensors.
+///
+/// Performs a 2D convolution over the given input data and scales, using
+/// the weight data and scales. Implementations may choose to skip calculation
+/// of multiplies in the padding area.
+///
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("tosa.conv2d_block_scaled", results(output))]
+pub struct Conv2DBlockScaledOp<'a> {
+    #[slot(input_data_ty)]
+    pub input_data: Value<'a>,
+    #[slot(input_scale_ty)]
+    pub input_scale: Value<'a>,
+    #[slot(weight_data_ty)]
+    pub weight_data: Value<'a>,
+    #[slot(weight_scale_ty)]
+    pub weight_scale: Value<'a>,
+    #[slot(bias_ty)]
+    pub bias: Value<'a>,
+    #[slot(pad_ty)]
+    pub pad: Value<'a>,
+    #[slot(stride_ty)]
+    pub stride: Value<'a>,
+    #[slot(dilation_ty)]
+    pub dilation: Value<'a>,
+    #[attr(dialect = "tosa.block_size")]
+    pub block_size: Attribute<'a>,
+    pub input_data_ty: Type<'a>,
+    pub input_scale_ty: Type<'a>,
+    pub weight_data_ty: Type<'a>,
+    pub weight_scale_ty: Type<'a>,
+    pub bias_ty: Type<'a>,
+    pub pad_ty: Type<'a>,
+    pub stride_ty: Type<'a>,
+    pub dilation_ty: Type<'a>,
     pub output: Type<'a>,
 }
 
@@ -452,8 +484,9 @@ pub struct ConstShapeOp<'a> {
 /// tensor. Implementations may choose to skip calculation of multiplies in
 /// the padding area.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.conv2d", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.conv2d", format = "$input `,` $weight `,` $bias `,` $input_zp `,` $weight_zp attr-dict `:` functional-type($input $weight $bias $input_zp $weight_zp, $output)", results(output))]
 pub struct Conv2DOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -472,6 +505,7 @@ pub struct Conv2DOp<'a> {
     #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
     pub acc_type: Attribute<'a>,
+    #[attr(default = "false", optional)]
     pub local_bound: Option<Attribute<'a>>,
     pub input_ty: Type<'a>,
     pub weight_ty: Type<'a>,
@@ -486,8 +520,9 @@ pub struct Conv2DOp<'a> {
 /// Performs a 3D convolution over the given input tensor. Implementations
 /// may choose to skip calculation of multiplies in the padding area.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.conv3d", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.conv3d", format = "$input `,` $weight `,` $bias `,` $input_zp `,` $weight_zp attr-dict `:` functional-type($input $weight $bias $input_zp $weight_zp, $output)", results(output))]
 pub struct Conv3DOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -506,6 +541,7 @@ pub struct Conv3DOp<'a> {
     #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
     pub acc_type: Attribute<'a>,
+    #[attr(default = "false", optional)]
     pub local_bound: Option<Attribute<'a>>,
     pub input_ty: Type<'a>,
     pub weight_ty: Type<'a>,
@@ -518,9 +554,7 @@ pub struct Conv3DOp<'a> {
 /// `tosa.cos`: Elementwise cos operator.
 ///
 /// Elementwise cosine operation for values given in radians.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.cos", results(output))]
+#[mlir::op("tosa.cos", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct CosOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -556,9 +590,7 @@ pub struct CosOp<'a> {
 ///        "custom_test", implementation_attrs = ""}: (tensor<10xi32>) ->
 ///        (tensor<10xi32>)
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.custom", results(output_list))]
+#[mlir::op("tosa.custom", format = "$input_list attr-dict `:` functional-type($input_list, $output_list)", results(output_list))]
 pub struct CustomOp<'a> {
     #[slot(input_list_ty)]
     pub input_list: Vec<Value<'a>>,
@@ -575,8 +607,9 @@ pub struct CustomOp<'a> {
 /// input, using the weight tensor. Implementations may choose to skip
 /// calculation of multiplies in the padding area.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.depthwise_conv2d", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.depthwise_conv2d", format = "$input `,` $weight `,` $bias `,` $input_zp `,` $weight_zp attr-dict `:` functional-type($input $weight $bias $input_zp $weight_zp, $output)", results(output))]
 pub struct DepthwiseConv2DOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -595,6 +628,7 @@ pub struct DepthwiseConv2DOp<'a> {
     #[attr(dense = "i64")]
     pub dilation: Attribute<'a>,
     pub acc_type: Attribute<'a>,
+    #[attr(default = "false", optional)]
     pub local_bound: Option<Attribute<'a>>,
     pub input_ty: Type<'a>,
     pub weight_ty: Type<'a>,
@@ -607,9 +641,7 @@ pub struct DepthwiseConv2DOp<'a> {
 /// `tosa.dim`: Extract size of dimension from input tensor.
 ///
 /// Returns a length 1 shape_t of the size of the input tensor for the given axis.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.dim", results(output))]
+#[mlir::op("tosa.dim", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct DimOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -623,9 +655,7 @@ pub struct DimOp<'a> {
 /// `tosa.div_ceil_shape`: Elementwise ceiling divide of shapes.
 ///
 /// Elementwise divide of input1 by input2. The result of the divide is rounded up.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.div_ceil_shape", results(output))]
+#[mlir::op("tosa.div_ceil_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct DivCeilShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -642,9 +672,7 @@ pub struct DivCeilShapeOp<'a> {
 /// `tosa.div_floor_shape`: Elementwise floor divide of shapes.
 ///
 /// Elementwise integer divide of input1 by input2. The result of the divide is rounded down.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.div_floor_shape", results(output))]
+#[mlir::op("tosa.div_floor_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct DivFloorShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -661,9 +689,7 @@ pub struct DivFloorShapeOp<'a> {
 /// `tosa.equal`: Returns the truth value of (input1 == input2) element-wise.
 ///
 /// Elementwise comparison operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.equal", results(output))]
+#[mlir::op("tosa.equal", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct EqualOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -680,9 +706,7 @@ pub struct EqualOp<'a> {
 /// For quantized integer data types, the TABLE operator should be used instead
 /// with the following definition. The ERF table has 513 entries each of
 /// 16-bit precision and covering the input range -4.0 to +4.0 in steps of 1/64.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.erf", results(output))]
+#[mlir::op("tosa.erf", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct ErfOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -693,9 +717,7 @@ pub struct ErfOp<'a> {
 /// `tosa.exp2_shape`: Elementwise base-2 exponential of shapes.
 ///
 /// Computation of raising two to the power of each element in input.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.exp2_shape", results(output))]
+#[mlir::op("tosa.exp2_shape", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct Exp2ShapeOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -708,9 +730,7 @@ pub struct Exp2ShapeOp<'a> {
 /// `tosa.exp`: Elementwise exp operator.
 ///
 /// Elementwise e to the x operation
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.exp", results(output))]
+#[mlir::op("tosa.exp", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct ExpOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -731,15 +751,14 @@ pub struct ExpOp<'a> {
 /// ```mlir
 ///  %output_real, %output_imag = tosa.fft2d %input_real, %input_imag : (tensor<8x9xf32>, tensor<8x9xf32>) -> (tensor<8x9xf32>, tensor<8x9xf32>)
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.fft2d", results(output_real, output_imag))]
+#[mlir::op("tosa.fft2d", format = "$input_real `,` $input_imag attr-dict `:` functional-type($input_real $input_imag, $output_real $output_imag)", results(output_real, output_imag))]
 pub struct FFT2dOp<'a> {
     #[slot(input_real_ty)]
     pub input_real: Value<'a>,
     #[slot(input_imag_ty)]
     pub input_imag: Value<'a>,
     pub inverse: Attribute<'a>,
+    #[attr(default = "false", optional)]
     pub local_bound: Option<Attribute<'a>>,
     pub input_real_ty: Type<'a>,
     pub input_imag_ty: Type<'a>,
@@ -750,9 +769,7 @@ pub struct FFT2dOp<'a> {
 /// `tosa.floor`: Elementwise floor operator.
 ///
 /// Elementwise floor operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.floor", results(output))]
+#[mlir::op("tosa.floor", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct FloorOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -767,8 +784,9 @@ pub struct FloorOp<'a> {
 /// of indices in each batch, K the range of each index and C the number data
 /// channels for each index.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.gather", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// indices are out of range.
+#[mlir::op("tosa.gather", format = "$values `,` $indices attr-dict `:` functional-type($values $indices, $output)", results(output))]
 pub struct GatherOp<'a> {
     #[slot(values_ty)]
     pub values: Value<'a>,
@@ -782,9 +800,7 @@ pub struct GatherOp<'a> {
 /// `tosa.greater_equal`: Returns the truth value of (input1 >= input2) element-wise.
 ///
 /// Elementwise comparison operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.greater_equal", results(output))]
+#[mlir::op("tosa.greater_equal", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct GreaterEqualOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -798,9 +814,7 @@ pub struct GreaterEqualOp<'a> {
 /// `tosa.greater`: Returns the truth value of (input1 > input2) element-wise.
 ///
 /// Elementwise greater than comparison operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.greater", results(output))]
+#[mlir::op("tosa.greater", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct GreaterOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -814,9 +828,7 @@ pub struct GreaterOp<'a> {
 /// `tosa.identity`: Identity operator.
 ///
 /// Returns a tensor with the same shape, type, and contents as the input.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.identity", results(output))]
+#[mlir::op("tosa.identity", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct IdentityOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -851,8 +863,8 @@ pub struct IfOp<'a> {
 /// non-scaled integers. Floating point divide should use RECIPROCAL and MUL.
 /// Quantized integer divide should use TABLE (for 1/x) and MUL.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.intdiv", results(output))]
+/// This operation is not pure. Undefined behaviour may occur on division by zero.
+#[mlir::op("tosa.intdiv", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct IntDivOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -866,9 +878,7 @@ pub struct IntDivOp<'a> {
 /// `tosa.log2_ceil_shape`: Elementwise ceil base-2 logarithm of shapes.
 ///
 /// Computation of the base two logarithm of each element in input. Result is rounded up.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.log2_ceil_shape", results(output))]
+#[mlir::op("tosa.log2_ceil_shape", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct Log2CeilShapeOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -881,9 +891,7 @@ pub struct Log2CeilShapeOp<'a> {
 /// `tosa.log2_floor_shape`: Elementwise floor base-2 logarithm of shapes.
 ///
 /// Computation of the base two logarithm of each element in input. Result is rounded down.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.log2_floor_shape", results(output))]
+#[mlir::op("tosa.log2_floor_shape", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct Log2FloorShapeOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -896,9 +904,7 @@ pub struct Log2FloorShapeOp<'a> {
 /// `tosa.log`: Elementwise log operator.
 ///
 /// Elementwise natural logarithm operation
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.log", results(output))]
+#[mlir::op("tosa.log", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct LogOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -910,9 +916,7 @@ pub struct LogOp<'a> {
 ///
 /// Elementwise logical AND of input1 and input2. Axis of size 1 will be
 /// broadcast, as necessary. Rank of input tensors must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_and", results(output))]
+#[mlir::op("tosa.logical_and", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct LogicalAndOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -929,8 +933,9 @@ pub struct LogicalAndOp<'a> {
 /// Axis of size 1 will be broadcast, as necessary.
 /// Rank of input tensors must match.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_left_shift", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// shift is out of range.
+#[mlir::op("tosa.logical_left_shift", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct LogicalLeftShiftOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -944,9 +949,7 @@ pub struct LogicalLeftShiftOp<'a> {
 /// `tosa.logical_not`: Returns the truth value of NOT input1 element-wise.
 ///
 /// Elementwise logical NOT of input.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_not", results(output))]
+#[mlir::op("tosa.logical_not", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct LogicalNotOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -958,9 +961,7 @@ pub struct LogicalNotOp<'a> {
 ///
 /// Elementwise logical OR of input1 and input2. Axis of size 1 will be
 /// broadcast as necessary. Rank of input tensors must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_or", results(output))]
+#[mlir::op("tosa.logical_or", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct LogicalOrOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -977,8 +978,9 @@ pub struct LogicalOrOp<'a> {
 /// Axis of size 1 will be broadcast, as necessary. Rank of input tensors must
 /// match.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_right_shift", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// shift is out of range.
+#[mlir::op("tosa.logical_right_shift", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct LogicalRightShiftOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -993,9 +995,7 @@ pub struct LogicalRightShiftOp<'a> {
 ///
 /// Elementwise logical XOR of input1 and input2. Axis of size 1 will be
 /// broadcast as necessary. Rank of input tensors must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.logical_xor", results(output))]
+#[mlir::op("tosa.logical_xor", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct LogicalXorOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1010,9 +1010,33 @@ pub struct LogicalXorOp<'a> {
 ///
 /// Performs two dimensional matrix multiplications.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.matmul", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.matmul", format = "$a `,` $b `,` $a_zp `,` $b_zp attr-dict `:` functional-type($a $b $a_zp $b_zp, $output)", results(output))]
 pub struct MatMulOp<'a> {
+    #[slot(a_ty)]
+    pub a: Value<'a>,
+    #[slot(b_ty)]
+    pub b: Value<'a>,
+    #[slot(a_zp_ty)]
+    pub a_zp: Value<'a>,
+    #[slot(b_zp_ty)]
+    pub b_zp: Value<'a>,
+    pub a_ty: Type<'a>,
+    pub b_ty: Type<'a>,
+    pub a_zp_ty: Type<'a>,
+    pub b_zp_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
+/// `tosa.matmul_t`: Matrix multiplication with transposed B operator.
+///
+/// Performs two dimensional matrix multiplications. `A` matrix is of shape
+/// `N x H x C`. `B` matrix is of shape `D x W x C`. This is effectively a
+/// matrix multiply of `A` by the transposed `B` matrix. If the batched
+/// dimension of input `B` is of size 1, the `B` matrix is broadcast.
+#[mlir::op("tosa.matmul_t", format = "$a `,` $b `,` $a_zp `,` $b_zp attr-dict `:` functional-type($a $b $a_zp $b_zp, $output)", results(output))]
+pub struct MatMulTOp<'a> {
     #[slot(a_ty)]
     pub a: Value<'a>,
     #[slot(b_ty)]
@@ -1035,6 +1059,9 @@ pub struct MatMulOp<'a> {
 /// a matrix multiply of A by the transposed B matrix. If the N dimension of input B is of
 /// size 1, the B matrix will be broadcast.
 ///
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+///
 /// Generic form only (custom C++ syntax).
 #[mlir::op("tosa.matmul_t_block_scaled", results(output_data))]
 pub struct MatmulTBlockScaledOp<'a> {
@@ -1053,6 +1080,34 @@ pub struct MatmulTBlockScaledOp<'a> {
     pub b_data_ty: Type<'a>,
     pub b_scale_ty: Type<'a>,
     pub output_data: Type<'a>,
+}
+
+/// `tosa.max_pool2d_adaptive`: Performs max pooling on the input.
+///
+/// This performs a max pooling over the given input tensor. A sliding window of
+/// size given by <kernel size> is passed over the input tensor, with the
+/// maximum value being placed in the output tensor.
+/// Compared to MAX_POOL2D, MAX_POOL2D_ADAPTIVE has the kernel, stride,
+/// pad arguments as inputs rather than attributes.
+///
+/// Generic form only (custom C++ syntax).
+#[mlir::op("tosa.max_pool2d_adaptive", results(output))]
+pub struct MaxPool2dAdaptiveOp<'a> {
+    #[slot(input_ty)]
+    pub input: Value<'a>,
+    #[slot(kernel_ty)]
+    pub kernel: Value<'a>,
+    #[slot(stride_ty)]
+    pub stride: Value<'a>,
+    #[slot(pad_ty)]
+    pub pad: Value<'a>,
+    #[attr(dialect = "tosa.nan_mode", default = "<PROPAGATE>")]
+    pub nan_mode: Option<Attribute<'a>>,
+    pub input_ty: Type<'a>,
+    pub kernel_ty: Type<'a>,
+    pub stride_ty: Type<'a>,
+    pub pad_ty: Type<'a>,
+    pub output: Type<'a>,
 }
 
 /// `tosa.max_pool2d`: Performs max pooling on the input.
@@ -1082,9 +1137,7 @@ pub struct MaxPool2dOp<'a> {
 /// `tosa.max_shape`: Elementwise maximum of shapes.
 ///
 /// Elementwise maximum of input1 and input2.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.max_shape", results(output))]
+#[mlir::op("tosa.max_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct MaxShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1120,9 +1173,7 @@ pub struct MaximumOp<'a> {
 /// `tosa.min_shape`: Elementwise minimum of shapes.
 ///
 /// Elementwise minimum of input1 and input2.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.min_shape", results(output))]
+#[mlir::op("tosa.min_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct MinShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1158,9 +1209,7 @@ pub struct MinimumOp<'a> {
 /// `tosa.mod_shape`: Elementwise modulo of shapes.
 ///
 /// Elementwise modulo of input1 divided by input2.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.mod_shape", results(output))]
+#[mlir::op("tosa.mod_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct ModShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1180,8 +1229,9 @@ pub struct ModShapeOp<'a> {
 /// Axis of size 1 will be broadcast, as necessary. Rank of input tensors must
 /// match.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.mul", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the specifed
+/// shift is out of range or the result overflows.
+#[mlir::op("tosa.mul", format = "$input1 `,` $input2 `,` $shift attr-dict `:` functional-type($input1 $input2 $shift, $output)", results(output))]
 pub struct MulOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1198,9 +1248,7 @@ pub struct MulOp<'a> {
 /// `tosa.mul_shape`: Elementwise multiplication of shapes.
 ///
 /// Elementwise multiplication of input1 and input2.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.mul_shape", results(output))]
+#[mlir::op("tosa.mul_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct MulShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1218,8 +1266,9 @@ pub struct MulShapeOp<'a> {
 ///
 /// Elementwise negation operation.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.negate", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the calculated
+/// result underflows or overflows.
+#[mlir::op("tosa.negate", format = "$input1 `,` $input1_zp `,` $output_zp attr-dict `:` functional-type($input1 $input1_zp $output_zp, $output)", results(output))]
 pub struct NegateOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1254,9 +1303,7 @@ pub struct NegateOp<'a> {
 /// %padding = tosa.const_shape {values = dense<[-1, 2, 3, 4]> : tensor<4xindex>} : () -> !tosa.shape<4>
 /// tosa.pad %arg0, %padding, %pad_const : (tensor<1x2xf32>, !tosa.shape<4>, tensor<1xf32>)  -> (tensor<?x9xf32>)
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.pad", results(output))]
+#[mlir::op("tosa.pad", format = "$input1 `,` $padding `,` $pad_const attr-dict `:` functional-type($input1 $padding $pad_const, $output)", results(output))]
 pub struct PadOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1277,8 +1324,9 @@ pub struct PadOp<'a> {
 /// Axis of size 1 will be broadcast, as necessary. Rank of input tensors must
 /// match.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.pow", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if specified
+/// exponent is negative.
+#[mlir::op("tosa.pow", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct PowOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1305,12 +1353,11 @@ pub struct PowOp<'a> {
 /// ```mlir
 ///  %ouput_real, %output_imag = tosa.rfft2d %input_real : (tensor<8x16xf32>) -> (tensor<8x9xf32>, tensor<8x9xf32>)
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.rfft2d", results(output_real, output_imag))]
+#[mlir::op("tosa.rfft2d", format = "$input_real attr-dict `:` functional-type($input_real, $output_real $output_imag)", results(output_real, output_imag))]
 pub struct RFFT2dOp<'a> {
     #[slot(input_real_ty)]
     pub input_real: Value<'a>,
+    #[attr(default = "false", optional)]
     pub local_bound: Option<Attribute<'a>>,
     pub input_real_ty: Type<'a>,
     pub output_real: Type<'a>,
@@ -1321,9 +1368,7 @@ pub struct RFFT2dOp<'a> {
 ///
 /// Elementwise reciprocal operation. For integer operation, a TABLE should be
 /// used with the appropriate ranges.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reciprocal", results(output))]
+#[mlir::op("tosa.reciprocal", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct ReciprocalOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1334,9 +1379,7 @@ pub struct ReciprocalOp<'a> {
 /// `tosa.reduce_all`: Reduce All operator.
 ///
 /// Reduce a tensor along the given axis with a logical AND operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_all", results(output))]
+#[mlir::op("tosa.reduce_all", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct ReduceAllOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1349,9 +1392,7 @@ pub struct ReduceAllOp<'a> {
 /// `tosa.reduce_any`: Reduce Any operator.
 ///
 /// Reduce a tensor along the given axis with a logical OR operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_any", results(output))]
+#[mlir::op("tosa.reduce_any", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct ReduceAnyOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1399,8 +1440,9 @@ pub struct ReduceMinOp<'a> {
 ///
 /// Reduce a tensor along the given axis by computing the product of the axis.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_product", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.reduce_product", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct ReduceProductOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1414,8 +1456,9 @@ pub struct ReduceProductOp<'a> {
 ///
 /// Reduce a tensor along the given axis by computing the sum of the axis.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reduce_sum", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.reduce_sum", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct ReduceSumOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1438,6 +1481,9 @@ pub struct ReduceSumOp<'a> {
 ///
 /// The shift and value range are limited to allow a variety of implementations. The limit
 /// of 62 on shift allows the shift to be decomposed as two right shifts of 31.
+///
+/// This operation is not pure. Undefined behaviour may occur if the calculated
+/// result underflows or overflows.
 ///
 /// Supported rescalings:
 /// * This table is showing the supported conversions from the TOSA Specification.
@@ -1487,14 +1533,36 @@ pub struct RescaleOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.reshape_block_scaled`: Reshape with support for block scaled tensors.
+///
+/// Returns a tensor-list with the same type/values as the input, with a new
+/// shape specified by the shape argument. Reshape may operate on block-scaled
+/// tensors (values tensor followed by scale tensor) of rank 1 or higher; or a
+/// single non-block-scaled tensor of any rank. No data conversion happens during
+/// a reshape operation. Reshape must retain the relationship between values
+/// and their scale in a block for block-scaled content.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.reshape_block_scaled", results(output))]
+pub struct ReshapeBlockScaledOp<'a> {
+    #[slot(input_ty)]
+    pub input: Vec<Value<'a>>,
+    #[slot(new_value_shape_ty)]
+    pub new_value_shape: Value<'a>,
+    #[attr(dialect = "tosa.block_size")]
+    pub block_size: Attribute<'a>,
+    pub input_ty: Vec<Type<'a>>,
+    #[dtype(strip = "tosa.shape")]
+    pub new_value_shape_ty: Type<'a>,
+    pub output: Vec<Type<'a>>,
+}
+
 /// `tosa.reshape`: Reshape operator.
 ///
 /// Returns a tensor with the same type/values as the input, with a new shape
 /// specified by the shape argument. Reshape may operate on tensors of any rank.
 /// No data conversion happens during a reshape operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reshape", results(output))]
+#[mlir::op("tosa.reshape", format = "$input1 `,` $shape attr-dict `:` functional-type($input1 $shape, $output)", results(output))]
 pub struct ReshapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1558,9 +1626,7 @@ pub struct ResizeOp<'a> {
 /// Returns a tensor with the same type/values as the input, with the data
 /// reversed along the given axis. No data conversion happens during a reverse
 /// operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.reverse", results(output))]
+#[mlir::op("tosa.reverse", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct ReverseOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1570,13 +1636,70 @@ pub struct ReverseOp<'a> {
     pub output: Type<'a>,
 }
 
+/// `tosa.row_gather_block_scaled`: Row gather operation for block-scaled and non-block-scaled data.
+///
+/// Generate a tensor-list which contains a data tensor and an optional scale
+/// tensor based on the input indices and row_count. The number of consecutive
+/// rows gathered for each index is specified in row_count.
+///
+/// The variadic `values` operands and results model the flattened
+/// `tensor_list_t` form from the TOSA spec:
+/// - non-block-scaled: 1 input value tensor and 1 result tensor
+/// - block-scaled: data + scale input tensors and data + scale result tensors
+///
+/// This operation follows the TOSA 1.1 draft specification and may evolve as
+/// the specification is updated.
+///
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// indices are out of range.
+///
+/// Generic form only (directive `operands`).
+#[mlir::op("tosa.row_gather_block_scaled", results(output))]
+pub struct RowGatherBlockScaledOp<'a> {
+    #[slot(values_ty)]
+    pub values: Vec<Value<'a>>,
+    #[slot(indices_ty)]
+    pub indices: Value<'a>,
+    #[slot(row_count_ty)]
+    pub row_count: Value<'a>,
+    #[attr(dialect = "tosa.block_size")]
+    pub block_size: Attribute<'a>,
+    pub values_ty: Vec<Type<'a>>,
+    pub indices_ty: Type<'a>,
+    pub row_count_ty: Type<'a>,
+    pub output: Vec<Type<'a>>,
+}
+
+/// `tosa.row_gather`: Row gather operation.
+///
+/// Generate a tensor based on the input indices and row_count. The number of
+/// consecutive rows gathered for each index is specified in row_count. N is
+/// the number of batches, W is the number of indices in each batch, K is
+/// the range of each index, and C is the number of data channels for each
+/// index. The values tensor has shape [N, K, C] and the output tensor has shape
+/// [N, W * row_count, C].
+///
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// indices are out of range.
+#[mlir::op("tosa.row_gather", format = "$values `,` $indices `,` $row_count attr-dict `:` functional-type($values $indices $row_count, $output)", results(output))]
+pub struct RowGatherOp<'a> {
+    #[slot(values_ty)]
+    pub values: Value<'a>,
+    #[slot(indices_ty)]
+    pub indices: Value<'a>,
+    #[slot(row_count_ty)]
+    pub row_count: Value<'a>,
+    pub values_ty: Type<'a>,
+    pub indices_ty: Type<'a>,
+    pub row_count_ty: Type<'a>,
+    pub output: Type<'a>,
+}
+
 /// `tosa.rsqrt`: Elementwise 1/sqrt operator.
 ///
 /// Elementwise reciprocal square root operation. For integer operation, a TABLE
 /// should be used with the appropriate ranges.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.rsqrt", results(output))]
+#[mlir::op("tosa.rsqrt", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct RsqrtOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1595,8 +1718,9 @@ pub struct RsqrtOp<'a> {
 /// follows that K >= W. In use cases that require multiple updates to the same
 /// output position, these must be decomposed into multiple SCATTER operations.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.scatter", results(values_out))]
+/// This operation is not pure. Undefined behaviour may occur if the specified
+/// indices are out of range or duplicate indices are provided.
+#[mlir::op("tosa.scatter", format = "$values_in `,` $indices `,` $input attr-dict `:` functional-type($values_in $indices $input, $values_out)", results(values_out))]
 pub struct ScatterOp<'a> {
     #[slot(values_in_ty)]
     pub values_in: Value<'a>,
@@ -1613,9 +1737,7 @@ pub struct ScatterOp<'a> {
 /// `tosa.select`: Elementwise select operator.
 ///
 /// Elementwise select of the output based on a condition.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.select", results(output))]
+#[mlir::op("tosa.select", format = "$input1 `,` $input2 `,` $input3 attr-dict `:` functional-type($input1 $input2 $input3, $output)", results(output))]
 pub struct SelectOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1638,9 +1760,7 @@ pub struct SelectOp<'a> {
 /// Each implementation may choose an appropriate TABLE given the scale and zero
 /// point of the input data. Eight or sixteen bit precision tables may be used
 /// based on the input tensor to the sigmoid function.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.sigmoid", results(output))]
+#[mlir::op("tosa.sigmoid", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct SigmoidOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1651,9 +1771,7 @@ pub struct SigmoidOp<'a> {
 /// `tosa.sin`: Elementwise sin operator.
 ///
 /// Elementwise sine operation for values given in radians.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.sin", results(output))]
+#[mlir::op("tosa.sin", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct SinOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1666,9 +1784,7 @@ pub struct SinOp<'a> {
 /// Extracts a slice of input1, beginning at the start coordinates,
 /// and extending for size elements in each direction.
 /// No data conversion happens during a slice operation.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.slice", results(output))]
+#[mlir::op("tosa.slice", format = "$input1 `,` $start `,` $size attr-dict `:` functional-type($input1 $start $size, $output)", results(output))]
 pub struct SliceOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1687,9 +1803,7 @@ pub struct SliceOp<'a> {
 /// `tosa.slice_shape`: Extract slice of a shape.
 ///
 /// Extract a shape of size from input.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.slice_shape", results(output))]
+#[mlir::op("tosa.slice_shape", format = "$input `,` $start `,` $size attr-dict `:` functional-type($input $start $size, $output)", results(output))]
 pub struct SliceShapeOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1710,8 +1824,9 @@ pub struct SliceShapeOp<'a> {
 /// Elementwise subtraction of input1 and input2. Axis of size 1 will be
 /// broadcast as necessary. Rank of input tensors must match.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.sub", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the calculated
+/// result underflows.
+#[mlir::op("tosa.sub", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct SubOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1725,9 +1840,7 @@ pub struct SubOp<'a> {
 /// `tosa.sub_shape`: Elementwise subtraction of shapes.
 ///
 /// Elementwise subtraction of input1 and input2. Size of shapes must match.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.sub_shape", results(output))]
+#[mlir::op("tosa.sub_shape", format = "$input1 `,` $input2 attr-dict `:` functional-type($input1 $input2, $output)", results(output))]
 pub struct SubShapeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1758,8 +1871,9 @@ pub struct SubShapeOp<'a> {
 /// * Use RESCALE (in_t=int32_t, out_t=int16_t, scale=1<<14, shift=21) to
 ///   scale the output to int16_t range (or alternate scale as required)
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.table", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the calculated
+/// slope is out of range.
+#[mlir::op("tosa.table", format = "$input1 `,` $table attr-dict `:` functional-type($input1 $table, $output)", results(output))]
 pub struct TableOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1778,9 +1892,7 @@ pub struct TableOp<'a> {
 /// Each implementation may choose an appropriate TABLE given the scale and zero
 /// point of the input data. Eight or sixteen bit precision tables may be used
 /// based on the input tensor to the tanh function.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.tanh", results(output))]
+#[mlir::op("tosa.tanh", format = "$input attr-dict `:` functional-type($input, $output)", results(output))]
 pub struct TanhOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1791,9 +1903,7 @@ pub struct TanhOp<'a> {
 /// `tosa.tile`: Tile operator.
 ///
 /// Replicates input1 multiples times along each dimension.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.tile", results(output))]
+#[mlir::op("tosa.tile", format = "$input1 `,` $multiples attr-dict `:` functional-type($input1 $multiples, $output)", results(output))]
 pub struct TileOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1811,8 +1921,9 @@ pub struct TileOp<'a> {
 /// weights tensor. Implementations may choose to skip calculation of multiplies
 /// by zero at fractional input positions.
 ///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.transpose_conv2d", results(output))]
+/// This operation is not pure. Undefined behaviour may occur if the accumulated
+/// result overflows.
+#[mlir::op("tosa.transpose_conv2d", format = "$input `,` $weight `,` $bias `,` $input_zp `,` $weight_zp attr-dict `:` functional-type($input $weight $bias $input_zp $weight_zp, $output)", results(output))]
 pub struct TransposeConv2DOp<'a> {
     #[slot(input_ty)]
     pub input: Value<'a>,
@@ -1829,6 +1940,7 @@ pub struct TransposeConv2DOp<'a> {
     #[attr(dense = "i64")]
     pub stride: Attribute<'a>,
     pub acc_type: Attribute<'a>,
+    #[attr(default = "false", optional)]
     pub local_bound: Option<Attribute<'a>>,
     pub input_ty: Type<'a>,
     pub weight_ty: Type<'a>,
@@ -1843,9 +1955,7 @@ pub struct TransposeConv2DOp<'a> {
 /// Permutes the dimensions of the input tensor input1 based on the perms
 /// argument. Each value in the perms list must be a valid dimension of the
 /// input tensor and may not be repeated.
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("tosa.transpose", results(output))]
+#[mlir::op("tosa.transpose", format = "$input1 attr-dict `:` functional-type($input1, $output)", results(output))]
 pub struct TransposeOp<'a> {
     #[slot(input1_ty)]
     pub input1: Value<'a>,
@@ -1926,7 +2036,7 @@ pub struct YieldOp<'a> {
 /// The `tosa` dialect.
 #[mlir::dialect(
     "tosa",
-    ops = [AbsOp, AddOp, AddShapeOp, ApplyScaleOp, ArgMaxOp, ArithmeticRightShiftOp, AvgPool2dOp, BitwiseAndOp, BitwiseNotOp, BitwiseOrOp, BitwiseXorOp, CastFromBlockScaledOp, CastOp, CastToBlockScaledOp, CeilOp, ClampOp, ClzOp, ConcatOp, ConcatShapeOp, ConstOp, ConstShapeOp, Conv2DOp, Conv3DOp, CosOp, CustomOp, DepthwiseConv2DOp, DimOp, DivCeilShapeOp, DivFloorShapeOp, EqualOp, ErfOp, Exp2ShapeOp, ExpOp, FFT2dOp, FloorOp, GatherOp, GreaterEqualOp, GreaterOp, IdentityOp, IfOp, IntDivOp, Log2CeilShapeOp, Log2FloorShapeOp, LogOp, LogicalAndOp, LogicalLeftShiftOp, LogicalNotOp, LogicalOrOp, LogicalRightShiftOp, LogicalXorOp, MatMulOp, MatmulTBlockScaledOp, MaxPool2dOp, MaxShapeOp, MaximumOp, MinShapeOp, MinimumOp, ModShapeOp, MulOp, MulShapeOp, NegateOp, PadOp, PowOp, RFFT2dOp, ReciprocalOp, ReduceAllOp, ReduceAnyOp, ReduceMaxOp, ReduceMinOp, ReduceProductOp, ReduceSumOp, RescaleOp, ReshapeOp, ResizeOp, ReverseOp, RsqrtOp, ScatterOp, SelectOp, SigmoidOp, SinOp, SliceOp, SliceShapeOp, SubOp, SubShapeOp, TableOp, TanhOp, TileOp, TransposeConv2DOp, TransposeOp, VariableOp, VariableReadOp, VariableWriteOp, WhileOp, YieldOp],
+    ops = [AbsOp, AddOp, AddShapeOp, ApplyScaleOp, ArgMaxOp, ArithmeticRightShiftOp, AssertEqualShapeOp, AvgPool2dAdaptiveOp, AvgPool2dOp, BitwiseAndOp, BitwiseNotOp, BitwiseOrOp, BitwiseXorOp, CastFromBlockScaledOp, CastOp, CastToBlockScaledOp, CeilOp, ClampOp, ClzOp, ConcatOp, ConcatShapeOp, ConstOp, ConstShapeOp, Conv2DBlockScaledOp, Conv2DOp, Conv3DOp, CosOp, CustomOp, DepthwiseConv2DOp, DimOp, DivCeilShapeOp, DivFloorShapeOp, EqualOp, ErfOp, Exp2ShapeOp, ExpOp, FFT2dOp, FloorOp, GatherOp, GreaterEqualOp, GreaterOp, IdentityOp, IfOp, IntDivOp, Log2CeilShapeOp, Log2FloorShapeOp, LogOp, LogicalAndOp, LogicalLeftShiftOp, LogicalNotOp, LogicalOrOp, LogicalRightShiftOp, LogicalXorOp, MatMulOp, MatMulTOp, MatmulTBlockScaledOp, MaxPool2dAdaptiveOp, MaxPool2dOp, MaxShapeOp, MaximumOp, MinShapeOp, MinimumOp, ModShapeOp, MulOp, MulShapeOp, NegateOp, PadOp, PowOp, RFFT2dOp, ReciprocalOp, ReduceAllOp, ReduceAnyOp, ReduceMaxOp, ReduceMinOp, ReduceProductOp, ReduceSumOp, RescaleOp, ReshapeBlockScaledOp, ReshapeOp, ResizeOp, ReverseOp, RowGatherBlockScaledOp, RowGatherOp, RsqrtOp, ScatterOp, SelectOp, SigmoidOp, SinOp, SliceOp, SliceShapeOp, SubOp, SubShapeOp, TableOp, TanhOp, TileOp, TransposeConv2DOp, TransposeOp, VariableOp, VariableReadOp, VariableWriteOp, WhileOp, YieldOp],
     dependents = ["tensor", "quant"],
     materializer
 )]

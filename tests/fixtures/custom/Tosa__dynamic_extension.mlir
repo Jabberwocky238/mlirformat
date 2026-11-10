@@ -78,6 +78,24 @@ module {
 
 // -----
 module {
+  func.func @test_matmul_t_non_const_a_zp(%arg0: tensor<1x14x19xf32>, %arg1: tensor<1x28x19xf32>, %arg2: tensor<1xf32>) -> tensor<1x14x28xf32> {
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = tosa.matmul_t %arg0, %arg1, %arg2, %0 : (tensor<1x14x19xf32>, tensor<1x28x19xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<1x14x28xf32>
+    return %1 : tensor<1x14x28xf32>
+  }
+}
+
+// -----
+module {
+  func.func @test_matmul_t_non_const_b_zp(%arg0: tensor<1x14x19xf32>, %arg1: tensor<1x28x19xf32>, %arg2: tensor<1xf32>) -> tensor<1x14x28xf32> {
+    %0 = "tosa.const"() <{values = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+    %1 = tosa.matmul_t %arg0, %arg1, %0, %arg2 : (tensor<1x14x19xf32>, tensor<1x28x19xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<1x14x28xf32>
+    return %1 : tensor<1x14x28xf32>
+  }
+}
+
+// -----
+module {
   func.func @test_negate_non_const_zps(%arg0: tensor<1xf32>, %arg1: tensor<1xf32>, %arg2: tensor<1xf32>) -> tensor<1xf32> {
     %0 = tosa.negate %arg0, %arg1, %arg2 : (tensor<1xf32>, tensor<1xf32>, tensor<1xf32>) -> tensor<1xf32>
     return %0 : tensor<1xf32>
@@ -94,10 +112,21 @@ module {
 
 // -----
 module {
-  func.func @test_slice_shape_non_const_start_size(%arg0: tensor<1xi32>, %arg1: tensor<1xi32>) -> !tosa.shape<3> {
+  func.func @test_avg_pool2d_adaptive_non_const_zps(%arg0: tensor<1x32x32x8xf32>, %arg1: tensor<1xf32>, %arg2: tensor<1xf32>) -> tensor<1x32x32x8xf32> {
+    %0 = tosa.const_shape  {values = dense<1> : tensor<2xindex>} : () -> !tosa.shape<2>
+    %1 = tosa.const_shape  {values = dense<1> : tensor<2xindex>} : () -> !tosa.shape<2>
+    %2 = tosa.const_shape  {values = dense<0> : tensor<4xindex>} : () -> !tosa.shape<4>
+    %3 = tosa.avg_pool2d_adaptive %arg0, %arg1, %arg2, %0, %1, %2 {acc_type = f32} : (tensor<1x32x32x8xf32>, tensor<1xf32>, tensor<1xf32>, !tosa.shape<2>, !tosa.shape<2>, !tosa.shape<4>) -> tensor<1x32x32x8xf32>
+    return %3 : tensor<1x32x32x8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @test_slice_shape_non_const_start_size(%arg0: tensor<1xi32>, %arg1: tensor<1xi32>) {
     %0 = tosa.const_shape  {values = dense<[4, 5, 6, 7, 8, 9]> : tensor<6xindex>} : () -> !tosa.shape<6>
     %1 = tosa.slice_shape %0, %arg0, %arg1 : (!tosa.shape<6>, tensor<1xi32>, tensor<1xi32>) -> !tosa.shape<3>
-    return %1 : !tosa.shape<3>
+    return
   }
 }
 

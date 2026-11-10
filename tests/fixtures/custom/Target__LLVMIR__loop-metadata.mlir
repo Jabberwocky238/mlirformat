@@ -187,10 +187,12 @@ module {
 
 // -----
 #di_file = #llvm.di_file<"metadata-loop.ll" in "/">
+#di_null_type = #llvm.di_null_type
 #loc = loc("loop-metadata.mlir":42:4)
 #loc1 = loc("loop-metadata.mlir":52:4)
-#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_C, file = #di_file, isOptimized = false, emissionKind = None>
-#di_subprogram = #llvm.di_subprogram<compileUnit = #di_compile_unit, scope = #di_file, name = "loop_locs", file = #di_file, subprogramFlags = Definition>
+#di_compile_unit = #llvm.di_compile_unit<id = distinct[0]<>, sourceLanguage = DW_LANG_C, file = #di_file>
+#di_subroutine_type = #llvm.di_subroutine_type<types = #di_null_type>
+#di_subprogram = #llvm.di_subprogram<compileUnit = #di_compile_unit, scope = #di_file, name = "loop_locs", file = #di_file, subprogramFlags = Definition, type = #di_subroutine_type>
 #loc2 = loc(fused<#di_subprogram>[#loc])
 #loc3 = loc(fused<#di_subprogram>[#loc1])
 #loop_annotation = #llvm.loop_annotation<disableNonforced = false, startLoc = #loc2, endLoc = #loc3>

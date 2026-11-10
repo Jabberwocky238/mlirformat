@@ -45,9 +45,7 @@ pub struct CallIndirectOp<'a> {
 /// ```mlir
 /// %2 = func.call @my_add(%0, %1) : (f32, f32) -> f32
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("func.call", results(result))]
+#[mlir::op("func.call", format = "$callee `(` $operands `)` attr-dict `:` functional-type($operands, $result)", results(result))]
 pub struct CallOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
@@ -78,9 +76,7 @@ pub struct CallOp<'a> {
 /// the compiler is multithreaded, and disallowing SSA values to directly
 /// reference a function simplifies this
 /// ([rationale](../Rationale/Rationale.md#multithreading-the-compiler)).
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("func.constant", results(result))]
+#[mlir::op("func.constant", format = "attr-dict $value `:` qualified(type($result))", results(result))]
 pub struct ConstantOp<'a> {
     pub value: Attribute<'a>,
     pub result: Type<'a>,

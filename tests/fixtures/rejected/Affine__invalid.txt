@@ -59,3 +59,5 @@
 59	verify	'affine.for' op expected lower bound map to have at least one result
 60	verify	'affine.for' op expected upper bound map to have at least one result
 61	verify	dimensional operand cannot be used as a symbol
+62	parse	custom op 'affine.for' expected step to be representable as a positive signed integer
+63	verify	'affine.for' op expected step to be a positive integer, got 0

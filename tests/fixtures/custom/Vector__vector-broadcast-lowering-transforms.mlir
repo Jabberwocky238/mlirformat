@@ -31,6 +31,18 @@ module {
     %0 = vector.broadcast %arg0 : vector<1xf32> to vector<4xf32>
     return %0 : vector<4xf32>
   }
+  func.func @broadcast_vec2d_from_vec1d_single_element(%arg0: vector<1xf32>) -> vector<16x1xf32> {
+    %0 = vector.broadcast %arg0 : vector<1xf32> to vector<16x1xf32>
+    return %0 : vector<16x1xf32>
+  }
+  func.func @broadcast_vec2d_from_vec2d_single_element(%arg0: vector<1x1xf32>) -> vector<4x3xf32> {
+    %0 = vector.broadcast %arg0 : vector<1x1xf32> to vector<4x3xf32>
+    return %0 : vector<4x3xf32>
+  }
+  func.func @broadcast_vec2d_from_vec1d_unit_scalable_dim(%arg0: vector<[1]xf32>) -> vector<4x[1]xf32> {
+    %0 = vector.broadcast %arg0 : vector<[1]xf32> to vector<4x[1]xf32>
+    return %0 : vector<4x[1]xf32>
+  }
   func.func @broadcast_stretch_at_start(%arg0: vector<1x4xf32>) -> vector<3x4xf32> {
     %0 = vector.broadcast %arg0 : vector<1x4xf32> to vector<3x4xf32>
     return %0 : vector<3x4xf32>

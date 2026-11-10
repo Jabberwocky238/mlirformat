@@ -180,7 +180,7 @@ module {
     %0 = llvm.mlir.constant(64 : i32) : i32
     %1 = omp.map.info var_ptr(%arg0 : !llvm.ptr, !llvm.array<1024 x i32>) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
     %2 = omp.map.info var_ptr(%arg1 : !llvm.ptr, i32) map_clauses(implicit, storage) capture(ByCopy) -> !llvm.ptr {name = ""}
-    omp.target thread_limit(%0 : i32) map_entries(%1 -> %arg2, %2 -> %arg3 : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) thread_limit(%0 : i32) map_entries(%1 -> %arg2, %2 -> %arg3 : !llvm.ptr, !llvm.ptr) {
       %3 = llvm.mlir.constant(10 : i32) : i32
       llvm.store %3, %arg3 : i32, !llvm.ptr
       omp.terminator
@@ -337,7 +337,7 @@ module {
     %9 = llvm.mlir.constant(1 : index) : i64
     %10 = omp.map.bounds lower_bound(%7 : i64) upper_bound(%6 : i64) stride(%9 : i64) start_idx(%9 : i64)
     %11 = omp.map.info var_ptr(%arg2 : !llvm.ptr, !llvm.array<10 x i32>) map_clauses(tofrom) capture(ByRef) bounds(%10) -> !llvm.ptr {name = ""}
-    omp.target map_entries(%5 -> %arg3, %11 -> %arg4 : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%5 -> %arg3, %11 -> %arg4 : !llvm.ptr, !llvm.ptr) {
       omp.terminator
     }
     llvm.return
@@ -411,14 +411,17 @@ module {
 module {
   func.func @omp_taskloop(%arg0: index, %arg1: memref<i32>) {
     omp.parallel {
-      omp.taskloop allocate(%arg1 : memref<i32> -> %arg1 : memref<i32>) {
-        omp.loop_nest (%arg2) : index = (%arg0) to (%arg0) step (%arg0) {
-          "test.payload"(%arg2) : (index) -> ()
-          omp.yield
+      omp.taskloop.context allocate(%arg1 : memref<i32> -> %arg1 : memref<i32>) {
+        omp.taskloop.wrapper {
+          omp.loop_nest (%arg2) : index = (%arg0) to (%arg0) step (%arg0) {
+            "test.payload"(%arg2) : (index) -> ()
+            omp.yield
+          }
         }
-      }
+        omp.terminator
+      } {omp.combined}
       omp.terminator
-    }
+    } {omp.combined}
     return
   }
 }

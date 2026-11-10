@@ -7,8 +7,14 @@
   }) : () -> ()
   "func.func"() <{function_type = (!spirv.array<32 x vector<4xbf16>>) -> (), sym_name = "vector_array_type_bf16", sym_visibility = "private"}> ({
   }) : () -> ()
+  "func.func"() <{function_type = (!spirv.array<16 x f16>, !spirv.array<16 x f64>) -> (), sym_name = "scalar_array_type_f64", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.array<16 x f8E4M3FN>, !spirv.array<16 x f8E5M2>) -> (), sym_name = "scalar_array_type_f8", sym_visibility = "private"}> ({
+  }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -32,6 +38,8 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -68,6 +76,12 @@
 // -----
 // -----
 // -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.sampler) -> (), sym_name = "sampler_type", sym_visibility = "private"}> ({
+  }) : () -> ()
+}) : () -> ()
+
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (!spirv.sampled_image<!spirv.image<f32, Dim1D, NoDepth, NonArrayed, SingleSampled, NoSampler, Unknown>>) -> (), sym_name = "sampled_image_type", sym_visibility = "private"}> ({
@@ -121,6 +135,7 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
 // -----
 // -----
 // -----
@@ -200,6 +215,12 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (!spirv.coopmatrix<8x16xi32, Subgroup, MatrixA>, !spirv.coopmatrix<8x8xf32, Workgroup, MatrixB>, !spirv.coopmatrix<4x8xf32, Workgroup, MatrixAcc>) -> (), sym_name = "coop_matrix_types", sym_visibility = "private"}> ({
   }) : () -> ()
+  "func.func"() <{function_type = (!spirv.coopmatrix<8x16xf8E4M3FN, Subgroup, MatrixA>) -> (), sym_name = "coop_matrix_types_f8E4M3FN", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.coopmatrix<8x16xf8E5M2, Subgroup, MatrixA>) -> (), sym_name = "coop_matrix_types_f8E5M2", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (!spirv.coopmatrix<8x16xbf16, Subgroup, MatrixA>) -> (), sym_name = "coop_matrix_types_bf16", sym_visibility = "private"}> ({
+  }) : () -> ()
 }) : () -> ()
 
 // -----
@@ -247,6 +268,18 @@
 // -----
 // -----
 "builtin.module"() ({
+  "func.func"() <{function_type = (f8E4M3FN) -> (), sym_name = "type_f8E4M3FN", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<4xf8E4M3FN>) -> (), sym_name = "vector_type_f8E4M3FN", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (f8E5M2) -> (), sym_name = "type_f8E5M2", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<4xf8E5M2>) -> (), sym_name = "vector_type_f8E5M2", sym_visibility = "private"}> ({
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
   "func.func"() <{function_type = (!spirv.arm.tensor<1xi32>) -> (), sym_name = "arm_tensor_type_single_dim_i32", sym_visibility = "private"}> ({
   }) : () -> ()
 }) : () -> ()
@@ -290,3 +323,21 @@
 }) : () -> ()
 
 // -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.arm.tensor<2x3xbf16>) -> (), sym_name = "arm_tensor_type_bf16", sym_visibility = "private"}> ({
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.arm.tensor<2x3xf8E4M3FN>) -> (), sym_name = "arm_tensor_type_fp8e4m3fn", sym_visibility = "private"}> ({
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (!spirv.arm.tensor<2x3xf8E5M2>) -> (), sym_name = "arm_tensor_type_fp8e5m2", sym_visibility = "private"}> ({
+  }) : () -> ()
+}) : () -> ()
+

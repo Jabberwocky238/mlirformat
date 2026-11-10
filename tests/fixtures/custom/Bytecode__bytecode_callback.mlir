@@ -6,3 +6,10 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @no_test_dialect_ops() {
+    return
+  }
+}
+

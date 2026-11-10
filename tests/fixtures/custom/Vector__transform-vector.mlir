@@ -18,7 +18,9 @@ module {
         transform.apply_patterns.vector.transfer_permutation_patterns
       } : !transform.any_op
       transform.apply_patterns to %4 {
-        transform.apply_patterns.vector.lower_multi_reduction
+        transform.apply_patterns.vector.reorder_multi_reduction_dims
+        transform.apply_patterns.vector.multi_reduction_flattening
+        transform.apply_patterns.vector.multi_reduction_unrolling
       } : !transform.any_op
       transform.apply_patterns to %4 {
         transform.apply_patterns.vector.split_transfer_full_partial

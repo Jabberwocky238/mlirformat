@@ -128,7 +128,7 @@ module {
 #sparse = #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed) }>
 module {
   func.func @sparse_get_md(%arg0: !sparse_tensor.storage_specifier<#sparse>) -> index {
-    %0 = sparse_tensor.storage_specifier.get %arg0  lvl_sz at 0 : !sparse_tensor.storage_specifier<#sparse>
+    %0 = sparse_tensor.storage_specifier.get %arg0 lvl_sz at 0 : !sparse_tensor.storage_specifier<#sparse>
     return %0 : index
   }
 }
@@ -137,7 +137,7 @@ module {
 #sparse = #sparse_tensor.encoding<{ map = (d0 : #sparse_tensor<slice(?, ?, ?)>) -> (d0 : compressed) }>
 module {
   func.func @sparse_get_md(%arg0: !sparse_tensor.storage_specifier<#sparse>) -> index {
-    %0 = sparse_tensor.storage_specifier.get %arg0  dim_offset at 0 : !sparse_tensor.storage_specifier<#sparse>
+    %0 = sparse_tensor.storage_specifier.get %arg0 dim_offset at 0 : !sparse_tensor.storage_specifier<#sparse>
     return %0 : index
   }
 }
@@ -146,7 +146,7 @@ module {
 #sparse = #sparse_tensor.encoding<{ map = (d0 : #sparse_tensor<slice(?, ?, ?)>) -> (d0 : compressed) }>
 module {
   func.func @sparse_get_md(%arg0: !sparse_tensor.storage_specifier<#sparse>) -> index {
-    %0 = sparse_tensor.storage_specifier.get %arg0  dim_stride at 0 : !sparse_tensor.storage_specifier<#sparse>
+    %0 = sparse_tensor.storage_specifier.get %arg0 dim_stride at 0 : !sparse_tensor.storage_specifier<#sparse>
     return %0 : index
   }
 }
@@ -155,7 +155,7 @@ module {
 #sparse = #sparse_tensor.encoding<{ map = (d0) -> (d0 : compressed) }>
 module {
   func.func @sparse_set_md(%arg0: !sparse_tensor.storage_specifier<#sparse>, %arg1: index) -> !sparse_tensor.storage_specifier<#sparse> {
-    %0 = sparse_tensor.storage_specifier.set %arg0  lvl_sz at 0 with %arg1 : !sparse_tensor.storage_specifier<#sparse>
+    %0 = sparse_tensor.storage_specifier.set %arg0 lvl_sz at 0 with %arg1 : !sparse_tensor.storage_specifier<#sparse>
     return %0 : !sparse_tensor.storage_specifier<#sparse>
   }
 }
@@ -357,7 +357,7 @@ module {
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
   func.func @sparse_sort_coo(%arg0: index, %arg1: memref<?xindex>) -> memref<?xindex> {
-    sparse_tensor.sort  hybrid_quick_sort %arg0, %arg1 {ny = 1 : index, perm_map = #map} : memref<?xindex>
+    sparse_tensor.sort hybrid_quick_sort %arg0, %arg1 {ny = 1 : index, perm_map = #map} : memref<?xindex>
     return %arg1 : memref<?xindex>
   }
 }
@@ -366,7 +366,7 @@ module {
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
   func.func @sparse_sort_coo_stable(%arg0: index, %arg1: memref<?xi64>, %arg2: memref<?xf32>) -> (memref<?xi64>, memref<?xf32>) {
-    sparse_tensor.sort  insertion_sort_stable %arg0, %arg1 jointly %arg2 {ny = 1 : index, perm_map = #map} : memref<?xi64> jointly memref<?xf32>
+    sparse_tensor.sort insertion_sort_stable %arg0, %arg1 jointly %arg2 {ny = 1 : index, perm_map = #map} : memref<?xi64> jointly memref<?xf32>
     return %arg1, %arg2 : memref<?xi64>, memref<?xf32>
   }
 }
@@ -376,7 +376,7 @@ module {
 #sparse1 = #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : compressed(nonunique), d1 : singleton) }>
 module {
   func.func @sparse_reorder_coo(%arg0: tensor<?x?xf32, #sparse>) -> tensor<?x?xf32, #sparse1> {
-    %0 = sparse_tensor.reorder_coo  quick_sort %arg0 : tensor<?x?xf32, #sparse> to tensor<?x?xf32, #sparse1>
+    %0 = sparse_tensor.reorder_coo quick_sort %arg0 : tensor<?x?xf32, #sparse> to tensor<?x?xf32, #sparse1>
     return %0 : tensor<?x?xf32, #sparse1>
   }
 }
@@ -385,7 +385,7 @@ module {
 #sparse = #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 floordiv 2 : dense, d1 floordiv 3 : compressed, d0 mod 2 : dense, d1 mod 3 : dense) }>
 module {
   func.func @sparse_crd_translate(%arg0: index, %arg1: index) -> (index, index, index, index) {
-    %0:4 = sparse_tensor.crd_translate  dim_to_lvl[%arg0, %arg1] as #sparse : index, index, index, index
+    %0:4 = sparse_tensor.crd_translate dim_to_lvl[%arg0, %arg1] as #sparse : index, index, index, index
     return %0#0, %0#1, %0#2, %0#3 : index, index, index, index
   }
 }

@@ -53,7 +53,7 @@
       "linalg.yield"(%21) : (i32) -> ()
     }) {linalg.memoized_indexing_maps = [#map3, #map4, #map5]} : (tensor<1x16x8x1xi32>, tensor<2x16x8x1xi32>, tensor<1x2x8x8xi32>) -> tensor<1x2x8x8xi32>
     %18 = "tensor.empty"() : () -> tensor<7x13xi32>
-    %19 = "linalg.unpack"(%17, %18) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> : (tensor<1x2x8x8xi32>, tensor<7x13xi32>) -> tensor<7x13xi32>
+    %19 = "linalg.unpack"(%17, %18) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 0, 1>, static_inner_tiles = array<i64: 8, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x2x8x8xi32>, tensor<7x13xi32>) -> tensor<7x13xi32>
     "func.return"(%19) : (tensor<7x13xi32>) -> ()
   }) : () -> ()
   "builtin.module"() <{sym_name = "transforms"}> ({
@@ -80,7 +80,7 @@
       %6 = "transform.structured.match"(%4) <{ops = ["linalg.pack"]}> : (!transform.op<"func.func">) -> !transform.op<"linalg.pack">
       %7:3 = "transform.structured.lower_pack"(%6) <{lowerPadLikeWithInsertSlice = true}> : (!transform.op<"linalg.pack">) -> (!transform.op<"tensor.pad">, !transform.op<"tensor.expand_shape">, !transform.op<"linalg.transpose">)
       %8 = "transform.structured.match"(%4) <{ops = ["linalg.unpack"]}> : (!transform.op<"func.func">) -> !transform.op<"linalg.unpack">
-      %9:4 = "transform.structured.lower_unpack"(%8) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %9:5 = "transform.structured.lower_unpack"(%8) <{lowerUnpadLikeWithExtractSlice = true}> : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       "transform.yield"() : () -> ()
     }) : () -> ()
     "transform.named_sequence"() <{arg_attrs = [{transform.readonly}], function_type = (!transform.any_op) -> !transform.any_op, sym_name = "match_mmt4d"}> ({

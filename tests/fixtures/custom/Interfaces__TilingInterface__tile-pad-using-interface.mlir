@@ -105,3 +105,21 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @dynamic_2d_pad_tensor_with_encoding(%arg0: tensor<?x?xf32>, %arg1: f32) -> tensor<?x?xf32, #test.tensor_encoding<"encoding">> {
+    %padded = tensor.pad %arg0 low[3, 4] high[5, 3] {
+    ^bb0(%arg2: index, %arg3: index):
+      tensor.yield %arg1 : f32
+    } : tensor<?x?xf32> to tensor<?x?xf32, #test.tensor_encoding<"encoding">>
+    return %padded : tensor<?x?xf32, #test.tensor_encoding<"encoding">>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["tensor.pad"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %tiled_linalg_op, %loops:2 = transform.structured.tile_using_for %0 tile_sizes [2, 3] : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+      transform.yield 
+    }
+  }
+}
+

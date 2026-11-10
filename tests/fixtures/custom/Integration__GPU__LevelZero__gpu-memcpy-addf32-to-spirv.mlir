@@ -29,9 +29,9 @@ module @add attributes {gpu.container_module} {
   }
   gpu.module @test_kernel attributes {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Addresses, Int64, Kernel], []>, api=OpenCL, #spirv.resource_limits<>>} {
     gpu.func @test_kernel(%arg0: memref<2x2x2xf32>, %arg1: memref<2x2x2xf32>, %arg2: memref<2x2x2xf32>) kernel attributes {gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 2, 2, 2>, spirv.entry_point_abi = #spirv.entry_point_abi<>} {
-      %block_id_x = gpu.block_id  x
-      %block_id_y = gpu.block_id  y
-      %block_id_z = gpu.block_id  z
+      %block_id_x = gpu.block_id x
+      %block_id_y = gpu.block_id y
+      %block_id_z = gpu.block_id z
       %0 = memref.load %arg0[%block_id_x, %block_id_y, %block_id_z] : memref<2x2x2xf32>
       %1 = memref.load %arg1[%block_id_x, %block_id_y, %block_id_z] : memref<2x2x2xf32>
       %2 = arith.addf %0, %1 : f32

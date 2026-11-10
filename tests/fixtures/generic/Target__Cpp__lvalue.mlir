@@ -4,7 +4,7 @@
     %0 = "emitc.mul"(%arg0, %arg1) : (i32, i32) -> i32
     %1 = "emitc.variable"() <{value = #emitc.opaque<"">}> : () -> !emitc.lvalue<i32>
     "emitc.assign"(%1, %0) : (!emitc.lvalue<i32>, i32) -> ()
-    %2 = "emitc.apply"(%1) <{applicableOperator = "&"}> : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
+    %2 = "emitc.address_of"(%1) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
     "emitc.call"(%2) <{callee = @zero}> : (!emitc.ptr<i32>) -> ()
     %3 = "emitc.load"(%1) : (!emitc.lvalue<i32>) -> i32
     %4 = "emitc.constant"() <{value = -1 : i32}> : () -> i32

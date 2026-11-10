@@ -136,6 +136,69 @@
 
 // -----
 // -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "succeededHasAncestor_direct_parent"}> ({
+    "test.parent"() ({
+      "test.child_with_ancestor"() : () -> ()
+      "test.finish"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "succeededHasAncestor_indirect"}> ({
+    "test.parent"() ({
+      "some.intermediate_op"() ({
+        "test.child_with_ancestor"() : () -> ()
+        "test.finish"() : () -> ()
+      }) : () -> ()
+      "test.finish"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "succeededAncestorOneOf"}> ({
+    "test.parent"() ({
+      "test.child_with_ancestor_one_of"() : () -> ()
+      "test.finish"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "succeededAncestor1OneOf"}> ({
+    "test.parent1"() ({
+      "test.child_with_ancestor_one_of"() : () -> ()
+      "test.finish"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "succeededAncestorOneOf_indirect"}> ({
+    "test.parent1"() ({
+      "some.intermediate_op"() ({
+        "test.child_with_ancestor_one_of"() : () -> ()
+        "test.finish"() : () -> ()
+      }) : () -> ()
+      "test.finish"() : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
 // -----
 // -----
 // -----

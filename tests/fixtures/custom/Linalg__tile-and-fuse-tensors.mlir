@@ -183,3 +183,30 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+module {
+  func.func @fuse_same_producer_multiple_consumers(%arg0: tensor<5x4xi32>) -> (tensor<5x4xi32>, tensor<5x4xi1>) {
+    %c0_i32 = arith.constant 0 : i32
+    %c1_i32 = arith.constant 1 : i32
+    %0 = tensor.empty() : tensor<30x8xi32>
+    %1 = linalg.generic {indexing_maps = [#map], iterator_types = ["parallel", "parallel"]} outs(%0 : tensor<30x8xi32>) {
+    ^bb0(%out: i32):
+      linalg.yield %c1_i32 : i32
+    } -> tensor<30x8xi32>
+    %extracted_slice = tensor.extract_slice %1[7, 4] [5, 4] [1, 1] : tensor<30x8xi32> to tensor<5x4xi32>
+    %2 = tensor.empty() : tensor<5x4xi1>
+    %3 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%extracted_slice : tensor<5x4xi32>) outs(%2 : tensor<5x4xi1>) {
+    ^bb0(%in: i32, %out: i1):
+      %5 = arith.cmpi eq, %in, %c0_i32 : i32
+      linalg.yield %5 : i1
+    } -> tensor<5x4xi1>
+    %4 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%extracted_slice : tensor<5x4xi32>) outs(%arg0 : tensor<5x4xi32>) {
+    ^bb0(%in: i32, %out: i32):
+      %5 = arith.addi %in, %c1_i32 : i32
+      linalg.yield %5 : i32
+    } -> tensor<5x4xi32>
+    return %4, %3 : tensor<5x4xi32>, tensor<5x4xi1>
+  }
+}
+

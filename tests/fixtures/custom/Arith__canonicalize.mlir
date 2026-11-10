@@ -13,6 +13,43 @@ module {
     %1 = arith.select %0, %arg0, %arg1 : i64
     return %1 : i64
   }
+  func.func @select_cmp_signed_min_max(%arg0: i64, %arg1: i64) -> (i64, i64, i64, i64, i64, i64, i64, i64) {
+    %0 = arith.cmpi slt, %arg0, %arg1 : i64
+    %1 = arith.cmpi sle, %arg0, %arg1 : i64
+    %2 = arith.cmpi sgt, %arg0, %arg1 : i64
+    %3 = arith.cmpi sge, %arg0, %arg1 : i64
+    %4 = arith.select %0, %arg0, %arg1 : i64
+    %5 = arith.select %1, %arg0, %arg1 : i64
+    %6 = arith.select %2, %arg1, %arg0 : i64
+    %7 = arith.select %3, %arg1, %arg0 : i64
+    %8 = arith.select %0, %arg1, %arg0 : i64
+    %9 = arith.select %1, %arg1, %arg0 : i64
+    %10 = arith.select %2, %arg0, %arg1 : i64
+    %11 = arith.select %3, %arg0, %arg1 : i64
+    return %4, %5, %6, %7, %8, %9, %10, %11 : i64, i64, i64, i64, i64, i64, i64, i64
+  }
+  func.func @select_cmp_unsigned_min_max(%arg0: i64, %arg1: i64) -> (i64, i64, i64, i64, i64, i64, i64, i64) {
+    %0 = arith.cmpi ult, %arg0, %arg1 : i64
+    %1 = arith.cmpi ule, %arg0, %arg1 : i64
+    %2 = arith.cmpi ugt, %arg0, %arg1 : i64
+    %3 = arith.cmpi uge, %arg0, %arg1 : i64
+    %4 = arith.select %0, %arg0, %arg1 : i64
+    %5 = arith.select %1, %arg0, %arg1 : i64
+    %6 = arith.select %2, %arg1, %arg0 : i64
+    %7 = arith.select %3, %arg1, %arg0 : i64
+    %8 = arith.select %0, %arg1, %arg0 : i64
+    %9 = arith.select %1, %arg1, %arg0 : i64
+    %10 = arith.select %2, %arg0, %arg1 : i64
+    %11 = arith.select %3, %arg0, %arg1 : i64
+    return %4, %5, %6, %7, %8, %9, %10, %11 : i64, i64, i64, i64, i64, i64, i64, i64
+  }
+  func.func @select_cmp_min_max_index_vector(%arg0: index, %arg1: index, %arg2: vector<4xi32>, %arg3: vector<4xi32>) -> (index, vector<4xi32>) {
+    %0 = arith.cmpi sle, %arg0, %arg1 : index
+    %1 = arith.select %0, %arg0, %arg1 : index
+    %2 = arith.cmpi ult, %arg2, %arg3 : vector<4xi32>
+    %3 = arith.select %2, %arg3, %arg2 : vector<4xi1>, vector<4xi32>
+    return %1, %3 : index, vector<4xi32>
+  }
   func.func @select_extui(%arg0: i1) -> i64 {
     %c0_i64 = arith.constant 0 : i64
     %c1_i64 = arith.constant 1 : i64
@@ -217,6 +254,11 @@ module {
     %1 = arith.extsi %0 : i8 to i64
     return %1 : i64
   }
+  func.func @extSIOfExtUI_nneg(%arg0: i1) -> i64 {
+    %0 = arith.extui %arg0 nneg : i1 to i8
+    %1 = arith.extsi %0 : i8 to i64
+    return %1 : i64
+  }
   func.func @extUIOfExtUI(%arg0: i1) -> i64 {
     %0 = arith.extui %arg0 : i1 to i8
     %1 = arith.extui %0 : i8 to i64
@@ -295,6 +337,24 @@ module {
     %2 = arith.andi %0, %1 : i64
     return %2 : i64
   }
+  func.func @andOfExtUI_nneg_lhs(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 nneg : i8 to i64
+    %1 = arith.extui %arg1 : i8 to i64
+    %2 = arith.andi %0, %1 : i64
+    return %2 : i64
+  }
+  func.func @andOfExtUI_nneg_rhs(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 : i8 to i64
+    %1 = arith.extui %arg1 nneg : i8 to i64
+    %2 = arith.andi %0, %1 : i64
+    return %2 : i64
+  }
+  func.func @andOfExtUI_nneg_both(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 nneg : i8 to i64
+    %1 = arith.extui %arg1 nneg : i8 to i64
+    %2 = arith.andi %0, %1 : i64
+    return %2 : i64
+  }
   func.func @orOfExtSI(%arg0: i8, %arg1: i8) -> i64 {
     %0 = arith.extsi %arg0 : i8 to i64
     %1 = arith.extsi %arg1 : i8 to i64
@@ -306,6 +366,121 @@ module {
     %1 = arith.extui %arg1 : i8 to i64
     %2 = arith.ori %0, %1 : i64
     return %2 : i64
+  }
+  func.func @orOfExtUI_nneg_both(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 nneg : i8 to i64
+    %1 = arith.extui %arg1 nneg : i8 to i64
+    %2 = arith.ori %0, %1 : i64
+    return %2 : i64
+  }
+  func.func @orOfExtUI_nneg_mixed(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 nneg : i8 to i64
+    %1 = arith.extui %arg1 : i8 to i64
+    %2 = arith.ori %0, %1 : i64
+    return %2 : i64
+  }
+}
+
+// -----
+module {
+  func.func @andOfAndConstant(%arg0: i32) -> i32 {
+    %c12_i32 = arith.constant 12 : i32
+    %c10_i32 = arith.constant 10 : i32
+    %0 = arith.andi %arg0, %c12_i32 : i32
+    %1 = arith.andi %0, %c10_i32 : i32
+    return %1 : i32
+  }
+}
+
+// -----
+module {
+  func.func @andOfAndConstantIndex(%arg0: index) -> index {
+    %c12 = arith.constant 12 : index
+    %c10 = arith.constant 10 : index
+    %0 = arith.andi %arg0, %c12 : index
+    %1 = arith.andi %0, %c10 : index
+    return %1 : index
+  }
+}
+
+// -----
+module {
+  func.func @andOfAndConstantMultiUse(%arg0: i32) -> (i32, i32) {
+    %c12_i32 = arith.constant 12 : i32
+    %c10_i32 = arith.constant 10 : i32
+    %0 = arith.andi %arg0, %c12_i32 : i32
+    %1 = arith.andi %0, %c10_i32 : i32
+    return %0, %1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @andOfAndConstantChain(%arg0: i32) -> (i32, i32, i32) {
+    %c14_i32 = arith.constant 14 : i32
+    %c13_i32 = arith.constant 13 : i32
+    %c11_i32 = arith.constant 11 : i32
+    %0 = arith.andi %arg0, %c14_i32 : i32
+    %1 = arith.andi %0, %c13_i32 : i32
+    %2 = arith.andi %1, %c11_i32 : i32
+    return %0, %1, %2 : i32, i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @orOfOrConstant(%arg0: i32) -> i32 {
+    %c12_i32 = arith.constant 12 : i32
+    %c10_i32 = arith.constant 10 : i32
+    %0 = arith.ori %arg0, %c12_i32 : i32
+    %1 = arith.ori %0, %c10_i32 : i32
+    return %1 : i32
+  }
+}
+
+// -----
+module {
+  func.func @orOfOrConstantIndex(%arg0: index) -> index {
+    %c12 = arith.constant 12 : index
+    %c10 = arith.constant 10 : index
+    %0 = arith.ori %arg0, %c12 : index
+    %1 = arith.ori %0, %c10 : index
+    return %1 : index
+  }
+}
+
+// -----
+module {
+  func.func @orOfOrConstantMultiUse(%arg0: i32) -> (i32, i32) {
+    %c12_i32 = arith.constant 12 : i32
+    %c10_i32 = arith.constant 10 : i32
+    %0 = arith.ori %arg0, %c12_i32 : i32
+    %1 = arith.ori %0, %c10_i32 : i32
+    return %0, %1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @nested_andi() -> i32 {
+    %0 = "test.constant"() <{value = 2147483647 : i64}> : () -> i32
+    %1 = "test.constant"() <{value = -2147483648 : i64}> : () -> i32
+    %2 = "test.constant"() <{value = 2147483648 : i64}> : () -> i32
+    %3 = arith.andi %0, %1 : i32
+    %4 = arith.andi %3, %2 : i32
+    return %4 : i32
+  }
+}
+
+// -----
+module {
+  func.func @nested_ori() -> i32 {
+    %0 = "test.constant"() <{value = 2147483647 : i64}> : () -> i32
+    %1 = "test.constant"() <{value = -2147483648 : i64}> : () -> i32
+    %2 = "test.constant"() <{value = 2147483648 : i64}> : () -> i32
+    %3 = arith.ori %0, %1 : i32
+    %4 = arith.ori %3, %2 : i32
+    return %4 : i32
   }
 }
 
@@ -319,6 +494,16 @@ module {
   func.func @indexCastUIOfUnsignedExtend(%arg0: i8) -> index {
     %0 = arith.extui %arg0 : i8 to i16
     %1 = arith.index_castui %0 : i16 to index
+    return %1 : index
+  }
+  func.func @indexCastUIOfUnsignedExtend_nneg_on_extui(%arg0: i8) -> index {
+    %0 = arith.extui %arg0 nneg : i8 to i16
+    %1 = arith.index_castui %0 : i16 to index
+    return %1 : index
+  }
+  func.func @indexCastUIOfUnsignedExtend_nneg_on_castui(%arg0: i8) -> index {
+    %0 = arith.extui %arg0 : i8 to i16
+    %1 = arith.index_castui %0 nneg : i16 to index
     return %1 : index
   }
   func.func @indexCastFold() -> index {
@@ -381,6 +566,80 @@ module {
     %0 = arith.index_castui %cst : vector<3xindex> to vector<3xi32>
     return %0 : vector<3xi32>
   }
+  func.func @indexCastOfIndexCast_lossless(%arg0: i64) -> i64 {
+    %0 = arith.index_cast %arg0 : i64 to index
+    %1 = arith.index_cast %0 : index to i64
+    return %1 : i64
+  }
+}
+
+// -----
+module {
+  func.func @indexCastOfIndexCast_lossy(%arg0: index) -> index {
+    %0 = arith.index_cast %arg0 : index to i8
+    %1 = arith.index_cast %0 : i8 to index
+    return %1 : index
+  }
+}
+
+// -----
+module {
+  func.func @indexCastUIOfIndexCastUI_lossless(%arg0: i64) -> i64 {
+    %0 = arith.index_castui %arg0 : i64 to index
+    %1 = arith.index_castui %0 : index to i64
+    return %1 : i64
+  }
+}
+
+// -----
+module {
+  func.func @indexCastUIOfIndexCastUI_lossy(%arg0: index) -> index {
+    %0 = arith.index_castui %arg0 : index to i8
+    %1 = arith.index_castui %0 : i8 to index
+    return %1 : index
+  }
+}
+
+// -----
+module {
+  func.func @indexCastUIOfIndexCastUI_3way_lossy(%arg0: i64) -> index {
+    %0 = arith.index_castui %arg0 : i64 to index
+    %1 = arith.index_castui %0 : index to i8
+    %2 = arith.index_castui %1 : i8 to index
+    return %2 : index
+  }
+}
+
+// -----
+module {
+  func.func @indexCastOfIndexCast_3way_lossy(%arg0: i8) -> index {
+    %0 = arith.index_cast %arg0 : i8 to index
+    %1 = arith.index_cast %0 : index to i64
+    %2 = arith.index_cast %1 : i64 to index
+    return %2 : index
+  }
+}
+
+// -----
+module {
+  func.func @indexCastOfIndexCast_i8_roundtrip(%arg0: i8) -> i8 {
+    %0 = arith.index_cast %arg0 : i8 to index
+    %1 = arith.index_cast %0 : index to i8
+    return %1 : i8
+  }
+}
+
+// -----
+module {
+  func.func @indexCastOfIndexCast_vector_lossy(%arg0: vector<3xi128>) -> vector<3xi128> {
+    %0 = arith.index_cast %arg0 : vector<3xi128> to vector<3xindex>
+    %1 = arith.index_cast %0 : vector<3xindex> to vector<3xi128>
+    return %1 : vector<3xi128>
+  }
+}
+
+// -----
+module {
   func.func @signExtendConstant() -> i16 {
     %c-2_i8 = arith.constant -2 : i8
     %0 = arith.extsi %c-2_i8 : i8 to i16
@@ -453,6 +712,36 @@ module {
     %1 = arith.truncf %0 to_nearest_even : f64 to f32
     return %1 : f32
   }
+  func.func @truncUitofp(%arg0: i32) -> f32 {
+    %0 = arith.uitofp %arg0 : i32 to f64
+    %1 = arith.truncf %0 : f64 to f32
+    return %1 : f32
+  }
+  func.func @truncUitofp_nneg(%arg0: i32) -> f32 {
+    %0 = arith.uitofp %arg0 nneg : i32 to f64
+    %1 = arith.truncf %0 : f64 to f32
+    return %1 : f32
+  }
+  func.func @sitofpExtsi(%arg0: i8) -> bf16 {
+    %0 = arith.extsi %arg0 : i8 to i32
+    %1 = arith.sitofp %0 : i32 to bf16
+    return %1 : bf16
+  }
+  func.func @sitofpExtui(%arg0: i4) -> bf16 {
+    %0 = arith.extui %arg0 : i4 to i8
+    %1 = arith.sitofp %0 : i8 to bf16
+    return %1 : bf16
+  }
+  func.func @uitofpExtui(%arg0: i8) -> bf16 {
+    %0 = arith.extui %arg0 : i8 to i32
+    %1 = arith.uitofp %0 : i32 to bf16
+    return %1 : bf16
+  }
+  func.func @sitofpExtui_nneg(%arg0: i4) -> bf16 {
+    %0 = arith.extui %arg0 nneg : i4 to i8
+    %1 = arith.sitofp %0 : i8 to bf16
+    return %1 : bf16
+  }
   func.func @truncConstant(%arg0: i8) -> i16 {
     %c-2_i32 = arith.constant -2 : i32
     %0 = arith.trunci %c-2_i32 : i32 to i16
@@ -470,6 +759,11 @@ module {
   }
   func.func @truncExtui3(%arg0: i8) -> i16 {
     %0 = arith.extui %arg0 : i8 to i32
+    %1 = arith.trunci %0 : i32 to i16
+    return %1 : i16
+  }
+  func.func @truncExtui3_nneg(%arg0: i8) -> i16 {
+    %0 = arith.extui %arg0 nneg : i8 to i32
     %1 = arith.trunci %0 : i32 to i16
     return %1 : i16
   }
@@ -637,6 +931,11 @@ module {
   func.func @subSub0(%arg0: index, %arg1: index) -> index {
     %0 = arith.subi %arg0, %arg1 : index
     %1 = arith.subi %0, %arg0 : index
+    return %1 : index
+  }
+  func.func @subSub1(%arg0: index, %arg1: index) -> index {
+    %0 = arith.subi %arg0, %arg1 : index
+    %1 = arith.subi %arg0, %0 : index
     return %1 : index
   }
   func.func @subSub0Ovf(%arg0: index, %arg1: index) -> index {
@@ -837,6 +1136,74 @@ module {
     %sum, %overflow = arith.addui_extended %cst, %cst_0 : vector<4xi32>, vector<4xi1>
     return %sum, %overflow : vector<4xi32>, vector<4xi1>
   }
+  func.func @adduiExtendedPoisonLhs() -> (i32, i1) {
+    %0 = ub.poison : i32
+    %c5_i32 = arith.constant 5 : i32
+    %sum, %overflow = arith.addui_extended %0, %c5_i32 : i32, i1
+    return %sum, %overflow : i32, i1
+  }
+  func.func @adduiExtendedPoisonRhs() -> (i32, i1) {
+    %c5_i32 = arith.constant 5 : i32
+    %0 = ub.poison : i32
+    %sum, %overflow = arith.addui_extended %c5_i32, %0 : i32, i1
+    return %sum, %overflow : i32, i1
+  }
+  func.func @subuiExtendedZeroRhs(%arg0: i32) -> (i32, i1) {
+    %c0_i32 = arith.constant 0 : i32
+    %diff, %borrow = arith.subui_extended %arg0, %c0_i32 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @subuiExtendedZeroRhsSplat(%arg0: vector<4xi32>) -> (vector<4xi32>, vector<4xi1>) {
+    %cst = arith.constant dense<0> : vector<4xi32>
+    %diff, %borrow = arith.subui_extended %arg0, %cst : vector<4xi32>, vector<4xi1>
+    return %diff, %borrow : vector<4xi32>, vector<4xi1>
+  }
+  func.func @subuiExtendedSameOperand(%arg0: i32) -> (i32, i1) {
+    %diff, %borrow = arith.subui_extended %arg0, %arg0 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @subuiExtendedSameOperandVector(%arg0: vector<4xi32>) -> (vector<4xi32>, vector<4xi1>) {
+    %diff, %borrow = arith.subui_extended %arg0, %arg0 : vector<4xi32>, vector<4xi1>
+    return %diff, %borrow : vector<4xi32>, vector<4xi1>
+  }
+  func.func @subuiExtendedUnusedBorrowScalar(%arg0: i32, %arg1: i32) -> i32 {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : i32, i1
+    return %diff : i32
+  }
+  func.func @subuiExtendedUnusedBorrowVector(%arg0: vector<3xi32>, %arg1: vector<3xi32>) -> vector<3xi32> {
+    %diff, %borrow = arith.subui_extended %arg0, %arg1 : vector<3xi32>, vector<3xi1>
+    return %diff : vector<3xi32>
+  }
+  func.func @subuiExtendedConstants() -> (i32, i1) {
+    %c5_i32 = arith.constant 5 : i32
+    %c3_i32 = arith.constant 3 : i32
+    %diff, %borrow = arith.subui_extended %c5_i32, %c3_i32 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @subuiExtendedConstantsBorrow() -> (i32, i1) {
+    %c3_i32 = arith.constant 3 : i32
+    %c5_i32 = arith.constant 5 : i32
+    %diff, %borrow = arith.subui_extended %c3_i32, %c5_i32 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @subuiExtendedConstantsBorrowVector() -> (vector<4xi32>, vector<4xi1>) {
+    %cst = arith.constant dense<[1, 3, 3, 7]> : vector<4xi32>
+    %cst_0 = arith.constant dense<[0, 3, 4, 7]> : vector<4xi32>
+    %diff, %borrow = arith.subui_extended %cst, %cst_0 : vector<4xi32>, vector<4xi1>
+    return %diff, %borrow : vector<4xi32>, vector<4xi1>
+  }
+  func.func @subuiExtendedPoisonLhs() -> (i32, i1) {
+    %0 = ub.poison : i32
+    %c5_i32 = arith.constant 5 : i32
+    %diff, %borrow = arith.subui_extended %0, %c5_i32 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
+  func.func @subuiExtendedPoisonRhs() -> (i32, i1) {
+    %c5_i32 = arith.constant 5 : i32
+    %0 = ub.poison : i32
+    %diff, %borrow = arith.subui_extended %c5_i32, %0 : i32, i1
+    return %diff, %borrow : i32, i1
+  }
   func.func @mulsiExtendedZeroRhs(%arg0: i32) -> (i32, i32) {
     %c0_i32 = arith.constant 0 : i32
     %low, %high = arith.mulsi_extended %arg0, %c0_i32 : i32
@@ -1025,6 +1392,63 @@ module {
     %1 = arith.extui %arg1 : i8 to i64
     %2 = arith.xori %0, %1 : i64
     return %2 : i64
+  }
+  func.func @xorOfExtUI_nneg_both(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 nneg : i8 to i64
+    %1 = arith.extui %arg1 nneg : i8 to i64
+    %2 = arith.xori %0, %1 : i64
+    return %2 : i64
+  }
+  func.func @xorOfExtUI_nneg_mixed(%arg0: i8, %arg1: i8) -> i64 {
+    %0 = arith.extui %arg0 nneg : i8 to i64
+    %1 = arith.extui %arg1 : i8 to i64
+    %2 = arith.xori %0, %1 : i64
+    return %2 : i64
+  }
+}
+
+// -----
+module {
+  func.func @xorOfXorConstant(%arg0: i32) -> i32 {
+    %c12_i32 = arith.constant 12 : i32
+    %c10_i32 = arith.constant 10 : i32
+    %0 = arith.xori %arg0, %c12_i32 : i32
+    %1 = arith.xori %0, %c10_i32 : i32
+    return %1 : i32
+  }
+}
+
+// -----
+module {
+  func.func @xorOfXorConstantIndex(%arg0: index) -> index {
+    %c12 = arith.constant 12 : index
+    %c10 = arith.constant 10 : index
+    %0 = arith.xori %arg0, %c12 : index
+    %1 = arith.xori %0, %c10 : index
+    return %1 : index
+  }
+}
+
+// -----
+module {
+  func.func @xorOfXorConstantMultiUse(%arg0: i32) -> (i32, i32) {
+    %c12_i32 = arith.constant 12 : i32
+    %c10_i32 = arith.constant 10 : i32
+    %0 = arith.xori %arg0, %c12_i32 : i32
+    %1 = arith.xori %0, %c10_i32 : i32
+    return %0, %1 : i32, i32
+  }
+}
+
+// -----
+module {
+  func.func @nested_xori() -> i32 {
+    %0 = "test.constant"() <{value = 2147483647 : i64}> : () -> i32
+    %1 = "test.constant"() <{value = -2147483648 : i64}> : () -> i32
+    %2 = "test.constant"() <{value = 2147483648 : i64}> : () -> i32
+    %3 = arith.xori %0, %1 : i32
+    %4 = arith.xori %3, %2 : i32
+    return %4 : i32
   }
 }
 
@@ -1309,6 +1733,21 @@ module {
     %2 = arith.subf %cst, %cst_1 : f16
     return %0, %1, %2 : f16, f16, f16
   }
+  func.func @test_subf_negzero(%arg0: f16) -> f16 {
+    %cst = arith.constant -0.000000e+00 : f16
+    %0 = arith.subf %cst, %arg0 : f16
+    return %0 : f16
+  }
+  func.func @test_subf_poszero_no_negf(%arg0: f16) -> f16 {
+    %cst = arith.constant 0.000000e+00 : f16
+    %0 = arith.subf %cst, %arg0 : f16
+    return %0 : f16
+  }
+  func.func @test_subf_negzero_splat(%arg0: vector<4xf32>) -> vector<4xf32> {
+    %cst = arith.constant dense<-0.000000e+00> : vector<4xf32>
+    %0 = arith.subf %cst, %arg0 : vector<4xf32>
+    return %0 : vector<4xf32>
+  }
 }
 
 // -----
@@ -1351,6 +1790,60 @@ module {
     %1 = arith.negf %arg1 : f32
     %2 = arith.divf %0, %1 : f32
     return %2 : f32
+  }
+}
+
+// -----
+module {
+  func.func @test_addf_rounding_mode(%arg0: f32) -> (f32, f32, f32) {
+    %cst = arith.constant 1.00000012 : f32
+    %cst_0 = arith.constant 1.000000e+00 : f32
+    %cst_1 = arith.constant -0.000000e+00 : f32
+    %0 = arith.addf %arg0, %cst_1 to_nearest_even : f32
+    %1 = arith.addf %cst, %cst_0 upward : f32
+    %2 = arith.addf %cst, %cst_0 downward : f32
+    return %0, %1, %2 : f32, f32, f32
+  }
+}
+
+// -----
+module {
+  func.func @test_subf_rounding_mode(%arg0: f32) -> (f32, f32, f32, f32) {
+    %cst = arith.constant 1.00000012 : f32
+    %cst_0 = arith.constant -1.000000e+00 : f32
+    %cst_1 = arith.constant 0.000000e+00 : f32
+    %0 = arith.subf %arg0, %cst_1 downward : f32
+    %1 = arith.subf %cst, %cst_0 upward : f32
+    %2 = arith.subf %cst, %cst_0 downward : f32
+    %cst_2 = arith.constant -0.000000e+00 : f32
+    %3 = arith.subf %cst_2, %arg0 downward : f32
+    return %0, %1, %2, %3 : f32, f32, f32, f32
+  }
+}
+
+// -----
+module {
+  func.func @test_mulf_rounding_mode(%arg0: f32) -> (f32, f32, f32) {
+    %cst = arith.constant 1.00000012 : f32
+    %cst_0 = arith.constant 3.000000e+00 : f32
+    %cst_1 = arith.constant 1.000000e+00 : f32
+    %0 = arith.mulf %arg0, %cst_1 upward : f32
+    %1 = arith.mulf %cst, %cst_0 upward : f32
+    %2 = arith.mulf %cst, %cst_0 downward : f32
+    return %0, %1, %2 : f32, f32, f32
+  }
+}
+
+// -----
+module {
+  func.func @test_divf_rounding_mode(%arg0: f32) -> (f32, f32, f32) {
+    %cst = arith.constant 1.000000e+00 : f32
+    %cst_0 = arith.constant 3.000000e+00 : f32
+    %cst_1 = arith.constant 1.000000e+00 : f32
+    %0 = arith.divf %arg0, %cst_1 toward_zero : f32
+    %1 = arith.divf %cst, %cst_0 upward : f32
+    %2 = arith.divf %cst, %cst_0 downward : f32
+    return %0, %1, %2 : f32, f32, f32
   }
 }
 
@@ -1644,6 +2137,24 @@ module {
 
 // -----
 module {
+  func.func @test_flush_denormals_const() -> f32 {
+    %cst = arith.constant 9.999940e-41 : f32
+    %0 = arith.flush_denormals %cst : f32
+    return %0 : f32
+  }
+}
+
+// -----
+module {
+  func.func @test_flush_denormals_idempotent(%arg0: f32) -> f32 {
+    %0 = arith.flush_denormals %arg0 : f32
+    %1 = arith.flush_denormals %0 : f32
+    return %1 : f32
+  }
+}
+
+// -----
+module {
   func.func @test_remui() -> vector<4xi32> {
     %cst = arith.constant dense<9> : vector<4xi32>
     %cst_0 = arith.constant dense<[1, 3, 5, 7]> : vector<4xi32>
@@ -1918,51 +2429,6 @@ module {
     %0 = arith.extui %cst : tensor<i8> to tensor<i16>
     return %0 : tensor<i16>
   }
-  func.func @extsi_i0() -> i16 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.extsi %c0_i0 : i0 to i16
-    return %0 : i16
-  }
-  func.func @extui_i0() -> i16 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.extui %c0_i0 : i0 to i16
-    return %0 : i16
-  }
-  func.func @trunc_i0() -> i0 {
-    %c-1_i8 = arith.constant -1 : i8
-    %0 = arith.trunci %c-1_i8 : i8 to i0
-    return %0 : i0
-  }
-  func.func @shli_i0() -> i0 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.shli %c0_i0, %c0_i0 : i0
-    return %0 : i0
-  }
-  func.func @shrsi_i0() -> i0 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.shrsi %c0_i0, %c0_i0 : i0
-    return %0 : i0
-  }
-  func.func @shrui_i0() -> i0 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.shrui %c0_i0, %c0_i0 : i0
-    return %0 : i0
-  }
-  func.func @maxsi_i0() -> i0 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.maxsi %c0_i0, %c0_i0 : i0
-    return %0 : i0
-  }
-  func.func @minsi_i0() -> i0 {
-    %c0_i0 = arith.constant 0 : i0
-    %0 = arith.minsi %c0_i0, %c0_i0 : i0
-    return %0 : i0
-  }
-  func.func @mulsi_extended_i0() -> (i0, i0) {
-    %c0_i0 = arith.constant 0 : i0
-    %low, %high = arith.mulsi_extended %c0_i0, %c0_i0 : i0
-    return %low, %high : i0, i0
-  }
   func.func @sequences_fastmath_contract(%arg0: bf16) -> bf16 {
     %0 = arith.extf %arg0 fastmath<contract> : bf16 to f32
     %1 = math.absf %0 : f32
@@ -2054,4 +2520,39 @@ module {
     }
   }
 #-}
+
+// -----
+module {
+  func.func @cmpi_dynamic_shape_no_fold(%arg0: tensor<?xi32>) -> tensor<?xi1> {
+    %0 = arith.cmpi eq, %arg0, %arg0 : tensor<?xi32>
+    return %0 : tensor<?xi1>
+  }
+}
+
+// -----
+module {
+  func.func @truncf_inf_to_finite_only_no_fold() -> f4E2M1FN {
+    %cst = arith.constant 0x7F800000 : f32
+    %0 = arith.truncf %cst : f32 to f4E2M1FN
+    return %0 : f4E2M1FN
+  }
+}
+
+// -----
+module {
+  func.func @truncf_neg_inf_to_finite_only_no_fold() -> f4E2M1FN {
+    %cst = arith.constant 0xFF800000 : f32
+    %0 = arith.truncf %cst : f32 to f4E2M1FN
+    return %0 : f4E2M1FN
+  }
+}
+
+// -----
+module {
+  func.func @convertf_fold_f8() -> f8E5M2 {
+    %cst = arith.constant 2.000000e+00 : f8E4M3FN
+    %0 = arith.convertf %cst : f8E4M3FN to f8E5M2
+    return %0 : f8E5M2
+  }
+}
 

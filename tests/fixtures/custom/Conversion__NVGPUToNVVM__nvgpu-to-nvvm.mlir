@@ -7,6 +7,10 @@ module {
     %0 = nvgpu.mma.sync(%arg0, %arg1, %arg2) {mmaShape = [16, 8, 16]} : (vector<4x2xf16>, vector<2x2xf16>, vector<2x2xf32>) -> vector<2x2xf32>
     return %0 : vector<2x2xf32>
   }
+  func.func @m16n8k16_bf16_fp32(%arg0: vector<4x2xbf16>, %arg1: vector<2x2xbf16>, %arg2: vector<2x2xf32>) -> vector<2x2xf32> {
+    %0 = nvgpu.mma.sync(%arg0, %arg1, %arg2) {mmaShape = [16, 8, 16]} : (vector<4x2xbf16>, vector<2x2xbf16>, vector<2x2xf32>) -> vector<2x2xf32>
+    return %0 : vector<2x2xf32>
+  }
   func.func @m16n8k8_fp16(%arg0: vector<2x2xf16>, %arg1: vector<1x2xf16>, %arg2: vector<2x2xf16>) -> vector<2x2xf16> {
     %0 = nvgpu.mma.sync(%arg0, %arg1, %arg2) {mmaShape = [16, 8, 8]} : (vector<2x2xf16>, vector<1x2xf16>, vector<2x2xf16>) -> vector<2x2xf16>
     return %0 : vector<2x2xf16>
@@ -140,7 +144,7 @@ module {
   func.func @mbarrier_txcount_pred() {
     %c1 = arith.constant 1 : index
     %c0 = arith.constant 0 : index
-    %thread_id_x = gpu.thread_id  x
+    %thread_id_x = gpu.thread_id x
     %0 = arith.cmpi eq, %thread_id_x, %c0 : index
     %1 = nvgpu.mbarrier.create -> <memorySpace = #gpu.address_space<workgroup>>
     nvgpu.mbarrier.init %1[%c0], %c1, predicate = %0 : <memorySpace = #gpu.address_space<workgroup>>
@@ -316,7 +320,7 @@ module {
     }
   }
   func.func @rcp_approx_ftz_f32(%arg0: vector<32x16xf32>) {
-    %0 = nvgpu.rcp %arg0{rounding =  approx, ftz} : vector<32x16xf32>
+    %0 = nvgpu.rcp %arg0 {approx = true, ftz = true} : vector<32x16xf32>
     return
   }
 }

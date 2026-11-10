@@ -1,512 +1,524 @@
 #map = affine_map<() -> (0)>
 "builtin.module"() ({
   "func.func"() <{function_type = (index, index) -> index, sym_name = "add_min_max"}> ({
-  ^bb0(%arg79: index, %arg80: index):
-    %477 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %478 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %479 = "arith.minsi"(%arg79, %477) : (index, index) -> index
-    %480 = "arith.maxsi"(%479, %477) : (index, index) -> index
-    %481 = "arith.minui"(%arg80, %478) : (index, index) -> index
-    %482 = "arith.maxui"(%481, %478) : (index, index) -> index
-    %483 = "arith.addi"(%480, %482) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    "func.return"(%483) : (index) -> ()
+  ^bb0(%arg80: index, %arg81: index):
+    %485 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %486 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %487 = "arith.minsi"(%arg80, %485) : (index, index) -> index
+    %488 = "arith.maxsi"(%487, %485) : (index, index) -> index
+    %489 = "arith.minui"(%arg81, %486) : (index, index) -> index
+    %490 = "arith.maxui"(%489, %486) : (index, index) -> index
+    %491 = "arith.addi"(%488, %490) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    "func.return"(%491) : (index) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32, i32) -> i1, sym_name = "add_lower_bound"}> ({
-  ^bb0(%arg77: i32, %arg78: i32):
-    %469 = "arith.constant"() <{value = 1 : i32}> : () -> i32
-    %470 = "arith.constant"() <{value = 2 : i32}> : () -> i32
-    %471 = "arith.maxsi"(%arg77, %469) : (i32, i32) -> i32
-    %472 = "arith.maxsi"(%arg78, %469) : (i32, i32) -> i32
-    %473 = "arith.addi"(%471, %472) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
-    %474 = "arith.cmpi"(%473, %470) <{predicate = 5 : i64}> : (i32, i32) -> i1
-    %475 = "arith.cmpi"(%473, %470) <{predicate = 9 : i64}> : (i32, i32) -> i1
+  ^bb0(%arg78: i32, %arg79: i32):
+    %477 = "arith.constant"() <{value = 1 : i32}> : () -> i32
+    %478 = "arith.constant"() <{value = 2 : i32}> : () -> i32
+    %479 = "arith.maxsi"(%arg78, %477) : (i32, i32) -> i32
+    %480 = "arith.maxsi"(%arg79, %477) : (i32, i32) -> i32
+    %481 = "arith.addi"(%479, %480) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+    %482 = "arith.cmpi"(%481, %478) <{predicate = 5 : i64}> : (i32, i32) -> i1
+    %483 = "arith.cmpi"(%481, %478) <{predicate = 9 : i64}> : (i32, i32) -> i1
+    %484 = "arith.andi"(%482, %483) : (i1, i1) -> i1
+    "func.return"(%484) : (i1) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i64) -> i1, sym_name = "sub_signed_vs_unsigned"}> ({
+  ^bb0(%arg77: i64):
+    %468 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %469 = "arith.constant"() <{value = 2 : i64}> : () -> i64
+    %470 = "arith.constant"() <{value = -5 : i64}> : () -> i64
+    %471 = "arith.minsi"(%arg77, %469) : (i64, i64) -> i64
+    %472 = "arith.maxsi"(%471, %470) : (i64, i64) -> i64
+    %473 = "arith.subi"(%472, %469) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %474 = "arith.cmpi"(%473, %468) <{predicate = 3 : i64}> : (i64, i64) -> i1
+    %475 = "arith.cmpi"(%473, %468) <{predicate = 7 : i64}> : (i64, i64) -> i1
     %476 = "arith.andi"(%474, %475) : (i1, i1) -> i1
     "func.return"(%476) : (i1) -> ()
   }) : () -> ()
-  "func.func"() <{function_type = (i64) -> i1, sym_name = "sub_signed_vs_unsigned"}> ({
-  ^bb0(%arg76: i64):
-    %460 = "arith.constant"() <{value = 0 : i64}> : () -> i64
-    %461 = "arith.constant"() <{value = 2 : i64}> : () -> i64
-    %462 = "arith.constant"() <{value = -5 : i64}> : () -> i64
-    %463 = "arith.minsi"(%arg76, %461) : (i64, i64) -> i64
-    %464 = "arith.maxsi"(%463, %462) : (i64, i64) -> i64
-    %465 = "arith.subi"(%464, %461) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
-    %466 = "arith.cmpi"(%465, %460) <{predicate = 3 : i64}> : (i64, i64) -> i1
-    %467 = "arith.cmpi"(%465, %460) <{predicate = 7 : i64}> : (i64, i64) -> i1
-    %468 = "arith.andi"(%466, %467) : (i1, i1) -> i1
-    "func.return"(%468) : (i1) -> ()
-  }) : () -> ()
   "func.func"() <{function_type = (index, index) -> i1, sym_name = "multiply_negatives"}> ({
-  ^bb0(%arg74: index, %arg75: index):
-    %446 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %447 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %448 = "arith.constant"() <{value = -1 : index}> : () -> index
-    %449 = "arith.constant"() <{value = -2 : index}> : () -> index
-    %450 = "arith.constant"() <{value = -4 : index}> : () -> index
-    %451 = "arith.constant"() <{value = -12 : index}> : () -> index
-    %452 = "arith.maxsi"(%arg74, %446) : (index, index) -> index
-    %453 = "arith.minsi"(%452, %447) : (index, index) -> index
-    %454 = "arith.minsi"(%arg75, %448) : (index, index) -> index
-    %455 = "arith.maxsi"(%454, %450) : (index, index) -> index
-    %456 = "arith.muli"(%453, %455) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    %457 = "arith.cmpi"(%456, %451) <{predicate = 2 : i64}> : (index, index) -> i1
-    %458 = "arith.cmpi"(%448, %456) <{predicate = 2 : i64}> : (index, index) -> i1
-    %459 = "arith.ori"(%457, %458) : (i1, i1) -> i1
-    "func.return"(%459) : (i1) -> ()
+  ^bb0(%arg75: index, %arg76: index):
+    %454 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %455 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %456 = "arith.constant"() <{value = -1 : index}> : () -> index
+    %457 = "arith.constant"() <{value = -2 : index}> : () -> index
+    %458 = "arith.constant"() <{value = -4 : index}> : () -> index
+    %459 = "arith.constant"() <{value = -12 : index}> : () -> index
+    %460 = "arith.maxsi"(%arg75, %454) : (index, index) -> index
+    %461 = "arith.minsi"(%460, %455) : (index, index) -> index
+    %462 = "arith.minsi"(%arg76, %456) : (index, index) -> index
+    %463 = "arith.maxsi"(%462, %458) : (index, index) -> index
+    %464 = "arith.muli"(%461, %463) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %465 = "arith.cmpi"(%464, %459) <{predicate = 2 : i64}> : (index, index) -> i1
+    %466 = "arith.cmpi"(%456, %464) <{predicate = 2 : i64}> : (index, index) -> i1
+    %467 = "arith.ori"(%465, %466) : (i1, i1) -> i1
+    "func.return"(%467) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i16, i16) -> i1, sym_name = "multiply_unsigned_bounds"}> ({
-  ^bb0(%arg72: i16, %arg73: i16):
-    %436 = "arith.constant"() <{value = 0 : i16}> : () -> i16
-    %437 = "arith.constant"() <{value = 4 : i16}> : () -> i16
-    %438 = "arith.constant"() <{value = 16383 : i16}> : () -> i16
-    %439 = "arith.constant"() <{value = -4 : i16}> : () -> i16
-    %440 = "arith.andi"(%arg72, %438) : (i16, i16) -> i16
-    %441 = "arith.minui"(%arg73, %437) : (i16, i16) -> i16
-    %442 = "arith.muli"(%440, %441) <{overflowFlags = #arith.overflow<none>}> : (i16, i16) -> i16
-    %443 = "arith.cmpi"(%442, %436) <{predicate = 9 : i64}> : (i16, i16) -> i1
-    %444 = "arith.cmpi"(%442, %439) <{predicate = 7 : i64}> : (i16, i16) -> i1
-    %445 = "arith.andi"(%443, %444) : (i1, i1) -> i1
-    "func.return"(%445) : (i1) -> ()
+  ^bb0(%arg73: i16, %arg74: i16):
+    %444 = "arith.constant"() <{value = 0 : i16}> : () -> i16
+    %445 = "arith.constant"() <{value = 4 : i16}> : () -> i16
+    %446 = "arith.constant"() <{value = 16383 : i16}> : () -> i16
+    %447 = "arith.constant"() <{value = -4 : i16}> : () -> i16
+    %448 = "arith.andi"(%arg73, %446) : (i16, i16) -> i16
+    %449 = "arith.minui"(%arg74, %445) : (i16, i16) -> i16
+    %450 = "arith.muli"(%448, %449) <{overflowFlags = #arith.overflow<none>}> : (i16, i16) -> i16
+    %451 = "arith.cmpi"(%450, %444) <{predicate = 9 : i64}> : (i16, i16) -> i1
+    %452 = "arith.cmpi"(%450, %447) <{predicate = 7 : i64}> : (i16, i16) -> i1
+    %453 = "arith.andi"(%451, %452) : (i1, i1) -> i1
+    "func.return"(%453) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> i1, sym_name = "for_loop_with_increasing_arg"}> ({
-    %429 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %430 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %431 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %432 = "arith.constant"() <{value = 16 : index}> : () -> index
-    %433 = "scf.for"(%429, %431, %430, %429) ({
-    ^bb0(%arg70: index, %arg71: index):
-      %435 = "arith.addi"(%arg70, %arg71) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-      "scf.yield"(%435) : (index) -> ()
+    %437 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %438 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %439 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %440 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %441 = "scf.for"(%437, %439, %438, %437) ({
+    ^bb0(%arg71: index, %arg72: index):
+      %443 = "arith.addi"(%arg71, %arg72) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+      "scf.yield"(%443) : (index) -> ()
     }) : (index, index, index, index) -> index
-    %434 = "arith.cmpi"(%433, %432) <{predicate = 7 : i64}> : (index, index) -> i1
-    "func.return"(%434) : (i1) -> ()
+    %442 = "arith.cmpi"(%441, %440) <{predicate = 7 : i64}> : (index, index) -> i1
+    "func.return"(%442) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> i1, sym_name = "for_loop_with_constant_result"}> ({
-    %422 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %423 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %424 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %425 = "arith.constant"() <{value = true}> : () -> i1
-    %426 = "scf.for"(%422, %424, %423, %425) ({
-    ^bb0(%arg68: index, %arg69: i1):
-      %427 = "arith.cmpi"(%arg68, %424) <{predicate = 7 : i64}> : (index, index) -> i1
-      %428 = "arith.andi"(%427, %arg69) : (i1, i1) -> i1
-      "scf.yield"(%428) : (i1) -> ()
+    %430 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %431 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %432 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %433 = "arith.constant"() <{value = true}> : () -> i1
+    %434 = "scf.for"(%430, %432, %431, %433) ({
+    ^bb0(%arg69: index, %arg70: i1):
+      %435 = "arith.cmpi"(%arg69, %432) <{predicate = 7 : i64}> : (index, index) -> i1
+      %436 = "arith.andi"(%435, %arg70) : (i1, i1) -> i1
+      "scf.yield"(%436) : (i1) -> ()
     }) : (index, index, index, i1) -> i1
-    "func.return"(%426) : (i1) -> ()
+    "func.return"(%434) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> index, sym_name = "while_false"}> ({
-  ^bb0(%arg65: index):
-    %416 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %417 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %418 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %419 = "arith.divui"(%arg65, %418) : (index, index) -> index
-    %420 = "scf.while"(%419) ({
-    ^bb0(%arg67: index):
-      %421 = "arith.cmpi"(%arg67, %416) <{predicate = 2 : i64}> : (index, index) -> i1
-      "scf.condition"(%421, %arg67) : (i1, index) -> ()
+  ^bb0(%arg66: index):
+    %424 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %425 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %426 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %427 = "arith.divui"(%arg66, %426) : (index, index) -> index
+    %428 = "scf.while"(%427) ({
+    ^bb0(%arg68: index):
+      %429 = "arith.cmpi"(%arg68, %424) <{predicate = 2 : i64}> : (index, index) -> i1
+      "scf.condition"(%429, %arg68) : (i1, index) -> ()
     }, {
-    ^bb0(%arg66: index):
-      "scf.yield"(%418) : (index) -> ()
+    ^bb0(%arg67: index):
+      "scf.yield"(%426) : (index) -> ()
     }) : (index) -> index
-    "func.return"(%420) : (index) -> ()
+    "func.return"(%428) : (index) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "div_bounds_positive"}> ({
-  ^bb0(%arg64: index):
-    %403 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %404 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %405 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %406 = "arith.maxsi"(%arg64, %404) : (index, index) -> index
-    %407 = "arith.divsi"(%405, %406) : (index, index) -> index
-    %408 = "arith.divui"(%405, %406) : (index, index) -> index
-    %409 = "arith.cmpi"(%407, %403) <{predicate = 5 : i64}> : (index, index) -> i1
-    %410 = "arith.cmpi"(%407, %404) <{predicate = 3 : i64}> : (index, index) -> i1
-    %411 = "arith.cmpi"(%408, %403) <{predicate = 5 : i64}> : (index, index) -> i1
-    %412 = "arith.cmpi"(%407, %404) <{predicate = 3 : i64}> : (index, index) -> i1
-    %413 = "arith.andi"(%409, %410) : (i1, i1) -> i1
-    %414 = "arith.andi"(%413, %411) : (i1, i1) -> i1
-    %415 = "arith.andi"(%414, %412) : (i1, i1) -> i1
-    "func.return"(%415) : (i1) -> ()
+  ^bb0(%arg65: index):
+    %411 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %412 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %413 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %414 = "arith.maxsi"(%arg65, %412) : (index, index) -> index
+    %415 = "arith.divsi"(%413, %414) : (index, index) -> index
+    %416 = "arith.divui"(%413, %414) : (index, index) -> index
+    %417 = "arith.cmpi"(%415, %411) <{predicate = 5 : i64}> : (index, index) -> i1
+    %418 = "arith.cmpi"(%415, %412) <{predicate = 3 : i64}> : (index, index) -> i1
+    %419 = "arith.cmpi"(%416, %411) <{predicate = 5 : i64}> : (index, index) -> i1
+    %420 = "arith.cmpi"(%415, %412) <{predicate = 3 : i64}> : (index, index) -> i1
+    %421 = "arith.andi"(%417, %418) : (i1, i1) -> i1
+    %422 = "arith.andi"(%421, %419) : (i1, i1) -> i1
+    %423 = "arith.andi"(%422, %420) : (i1, i1) -> i1
+    "func.return"(%423) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "div_bounds_negative"}> ({
-  ^bb0(%arg63: index):
-    %392 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %393 = "arith.constant"() <{value = -2 : index}> : () -> index
-    %394 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %395 = "arith.minsi"(%arg63, %393) : (index, index) -> index
-    %396 = "arith.divsi"(%394, %395) : (index, index) -> index
-    %397 = "arith.divui"(%394, %395) : (index, index) -> index
-    %398 = "arith.cmpi"(%396, %392) <{predicate = 3 : i64}> : (index, index) -> i1
-    %399 = "arith.cmpi"(%396, %393) <{predicate = 5 : i64}> : (index, index) -> i1
-    %400 = "arith.cmpi"(%397, %392) <{predicate = 0 : i64}> : (index, index) -> i1
-    %401 = "arith.andi"(%398, %399) : (i1, i1) -> i1
-    %402 = "arith.andi"(%401, %400) : (i1, i1) -> i1
-    "func.return"(%402) : (i1) -> ()
+  ^bb0(%arg64: index):
+    %400 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %401 = "arith.constant"() <{value = -2 : index}> : () -> index
+    %402 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %403 = "arith.minsi"(%arg64, %401) : (index, index) -> index
+    %404 = "arith.divsi"(%402, %403) : (index, index) -> index
+    %405 = "arith.divui"(%402, %403) : (index, index) -> index
+    %406 = "arith.cmpi"(%404, %400) <{predicate = 3 : i64}> : (index, index) -> i1
+    %407 = "arith.cmpi"(%404, %401) <{predicate = 5 : i64}> : (index, index) -> i1
+    %408 = "arith.cmpi"(%405, %400) <{predicate = 0 : i64}> : (index, index) -> i1
+    %409 = "arith.andi"(%406, %407) : (i1, i1) -> i1
+    %410 = "arith.andi"(%409, %408) : (i1, i1) -> i1
+    "func.return"(%410) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "div_zero_undefined"}> ({
-  ^bb0(%arg62: index):
-    %386 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %387 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %388 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %389 = "arith.andi"(%arg62, %387) : (index, index) -> index
-    %390 = "arith.divui"(%388, %389) : (index, index) -> index
-    %391 = "arith.cmpi"(%390, %388) <{predicate = 7 : i64}> : (index, index) -> i1
-    "func.return"(%391) : (i1) -> ()
+  ^bb0(%arg63: index):
+    %394 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %395 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %396 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %397 = "arith.andi"(%arg63, %395) : (index, index) -> index
+    %398 = "arith.divui"(%396, %397) : (index, index) -> index
+    %399 = "arith.cmpi"(%398, %396) <{predicate = 7 : i64}> : (index, index) -> i1
+    "func.return"(%399) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "div_refine_min"}> ({
-  ^bb0(%arg61: index):
-    %380 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %381 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %382 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %383 = "arith.andi"(%arg61, %381) : (index, index) -> index
-    %384 = "arith.divui"(%382, %383) : (index, index) -> index
-    %385 = "arith.cmpi"(%384, %380) <{predicate = 9 : i64}> : (index, index) -> i1
-    "func.return"(%385) : (i1) -> ()
+  ^bb0(%arg62: index):
+    %388 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %389 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %390 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %391 = "arith.andi"(%arg62, %389) : (index, index) -> index
+    %392 = "arith.divui"(%390, %391) : (index, index) -> index
+    %393 = "arith.cmpi"(%392, %388) <{predicate = 9 : i64}> : (index, index) -> i1
+    "func.return"(%393) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "ceil_divui"}> ({
-  ^bb0(%arg60: index):
-    %368 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %369 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %370 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %371 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %372 = "arith.minui"(%arg60, %370) : (index, index) -> index
-    %373 = "arith.maxui"(%372, %369) : (index, index) -> index
-    %374 = "arith.ceildivui"(%373, %371) : (index, index) -> index
-    %375 = "arith.cmpi"(%374, %369) <{predicate = 0 : i64}> : (index, index) -> i1
-    %376 = "arith.maxui"(%372, %368) : (index, index) -> index
-    %377 = "arith.ceildivui"(%376, %371) : (index, index) -> index
-    %378 = "arith.cmpi"(%377, %369) <{predicate = 0 : i64}> : (index, index) -> i1
-    %379 = "arith.andi"(%375, %378) : (i1, i1) -> i1
-    "func.return"(%379) : (i1) -> ()
+  ^bb0(%arg61: index):
+    %376 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %377 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %378 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %379 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %380 = "arith.minui"(%arg61, %378) : (index, index) -> index
+    %381 = "arith.maxui"(%380, %377) : (index, index) -> index
+    %382 = "arith.ceildivui"(%381, %379) : (index, index) -> index
+    %383 = "arith.cmpi"(%382, %377) <{predicate = 0 : i64}> : (index, index) -> i1
+    %384 = "arith.maxui"(%380, %376) : (index, index) -> index
+    %385 = "arith.ceildivui"(%384, %379) : (index, index) -> index
+    %386 = "arith.cmpi"(%385, %377) <{predicate = 0 : i64}> : (index, index) -> i1
+    %387 = "arith.andi"(%383, %386) : (i1, i1) -> i1
+    "func.return"(%387) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "ceil_divui_by_zero_issue_131273"}> ({
-    %365 = "test.with_bounds"() <{smax = 0 : i32, smin = -1 : i32, umax = 0 : i32, umin = -1 : i32}> : () -> i32
-    %366 = "arith.constant"() <{value = 7 : i32}> : () -> i32
-    %367 = "arith.ceildivui"(%366, %365) : (i32, i32) -> i32
+    %373 = "test.with_bounds"() <{smax = 0 : i32, smin = -1 : i32, umax = 0 : i32, umin = -1 : i32}> : () -> i32
+    %374 = "arith.constant"() <{value = 7 : i32}> : () -> i32
+    %375 = "arith.ceildivui"(%374, %373) : (i32, i32) -> i32
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "ceil_divsi"}> ({
-  ^bb0(%arg59: index):
-    %349 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %350 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %351 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %352 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %353 = "arith.constant"() <{value = -4 : index}> : () -> index
-    %354 = "arith.minsi"(%arg59, %351) : (index, index) -> index
-    %355 = "arith.maxsi"(%354, %350) : (index, index) -> index
-    %356 = "arith.ceildivsi"(%355, %352) : (index, index) -> index
-    %357 = "arith.cmpi"(%356, %350) <{predicate = 0 : i64}> : (index, index) -> i1
-    %358 = "arith.ceildivsi"(%355, %353) : (index, index) -> index
-    %359 = "arith.cmpi"(%358, %349) <{predicate = 0 : i64}> : (index, index) -> i1
-    %360 = "arith.andi"(%357, %359) : (i1, i1) -> i1
-    %361 = "arith.maxsi"(%354, %349) : (index, index) -> index
-    %362 = "arith.ceildivsi"(%361, %352) : (index, index) -> index
-    %363 = "arith.cmpi"(%362, %350) <{predicate = 0 : i64}> : (index, index) -> i1
-    %364 = "arith.andi"(%360, %363) : (i1, i1) -> i1
-    "func.return"(%364) : (i1) -> ()
+  ^bb0(%arg60: index):
+    %357 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %358 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %359 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %360 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %361 = "arith.constant"() <{value = -4 : index}> : () -> index
+    %362 = "arith.minsi"(%arg60, %359) : (index, index) -> index
+    %363 = "arith.maxsi"(%362, %358) : (index, index) -> index
+    %364 = "arith.ceildivsi"(%363, %360) : (index, index) -> index
+    %365 = "arith.cmpi"(%364, %358) <{predicate = 0 : i64}> : (index, index) -> i1
+    %366 = "arith.ceildivsi"(%363, %361) : (index, index) -> index
+    %367 = "arith.cmpi"(%366, %357) <{predicate = 0 : i64}> : (index, index) -> i1
+    %368 = "arith.andi"(%365, %367) : (i1, i1) -> i1
+    %369 = "arith.maxsi"(%362, %357) : (index, index) -> index
+    %370 = "arith.ceildivsi"(%369, %360) : (index, index) -> index
+    %371 = "arith.cmpi"(%370, %358) <{predicate = 0 : i64}> : (index, index) -> i1
+    %372 = "arith.andi"(%368, %371) : (i1, i1) -> i1
+    "func.return"(%372) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> index, sym_name = "ceil_divsi_full_range"}> ({
-  ^bb0(%arg58: index):
-    %347 = "arith.constant"() <{value = 64 : index}> : () -> index
-    %348 = "arith.ceildivsi"(%arg58, %347) : (index, index) -> index
-    "func.return"(%348) : (index) -> ()
+  ^bb0(%arg59: index):
+    %355 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %356 = "arith.ceildivsi"(%arg59, %355) : (index, index) -> index
+    "func.return"(%356) : (index) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> i1, sym_name = "ceil_divsi_intmin_bug_115293"}> ({
-    %342 = "test.with_bounds"() <{smax = -9223372036854775808 : si64, smin = -9223372036854775808 : si64, umax = 9223372036854775808 : ui64, umin = 9223372036854775808 : ui64}> : () -> i64
-    %343 = "test.with_bounds"() <{smax = 1189465982 : si64, smin = 1189465982 : si64, umax = 1189465982 : ui64, umin = 1189465982 : ui64}> : () -> i64
-    %344 = "test.with_bounds"() <{smax = 7754212542 : si64, smin = 7754212542 : si64, umax = 7754212542 : ui64, umin = 7754212542 : ui64}> : () -> i64
-    %345 = "arith.ceildivsi"(%342, %343) : (i64, i64) -> i64
-    %346 = "arith.cmpi"(%345, %344) <{predicate = 0 : i64}> : (i64, i64) -> i1
-    "func.return"(%346) : (i1) -> ()
+    %350 = "test.with_bounds"() <{smax = -9223372036854775808 : si64, smin = -9223372036854775808 : si64, umax = 9223372036854775808 : ui64, umin = 9223372036854775808 : ui64}> : () -> i64
+    %351 = "test.with_bounds"() <{smax = 1189465982 : si64, smin = 1189465982 : si64, umax = 1189465982 : ui64, umin = 1189465982 : ui64}> : () -> i64
+    %352 = "test.with_bounds"() <{smax = 7754212542 : si64, smin = 7754212542 : si64, umax = 7754212542 : ui64, umin = 7754212542 : ui64}> : () -> i64
+    %353 = "arith.ceildivsi"(%350, %351) : (i64, i64) -> i64
+    %354 = "arith.cmpi"(%353, %352) <{predicate = 0 : i64}> : (i64, i64) -> i1
+    "func.return"(%354) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "floor_divsi"}> ({
-  ^bb0(%arg57: index):
-    %334 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %335 = "arith.constant"() <{value = -1 : index}> : () -> index
-    %336 = "arith.constant"() <{value = -3 : index}> : () -> index
-    %337 = "arith.constant"() <{value = -4 : index}> : () -> index
-    %338 = "arith.minsi"(%arg57, %335) : (index, index) -> index
-    %339 = "arith.maxsi"(%338, %337) : (index, index) -> index
-    %340 = "arith.floordivsi"(%339, %334) : (index, index) -> index
-    %341 = "arith.cmpi"(%340, %335) <{predicate = 0 : i64}> : (index, index) -> i1
-    "func.return"(%341) : (i1) -> ()
+  ^bb0(%arg58: index):
+    %342 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %343 = "arith.constant"() <{value = -1 : index}> : () -> index
+    %344 = "arith.constant"() <{value = -3 : index}> : () -> index
+    %345 = "arith.constant"() <{value = -4 : index}> : () -> index
+    %346 = "arith.minsi"(%arg58, %343) : (index, index) -> index
+    %347 = "arith.maxsi"(%346, %345) : (index, index) -> index
+    %348 = "arith.floordivsi"(%347, %342) : (index, index) -> index
+    %349 = "arith.cmpi"(%348, %343) <{predicate = 0 : i64}> : (index, index) -> i1
+    "func.return"(%349) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, index) -> i1, sym_name = "remui_base"}> ({
-  ^bb0(%arg55: index, %arg56: index):
-    %328 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %329 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %330 = "arith.minui"(%arg56, %329) : (index, index) -> index
-    %331 = "arith.maxui"(%330, %328) : (index, index) -> index
-    %332 = "arith.remui"(%arg55, %331) : (index, index) -> index
-    %333 = "arith.cmpi"(%332, %329) <{predicate = 6 : i64}> : (index, index) -> i1
-    "func.return"(%333) : (i1) -> ()
+  ^bb0(%arg56: index, %arg57: index):
+    %336 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %337 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %338 = "arith.minui"(%arg57, %337) : (index, index) -> index
+    %339 = "arith.maxui"(%338, %336) : (index, index) -> index
+    %340 = "arith.remui"(%arg56, %339) : (index, index) -> index
+    %341 = "arith.cmpi"(%340, %337) <{predicate = 6 : i64}> : (index, index) -> i1
+    "func.return"(%341) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, index) -> i1, sym_name = "remui_base_maybe_zero"}> ({
-  ^bb0(%arg53: index, %arg54: index):
-    %323 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %324 = "arith.constant"() <{value = 5 : index}> : () -> index
-    %325 = "arith.minui"(%arg54, %323) : (index, index) -> index
-    %326 = "arith.remui"(%arg53, %325) : (index, index) -> index
-    %327 = "arith.cmpi"(%326, %324) <{predicate = 6 : i64}> : (index, index) -> i1
-    "func.return"(%327) : (i1) -> ()
+  ^bb0(%arg54: index, %arg55: index):
+    %331 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %332 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %333 = "arith.minui"(%arg55, %331) : (index, index) -> index
+    %334 = "arith.remui"(%arg54, %333) : (index, index) -> index
+    %335 = "arith.cmpi"(%334, %332) <{predicate = 6 : i64}> : (index, index) -> i1
+    "func.return"(%335) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, index) -> i1, sym_name = "remsi_base"}> ({
-  ^bb0(%arg51: index, %arg52: index):
-    %310 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %311 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %312 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %313 = "arith.constant"() <{value = -4 : index}> : () -> index
-    %314 = "arith.constant"() <{value = true}> : () -> i1
-    %315 = "arith.minsi"(%arg52, %312) : (index, index) -> index
-    %316 = "arith.maxsi"(%315, %311) : (index, index) -> index
-    %317 = "arith.remsi"(%arg51, %316) : (index, index) -> index
-    %318 = "arith.cmpi"(%317, %313) <{predicate = 4 : i64}> : (index, index) -> i1
-    %319 = "arith.cmpi"(%317, %312) <{predicate = 2 : i64}> : (index, index) -> i1
-    %320 = "arith.cmpi"(%317, %310) <{predicate = 5 : i64}> : (index, index) -> i1
-    %321 = "arith.andi"(%318, %319) : (i1, i1) -> i1
-    %322 = "arith.andi"(%320, %321) : (i1, i1) -> i1
-    "func.return"(%322) : (i1) -> ()
+  ^bb0(%arg52: index, %arg53: index):
+    %318 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %319 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %320 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %321 = "arith.constant"() <{value = -4 : index}> : () -> index
+    %322 = "arith.constant"() <{value = true}> : () -> i1
+    %323 = "arith.minsi"(%arg53, %320) : (index, index) -> index
+    %324 = "arith.maxsi"(%323, %319) : (index, index) -> index
+    %325 = "arith.remsi"(%arg52, %324) : (index, index) -> index
+    %326 = "arith.cmpi"(%325, %321) <{predicate = 4 : i64}> : (index, index) -> i1
+    %327 = "arith.cmpi"(%325, %320) <{predicate = 2 : i64}> : (index, index) -> i1
+    %328 = "arith.cmpi"(%325, %318) <{predicate = 5 : i64}> : (index, index) -> i1
+    %329 = "arith.andi"(%326, %327) : (i1, i1) -> i1
+    %330 = "arith.andi"(%328, %329) : (i1, i1) -> i1
+    "func.return"(%330) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, index) -> i1, sym_name = "remsi_positive"}> ({
-  ^bb0(%arg49: index, %arg50: index):
-    %299 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %300 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %301 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %302 = "arith.constant"() <{value = true}> : () -> i1
-    %303 = "arith.minsi"(%arg50, %301) : (index, index) -> index
-    %304 = "arith.maxsi"(%303, %300) : (index, index) -> index
-    %305 = "arith.maxsi"(%arg49, %299) : (index, index) -> index
-    %306 = "arith.remsi"(%305, %304) : (index, index) -> index
-    %307 = "arith.cmpi"(%306, %299) <{predicate = 5 : i64}> : (index, index) -> i1
-    %308 = "arith.cmpi"(%306, %301) <{predicate = 2 : i64}> : (index, index) -> i1
-    %309 = "arith.andi"(%307, %308) : (i1, i1) -> i1
-    "func.return"(%309) : (i1) -> ()
+  ^bb0(%arg50: index, %arg51: index):
+    %307 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %308 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %309 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %310 = "arith.constant"() <{value = true}> : () -> i1
+    %311 = "arith.minsi"(%arg51, %309) : (index, index) -> index
+    %312 = "arith.maxsi"(%311, %308) : (index, index) -> index
+    %313 = "arith.maxsi"(%arg50, %307) : (index, index) -> index
+    %314 = "arith.remsi"(%313, %312) : (index, index) -> index
+    %315 = "arith.cmpi"(%314, %307) <{predicate = 5 : i64}> : (index, index) -> i1
+    %316 = "arith.cmpi"(%314, %309) <{predicate = 2 : i64}> : (index, index) -> i1
+    %317 = "arith.andi"(%315, %316) : (i1, i1) -> i1
+    "func.return"(%317) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "remui_restricted"}> ({
-  ^bb0(%arg48: index):
-    %290 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %291 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %292 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %293 = "arith.minui"(%arg48, %291) : (index, index) -> index
-    %294 = "arith.maxui"(%293, %290) : (index, index) -> index
-    %295 = "arith.remui"(%294, %292) : (index, index) -> index
-    %296 = "arith.cmpi"(%295, %291) <{predicate = 7 : i64}> : (index, index) -> i1
-    %297 = "arith.cmpi"(%295, %290) <{predicate = 9 : i64}> : (index, index) -> i1
-    %298 = "arith.andi"(%296, %297) : (i1, i1) -> i1
-    "func.return"(%298) : (i1) -> ()
+  ^bb0(%arg49: index):
+    %298 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %299 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %300 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %301 = "arith.minui"(%arg49, %299) : (index, index) -> index
+    %302 = "arith.maxui"(%301, %298) : (index, index) -> index
+    %303 = "arith.remui"(%302, %300) : (index, index) -> index
+    %304 = "arith.cmpi"(%303, %299) <{predicate = 7 : i64}> : (index, index) -> i1
+    %305 = "arith.cmpi"(%303, %298) <{predicate = 9 : i64}> : (index, index) -> i1
+    %306 = "arith.andi"(%304, %305) : (i1, i1) -> i1
+    "func.return"(%306) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "remsi_restricted"}> ({
+  ^bb0(%arg48: index):
+    %289 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %290 = "arith.constant"() <{value = 3 : index}> : () -> index
+    %291 = "arith.constant"() <{value = -4 : index}> : () -> index
+    %292 = "arith.minsi"(%arg48, %290) : (index, index) -> index
+    %293 = "arith.maxsi"(%292, %289) : (index, index) -> index
+    %294 = "arith.remsi"(%293, %291) : (index, index) -> index
+    %295 = "arith.cmpi"(%294, %290) <{predicate = 7 : i64}> : (index, index) -> i1
+    %296 = "arith.cmpi"(%294, %289) <{predicate = 9 : i64}> : (index, index) -> i1
+    %297 = "arith.andi"(%295, %296) : (i1, i1) -> i1
+    "func.return"(%297) : (i1) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (index) -> i1, sym_name = "remui_restricted_fails"}> ({
   ^bb0(%arg47: index):
     %281 = "arith.constant"() <{value = 2 : index}> : () -> index
     %282 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %283 = "arith.constant"() <{value = -4 : index}> : () -> index
-    %284 = "arith.minsi"(%arg47, %282) : (index, index) -> index
-    %285 = "arith.maxsi"(%284, %281) : (index, index) -> index
-    %286 = "arith.remsi"(%285, %283) : (index, index) -> index
-    %287 = "arith.cmpi"(%286, %282) <{predicate = 7 : i64}> : (index, index) -> i1
-    %288 = "arith.cmpi"(%286, %281) <{predicate = 9 : i64}> : (index, index) -> i1
-    %289 = "arith.andi"(%287, %288) : (i1, i1) -> i1
-    "func.return"(%289) : (i1) -> ()
+    %283 = "arith.constant"() <{value = 4 : index}> : () -> index
+    %284 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %285 = "arith.minui"(%arg47, %284) : (index, index) -> index
+    %286 = "arith.maxui"(%285, %282) : (index, index) -> index
+    %287 = "arith.remui"(%286, %283) : (index, index) -> index
+    %288 = "arith.cmpi"(%287, %281) <{predicate = 1 : i64}> : (index, index) -> i1
+    "func.return"(%288) : (i1) -> ()
   }) : () -> ()
-  "func.func"() <{function_type = (index) -> i1, sym_name = "remui_restricted_fails"}> ({
+  "func.func"() <{function_type = (index) -> i1, sym_name = "remsi_restricted_fails"}> ({
   ^bb0(%arg46: index):
     %273 = "arith.constant"() <{value = 2 : index}> : () -> index
     %274 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %275 = "arith.constant"() <{value = 4 : index}> : () -> index
-    %276 = "arith.constant"() <{value = 5 : index}> : () -> index
-    %277 = "arith.minui"(%arg46, %276) : (index, index) -> index
-    %278 = "arith.maxui"(%277, %274) : (index, index) -> index
-    %279 = "arith.remui"(%278, %275) : (index, index) -> index
+    %275 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %276 = "arith.constant"() <{value = -4 : index}> : () -> index
+    %277 = "arith.minsi"(%arg46, %275) : (index, index) -> index
+    %278 = "arith.maxsi"(%277, %274) : (index, index) -> index
+    %279 = "arith.remsi"(%278, %276) : (index, index) -> index
     %280 = "arith.cmpi"(%279, %273) <{predicate = 1 : i64}> : (index, index) -> i1
     "func.return"(%280) : (i1) -> ()
   }) : () -> ()
-  "func.func"() <{function_type = (index) -> i1, sym_name = "remsi_restricted_fails"}> ({
+  "func.func"() <{function_type = (index) -> i1, sym_name = "andi"}> ({
   ^bb0(%arg45: index):
-    %265 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %266 = "arith.constant"() <{value = 3 : index}> : () -> index
-    %267 = "arith.constant"() <{value = 5 : index}> : () -> index
-    %268 = "arith.constant"() <{value = -4 : index}> : () -> index
-    %269 = "arith.minsi"(%arg45, %267) : (index, index) -> index
-    %270 = "arith.maxsi"(%269, %266) : (index, index) -> index
-    %271 = "arith.remsi"(%270, %268) : (index, index) -> index
-    %272 = "arith.cmpi"(%271, %265) <{predicate = 1 : i64}> : (index, index) -> i1
+    %264 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %265 = "arith.constant"() <{value = 5 : index}> : () -> index
+    %266 = "arith.constant"() <{value = 7 : index}> : () -> index
+    %267 = "arith.minsi"(%arg45, %265) : (index, index) -> index
+    %268 = "arith.maxsi"(%267, %264) : (index, index) -> index
+    %269 = "arith.andi"(%268, %266) : (index, index) -> index
+    %270 = "arith.cmpi"(%269, %265) <{predicate = 8 : i64}> : (index, index) -> i1
+    %271 = "arith.cmpi"(%269, %266) <{predicate = 7 : i64}> : (index, index) -> i1
+    %272 = "arith.andi"(%270, %271) : (i1, i1) -> i1
     "func.return"(%272) : (i1) -> ()
   }) : () -> ()
-  "func.func"() <{function_type = (index) -> i1, sym_name = "andi"}> ({
-  ^bb0(%arg44: index):
-    %256 = "arith.constant"() <{value = 2 : index}> : () -> index
-    %257 = "arith.constant"() <{value = 5 : index}> : () -> index
-    %258 = "arith.constant"() <{value = 7 : index}> : () -> index
-    %259 = "arith.minsi"(%arg44, %257) : (index, index) -> index
-    %260 = "arith.maxsi"(%259, %256) : (index, index) -> index
-    %261 = "arith.andi"(%260, %258) : (index, index) -> index
-    %262 = "arith.cmpi"(%261, %257) <{predicate = 8 : i64}> : (index, index) -> i1
-    %263 = "arith.cmpi"(%261, %258) <{predicate = 7 : i64}> : (index, index) -> i1
-    %264 = "arith.andi"(%262, %263) : (i1, i1) -> i1
-    "func.return"(%264) : (i1) -> ()
-  }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "andi_doesnt_make_nonnegative"}> ({
-  ^bb0(%arg43: index):
-    %251 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %252 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %253 = "arith.addi"(%arg43, %252) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    %254 = "arith.andi"(%arg43, %253) : (index, index) -> index
-    %255 = "arith.cmpi"(%254, %251) <{predicate = 5 : i64}> : (index, index) -> i1
-    "func.return"(%255) : (i1) -> ()
+  ^bb0(%arg44: index):
+    %259 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %260 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %261 = "arith.addi"(%arg44, %260) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %262 = "arith.andi"(%arg44, %261) : (index, index) -> index
+    %263 = "arith.cmpi"(%262, %259) <{predicate = 5 : i64}> : (index, index) -> i1
+    "func.return"(%263) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i128, i128) -> i1, sym_name = "ori"}> ({
-  ^bb0(%arg41: i128, %arg42: i128):
-    %246 = "arith.constant"() <{value = -1 : i128}> : () -> i128
-    %247 = "arith.constant"() <{value = 0 : i128}> : () -> i128
-    %248 = "arith.minsi"(%arg42, %246) : (i128, i128) -> i128
-    %249 = "arith.ori"(%arg41, %248) : (i128, i128) -> i128
-    %250 = "arith.cmpi"(%249, %247) <{predicate = 2 : i64}> : (i128, i128) -> i1
-    "func.return"(%250) : (i1) -> ()
+  ^bb0(%arg42: i128, %arg43: i128):
+    %254 = "arith.constant"() <{value = -1 : i128}> : () -> i128
+    %255 = "arith.constant"() <{value = 0 : i128}> : () -> i128
+    %256 = "arith.minsi"(%arg43, %254) : (i128, i128) -> i128
+    %257 = "arith.ori"(%arg42, %256) : (i128, i128) -> i128
+    %258 = "arith.cmpi"(%257, %255) <{predicate = 2 : i64}> : (i128, i128) -> i1
+    "func.return"(%258) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> i1, sym_name = "xori_issue_82168"}> ({
-    %241 = "arith.constant"() <{value = 0 : i64}> : () -> i64
-    %242 = "arith.constant"() <{value = 2060639849 : i64}> : () -> i64
-    %243 = "test.with_bounds"() <{smax = 2060639850 : i64, smin = 2060639849 : i64, umax = 2060639850 : i64, umin = 2060639849 : i64}> : () -> i64
-    %244 = "arith.xori"(%243, %242) : (i64, i64) -> i64
-    %245 = "arith.cmpi"(%244, %241) <{predicate = 0 : i64}> : (i64, i64) -> i1
-    "func.return"(%245) : (i1) -> ()
+    %249 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %250 = "arith.constant"() <{value = 2060639849 : i64}> : () -> i64
+    %251 = "test.with_bounds"() <{smax = 2060639850 : i64, smin = 2060639849 : i64, umax = 2060639850 : i64, umin = 2060639849 : i64}> : () -> i64
+    %252 = "arith.xori"(%251, %250) : (i64, i64) -> i64
+    %253 = "arith.cmpi"(%252, %249) <{predicate = 0 : i64}> : (i64, i64) -> i1
+    "func.return"(%253) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (i1, i1), sym_name = "xori_i1"}> ({
-    %236 = "arith.constant"() <{value = true}> : () -> i1
-    %237 = "test.with_bounds"() <{smax = false, smin = false, umax = false, umin = false}> : () -> i1
-    %238 = "test.with_bounds"() <{smax = true, smin = true, umax = true, umin = true}> : () -> i1
-    %239 = "arith.xori"(%237, %236) : (i1, i1) -> i1
-    %240 = "arith.xori"(%238, %236) : (i1, i1) -> i1
-    "func.return"(%239, %240) : (i1, i1) -> ()
+    %244 = "arith.constant"() <{value = true}> : () -> i1
+    %245 = "test.with_bounds"() <{smax = false, smin = false, umax = false, umin = false}> : () -> i1
+    %246 = "test.with_bounds"() <{smax = true, smin = true, umax = true, umin = true}> : () -> i1
+    %247 = "arith.xori"(%245, %244) : (i1, i1) -> i1
+    %248 = "arith.xori"(%246, %244) : (i1, i1) -> i1
+    "func.return"(%247, %248) : (i1, i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i64, i64) -> i1, sym_name = "xori"}> ({
-  ^bb0(%arg39: i64, %arg40: i64):
-    %227 = "arith.constant"() <{value = 0 : i64}> : () -> i64
-    %228 = "arith.constant"() <{value = 7 : i64}> : () -> i64
-    %229 = "arith.constant"() <{value = 15 : i64}> : () -> i64
-    %230 = "arith.constant"() <{value = true}> : () -> i1
-    %231 = "arith.minui"(%arg39, %228) : (i64, i64) -> i64
-    %232 = "arith.minui"(%arg40, %229) : (i64, i64) -> i64
-    %233 = "arith.xori"(%231, %232) : (i64, i64) -> i64
-    %234 = "arith.cmpi"(%233, %229) <{predicate = 3 : i64}> : (i64, i64) -> i1
-    %235 = "arith.xori"(%234, %230) : (i1, i1) -> i1
-    "func.return"(%235) : (i1) -> ()
+  ^bb0(%arg40: i64, %arg41: i64):
+    %235 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %236 = "arith.constant"() <{value = 7 : i64}> : () -> i64
+    %237 = "arith.constant"() <{value = 15 : i64}> : () -> i64
+    %238 = "arith.constant"() <{value = true}> : () -> i1
+    %239 = "arith.minui"(%arg40, %236) : (i64, i64) -> i64
+    %240 = "arith.minui"(%arg41, %237) : (i64, i64) -> i64
+    %241 = "arith.xori"(%239, %240) : (i64, i64) -> i64
+    %242 = "arith.cmpi"(%241, %237) <{predicate = 3 : i64}> : (i64, i64) -> i1
+    %243 = "arith.xori"(%242, %238) : (i1, i1) -> i1
+    "func.return"(%243) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i16) -> i1, sym_name = "extui"}> ({
-  ^bb0(%arg38: i16):
-    %224 = "arith.constant"() <{value = 65535 : i32}> : () -> i32
-    %225 = "arith.extui"(%arg38) : (i16) -> i32
-    %226 = "arith.cmpi"(%225, %224) <{predicate = 7 : i64}> : (i32, i32) -> i1
-    "func.return"(%226) : (i1) -> ()
+  ^bb0(%arg39: i16):
+    %232 = "arith.constant"() <{value = 65535 : i32}> : () -> i32
+    %233 = "arith.extui"(%arg39) : (i16) -> i32
+    %234 = "arith.cmpi"(%233, %232) <{predicate = 7 : i64}> : (i32, i32) -> i1
+    "func.return"(%234) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i16) -> i1, sym_name = "extsi"}> ({
-  ^bb0(%arg37: i16):
-    %218 = "arith.constant"() <{value = 32767 : i32}> : () -> i32
-    %219 = "arith.constant"() <{value = -32768 : i32}> : () -> i32
-    %220 = "arith.extsi"(%arg37) : (i16) -> i32
-    %221 = "arith.cmpi"(%220, %218) <{predicate = 3 : i64}> : (i32, i32) -> i1
-    %222 = "arith.cmpi"(%220, %219) <{predicate = 5 : i64}> : (i32, i32) -> i1
-    %223 = "arith.andi"(%221, %222) : (i1, i1) -> i1
-    "func.return"(%223) : (i1) -> ()
+  ^bb0(%arg38: i16):
+    %226 = "arith.constant"() <{value = 32767 : i32}> : () -> i32
+    %227 = "arith.constant"() <{value = -32768 : i32}> : () -> i32
+    %228 = "arith.extsi"(%arg38) : (i16) -> i32
+    %229 = "arith.cmpi"(%228, %226) <{predicate = 3 : i64}> : (i32, i32) -> i1
+    %230 = "arith.cmpi"(%228, %227) <{predicate = 5 : i64}> : (i32, i32) -> i1
+    %231 = "arith.andi"(%229, %230) : (i1, i1) -> i1
+    "func.return"(%231) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32) -> i1, sym_name = "trunci"}> ({
-  ^bb0(%arg36: i32):
-    %206 = "arith.constant"() <{value = -14 : i32}> : () -> i32
-    %207 = "arith.constant"() <{value = -14 : i16}> : () -> i16
-    %208 = "arith.constant"() <{value = -32768 : i32}> : () -> i32
-    %209 = "arith.minsi"(%arg36, %206) : (i32, i32) -> i32
-    %210 = "arith.maxsi"(%209, %208) : (i32, i32) -> i32
-    %211 = "arith.trunci"(%210) <{overflowFlags = #arith.overflow<none>}> : (i32) -> i16
-    %212 = "arith.cmpi"(%211, %207) <{predicate = 3 : i64}> : (i16, i16) -> i1
-    %213 = "arith.extsi"(%211) : (i16) -> i32
-    %214 = "arith.cmpi"(%213, %206) <{predicate = 3 : i64}> : (i32, i32) -> i1
-    %215 = "arith.cmpi"(%213, %208) <{predicate = 5 : i64}> : (i32, i32) -> i1
-    %216 = "arith.andi"(%212, %214) : (i1, i1) -> i1
-    %217 = "arith.andi"(%216, %215) : (i1, i1) -> i1
-    "func.return"(%217) : (i1) -> ()
+  ^bb0(%arg37: i32):
+    %214 = "arith.constant"() <{value = -14 : i32}> : () -> i32
+    %215 = "arith.constant"() <{value = -14 : i16}> : () -> i16
+    %216 = "arith.constant"() <{value = -32768 : i32}> : () -> i32
+    %217 = "arith.minsi"(%arg37, %214) : (i32, i32) -> i32
+    %218 = "arith.maxsi"(%217, %216) : (i32, i32) -> i32
+    %219 = "arith.trunci"(%218) <{overflowFlags = #arith.overflow<none>}> : (i32) -> i16
+    %220 = "arith.cmpi"(%219, %215) <{predicate = 3 : i64}> : (i16, i16) -> i1
+    %221 = "arith.extsi"(%219) : (i16) -> i32
+    %222 = "arith.cmpi"(%221, %214) <{predicate = 3 : i64}> : (i32, i32) -> i1
+    %223 = "arith.cmpi"(%221, %216) <{predicate = 5 : i64}> : (i32, i32) -> i1
+    %224 = "arith.andi"(%220, %222) : (i1, i1) -> i1
+    %225 = "arith.andi"(%224, %223) : (i1, i1) -> i1
+    "func.return"(%225) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "index_cast"}> ({
-  ^bb0(%arg35: index):
-    %201 = "arith.constant"() <{value = -2147483648 : i64}> : () -> i64
-    %202 = "arith.index_cast"(%arg35) : (index) -> i32
-    %203 = "arith.index_cast"(%202) : (i32) -> index
-    %204 = "arith.index_cast"(%201) : (i64) -> index
-    %205 = "arith.cmpi"(%203, %204) <{predicate = 5 : i64}> : (index, index) -> i1
-    "func.return"(%205) : (i1) -> ()
+  ^bb0(%arg36: index):
+    %209 = "arith.constant"() <{value = -2147483648 : i64}> : () -> i64
+    %210 = "arith.index_cast"(%arg36) : (index) -> i32
+    %211 = "arith.index_cast"(%210) : (i32) -> index
+    %212 = "arith.index_cast"(%209) : (i64) -> index
+    %213 = "arith.cmpi"(%211, %212) <{predicate = 5 : i64}> : (index, index) -> i1
+    "func.return"(%213) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32, i1) -> i1, sym_name = "shli"}> ({
-  ^bb0(%arg33: i32, %arg34: i1):
-    %186 = "arith.constant"() <{value = 2 : i32}> : () -> i32
-    %187 = "arith.constant"() <{value = 4 : i32}> : () -> i32
-    %188 = "arith.constant"() <{value = 8 : i32}> : () -> i32
-    %189 = "arith.constant"() <{value = 32 : i32}> : () -> i32
-    %190 = "arith.constant"() <{value = -1 : i32}> : () -> i32
-    %191 = "arith.constant"() <{value = -16 : i32}> : () -> i32
-    %192 = "arith.maxsi"(%arg33, %190) : (i32, i32) -> i32
-    %193 = "arith.minsi"(%192, %186) : (i32, i32) -> i32
-    %194 = "arith.select"(%arg34, %186, %187) : (i1, i32, i32) -> i32
-    %195 = "arith.shli"(%193, %194) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
-    %196 = "arith.cmpi"(%195, %191) <{predicate = 5 : i64}> : (i32, i32) -> i1
-    %197 = "arith.cmpi"(%195, %189) <{predicate = 3 : i64}> : (i32, i32) -> i1
-    %198 = "arith.cmpi"(%195, %188) <{predicate = 4 : i64}> : (i32, i32) -> i1
-    %199 = "arith.andi"(%196, %197) : (i1, i1) -> i1
-    %200 = "arith.andi"(%199, %198) : (i1, i1) -> i1
-    "func.return"(%200) : (i1) -> ()
+  ^bb0(%arg34: i32, %arg35: i1):
+    %194 = "arith.constant"() <{value = 2 : i32}> : () -> i32
+    %195 = "arith.constant"() <{value = 4 : i32}> : () -> i32
+    %196 = "arith.constant"() <{value = 8 : i32}> : () -> i32
+    %197 = "arith.constant"() <{value = 32 : i32}> : () -> i32
+    %198 = "arith.constant"() <{value = -1 : i32}> : () -> i32
+    %199 = "arith.constant"() <{value = -16 : i32}> : () -> i32
+    %200 = "arith.maxsi"(%arg34, %198) : (i32, i32) -> i32
+    %201 = "arith.minsi"(%200, %194) : (i32, i32) -> i32
+    %202 = "arith.select"(%arg35, %194, %195) : (i1, i32, i32) -> i32
+    %203 = "arith.shli"(%201, %202) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+    %204 = "arith.cmpi"(%203, %199) <{predicate = 5 : i64}> : (i32, i32) -> i1
+    %205 = "arith.cmpi"(%203, %197) <{predicate = 3 : i64}> : (i32, i32) -> i1
+    %206 = "arith.cmpi"(%203, %196) <{predicate = 4 : i64}> : (i32, i32) -> i1
+    %207 = "arith.andi"(%204, %205) : (i1, i1) -> i1
+    %208 = "arith.andi"(%207, %206) : (i1, i1) -> i1
+    "func.return"(%208) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i1) -> i1, sym_name = "shrui"}> ({
-  ^bb0(%arg32: i1):
-    %175 = "arith.constant"() <{value = 2 : i32}> : () -> i32
-    %176 = "arith.constant"() <{value = 4 : i32}> : () -> i32
-    %177 = "arith.constant"() <{value = 8 : i32}> : () -> i32
-    %178 = "arith.constant"() <{value = 32 : i32}> : () -> i32
-    %179 = "arith.select"(%arg32, %175, %176) : (i1, i32, i32) -> i32
-    %180 = "arith.shrui"(%178, %179) : (i32, i32) -> i32
-    %181 = "arith.cmpi"(%180, %177) <{predicate = 7 : i64}> : (i32, i32) -> i1
-    %182 = "arith.cmpi"(%180, %175) <{predicate = 9 : i64}> : (i32, i32) -> i1
-    %183 = "arith.cmpi"(%180, %177) <{predicate = 9 : i64}> : (i32, i32) -> i1
-    %184 = "arith.andi"(%181, %182) : (i1, i1) -> i1
-    %185 = "arith.andi"(%184, %183) : (i1, i1) -> i1
-    "func.return"(%185) : (i1) -> ()
+  ^bb0(%arg33: i1):
+    %183 = "arith.constant"() <{value = 2 : i32}> : () -> i32
+    %184 = "arith.constant"() <{value = 4 : i32}> : () -> i32
+    %185 = "arith.constant"() <{value = 8 : i32}> : () -> i32
+    %186 = "arith.constant"() <{value = 32 : i32}> : () -> i32
+    %187 = "arith.select"(%arg33, %183, %184) : (i1, i32, i32) -> i32
+    %188 = "arith.shrui"(%186, %187) : (i32, i32) -> i32
+    %189 = "arith.cmpi"(%188, %185) <{predicate = 7 : i64}> : (i32, i32) -> i1
+    %190 = "arith.cmpi"(%188, %183) <{predicate = 9 : i64}> : (i32, i32) -> i1
+    %191 = "arith.cmpi"(%188, %185) <{predicate = 9 : i64}> : (i32, i32) -> i1
+    %192 = "arith.andi"(%189, %190) : (i1, i1) -> i1
+    %193 = "arith.andi"(%192, %191) : (i1, i1) -> i1
+    "func.return"(%193) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32, i1) -> i1, sym_name = "shrsi"}> ({
-  ^bb0(%arg30: i32, %arg31: i1):
-    %160 = "arith.constant"() <{value = 2 : i32}> : () -> i32
-    %161 = "arith.constant"() <{value = 4 : i32}> : () -> i32
-    %162 = "arith.constant"() <{value = 8 : i32}> : () -> i32
-    %163 = "arith.constant"() <{value = 32 : i32}> : () -> i32
-    %164 = "arith.constant"() <{value = -8 : i32}> : () -> i32
-    %165 = "arith.constant"() <{value = -32 : i32}> : () -> i32
-    %166 = "arith.maxsi"(%arg30, %165) : (i32, i32) -> i32
-    %167 = "arith.minsi"(%166, %163) : (i32, i32) -> i32
-    %168 = "arith.select"(%arg31, %160, %161) : (i1, i32, i32) -> i32
-    %169 = "arith.shrsi"(%167, %168) : (i32, i32) -> i32
-    %170 = "arith.cmpi"(%169, %164) <{predicate = 5 : i64}> : (i32, i32) -> i1
-    %171 = "arith.cmpi"(%169, %162) <{predicate = 3 : i64}> : (i32, i32) -> i1
-    %172 = "arith.cmpi"(%169, %160) <{predicate = 2 : i64}> : (i32, i32) -> i1
-    %173 = "arith.andi"(%170, %171) : (i1, i1) -> i1
-    %174 = "arith.andi"(%173, %172) : (i1, i1) -> i1
-    "func.return"(%174) : (i1) -> ()
+  ^bb0(%arg31: i32, %arg32: i1):
+    %168 = "arith.constant"() <{value = 2 : i32}> : () -> i32
+    %169 = "arith.constant"() <{value = 4 : i32}> : () -> i32
+    %170 = "arith.constant"() <{value = 8 : i32}> : () -> i32
+    %171 = "arith.constant"() <{value = 32 : i32}> : () -> i32
+    %172 = "arith.constant"() <{value = -8 : i32}> : () -> i32
+    %173 = "arith.constant"() <{value = -32 : i32}> : () -> i32
+    %174 = "arith.maxsi"(%arg31, %173) : (i32, i32) -> i32
+    %175 = "arith.minsi"(%174, %171) : (i32, i32) -> i32
+    %176 = "arith.select"(%arg32, %168, %169) : (i1, i32, i32) -> i32
+    %177 = "arith.shrsi"(%175, %176) : (i32, i32) -> i32
+    %178 = "arith.cmpi"(%177, %172) <{predicate = 5 : i64}> : (i32, i32) -> i1
+    %179 = "arith.cmpi"(%177, %170) <{predicate = 3 : i64}> : (i32, i32) -> i1
+    %180 = "arith.cmpi"(%177, %168) <{predicate = 2 : i64}> : (i32, i32) -> i1
+    %181 = "arith.andi"(%178, %179) : (i1, i1) -> i1
+    %182 = "arith.andi"(%181, %180) : (i1, i1) -> i1
+    "func.return"(%182) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index) -> i1, sym_name = "no_aggressive_eq"}> ({
-  ^bb0(%arg29: index):
-    %156 = "arith.constant"() <{value = 1 : index}> : () -> index
-    %157 = "arith.andi"(%arg29, %156) : (index, index) -> index
-    %158 = "arith.minui"(%arg29, %156) : (index, index) -> index
-    %159 = "arith.cmpi"(%157, %158) <{predicate = 0 : i64}> : (index, index) -> i1
-    "func.return"(%159) : (i1) -> ()
+  ^bb0(%arg30: index):
+    %164 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %165 = "arith.andi"(%arg30, %164) : (index, index) -> index
+    %166 = "arith.minui"(%arg30, %164) : (index, index) -> index
+    %167 = "arith.cmpi"(%165, %166) <{predicate = 0 : i64}> : (index, index) -> i1
+    "func.return"(%167) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, i1) -> i1, sym_name = "select_union"}> ({
-  ^bb0(%arg27: index, %arg28: i1):
-    %146 = "arith.constant"() <{value = 64 : index}> : () -> index
-    %147 = "arith.constant"() <{value = 100 : index}> : () -> index
-    %148 = "arith.constant"() <{value = 128 : index}> : () -> index
-    %149 = "arith.constant"() <{value = 192 : index}> : () -> index
-    %150 = "arith.remui"(%arg27, %146) : (index, index) -> index
-    %151 = "arith.addi"(%150, %148) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
-    %152 = "arith.select"(%arg28, %150, %151) : (i1, index, index) -> index
-    %153 = "arith.cmpi"(%152, %149) <{predicate = 2 : i64}> : (index, index) -> i1
-    %154 = "arith.cmpi"(%147, %152) <{predicate = 1 : i64}> : (index, index) -> i1
-    %155 = "arith.andi"(%153, %154) : (i1, i1) -> i1
-    "func.return"(%155) : (i1) -> ()
+  ^bb0(%arg28: index, %arg29: i1):
+    %154 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %155 = "arith.constant"() <{value = 100 : index}> : () -> index
+    %156 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %157 = "arith.constant"() <{value = 192 : index}> : () -> index
+    %158 = "arith.remui"(%arg28, %154) : (index, index) -> index
+    %159 = "arith.addi"(%158, %156) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %160 = "arith.select"(%arg29, %158, %159) : (i1, index, index) -> index
+    %161 = "arith.cmpi"(%160, %157) <{predicate = 2 : i64}> : (index, index) -> i1
+    %162 = "arith.cmpi"(%155, %160) <{predicate = 1 : i64}> : (index, index) -> i1
+    %163 = "arith.andi"(%161, %162) : (i1, i1) -> i1
+    "func.return"(%163) : (i1) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i1) -> i1, sym_name = "select_undefined_union"}> ({
+  ^bb0(%arg27: i1):
+    %146 = "arith.constant"() <{value = 32 : index}> : () -> index
+    %147 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %148 = "test.without_bounds"() : () -> index
+    %149 = "arith.select"(%arg27, %148, %147) : (i1, index, index) -> index
+    %150 = "arith.cmpi"(%149, %147) <{predicate = 0 : i64}> : (index, index) -> i1
+    %151 = "test.without_bounds"() : () -> index
+    %152 = "arith.select"(%150, %146, %151) : (i1, index, index) -> index
+    %153 = "arith.cmpi"(%152, %146) <{predicate = 0 : i64}> : (index, index) -> i1
+    "func.return"(%153) : (i1) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (index, i1) -> i1, sym_name = "if_union"}> ({
   ^bb0(%arg25: index, %arg26: i1):

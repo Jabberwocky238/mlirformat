@@ -10,6 +10,20 @@ module {
   }
   transform.sequence  failures(propagate) {
   ^bb0(%arg0: !transform.any_op):
+    %tiled_linalg_op, %loops:2 = transform.structured.tile_using_for %arg0 tile_sizes [8, 4] inner_tile_alignments = [Equal, Multiple] : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op)
+  }
+  transform.sequence  failures(propagate) {
+  ^bb0(%arg0: !transform.any_op):
+    %transformed, %loops = transform.structured.fuse %arg0 tile_sizes [8] inner_tile_alignments = [Multiple, Unknown] : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
+  }
+  transform.sequence  failures(propagate) {
+  ^bb0(%arg0: !transform.any_op):
+    %0 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+    %1 = transform.structured.match ops{["tensor.empty"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+    %fused_op, %new_containing_op = transform.structured.fuse_into_containing_op %0 into %1 inner_tile_alignments = [Equal, Equal] : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op)
+  }
+  transform.sequence  failures(propagate) {
+  ^bb0(%arg0: !transform.any_op):
     %0 = transform.structured.split %arg0 after 42  {dimension = 0 : i64} : !transform.any_op
     %1:2 = split_handle %0 : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
     %2 = transform.structured.split %1#0 after %1#1  {dimension = 1 : i64} : !transform.any_op, !transform.any_op

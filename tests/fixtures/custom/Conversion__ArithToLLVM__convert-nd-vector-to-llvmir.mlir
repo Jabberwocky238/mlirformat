@@ -35,6 +35,10 @@ module {
     %0 = arith.truncf %arg0 : vector<1x2x3xf64> to vector<1x2x3xf16>
     return %0 : vector<1x2x3xf16>
   }
+  func.func @convertf_vector(%arg0: vector<1x2x3xf16>) -> vector<1x2x3xbf16> {
+    %0 = arith.convertf %arg0 : vector<1x2x3xf16> to vector<1x2x3xbf16>
+    return %0 : vector<1x2x3xbf16>
+  }
   func.func @trunci_vector(%arg0: vector<1x2x3xi64>) -> vector<1x2x3xi16> {
     %0 = arith.trunci %arg0 : vector<1x2x3xi64> to vector<1x2x3xi16>
     return %0 : vector<1x2x3xi16>

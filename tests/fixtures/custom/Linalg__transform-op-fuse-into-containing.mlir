@@ -299,46 +299,6 @@ module {
 #map2 = affine_map<(d0)[s0] -> (d0 * s0)>
 #map3 = affine_map<(d0)[s0, s1] -> (-(d0 * s1) + s0, s1)>
 module {
-  func.func @fuse_tileable_multi_output_op_multi_use(%arg0: index, %arg1: tensor<?xf32>, %arg2: tensor<?xf32>, %arg3: tensor<?xf32>, %arg4: tensor<?xf32>) -> (tensor<?xf32>, tensor<?xf32>, tensor<?xf32>) {
-    %cst = arith.constant 4.200000e+01 : f32
-    %c0 = arith.constant 0 : index
-    %0:2 = linalg.generic {indexing_maps = [#map, #map, #map], iterator_types = ["parallel"]} ins(%arg1 : tensor<?xf32>) outs(%arg2, %arg4 : tensor<?xf32>, tensor<?xf32>) {
-    ^bb0(%in: f32, %out: f32, %out_0: f32):
-      %3 = arith.addf %in, %out : f32
-      %4 = arith.addf %3, %out_0 : f32
-      linalg.yield %3, %4 : f32, f32
-    } -> (tensor<?xf32>, tensor<?xf32>)
-    %dim = tensor.dim %arg2, %c0 : tensor<?xf32>
-    %1 = affine.apply #map1()[%dim, %arg0]
-    %2 = scf.forall (%arg5) in (%1) shared_outs(%arg6 = %arg3) -> (tensor<?xf32>) {
-      %3 = affine.apply #map2(%arg5)[%arg0]
-      %4 = affine.min #map3(%arg5)[%dim, %arg0]
-      %extracted_slice = tensor.extract_slice %arg6[%3] [%4] [1] : tensor<?xf32> to tensor<?xf32>
-      %extracted_slice_0 = tensor.extract_slice %0#0[%3] [%4] [1] : tensor<?xf32> to tensor<?xf32>
-      %5 = linalg.exp ins(%extracted_slice_0 : tensor<?xf32>) outs(%extracted_slice : tensor<?xf32>) -> tensor<?xf32>
-      scf.forall.in_parallel {
-        tensor.parallel_insert_slice %5 into %arg6[%3] [%4] [1] : tensor<?xf32> into tensor<?xf32>
-      }
-    }
-    return %2, %0#0, %0#1 : tensor<?xf32>, tensor<?xf32>, tensor<?xf32>
-  }
-  module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.generic">
-      %1 = transform.structured.match ops{["scf.forall"]} in %arg0 : (!transform.any_op) -> !transform.op<"scf.forall">
-      %fused_op, %new_containing_op = transform.structured.fuse_into_containing_op %0 into %1 : (!transform.op<"linalg.generic">, !transform.op<"scf.forall">) -> (!transform.any_op, !transform.any_op)
-      transform.debug.emit_remark_at %new_containing_op, "new containing op" : !transform.any_op
-      transform.yield 
-    }
-  }
-}
-
-// -----
-#map = affine_map<(d0) -> (d0)>
-#map1 = affine_map<()[s0, s1] -> (s0 ceildiv s1)>
-#map2 = affine_map<(d0)[s0] -> (d0 * s0)>
-#map3 = affine_map<(d0)[s0, s1] -> (-(d0 * s1) + s0, s1)>
-module {
   func.func @fuse_tileable_mixed_dominating_uses(%arg0: index, %arg1: tensor<?xf32>, %arg2: tensor<?xf32>, %arg3: tensor<?xf32>, %arg4: tensor<?xf32>) -> (tensor<?xf32>, tensor<?xf32>) {
     %cst = arith.constant 4.200000e+01 : f32
     %c0 = arith.constant 0 : index
@@ -514,25 +474,6 @@ module {
       %0 = transform.structured.match attributes {producer} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.generic">
       %1 = transform.structured.match ops{["scf.forall"]} in %arg0 : (!transform.any_op) -> !transform.op<"scf.forall">
       %fused_op, %new_containing_op = transform.structured.fuse_into_containing_op %0 into %1 : (!transform.op<"linalg.generic">, !transform.op<"scf.forall">) -> (!transform.any_op, !transform.any_op)
-      transform.yield 
-    }
-  }
-}
-
-// -----
-module {
-  func.func @copy_1d_1024xf16(%arg0: tensor<123x456xf32>, %arg1: tensor<456x789xf32>, %arg2: tensor<123x789xf32>) -> tensor<123x789xf32> {
-    %cst = arith.constant 0.000000e+00 : f32
-    %0 = linalg.fill ins(%cst : f32) outs(%arg2 : tensor<123x789xf32>) -> tensor<123x789xf32>
-    %1 = linalg.matmul ins(%arg0, %arg1 : tensor<123x456xf32>, tensor<456x789xf32>) outs(%0 : tensor<123x789xf32>) -> tensor<123x789xf32>
-    return %1 : tensor<123x789xf32>
-  }
-  module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["linalg.fill"]} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %1 = transform.structured.match ops{["linalg.matmul"]} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %tiled_op, %forall_op = transform.structured.tile_using_forall %1 tile_sizes [50, 16] : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
-      %fused_op, %new_containing_op = transform.structured.fuse_into_containing_op %0 into %tiled_op : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op)
       transform.yield 
     }
   }

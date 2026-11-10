@@ -22,3 +22,60 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "foo"}> ({
+    %0 = "emitc.get_global"() <{name = @global_arr}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr2", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "foo"}> ({
+    %0 = "emitc.get_global"() <{name = @global_arr}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr1", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr2", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr3", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "foo"}> ({
+    %1 = "emitc.get_global"() <{name = @global_arr1}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "bar"}> ({
+    %0 = "emitc.get_global"() <{name = @global_arr2}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "foo"}> ({
+    %1 = "emitc.get_global"() <{name = @global_arr}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "bar"}> ({
+    %0 = "emitc.get_global"() <{name = @global_arr}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "emitc.global"() <{const_specifier, initial_value = dense<0> : tensor<1xi8>, static_specifier, sym_name = "global_arr", type = !emitc.array<1xi8>}> : () -> ()
+  "emitc.func"() <{function_type = () -> (), sym_name = "foo"}> ({
+    %0 = "emitc.get_global"() <{name = @global_arr}> : () -> !emitc.array<1xi8>
+    %1 = "emitc.get_global"() <{name = @global_arr}> : () -> !emitc.array<1xi8>
+    "emitc.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

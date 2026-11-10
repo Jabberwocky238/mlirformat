@@ -280,12 +280,12 @@
 // -----
 #map = affine_map<(d0)[s0] -> ((-((d0 floordiv s0) * s0) + s0 * s0) mod s0)>
 #map1 = affine_map<(d0)[s0] -> ((-((d0 floordiv s0) * s0) + (s0 * 2) mod (s0 * 3)) floordiv s0)>
-#map2 = affine_map<()[s0] -> ((s0 floordiv s0) floordiv s0)>
+#map2 = affine_map<()[s0] -> (1 floordiv s0)>
 #map3 = affine_map<(d0)[s0] -> ((-((d0 floordiv s0) * s0) + s0 * 42 + 0 floordiv s0) ceildiv s0)>
 #map4 = affine_map<(d0)[s0] -> (((s0 * 2) ceildiv 4 + s0 * 42) ceildiv s0)>
 #map5 = affine_map<(d0)[s0] -> ((((s0 * 2) ceildiv 4) * 5 + s0 * 42) ceildiv s0)>
 #map6 = affine_map<(d0)[s0] -> ((((s0 * 2) floordiv 4) * 5 + s0 * 42) floordiv s0)>
-#map7 = affine_map<(d0)[s0] -> (s0 mod s0)>
+#map7 = affine_map<(d0)[s0] -> (0)>
 "builtin.module"() ({
   "func.func"() <{function_type = (index, index) -> index, sym_name = "semiaffine_mod"}> ({
   ^bb0(%arg13: index, %arg14: index):

@@ -191,16 +191,16 @@ module {
 
 // -----
 module {
-  func.func @invalid_scaling_truncf_to_f4E2M1FN(%arg0: f16, %arg1: f8E5M2FNUZ) -> f4E2M1FN {
-    %0 = arith.scaling_truncf %arg0, %arg1 : f16, f8E5M2FNUZ to f4E2M1FN
-    return %0 : f4E2M1FN
+  func.func @extf_f8E8M0FNU_to_f32(%arg0: f8E8M0FNU) -> f32 {
+    %0 = arith.extf %arg0 : f8E8M0FNU to f32
+    return %0 : f32
   }
 }
 
 // -----
 module {
-  func.func @extf_f8E8M0FNU_to_f32(%arg0: f8E8M0FNU) -> f32 {
-    %0 = arith.extf %arg0 : f8E8M0FNU to f32
+  func.func @extf_f8E8M0FNU_to_f32_no_nan(%arg0: f8E8M0FNU) -> f32 {
+    %0 = arith.extf %arg0 fastmath<nnan> : f8E8M0FNU to f32
     return %0 : f32
   }
 }
@@ -249,14 +249,6 @@ module {
 module {
   func.func @scaling_extf_to_f32_using_f16_scales(%arg0: f4E2M1FN, %arg1: f16) -> f32 {
     %0 = arith.scaling_extf %arg0, %arg1 : f4E2M1FN, f16 to f32
-    return %0 : f32
-  }
-}
-
-// -----
-module {
-  func.func @invalid_scaling_extf_to_f32(%arg0: f4E2M1FN, %arg1: f8E5M2FNUZ) -> f32 {
-    %0 = arith.scaling_extf %arg0, %arg1 : f4E2M1FN, f8E5M2FNUZ to f32
     return %0 : f32
   }
 }

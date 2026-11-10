@@ -240,3 +240,11 @@ module {
   }
 }
 
+// -----
+module {
+  func.func private @private2(%arg0: i32) {
+    %0 = arith.index_cast %arg0 {tag = "in_private2"} : i32 to index
+    return
+  }
+}
+

@@ -7,3 +7,10 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "no_test_dialect_ops"}> ({
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

@@ -68,6 +68,39 @@
 
 // -----
 "builtin.module"() ({
+  "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = (vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32>) -> (), sym_name = "masked_gather"}> ({
+  ^bb0(%arg0: vector<4x!spirv.ptr<f32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xf32>):
+    %0 = "spirv.INTEL.MaskedGather"(%arg0, %arg1, %arg2, %arg3) : (vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32>) -> vector<4xf32>
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = (vector<4x!spirv.ptr<i32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xi32>) -> (), sym_name = "masked_gather_i32"}> ({
+  ^bb0(%arg0: vector<4x!spirv.ptr<i32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xi32>):
+    %0 = "spirv.INTEL.MaskedGather"(%arg0, %arg1, %arg2, %arg3) : (vector<4x!spirv.ptr<i32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xi32>) -> vector<4xi32>
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+// -----
+// -----
+"builtin.module"() ({
+  "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = (vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32>) -> (), sym_name = "masked_scatter"}> ({
+  ^bb0(%arg0: vector<4x!spirv.ptr<f32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xf32>):
+    "spirv.INTEL.MaskedScatter"(%arg0, %arg1, %arg2, %arg3) : (vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32>) -> ()
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+// -----
+// -----
+"builtin.module"() ({
   "spirv.module"() <{addressing_model = #spirv.addressing_model<Logical>, memory_model = #spirv.memory_model<GLSL450>, vce_triple = #spirv.vce<v1.0, [CacheControlsINTEL], [SPV_INTEL_cache_controls]>}> ({
     "spirv.func"() <{function_control = #spirv.function_control<None>, function_type = () -> (), sym_name = "foo"}> ({
       %0 = "spirv.Variable"() <{storage_class = #spirv.storage_class<Function>}> {cache_control_load_intel = [#spirv.cache_control_load_intel<cache_level = 0, load_cache_control = Uncached>, #spirv.cache_control_load_intel<cache_level = 1, load_cache_control = Cached>, #spirv.cache_control_load_intel<cache_level = 2, load_cache_control = InvalidateAfterR>]} : () -> !spirv.ptr<f32, Function>

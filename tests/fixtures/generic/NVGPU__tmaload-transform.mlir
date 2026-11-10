@@ -20,7 +20,7 @@
         "linalg.yield"(%arg13) : (f32) -> ()
       }) : (memref<8x32xf32>, memref<8x32xf32, #gpu.address_space<workgroup>>) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "builtin.module"() ({

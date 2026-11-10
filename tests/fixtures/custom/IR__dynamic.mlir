@@ -58,3 +58,25 @@ module {
 }
 
 // -----
+// -----
+module {
+  func.func @dynamicTerminatorOp() {
+    "test.dynamic_generic"() ({
+      "test.dynamic_terminator"() : () -> ()
+    }) : () -> ()
+    return
+  }
+}
+
+// -----
+// -----
+module {
+  func.func @dynamicNoTerminatorOp() {
+    "test.dynamic_noterminator"() ({
+    ^bb0:
+    }) : () -> ()
+    return
+  }
+}
+
+// -----

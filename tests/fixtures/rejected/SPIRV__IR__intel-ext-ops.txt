@@ -1,6 +1,12 @@
-2	verify	'spirv.INTEL.ConvertFToBF16' op operand #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16, but got 'f64'
+2	verify	'spirv.INTEL.ConvertFToBF16' op operand #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16 of ranks 1, but got 'f64'
 3	verify	'spirv.INTEL.ConvertFToBF16' op requires the same shape for all operands and results
-6	verify	'spirv.INTEL.ConvertBF16ToF' op result #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16, but got 'f16'
+6	verify	'spirv.INTEL.ConvertBF16ToF' op result #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16 of ranks 1, but got 'f16'
 7	verify	'spirv.INTEL.ConvertBF16ToF' op requires the same shape for all operands and results
-10	verify	'spirv.INTEL.RoundFToTF32' op operand #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16, but got 'f64'
+10	verify	'spirv.INTEL.RoundFToTF32' op operand #0 must be Float32 or fixed-length vector of Float32 values of length 2/3/4/8/16 of ranks 1, but got 'f64'
 11	verify	'spirv.INTEL.RoundFToTF32' op requires the same shape for all operands and results
+15	verify	'spirv.INTEL.MaskedGather' op failed to verify that pointee type of ptr_vector must match result element type
+16	verify	'spirv.INTEL.MaskedGather' op failed to verify that pointee type of ptr_vector must match result element type
+17	verify	'spirv.INTEL.MaskedGather' op operand #2 must be fixed-length vector of bool values of length 2/3/4/8/16 of ranks 1, but got 'vector<4xi8>'
+18	verify	'spirv.INTEL.MaskedGather' op failed to verify that mask must be a vector of i1 matching result shape
+20	verify	'spirv.INTEL.MaskedScatter' op failed to verify that pointee type of ptr_vector must match input element type
+21	verify	'spirv.INTEL.MaskedScatter' op failed to verify that mask must be a vector of i1 matching input shape

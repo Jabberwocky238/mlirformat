@@ -4,7 +4,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
     %1 = llvm.alloca %0 x i32 : (i32) -> !llvm.ptr<5>
     %2 = llvm.addrspacecast %1 : !llvm.ptr<5> to !llvm.ptr
     %3 = omp.map.info var_ptr(%2 : !llvm.ptr, i32) map_clauses(tofrom) capture(ByRef) -> !llvm.ptr {name = ""}
-    omp.target map_entries(%3 -> %arg0 : !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%3 -> %arg0 : !llvm.ptr) {
       %4 = llvm.mlir.constant(1 : i32) : i32
       llvm.store %4, %arg0 : i32, !llvm.ptr
       omp.terminator

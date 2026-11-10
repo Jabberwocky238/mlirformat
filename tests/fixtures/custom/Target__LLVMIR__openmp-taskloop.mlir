@@ -15,16 +15,19 @@ module {
     %4 = llvm.mlir.constant(1 : i32) : i32
     %5 = llvm.mlir.constant(5 : i32) : i32
     %6 = llvm.mlir.constant(1 : i32) : i32
-    omp.taskloop private(@_QFtestEa_firstprivate_i32 %2 -> %arg0, @_QFtestEi_private_i32 %1 -> %arg1 : !llvm.ptr, !llvm.ptr) {
-      omp.loop_nest (%arg2) : i32 = (%4) to (%5) inclusive step (%6) {
-        llvm.store %arg2, %arg1 : i32, !llvm.ptr
-        %7 = llvm.load %arg0 : !llvm.ptr -> i32
-        %8 = llvm.mlir.constant(1 : i32) : i32
-        %9 = llvm.add %7, %8 : i32
-        llvm.store %9, %arg0 : i32, !llvm.ptr
-        omp.yield
+    omp.taskloop.context private(@_QFtestEa_firstprivate_i32 %2 -> %arg0, @_QFtestEi_private_i32 %1 -> %arg1 : !llvm.ptr, !llvm.ptr) {
+      omp.taskloop.wrapper {
+        omp.loop_nest (%arg2) : i32 = (%4) to (%5) inclusive step (%6) {
+          llvm.store %arg2, %arg1 : i32, !llvm.ptr
+          %7 = llvm.load %arg0 : !llvm.ptr -> i32
+          %8 = llvm.mlir.constant(1 : i32) : i32
+          %9 = llvm.add %7, %8 : i32
+          llvm.store %9, %arg0 : i32, !llvm.ptr
+          omp.yield
+        }
       }
-    }
+      omp.terminator
+    } {omp.combined}
     llvm.return
   }
 }

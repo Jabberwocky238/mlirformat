@@ -25,7 +25,7 @@ module {
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
   func.func @sparse_sort_coo_quick(%arg0: index, %arg1: memref<100xindex>, %arg2: memref<?xf32>, %arg3: memref<10xi32>) -> (memref<100xindex>, memref<?xf32>, memref<10xi32>) {
-    sparse_tensor.sort  quick_sort %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
+    sparse_tensor.sort quick_sort %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
     return %arg1, %arg2, %arg3 : memref<100xindex>, memref<?xf32>, memref<10xi32>
   }
 }
@@ -34,7 +34,7 @@ module {
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
   func.func @sparse_sort_coo_hybrid(%arg0: index, %arg1: memref<100xindex>, %arg2: memref<?xf32>, %arg3: memref<10xi32>) -> (memref<100xindex>, memref<?xf32>, memref<10xi32>) {
-    sparse_tensor.sort  hybrid_quick_sort %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
+    sparse_tensor.sort hybrid_quick_sort %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
     return %arg1, %arg2, %arg3 : memref<100xindex>, memref<?xf32>, memref<10xi32>
   }
 }
@@ -43,7 +43,7 @@ module {
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
   func.func @sparse_sort_coo_stable(%arg0: index, %arg1: memref<100xindex>, %arg2: memref<?xf32>, %arg3: memref<10xi32>) -> (memref<100xindex>, memref<?xf32>, memref<10xi32>) {
-    sparse_tensor.sort  insertion_sort_stable %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
+    sparse_tensor.sort insertion_sort_stable %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
     return %arg1, %arg2, %arg3 : memref<100xindex>, memref<?xf32>, memref<10xi32>
   }
 }
@@ -52,7 +52,7 @@ module {
 #map = affine_map<(d0, d1) -> (d0, d1)>
 module {
   func.func @sparse_sort_coo_heap(%arg0: index, %arg1: memref<100xindex>, %arg2: memref<?xf32>, %arg3: memref<10xi32>) -> (memref<100xindex>, memref<?xf32>, memref<10xi32>) {
-    sparse_tensor.sort  heap_sort %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
+    sparse_tensor.sort heap_sort %arg0, %arg1 jointly %arg2, %arg3 {ny = 1 : index, perm_map = #map} : memref<100xindex> jointly memref<?xf32>, memref<10xi32>
     return %arg1, %arg2, %arg3 : memref<100xindex>, memref<?xf32>, memref<10xi32>
   }
 }

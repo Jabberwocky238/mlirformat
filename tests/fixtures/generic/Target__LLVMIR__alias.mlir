@@ -74,3 +74,39 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "aliased_func", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.mlir.alias"() <{alias_type = !llvm.ptr, linkage = #llvm.linkage<external>, sym_name = "func_alias", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.addressof"() <{global_name = @aliased_func}> : () -> !llvm.ptr
+    "llvm.return"(%0) : (!llvm.ptr) -> ()
+  }) {addr_space = 0 : i32} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "caller", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.call"() <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @func_alias, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<i32 (...)>, linkage = #llvm.linkage<external>, sym_name = "__gxx_personality_v0", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, sym_name = "aliased_func2", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.return"() : () -> ()
+  }) : () -> ()
+  "llvm.mlir.alias"() <{alias_type = !llvm.ptr, linkage = #llvm.linkage<external>, sym_name = "func_alias2", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %1 = "llvm.mlir.addressof"() <{global_name = @aliased_func2}> : () -> !llvm.ptr
+    "llvm.return"(%1) : (!llvm.ptr) -> ()
+  }) {addr_space = 0 : i32} : () -> ()
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void ()>, linkage = #llvm.linkage<external>, personality = @__gxx_personality_v0, sym_name = "invoke_caller", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    "llvm.invoke"()[^bb1, ^bb2] <{CConv = #llvm.cconv<ccc>, callee = @func_alias2, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 0, 0, 0, 0>}> : () -> ()
+  ^bb1:  // pred: ^bb0
+    "llvm.return"() : () -> ()
+  ^bb2:  // pred: ^bb0
+    %0 = "llvm.landingpad"() <{cleanup}> : () -> !llvm.struct<(ptr, i32)>
+    "llvm.resume"(%0) : (!llvm.struct<(ptr, i32)>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

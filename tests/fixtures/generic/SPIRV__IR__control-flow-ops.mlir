@@ -193,6 +193,8 @@
 // -----
 // -----
 // -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = (i1) -> (), sym_name = "in_selection"}> ({
   ^bb0(%arg1: i1):
@@ -390,6 +392,8 @@
 }) : () -> ()
 
 // -----
+// -----
+// -----
 "builtin.module"() ({
   "func.func"() <{function_type = () -> (), sym_name = "unreachable_no_pred"}> ({
     "spirv.Return"() : () -> ()
@@ -416,8 +420,8 @@
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (i32) -> (), sym_name = "switch"}> ({
-  ^bb0(%arg3: i32):
-    "spirv.Switch"(%arg3)[^bb1, ^bb2, ^bb3, ^bb4] <{case_operand_segments = array<i32: 0, 0, 0>, literals = dense<[0, 1, 2]> : vector<3xi32>, operandSegmentSizes = array<i32: 1, 0, 0>}> : (i32) -> ()
+  ^bb0(%arg4: i32):
+    "spirv.Switch"(%arg4)[^bb1, ^bb2, ^bb3, ^bb4] <{case_operand_segments = array<i32: 0, 0, 0>, literals = dense<[0, 1, 2]> : vector<3xi32>, operandSegmentSizes = array<i32: 1, 0, 0>}> : (i32) -> ()
   ^bb1:  // pred: ^bb0
     "spirv.Branch"()[^bb5] : () -> ()
   ^bb2:  // pred: ^bb0
@@ -430,16 +434,16 @@
     "spirv.Return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32) -> (), sym_name = "switch_only_default"}> ({
-  ^bb0(%arg2: i32):
-    "spirv.Switch"(%arg2)[^bb1] <{case_operand_segments = array<i32>, operandSegmentSizes = array<i32: 1, 0, 0>}> : (i32) -> ()
+  ^bb0(%arg3: i32):
+    "spirv.Switch"(%arg3)[^bb1] <{case_operand_segments = array<i32>, operandSegmentSizes = array<i32: 1, 0, 0>}> : (i32) -> ()
   ^bb1:  // pred: ^bb0
     "spirv.Branch"()[^bb2] : () -> ()
   ^bb2:  // pred: ^bb1
     "spirv.Return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32, i32) -> (), sym_name = "switch_operands"}> ({
-  ^bb0(%arg0: i32, %arg1: i32):
-    "spirv.Switch"(%arg0, %arg1, %arg1, %arg1)[^bb1, ^bb2, ^bb3] <{case_operand_segments = array<i32: 1, 1>, literals = dense<[0, 1]> : vector<2xi32>, operandSegmentSizes = array<i32: 1, 1, 2>}> : (i32, i32, i32, i32) -> ()
+  ^bb0(%arg1: i32, %arg2: i32):
+    "spirv.Switch"(%arg1, %arg2, %arg2, %arg2)[^bb1, ^bb2, ^bb3] <{case_operand_segments = array<i32: 1, 1>, literals = dense<[0, 1]> : vector<2xi32>, operandSegmentSizes = array<i32: 1, 1, 2>}> : (i32, i32, i32, i32) -> ()
   ^bb1(%0: i32):  // pred: ^bb0
     "spirv.Branch"()[^bb4] : () -> ()
   ^bb2(%1: i32):  // pred: ^bb0
@@ -447,6 +451,16 @@
   ^bb3(%2: i32):  // pred: ^bb0
     "spirv.Branch"()[^bb4] : () -> ()
   ^bb4:  // 3 preds: ^bb1, ^bb2, ^bb3
+    "spirv.Return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i32) -> (), sym_name = "switch_targets_no_literals"}> ({
+  ^bb0(%arg0: i32):
+    "spirv.Switch"(%arg0)[^bb1, ^bb2] <{case_operand_segments = array<i32: 0>, operandSegmentSizes = array<i32: 1, 0, 0>}> : (i32) -> ()
+  ^bb1:  // pred: ^bb0
+    "spirv.Branch"()[^bb3] : () -> ()
+  ^bb2:  // pred: ^bb0
+    "spirv.Branch"()[^bb3] : () -> ()
+  ^bb3:  // 2 preds: ^bb1, ^bb2
     "spirv.Return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

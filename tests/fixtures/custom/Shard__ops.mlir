@@ -86,7 +86,7 @@ module {
     return %proc_linear_idx : index
   }
   func.func @all_reduce(%arg0: tensor<3x4xf32>) -> tensor<3x4xf64> {
-    %all_reduce = shard.all_reduce %arg0 on @grid0 grid_axes = [1, 0] reduction =  max : tensor<3x4xf32> -> tensor<3x4xf64>
+    %all_reduce = shard.all_reduce %arg0 on @grid0 grid_axes = [1, 0] reduction = max : tensor<3x4xf32> -> tensor<3x4xf64>
     return %all_reduce : tensor<3x4xf64>
   }
   func.func @all_gather(%arg0: tensor<3x4xf32>) -> tensor<3x16xf32> {
@@ -166,23 +166,23 @@ module {
     return %reduce : tensor<2xi16>
   }
   func.func @reduce_scatter_static_dimensions(%arg0: tensor<3x4xf32>) -> tensor<3x1xf64> {
-    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 grid_axes = [2] reduction =  max scatter_axis = 1 : tensor<3x4xf32> -> tensor<3x1xf64>
+    %reduce_scatter = shard.reduce_scatter %arg0 on @grid0 grid_axes = [2] reduction = max scatter_dim = 1 : tensor<3x4xf32> -> tensor<3x1xf64>
     return %reduce_scatter : tensor<3x1xf64>
   }
   func.func @reduce_scatter_dynamic_dimensions(%arg0: tensor<?xf32>) -> tensor<?xf64> {
-    %reduce_scatter = shard.reduce_scatter %arg0 on @grid3 grid_axes = [0, 1] scatter_axis = 0 : tensor<?xf32> -> tensor<?xf64>
+    %reduce_scatter = shard.reduce_scatter %arg0 on @grid3 grid_axes = [0, 1] scatter_dim = 0 : tensor<?xf32> -> tensor<?xf64>
     return %reduce_scatter : tensor<?xf64>
   }
   func.func @scatter_static_dimensions(%arg0: tensor<3x4xf32>) -> tensor<3x1xf32> {
-    %scatter = shard.scatter %arg0 on @grid0 grid_axes = [2] scatter_axis = 1 root = [1] : (tensor<3x4xf32>) -> tensor<3x1xf32>
+    %scatter = shard.scatter %arg0 on @grid0 grid_axes = [2] scatter_dim = 1 root = [1] : (tensor<3x4xf32>) -> tensor<3x1xf32>
     return %scatter : tensor<3x1xf32>
   }
   func.func @scatter_dynamic_dimensions(%arg0: tensor<?xf32>) -> tensor<?xf32> {
-    %scatter = shard.scatter %arg0 on @grid3 grid_axes = [0, 1] scatter_axis = 0 root = [1, 2] : (tensor<?xf32>) -> tensor<?xf32>
+    %scatter = shard.scatter %arg0 on @grid3 grid_axes = [0, 1] scatter_dim = 0 root = [1, 2] : (tensor<?xf32>) -> tensor<?xf32>
     return %scatter : tensor<?xf32>
   }
   func.func @scatter_dynamic_root(%arg0: tensor<8xi8>, %arg1: index) -> tensor<1xi8> {
-    %scatter = shard.scatter %arg0 on @grid0 grid_axes = [0, 2] scatter_axis = 0 root = [1, %arg1] : (tensor<8xi8>, index) -> tensor<1xi8>
+    %scatter = shard.scatter %arg0 on @grid0 grid_axes = [0, 2] scatter_dim = 0 root = [1, %arg1] : (tensor<8xi8>, index) -> tensor<1xi8>
     return %scatter : tensor<1xi8>
   }
   func.func @send_static_destination(%arg0: tensor<2xi8>) -> tensor<2xi8> {

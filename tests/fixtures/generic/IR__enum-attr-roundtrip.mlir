@@ -28,6 +28,20 @@
     "test.op_with_enum_prop_attr_form_always"() <{value = #test<enum second>}> : () -> ()
     "func.return"() : () -> ()
   }) : () -> ()
+  "func.func"() <{function_type = () -> (), sym_name = "test_two_default_enum_props"}> ({
+    "test.op_with_two_default_enum_props"() <{value1 = 0 : i32, value2 = 0 : i32}> : () -> ()
+    "test.op_with_two_default_enum_props"() <{value1 = 1 : i32, value2 = 0 : i32}> : () -> ()
+    "test.op_with_two_default_enum_props"() <{value1 = 0 : i32, value2 = 1 : i32}> : () -> ()
+    "test.op_with_two_default_enum_props"() <{value1 = 1 : i32, value2 = 1 : i32}> : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = () -> (), sym_name = "test_two_default_bit_enum_props"}> ({
+    "test.op_with_two_default_bit_enum_props"() <{value1 = 1 : i32, value2 = 1 : i32}> : () -> ()
+    "test.op_with_two_default_bit_enum_props"() <{value1 = 2 : i32, value2 = 1 : i32}> : () -> ()
+    "test.op_with_two_default_bit_enum_props"() <{value1 = 1 : i32, value2 = 2 : i32}> : () -> ()
+    "test.op_with_two_default_bit_enum_props"() <{value1 = 2 : i32, value2 = 2 : i32}> : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "test_bit_enum_prop"}> ({
     "test.op_with_bit_enum_prop"() <{value1 = 1 : i32, value2 = 1 : i32}> : () -> ()
     "test.op_with_bit_enum_prop"() <{value1 = 3 : i32, value2 = 6 : i32}> : () -> ()

@@ -51,6 +51,22 @@ module {
     %0 = vector.contract {indexing_maps = [#map5, #map10, #map11], iterator_types = ["reduction", "parallel", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<1x2xi32>, vector<2x2xi32> into vector<2xi32>
     return %0 : vector<2xi32>
   }
+  func.func @extract_contract2_fmf(%arg0: vector<2x3xf32>, %arg1: vector<3xf32>, %arg2: vector<2xf32>) -> vector<2xf32> {
+    %0 = vector.contract {fastmath = #arith.fastmath<contract>, indexing_maps = [#map2, #map3, #map4], iterator_types = ["parallel", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<2x3xf32>, vector<3xf32> into vector<2xf32>
+    return %0 : vector<2xf32>
+  }
+  func.func @contract_to_dot_matmat_fmf(%arg0: vector<2x2xf32>, %arg1: vector<2x2xf32>, %arg2: vector<2x2xf32>) -> vector<2x2xf32> {
+    %0 = vector.contract {fastmath = #arith.fastmath<contract>, indexing_maps = [#map5, #map6, #map7], iterator_types = ["parallel", "parallel", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<2x2xf32>, vector<2x2xf32> into vector<2x2xf32>
+    return %0 : vector<2x2xf32>
+  }
+  func.func @full_contract1_fmf(%arg0: vector<2x3xf32>, %arg1: vector<2x3xf32>, %arg2: f32) -> f32 {
+    %0 = vector.contract {fastmath = #arith.fastmath<reassoc>, indexing_maps = [#map2, #map2, #map8], iterator_types = ["reduction", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<2x3xf32>, vector<2x3xf32> into f32
+    return %0 : f32
+  }
+  func.func @batch_contract_fmf(%arg0: vector<2x2xf32>, %arg1: vector<2x2xf32>, %arg2: vector<2xf32>) -> vector<2xf32> {
+    %0 = vector.contract {fastmath = #arith.fastmath<reassoc>, indexing_maps = [#map2, #map2, #map4], iterator_types = ["parallel", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<2x2xf32>, vector<2x2xf32> into vector<2xf32>
+    return %0 : vector<2xf32>
+  }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["func.func"]} in %arg0 : (!transform.any_op) -> !transform.any_op

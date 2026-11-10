@@ -652,5 +652,21 @@ module {
     }
     return
   }
+  func.func @vector_store_dead_elim_different_types(%arg0: memref<20x1xi64>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant dense<1> : vector<5xi64>
+    %cst_0 = arith.constant dense<2> : vector<1xi64>
+    affine.vector_store %cst, %arg0[%c0, %c0] : memref<20x1xi64>, vector<5xi64>
+    affine.vector_store %cst_0, %arg0[%c0, %c0] : memref<20x1xi64>, vector<1xi64>
+    return
+  }
+  func.func @vector_store_dead_elim_same_type(%arg0: memref<20x1xi64>) {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant dense<1> : vector<5xi64>
+    %cst_0 = arith.constant dense<2> : vector<5xi64>
+    affine.vector_store %cst, %arg0[%c0, %c0] : memref<20x1xi64>, vector<5xi64>
+    affine.vector_store %cst_0, %arg0[%c0, %c0] : memref<20x1xi64>, vector<5xi64>
+    return
+  }
 }
 

@@ -31,3 +31,31 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0) -> (d0 * -64 + 128, 64)>
+module {
+  func.func @forall_static_bounds_affine_min_simplify(%arg0: memref<128xi32>) {
+    scf.forall (%arg1) in (2) {
+      %0 = affine.min #map(%arg1)
+      %1 = arith.index_cast %0 : index to i32
+      %c0 = arith.constant 0 : index
+      memref.store %1, %arg0[%c0] : memref<128xi32>
+    }
+    return
+  }
+}
+
+// -----
+#map = affine_map<(d0) -> (d0 * -64 + 128, d0 * -64 + 96, 32)>
+module {
+  func.func @forall_static_bounds_multi_result_min_simplify(%arg0: memref<128xi32>) {
+    scf.forall (%arg1) in (2) {
+      %0 = affine.min #map(%arg1)
+      %1 = arith.index_cast %0 : index to i32
+      %c0 = arith.constant 0 : index
+      memref.store %1, %arg0[%c0] : memref<128xi32>
+    }
+    return
+  }
+}
+

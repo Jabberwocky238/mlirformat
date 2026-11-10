@@ -11,7 +11,7 @@ module attributes {gpu.container_module} {
       %cst = arith.constant 0.000000e+00 : f16
       %c4 = arith.constant 4 : index
       %c8 = arith.constant 8 : index
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %0 = affine.apply #map()[%thread_id_x]
       %1 = affine.apply #map1()[%thread_id_x]
       %2 = affine.apply #map2()[%0]

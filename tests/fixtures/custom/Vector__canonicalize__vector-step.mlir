@@ -217,3 +217,33 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @ult_i32_constant_4_rhs() -> vector<4xi1> {
+    %cst = arith.constant dense<4> : vector<4xi32>
+    %0 = vector.step : vector<4xi32>
+    %1 = arith.cmpi ult, %0, %cst : vector<4xi32>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @negative_ult_i32_constant_2_rhs() -> vector<4xi1> {
+    %cst = arith.constant dense<2> : vector<4xi32>
+    %0 = vector.step : vector<4xi32>
+    %1 = arith.cmpi ult, %0, %cst : vector<4xi32>
+    return %1 : vector<4xi1>
+  }
+}
+
+// -----
+module {
+  func.func @negative_ult_i8_wrap() -> vector<300xi1> {
+    %cst = arith.constant dense<100> : vector<300xi8>
+    %0 = vector.step : vector<300xi8>
+    %1 = arith.cmpi ult, %0, %cst : vector<300xi8>
+    return %1 : vector<300xi1>
+  }
+}
+

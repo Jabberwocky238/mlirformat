@@ -14,7 +14,7 @@
       %87 = "memref.load"(%arg4, %arg8) : (memref<8xvector<4xf32>>, index) -> vector<4xf32>
       %88 = "memref.load"(%arg5, %arg8) : (memref<8xvector<4xi32>>, index) -> vector<4xi32>
       %89 = "vector.gather"(%arg6, %81, %88, %85, %86) : (memref<?xf32>, index, vector<4xi32>, vector<4xi1>, vector<4xf32>) -> vector<4xf32>
-      %90 = "vector.contract"(%87, %89, %84) <{indexing_maps = [#map, #map, #map1], iterator_types = [#vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4xf32>, vector<4xf32>, f32) -> f32
+      %90 = "vector.contract"(%87, %89, %84) <{fastmath = #arith.fastmath<none>, indexing_maps = [#map, #map, #map1], iterator_types = [#vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4xf32>, vector<4xf32>, f32) -> f32
       "memref.store"(%90, %arg7, %arg8) : (f32, memref<?xf32>, index) -> ()
       "scf.yield"() : () -> ()
     }) : (index, index, index) -> ()

@@ -49,7 +49,7 @@
     ^bb3:  // pred: ^bb1
       "omp.flush"() : () -> ()
       "omp.barrier"() : () -> ()
-      "omp.taskwait"() : () -> ()
+      "omp.taskwait"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> ()
       "omp.taskyield"() : () -> ()
       "omp.terminator"() : () -> ()
     }) : () -> ()
@@ -147,7 +147,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (!llvm.ptr) -> (), sym_name = "task_depend"}> ({
   ^bb0(%arg0: !llvm.ptr):
-    "omp.task"(%arg0) <{depend_kinds = [#omp<clause_task_depend(taskdependin)>], operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.task"(%arg0) <{depend_iterated_kinds = [], depend_kinds = [#omp<clause_task_depend(taskdependin)>], operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr) -> ()
     "func.return"() : () -> ()
@@ -158,15 +158,15 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr, ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "_QPomp_target_data", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: !llvm.ptr, %arg3: !llvm.ptr):
-    %0 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %1 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %2 = "omp.map.info"(%arg2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags storage|always>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target_enter_data"(%0, %1, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 3>}> : (!llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
-    %3 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %4 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %5 = "omp.map.info"(%arg2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags storage>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %6 = "omp.map.info"(%arg3) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags always|del>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target_exit_data"(%3, %4, %5, %6) <{operandSegmentSizes = array<i32: 0, 0, 0, 4>}> : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
+    %0 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %1 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %2 = "omp.map.info"(%arg2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags storage|always>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target_enter_data"(%0, %1, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 3, 0>}> : (!llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
+    %3 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %4 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %5 = "omp.map.info"(%arg2) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags storage>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %6 = "omp.map.info"(%arg3) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags always|del>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target_exit_data"(%3, %4, %5, %6) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 4, 0>}> : (!llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
     "llvm.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -175,8 +175,8 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "_QPomp_target_data_region", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
-    %0 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = !llvm.array<1024 x i32>}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target_data"(%0) <{operandSegmentSizes = array<i32: 0, 0, 1, 0, 0>}> ({
+    %0 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.array<1024 x i32>}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target_data"(%0) <{operandSegmentSizes = array<i32: 0, 0, 1, 0, 0, 0>}> ({
       %1 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32
       "llvm.store"(%1, %arg1) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
       "omp.terminator"() : () -> ()
@@ -190,9 +190,9 @@
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr, ptr)>, linkage = #llvm.linkage<external>, sym_name = "_QPomp_target", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: !llvm.ptr, %arg1: !llvm.ptr):
     %0 = "llvm.mlir.constant"() <{value = 64 : i32}> : () -> i32
-    %1 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = !llvm.array<1024 x i32>}> : (!llvm.ptr) -> !llvm.ptr
-    %2 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags storage|implicit>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    "omp.target"(%1, %2, %0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1>}> ({
+    %1 = "omp.map.info"(%arg0) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = !llvm.array<1024 x i32>}> : (!llvm.ptr) -> !llvm.ptr
+    %2 = "omp.map.info"(%arg1) <{map_capture_type = #omp<variable_capture_kind(ByCopy)>, map_type = #omp<clause_map_flags storage|implicit>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    "omp.target"(%1, %2, %0) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1>}> ({
     ^bb0(%arg2: !llvm.ptr, %arg3: !llvm.ptr):
       %3 = "llvm.mlir.constant"() <{value = 10 : i32}> : () -> i32
       "llvm.store"(%3, %arg3) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
@@ -296,7 +296,7 @@
       "llvm.cond_br"(%8)[^bb2, ^bb3] <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (i1) -> ()
     ^bb2:  // pred: ^bb1
       "llvm.store"(%6, %4) <{ordering = 0 : i64}> : (i32, !llvm.ptr) -> ()
-      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+      "omp.task"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
         "llvm.call"(%4) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @_QFPdo_work, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> ()
         "omp.terminator"() : () -> ()
       }) : () -> ()
@@ -352,14 +352,14 @@
     %2 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
     %3 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
     %4 = "omp.map.bounds"(%1, %0, %3, %3) <{operandSegmentSizes = array<i32: 1, 1, 0, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %5 = "omp.map.info"(%arg1, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    %5 = "omp.map.info"(%arg1, %4) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
     %6 = "llvm.mlir.constant"() <{value = 4 : index}> : () -> i64
     %7 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
     %8 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
     %9 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64
     %10 = "omp.map.bounds"(%7, %6, %9, %9) <{operandSegmentSizes = array<i32: 1, 1, 0, 1, 1>, stride_in_bytes = false}> : (i64, i64, i64, i64) -> !omp.map_bounds_ty
-    %11 = "omp.map.info"(%arg2, %10) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
-    "omp.target"(%5, %11) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0>}> ({
+    %11 = "omp.map.info"(%arg2, %10) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "", operandSegmentSizes = array<i32: 1, 0, 0, 1>, partial_map = false, var_ptr_type = !llvm.array<10 x i32>}> : (!llvm.ptr, !omp.map_bounds_ty) -> !llvm.ptr
+    "omp.target"(%5, %11) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0>}> ({
     ^bb0(%arg3: !llvm.ptr, %arg4: !llvm.ptr):
       "omp.terminator"() : () -> ()
     }) : (!llvm.ptr, !llvm.ptr) -> ()
@@ -417,7 +417,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (memref<i32>) -> (), sym_name = "omp_teams"}> ({
   ^bb0(%arg0: memref<i32>):
-    "omp.teams"(%arg0, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0, 0, 0>}> ({
+    "omp.teams"(%arg0, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (memref<i32>, memref<i32>) -> ()
     "func.return"() : () -> ()
@@ -444,15 +444,18 @@
   "func.func"() <{function_type = (index, memref<i32>) -> (), sym_name = "omp_taskloop"}> ({
   ^bb0(%arg0: index, %arg1: memref<i32>):
     "omp.parallel"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0>}> ({
-      "omp.taskloop"(%arg1, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
-        "omp.loop_nest"(%arg0, %arg0, %arg0) ({
-        ^bb0(%arg2: index):
-          "test.payload"(%arg2) : (index) -> ()
-          "omp.yield"() : () -> ()
-        }) : (index, index, index) -> ()
-      }) : (memref<i32>, memref<i32>) -> ()
+      "omp.taskloop.context"(%arg1, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0, 0, 0, 0, 0, 0, 0>}> ({
+        "omp.taskloop.wrapper"() ({
+          "omp.loop_nest"(%arg0, %arg0, %arg0) ({
+          ^bb0(%arg2: index):
+            "test.payload"(%arg2) : (index) -> ()
+            "omp.yield"() : () -> ()
+          }) : (index, index, index) -> ()
+        }) : () -> ()
+        "omp.terminator"() : () -> ()
+      }) {omp.combined} : (memref<i32>, memref<i32>) -> ()
       "omp.terminator"() : () -> ()
-    }) : () -> ()
+    }) {omp.combined} : () -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()
@@ -463,9 +466,9 @@
   ^bb0(%arg2: !llvm.ptr):
     %4 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32
     %5 = "llvm.getelementptr"(%arg2) <{elem_type = !llvm.struct<"_QFdeclare_mapperTmy_type", (i32)>, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: 0, 0>}> : (!llvm.ptr) -> !llvm.ptr
-    %6 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "var%data", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_type = i32}> : (!llvm.ptr) -> !llvm.ptr
-    %7 = "omp.map.info"(%arg2, %6) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, members_index = [[0]], name = "var", operandSegmentSizes = array<i32: 1, 0, 1, 0>, partial_map = true, var_type = !llvm.struct<"_QFdeclare_mapperTmy_type", (i32)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
-    "omp.declare_mapper.info"(%7, %6) : (!llvm.ptr, !llvm.ptr) -> ()
+    %6 = "omp.map.info"(%5) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, name = "var%data", operandSegmentSizes = array<i32: 1, 0, 0, 0>, partial_map = false, var_ptr_type = i32}> : (!llvm.ptr) -> !llvm.ptr
+    %7 = "omp.map.info"(%arg2, %6) <{map_capture_type = #omp<variable_capture_kind(ByRef)>, map_type = #omp<clause_map_flags to|from>, members_index = [[0]], name = "var", operandSegmentSizes = array<i32: 1, 0, 1, 0>, partial_map = true, var_ptr_type = !llvm.struct<"_QFdeclare_mapperTmy_type", (i32)>}> : (!llvm.ptr, !llvm.ptr) -> !llvm.ptr
+    "omp.declare_mapper.info"(%7, %6) <{operandSegmentSizes = array<i32: 2, 0>}> : (!llvm.ptr, !llvm.ptr) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32) -> (), sym_name = "omp_dist_schedule"}> ({
   ^bb0(%arg0: i32):
@@ -473,7 +476,7 @@
     %1 = "arith.constant"() <{value = 1024 : i32}> : () -> i32
     %2 = "arith.constant"() <{value = 16 : i32}> : () -> i32
     %3 = "arith.constant"() <{value = 8 : i32}> : () -> i32
-    "omp.teams"(%3, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 1, 0, 0, 1>}> ({
+    "omp.teams"(%3, %2) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 1, 0, 0, 1>}> ({
       "omp.distribute"(%1) <{dist_schedule_static, operandSegmentSizes = array<i32: 0, 0, 1, 0>}> ({
         "omp.loop_nest"(%0, %arg0, %0) <{loop_inclusive}> ({
         ^bb0(%arg1: i32):

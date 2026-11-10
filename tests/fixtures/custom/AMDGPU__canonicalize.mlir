@@ -101,10 +101,10 @@ module {
 
 // -----
 module {
-  func.func @dead_atomic_add(%arg0: memref<4xf32>, %arg1: f32) {
+  func.func @oob_atomic_add(%arg0: memref<4xf32>, %arg1: f32) -> f32 {
     %c4_i32 = arith.constant 4 : i32
-    amdgpu.raw_buffer_atomic_fadd %arg1 -> %arg0[%c4_i32] : f32 -> memref<4xf32>, i32
-    return
+    %0 = amdgpu.raw_buffer_atomic_fadd %arg1 -> %arg0[%c4_i32] : f32 -> memref<4xf32>, i32
+    return %0 : f32
   }
 }
 
@@ -124,6 +124,26 @@ module {
     %c0 = arith.constant 0 : index
     %cast = memref.cast %arg1 : memref<64x64xf32, 3> to memref<?x?xf32, 3>
     amdgpu.gather_to_lds %arg0[%c0, %c0], %cast[%c0, %c0] : f32, memref<128x72xf32, 1>, memref<?x?xf32, 3>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_true_mask(%arg0: memref<16xf32, #gpu.address_space<global>>, %arg1: memref<16xf32, #gpu.address_space<workgroup>>) {
+    %c0 = arith.constant 0 : index
+    %true = arith.constant true
+    amdgpu.global_load_async_to_lds %arg0[%c0], %arg1[%c0], %true : f32, memref<16xf32, #gpu.address_space<global>>, memref<16xf32, #gpu.address_space<workgroup>>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @global_load_async_to_lds_false_mask(%arg0: memref<16xf32, #gpu.address_space<global>>, %arg1: memref<16xf32, #gpu.address_space<workgroup>>) {
+    %c0 = arith.constant 0 : index
+    %false = arith.constant false
+    amdgpu.global_load_async_to_lds %arg0[%c0], %arg1[%c0], %false : f32, memref<16xf32, #gpu.address_space<global>>, memref<16xf32, #gpu.address_space<workgroup>>
     return
   }
 }
@@ -155,6 +175,20 @@ module {
     %0 = vector.extract %arg2[0] : f8E8M0FNU from vector<2xf8E8M0FNU>
     %1 = vector.insert %0, %cst_0 [0] : f8E8M0FNU into vector<4xf8E8M0FNU>
     %2 = vector.extract %arg3[1] : f8E8M0FNU from vector<2xf8E8M0FNU>
+    %3 = vector.insert %2, %cst_0 [0] : f8E8M0FNU into vector<4xf8E8M0FNU>
+    %4 = amdgpu.scaled_mfma 16x16x128 (%1[0] * %arg0) * (%3[0] * %arg1) + %cst : vector<4xf8E8M0FNU>, vector<32xf4E2M1FN>, vector<4xf8E8M0FNU>, vector<32xf4E2M1FN>, vector<4xf32>
+    return %4 : vector<4xf32>
+  }
+}
+
+// -----
+module {
+  func.func @scaled_mfma_exactly_4(%arg0: vector<32xf4E2M1FN>, %arg1: vector<32xf4E2M1FN>, %arg2: vector<4xf8E8M0FNU>, %arg3: vector<4xf8E8M0FNU>) -> vector<4xf32> {
+    %cst = arith.constant dense<0.000000e+00> : vector<4xf32>
+    %cst_0 = arith.constant dense<5.877470e-39> : vector<4xf8E8M0FNU>
+    %0 = vector.extract %arg2[0] : f8E8M0FNU from vector<4xf8E8M0FNU>
+    %1 = vector.insert %0, %cst_0 [0] : f8E8M0FNU into vector<4xf8E8M0FNU>
+    %2 = vector.extract %arg3[1] : f8E8M0FNU from vector<4xf8E8M0FNU>
     %3 = vector.insert %2, %cst_0 [0] : f8E8M0FNU into vector<4xf8E8M0FNU>
     %4 = amdgpu.scaled_mfma 16x16x128 (%1[0] * %arg0) * (%3[0] * %arg1) + %cst : vector<4xf8E8M0FNU>, vector<32xf4E2M1FN>, vector<4xf8E8M0FNU>, vector<32xf4E2M1FN>, vector<4xf32>
     return %4 : vector<4xf32>

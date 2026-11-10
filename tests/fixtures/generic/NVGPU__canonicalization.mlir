@@ -1,6 +1,6 @@
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "main_kernel"}> ({
-    "gpu.func"() <{function_type = (!nvgpu.tensormap.descriptor<tensor = memref<128x32xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>) -> ()}> ({
+    "gpu.func"() <{function_type = (!nvgpu.tensormap.descriptor<tensor = memref<128x32xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>) -> (), kernel}> ({
     ^bb0(%arg0: !nvgpu.tensormap.descriptor<tensor = memref<128x32xf32, 3>, swizzle = none, l2promo = none, oob = zero, interleave = none>):
       %0 = "arith.constant"() <{value = 0 : index}> : () -> index
       %1 = "gpu.thread_id"() <{dimension = #gpu<dim x>}> : () -> index
@@ -11,7 +11,7 @@
       "nvvm.cp.async.bulk.commit.group"() : () -> ()
       "nvvm.cp.async.bulk.wait_group"() <{group = 0 : i32}> : () -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, gpu.known_block_size = array<i32: 128, 1, 1>, gpu.known_grid_size = array<i32: 1, 1, 1>, sym_name = "main_kernel", workgroup_attributions = 0 : i64} : () -> ()
+    }) {gpu.known_block_size = array<i32: 128, 1, 1>, gpu.known_grid_size = array<i32: 1, 1, 1>, sym_name = "main_kernel"} : () -> ()
   }) : () -> ()
 }) : () -> ()
 

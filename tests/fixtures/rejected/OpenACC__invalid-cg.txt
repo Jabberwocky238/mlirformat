@@ -1,0 +1,17 @@
+1	parse	expected one of ::mlir::gpu::Processor enum names
+2	parse	expected one of ::mlir::gpu::Processor enum names
+3	verify	'acc.compute_region' op launch arguments must be results of acc.par_width operations
+4	verify	'acc.compute_region' op expected 1 block arguments (launch + input), got 2
+5	parse	custom op 'acc.reduction_accumulate' expected ::mlir::acc::ReductionOperator to be one of: none, add, mul, max, min, iand, ior, xor, eqv, neqv, land, lor, maximumf, minimumf, maxnumf, minnumf
+6	verify	'acc.reduction_accumulate' op pointer-like element type must match value type
+7	verify	'acc.reduction_accumulate' op par_dims must specify at least one parallel dimension
+8	parse	custom op 'acc.reduction_accumulate_array' expected ::mlir::acc::ReductionOperator to be one of: none, add, mul, max, min, iand, ior, xor, eqv, neqv, land, lor, maximumf, minimumf, maxnumf, minnumf
+9	verify	'acc.reduction_accumulate_array' op par_dims must specify at least one parallel dimension
+10	verify	'acc.predicate_region' op region needs to have at least one block
+11	verify	'acc.predicate_region' op region cannot have any arguments
+12	verify	'acc.predicate_region' op must be nested within an acc.compute_region operation
+13	verify	'acc.gpu_shared_memory' op dynamic_shared_memory_scaling_bytes and dynamic_shared_memory_fixed_bytes must both be present or both be absent
+14	verify	'acc.gpu_shared_memory' op result memref must use #gpu.address_space<workgroup>
+15	verify	'acc.gpu_shared_memory' op num_copies must be positive
+16	verify	'acc.gpu_shared_memory' op dynamic_shared_memory_scaling_bytes must be non-negative
+17	verify	'acc.gpu_shared_memory' op dynamic_shared_memory_fixed_bytes must be non-negative

@@ -448,28 +448,36 @@
 // -----
 "builtin.module"() ({
   "func.func"() <{function_type = (index, index, index, index, memref<?xf32>, memref<?xf32>) -> (), sym_name = "loop_nested_alloc_dyn_dependency"}> ({
-  ^bb0(%arg0: index, %arg1: index, %arg2: index, %arg3: index, %arg4: memref<?xf32>, %arg5: memref<?xf32>):
-    %0 = "memref.alloc"(%arg3) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?xf32>
-    %1 = "scf.for"(%arg0, %arg1, %arg2, %arg4) ({
-    ^bb0(%arg6: index, %arg7: memref<?xf32>):
-      %2 = "scf.for"(%arg0, %arg1, %arg2, %arg7) ({
-      ^bb0(%arg8: index, %arg9: memref<?xf32>):
-        %3 = "scf.for"(%arg0, %arg1, %arg2, %arg9) ({
-        ^bb0(%arg10: index, %arg11: memref<?xf32>):
-          %4 = "arith.cmpi"(%arg6, %arg1) <{predicate = 0 : i64}> : (index, index) -> i1
-          %5 = "scf.if"(%4) ({
-            %6 = "memref.alloc"(%arg10) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?xf32>
-            "scf.yield"(%6) : (memref<?xf32>) -> ()
+  ^bb0(%arg1: index, %arg2: index, %arg3: index, %arg4: index, %arg5: memref<?xf32>, %arg6: memref<?xf32>):
+    %3 = "memref.alloc"(%arg4) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?xf32>
+    %4 = "scf.for"(%arg1, %arg2, %arg3, %arg5) ({
+    ^bb0(%arg7: index, %arg8: memref<?xf32>):
+      %5 = "scf.for"(%arg1, %arg2, %arg3, %arg8) ({
+      ^bb0(%arg9: index, %arg10: memref<?xf32>):
+        %6 = "scf.for"(%arg1, %arg2, %arg3, %arg10) ({
+        ^bb0(%arg11: index, %arg12: memref<?xf32>):
+          %7 = "arith.cmpi"(%arg7, %arg2) <{predicate = 0 : i64}> : (index, index) -> i1
+          %8 = "scf.if"(%7) ({
+            %9 = "memref.alloc"(%arg11) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?xf32>
+            "scf.yield"(%9) : (memref<?xf32>) -> ()
           }, {
-            "scf.yield"(%arg11) : (memref<?xf32>) -> ()
+            "scf.yield"(%arg12) : (memref<?xf32>) -> ()
           }) : (i1) -> memref<?xf32>
-          "scf.yield"(%5) : (memref<?xf32>) -> ()
+          "scf.yield"(%8) : (memref<?xf32>) -> ()
         }) : (index, index, index, memref<?xf32>) -> memref<?xf32>
-        "scf.yield"(%3) : (memref<?xf32>) -> ()
+        "scf.yield"(%6) : (memref<?xf32>) -> ()
       }) : (index, index, index, memref<?xf32>) -> memref<?xf32>
-      "scf.yield"(%0) : (memref<?xf32>) -> ()
+      "scf.yield"(%3) : (memref<?xf32>) -> ()
     }) : (index, index, index, memref<?xf32>) -> memref<?xf32>
-    "test.copy"(%1, %arg5) : (memref<?xf32>, memref<?xf32>) -> ()
+    "test.copy"(%4, %arg6) : (memref<?xf32>, memref<?xf32>) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (f32) -> (), sym_name = "unreachable_alloc"}> ({
+  ^bb0(%arg0: f32):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "func.return"() : () -> ()
+  ^bb1(%1: i32):  // no predecessors
+    %2 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<10xf32>
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

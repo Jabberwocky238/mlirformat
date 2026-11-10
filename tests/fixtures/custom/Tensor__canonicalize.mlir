@@ -276,6 +276,24 @@ module {
 
 // -----
 module {
+  func.func @from_elements_with_poison() -> tensor<1xindex> {
+    %0 = ub.poison : index
+    %from_elements = tensor.from_elements %0 : tensor<1xindex>
+    return %from_elements : tensor<1xindex>
+  }
+}
+
+// -----
+module {
+  func.func @from_elements_with_vector_element_type() -> tensor<1xvector<1xi1>> {
+    %0 = vector.constant_mask [1] : vector<1xi1>
+    %from_elements = tensor.from_elements %0 : tensor<1xvector<1xi1>>
+    return %from_elements : tensor<1xvector<1xi1>>
+  }
+}
+
+// -----
+module {
   func.func @extract_negative_from_tensor.from_elements(%arg0: index) -> index {
     %c-1 = arith.constant -1 : index
     %from_elements = tensor.from_elements %arg0 : tensor<1xindex>
@@ -391,6 +409,15 @@ module {
     %c4 = arith.constant 4 : index
     %extracted_slice = tensor.extract_slice %arg0[%c0, %arg1, %c1] [%c4, 1, %arg2] [%c1, %c1, %c1] : tensor<?x?x?xf32> to tensor<?x?xf32>
     return %extracted_slice : tensor<?x?xf32>
+  }
+}
+
+// -----
+module {
+  func.func @rank_reducing_slice_preserve_dropped_dims(%arg0: tensor<1x1x8x1xf16>, %arg1: index) -> tensor<1x4xf16> {
+    %c0 = arith.constant 0 : index
+    %extracted_slice = tensor.extract_slice %arg0[%c0, 0, %arg1, 0] [1, 1, 4, 1] [1, 1, 1, 1] : tensor<1x1x8x1xf16> to tensor<1x4xf16>
+    return %extracted_slice : tensor<1x4xf16>
   }
 }
 
@@ -905,7 +932,7 @@ module {
 module {
   func.func @no_compose_collapse_of_expand_dynamic(%arg0: tensor<?x8x128x?xf16>, %arg1: index) -> tensor<?x128x?xf16> {
     %collapsed = tensor.collapse_shape %arg0 [[0, 1, 2, 3]] : tensor<?x8x128x?xf16> into tensor<?xf16>
-    %expanded = tensor.expand_shape %collapsed [[0, 1, 2]] output_shape [%arg1, 8, %arg1] : tensor<?xf16> into tensor<?x128x?xf16>
+    %expanded = tensor.expand_shape %collapsed [[0, 1, 2]] output_shape [%arg1, 128, %arg1] : tensor<?xf16> into tensor<?x128x?xf16>
     return %expanded : tensor<?x128x?xf16>
   }
 }
@@ -1106,6 +1133,15 @@ module {
     %cst = arith.constant dense<4.200000e+01> : tensor<2x8xf64>
     %expanded = tensor.expand_shape %cst [[0], [1, 2]] output_shape [2, 4, 2] : tensor<2x8xf64> into tensor<2x4x2xf64>
     return %expanded : tensor<2x4x2xf64>
+  }
+}
+
+// -----
+module {
+  func.func @expand_shape_splat_constant_dynamic_result(%arg0: index) -> tensor<?xi32> {
+    %cst = arith.constant dense<1> : tensor<i32>
+    %expanded = tensor.expand_shape %cst [] output_shape [%arg0] : tensor<i32> into tensor<?xi32>
+    return %expanded : tensor<?xi32>
   }
 }
 
@@ -1510,6 +1546,15 @@ module {
     %0 = tensor.empty(%arg0) : tensor<?x12xf32>
     %cast = tensor.cast %0 : tensor<?x12xf32> to tensor<1x12xf32>
     return %cast : tensor<1x12xf32>
+  }
+}
+
+// -----
+module {
+  func.func @fold_empty_tensor_with_cast_encoding(%arg0: index) -> tensor<1x12xf32, "foo"> {
+    %0 = tensor.empty(%arg0) : tensor<?x12xf32, "foo">
+    %cast = tensor.cast %0 : tensor<?x12xf32, "foo"> to tensor<1x12xf32, "foo">
+    return %cast : tensor<1x12xf32, "foo">
   }
 }
 

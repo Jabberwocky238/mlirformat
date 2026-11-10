@@ -36,7 +36,7 @@ module {
       %4 = memref.get_global @bufferRhsGlobal : memref<8x128xf32, 3>
       linalg.copy ins(%memref : memref<64x8xf32>) outs(%3 : memref<64x8xf32, 3>)
       linalg.copy ins(%memref_1 : memref<8x128xf32>) outs(%4 : memref<8x128xf32, 3>)
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %5 = arith.cmpi eq, %thread_id_x, %c0 : index
       scf.if %5 {
         %6 = memref.load %3[%c45, %c7] : memref<64x8xf32, 3>

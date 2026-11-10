@@ -35,6 +35,28 @@ module {
 
 // -----
 module {
+  spirv.module Physical64 OpenCL requires #spirv.vce<v1.0, [Kernel, Addresses, Linkage, MaskedGatherScatterINTEL], [SPV_INTEL_masked_gather_scatter]> {
+    spirv.func @masked_gather_f32(%arg0: vector<4x!spirv.ptr<f32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xf32>) "None" {
+      %0 = spirv.INTEL.MaskedGather %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32> -> vector<4xf32>
+      spirv.Return
+    }
+    spirv.func @masked_gather_i32(%arg0: vector<4x!spirv.ptr<i32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xi32>) "None" {
+      %0 = spirv.INTEL.MaskedGather %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<i32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xi32> -> vector<4xi32>
+      spirv.Return
+    }
+    spirv.func @masked_scatter_f32(%arg0: vector<4x!spirv.ptr<f32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xf32>) "None" {
+      spirv.INTEL.MaskedScatter %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32>
+      spirv.Return
+    }
+    spirv.func @masked_scatter_i32(%arg0: vector<4x!spirv.ptr<i32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xi32>) "None" {
+      spirv.INTEL.MaskedScatter %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<i32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xi32>
+      spirv.Return
+    }
+  }
+}
+
+// -----
+module {
   spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [Shader, Linkage, SplitBarrierINTEL], [SPV_INTEL_split_barrier]> {
     spirv.func @split_barrier() "None" {
       spirv.INTEL.ControlBarrierArrive <Workgroup> <Device> <Acquire|UniformMemory>

@@ -1619,6 +1619,15 @@ module {
     %1 = linalg.select ins(%arg0, %arg1, %arg2 : tensor<4x8x16xi1>, tensor<4x8x16xf32>, tensor<4x8x16xf32>) outs(%0 : tensor<4x8x16xf32>) -> tensor<4x8x16xf32>
     return %1 : tensor<4x8x16xf32>
   }
+}
+
+// -----
+module {
+  func.func @select_integer_values(%arg0: tensor<4x8x16xi1>, %arg1: tensor<4x8x16xi32>, %arg2: tensor<4x8x16xi32>) -> tensor<4x8x16xi32> {
+    %0 = tensor.empty() : tensor<4x8x16xi32>
+    %1 = linalg.select ins(%arg0, %arg1, %arg2 : tensor<4x8x16xi1>, tensor<4x8x16xi32>, tensor<4x8x16xi32>) outs(%0 : tensor<4x8x16xi32>) -> tensor<4x8x16xi32>
+    return %1 : tensor<4x8x16xi32>
+  }
   func.func @pack_nc_to_ncnc(%arg0: tensor<128x256xf32>, %arg1: tensor<4x16x32x16xf32>) -> tensor<128x256xf32> {
     %pack = linalg.pack %arg0 inner_dims_pos = [0, 1] inner_tiles = [32, 16] into %arg1 : tensor<128x256xf32> -> tensor<4x16x32x16xf32>
     %0 = tensor.empty() : tensor<128x256xf32>

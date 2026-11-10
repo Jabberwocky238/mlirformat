@@ -1,0 +1,2 @@
+1	verify	'nvvm.convert.f16x2.to.f6x2' op attribute 'dstTy' failed to satisfy constraint: type attribute of f6E2M3FN type or f6E3M2FN type
+2	verify	'nvvm.convert.bf16x2.to.f6x2' op attribute 'dstTy' failed to satisfy constraint: type attribute of f6E2M3FN type or f6E3M2FN type

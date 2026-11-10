@@ -57,3 +57,19 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> tensor<1x2xi64>, sym_name = "test_dense_ressource_i64"}> ({
+    %0 = "tosa.const"() <{values = dense_resource<resource> : tensor<1x2xi64>}> : () -> tensor<1x2xi64>
+    "func.return"(%0) : (tensor<1x2xi64>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+{-#
+  dialect_resources: {
+    builtin: {
+      resource: "0x0800000000000000000000000000000000000000"
+    }
+  }
+#-}
+

@@ -86,7 +86,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<8x8x32x16xf32>, tensor<256x128xf32>) -> tensor<256x128xf32>, sym_name = "NCnc_to_NC"}> ({
   ^bb0(%arg1: tensor<8x8x32x16xf32>, %arg2: tensor<256x128xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 16>}> : (tensor<8x8x32x16xf32>, tensor<256x128xf32>) -> tensor<256x128xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: 32, 16>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<8x8x32x16xf32>, tensor<256x128xf32>) -> tensor<256x128xf32>
     "func.return"(%2) : (tensor<256x128xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -103,7 +103,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<32x4x32x8xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>, sym_name = "CKkc_to_KC"}> ({
   ^bb0(%arg1: tensor<32x4x32x8xf32>, %arg2: tensor<128x256xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> : (tensor<32x4x32x8xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 32, 8>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<32x4x32x8xf32>, tensor<128x256xf32>) -> tensor<128x256xf32>
     "func.return"(%2) : (tensor<128x256xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -120,7 +120,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<32x4x2x4xf32>, tensor<8x128xf32>) -> tensor<8x128xf32>, sym_name = "perfect_CKkc_to_KC"}> ({
   ^bb0(%arg1: tensor<32x4x2x4xf32>, %arg2: tensor<8x128xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 2, 4>}> : (tensor<32x4x2x4xf32>, tensor<8x128xf32>) -> tensor<8x128xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 2, 4>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<32x4x2x4xf32>, tensor<8x128xf32>) -> tensor<8x128xf32>
     "func.return"(%2) : (tensor<8x128xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -137,7 +137,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<?x?x2x2xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>, sym_name = "dynamic_perfect_CKkc_to_KC"}> ({
   ^bb0(%arg1: tensor<?x?x2x2xf32>, %arg2: tensor<?x?xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 2, 2>}> : (tensor<?x?x2x2xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 0, 1>, outer_dims_perm = array<i64: 1, 0>, static_inner_tiles = array<i64: 2, 2>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<?x?x2x2xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
     "func.return"(%2) : (tensor<?x?xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -154,7 +154,7 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (tensor<1x4x6x6x2xf32>, tensor<1x6x6x8xf32>) -> tensor<1x6x6x8xf32>, sym_name = "perfect_NKPQk_to_NPQK"}> ({
   ^bb0(%arg1: tensor<1x4x6x6x2xf32>, %arg2: tensor<1x6x6x8xf32>):
-    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 2>}> : (tensor<1x4x6x6x2xf32>, tensor<1x6x6x8xf32>) -> tensor<1x6x6x8xf32>
+    %2 = "linalg.unpack"(%arg1, %arg2) <{inner_dims_pos = array<i64: 3>, outer_dims_perm = array<i64: 0, 3, 1, 2>, static_inner_tiles = array<i64: 2>}> {operandSegmentSizes = array<i32: 1, 1, 0, 0>} : (tensor<1x4x6x6x2xf32>, tensor<1x6x6x8xf32>) -> tensor<1x6x6x8xf32>
     "func.return"(%2) : (tensor<1x6x6x8xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({
@@ -174,7 +174,7 @@
   "func.func"() <{function_type = (tensor<?x?x?x?xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>, sym_name = "fully_dynamic_unpack"}> ({
   ^bb0(%arg1: tensor<?x?x?x?xf32>, %arg2: tensor<?x?xf32>):
     %2 = "func.call"() <{callee = @get_dynamic_tile_size}> : () -> index
-    %3 = "linalg.unpack"(%arg1, %arg2, %2, %2) <{inner_dims_pos = array<i64: 1, 0>, static_inner_tiles = array<i64: -9223372036854775808, -9223372036854775808>}> : (tensor<?x?x?x?xf32>, tensor<?x?xf32>, index, index) -> tensor<?x?xf32>
+    %3 = "linalg.unpack"(%arg1, %arg2, %2, %2) <{inner_dims_pos = array<i64: 1, 0>, static_inner_tiles = array<i64: -9223372036854775808, -9223372036854775808>}> {operandSegmentSizes = array<i32: 1, 1, 0, 2>} : (tensor<?x?x?x?xf32>, tensor<?x?xf32>, index, index) -> tensor<?x?xf32>
     "func.return"(%3) : (tensor<?x?xf32>) -> ()
   }) : () -> ()
   "builtin.module"() ({

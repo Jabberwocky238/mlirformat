@@ -5,6 +5,17 @@ use mlirformat::{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
 #[serde(crate = "mlirformat::__serde")]
+pub enum ClassType {
+    #[serde(rename = "class")]
+    Class,
+    #[serde(rename = "struct")]
+    Struct,
+    #[serde(rename = "union")]
+    Union,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]
+#[serde(crate = "mlirformat::__serde")]
 pub enum CmpPredicate {
     #[serde(rename = "eq")]
     Eq,
@@ -39,9 +50,7 @@ pub enum CmpPredicate {
 /// int32_t v5 = v1 + v2;
 /// float* v6 = v3 + v4;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.add", results(result))]
+#[mlir::op("emitc.add", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct AddOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -72,34 +81,6 @@ pub struct AddressOfOp<'a> {
     #[dtype(strip = "emitc.lvalue")]
     pub reference_ty: Type<'a>,
     #[dtype(strip = "emitc.ptr")]
-    pub result: Type<'a>,
-}
-
-/// `emitc.apply`: Deprecated (use address_of/dereference)
-///
-/// With the `emitc.apply` operation the operators & (address of) and * (contents of)
-/// can be applied to a single operand.
-///
-/// Example:
-///
-/// ```mlir
-/// // Custom form of applying the & operator.
-/// %0 = emitc.apply "&"(%arg0) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
-///
-/// // Generic form of the same operation.
-/// %0 = "emitc.apply"(%arg0) {applicableOperator = "&"}
-///     : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
-///
-/// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("emitc.apply", results(result))]
-pub struct ApplyOp<'a> {
-    #[slot(operand_ty)]
-    pub operand: Value<'a>,
-    #[attr(name = "applicableOperator")]
-    pub applicable_operator: Attribute<'a>,
-    pub operand_ty: Type<'a>,
     pub result: Type<'a>,
 }
 
@@ -145,9 +126,7 @@ pub struct AssignOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v3 = v1 & v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.bitwise_and", results(result))]
+#[mlir::op("emitc.bitwise_and", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct BitwiseAndOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -172,9 +151,7 @@ pub struct BitwiseAndOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v3 = v1 << v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.bitwise_left_shift", results(result))]
+#[mlir::op("emitc.bitwise_left_shift", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct BitwiseLeftShiftOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -199,9 +176,7 @@ pub struct BitwiseLeftShiftOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v2 = ~v1;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.bitwise_not", results(result))]
+#[mlir::op("emitc.bitwise_not", format = "$operand attr-dict `:` functional-type($operand, $result)", results(result))]
 pub struct BitwiseNotOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
@@ -223,9 +198,7 @@ pub struct BitwiseNotOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v3 = v1 | v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.bitwise_or", results(result))]
+#[mlir::op("emitc.bitwise_or", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct BitwiseOrOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -250,9 +223,7 @@ pub struct BitwiseOrOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v3 = v1 >> v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.bitwise_right_shift", results(result))]
+#[mlir::op("emitc.bitwise_right_shift", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct BitwiseRightShiftOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -277,9 +248,7 @@ pub struct BitwiseRightShiftOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v3 = v1 ^ v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.bitwise_xor", results(result))]
+#[mlir::op("emitc.bitwise_xor", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct BitwiseXorOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -302,9 +271,7 @@ pub struct BitwiseXorOp<'a> {
 /// ```mlir
 /// %2 = emitc.call @my_add(%0, %1) : (f32, f32) -> f32
 /// ```
-///
-/// Generic form only (directive `results)`).
-#[mlir::op("emitc.call", results(result))]
+#[mlir::op("emitc.call", format = "$callee `(` $operands `)` attr-dict `:` functional-type($operands, $result)", results(result))]
 pub struct CallOp<'a> {
     #[slot(operands_ty)]
     pub operands: Vec<Value<'a>>,
@@ -334,15 +301,15 @@ pub struct CallOp<'a> {
 /// %0 = "emitc.call_opaque"() {callee = "foo"} : () -> i32
 /// ```
 ///
-/// Generic form only (directive `results)`).
+/// Generic form only (directive `prop-dict`).
 #[mlir::op("emitc.call_opaque", results(result))]
 pub struct CallOpaqueOp<'a> {
-    #[slot(operands_ty)]
-    pub operands: Vec<Value<'a>>,
+    #[slot(arg_operands_ty)]
+    pub arg_operands: Vec<Value<'a>>,
     pub callee: Attribute<'a>,
     pub args: Option<Attribute<'a>>,
     pub template_args: Option<Attribute<'a>>,
-    pub operands_ty: Vec<Type<'a>>,
+    pub arg_operands_ty: Vec<Type<'a>>,
     pub result: Vec<Type<'a>>,
 }
 
@@ -362,10 +329,23 @@ pub struct CallOpaqueOp<'a> {
 /// %1 = emitc.cast %arg1 :
 ///     !emitc.ptr<!emitc.opaque<"void">> to !emitc.ptr<i32>
 /// ```
+///
+/// In general, C++ cast expressions cannot always be assumed to be pure:
+/// they may invoke user-defined conversions or be affected by floating-point
+/// environment settings. However, in many practical cases, such as integer
+/// casts without operator overloading, the cast is pure and can be treated as
+/// speculatable and side-effect-free. For such cases, the `pure` attribute
+/// may be used.
+///
+/// When `pure` attribute is set, `getSpeculatability()` returns `Speculatable`
+/// and `getEffects()` reports no effects. It is UB if the `pure` attribute is
+/// set and the actual conversion is not pure, e.g. when the user-defined
+/// conversion has memory effects.
 #[mlir::op("emitc.cast", format = "$source attr-dict `:` type($source) `to` type($dest)", results(dest))]
 pub struct CastOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,
+    pub pure: bool,
     pub source_ty: Type<'a>,
     pub dest: Type<'a>,
 }
@@ -400,11 +380,13 @@ pub struct CastOp<'a> {
 ///   }
 /// }
 /// ```
-#[mlir::op("emitc.class", format = "(`final` $final_specifier^)? $sym_name attr-dict-with-keyword $body")]
+#[mlir::op("emitc.class", format = "($class_type^)? (`final` $final_specifier^)? $sym_name attr-dict-with-keyword $body")]
 pub struct ClassOp<'a> {
     #[attr(symbol)]
     pub sym_name: Attribute<'a>,
     pub final_specifier: bool,
+    #[attr(int = "i32", default = "0")]
+    pub class_type: Option<ClassType>,
     pub body: Region<'a>,
 }
 
@@ -438,9 +420,7 @@ pub struct ClassOp<'a> {
 /// bool v5 = v1 == v2;
 /// std::valarray<bool> v6 = v3 < v4;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.cmp", results(result))]
+#[mlir::op("emitc.cmp", format = "$predicate `,` $lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct CmpOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -475,9 +455,7 @@ pub struct CmpOp<'a> {
 /// int32_t v5 = 11;
 /// int32_t v6 = v3 ? v4 : v5;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.conditional", results(result))]
+#[mlir::op("emitc.conditional", format = "$condition `,` $true_value `,` $false_value attr-dict `:` type($result)", results(result))]
 pub struct ConditionalOp<'a> {
     #[slot(condition_ty)]
     pub condition: Value<'a>,
@@ -595,9 +573,7 @@ pub struct DereferenceOp<'a> {
 /// int32_t v5 = v1 / v2;
 /// float v6 = v3 / v4;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.div", results(result))]
+#[mlir::op("emitc.div", format = "$operand0 `,` $operand1 attr-dict `:` functional-type($operand0 $operand1, $result)", results(result))]
 pub struct DivOp<'a> {
     #[slot(operand0_ty)]
     pub operand0: Value<'a>,
@@ -1087,9 +1063,7 @@ pub struct LoadOp<'a> {
 /// // Code emitted for the operation above.
 /// bool v3 = v1 && v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.logical_and", results(result))]
+#[mlir::op("emitc.logical_and", format = "$lhs `,` $rhs attr-dict `:` qualified(type($lhs)) `,` qualified(type($rhs))", results(result))]
 pub struct LogicalAndOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1115,9 +1089,7 @@ pub struct LogicalAndOp<'a> {
 /// // Code emitted for the operation above.
 /// bool v2 = !v1;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.logical_not", results(result))]
+#[mlir::op("emitc.logical_not", format = "$operand attr-dict `:` qualified(type($operand))", results(result))]
 pub struct LogicalNotOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
@@ -1140,9 +1112,7 @@ pub struct LogicalNotOp<'a> {
 /// // Code emitted for the operation above.
 /// bool v3 = v1 || v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.logical_or", results(result))]
+#[mlir::op("emitc.logical_or", format = "$lhs `,` $rhs attr-dict `:` qualified(type($lhs)) `,` qualified(type($rhs))", results(result))]
 pub struct LogicalOrOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1152,6 +1122,38 @@ pub struct LogicalOrOp<'a> {
     pub rhs_ty: Type<'a>,
     #[dtype(is = i1)]
     pub result: Type<'a>,
+}
+
+/// `emitc.member_call_opaque`: Opaque member call operation
+///
+/// The `emitc.member_call_opaque` operation represents a C++ member function
+/// call. It takes a receiver operand, a callee string attribute (the method
+/// name), and variadic operands for arguments.
+///
+/// The call allows specifying order of operands and attributes in the call as
+/// follows:
+/// - integer value of index type refers to an argument operand;
+/// - attribute which will get lowered to constant value in call;
+///
+/// Example:
+///
+/// ```mlir
+/// %0 = emitc.member_call_opaque %receiver "method" (%arg0, %arg1) : !emitc.opaque<"MyClass">, (i32, i32) -> i32
+/// ```
+///
+/// Generic form only (directive `prop-dict`).
+#[mlir::op("emitc.member_call_opaque", results(result))]
+pub struct MemberCallOpaqueOp<'a> {
+    #[slot(receiver_ty)]
+    pub receiver: Value<'a>,
+    #[slot(arg_operands_ty)]
+    pub arg_operands: Vec<Value<'a>>,
+    pub callee: Attribute<'a>,
+    pub args: Option<Attribute<'a>>,
+    pub template_args: Option<Attribute<'a>>,
+    pub receiver_ty: Type<'a>,
+    pub arg_operands_ty: Vec<Type<'a>>,
+    pub result: Vec<Type<'a>>,
 }
 
 /// `emitc.member_of_ptr`: Member of pointer operation
@@ -1190,6 +1192,8 @@ pub struct MemberOfPtrOp<'a> {
 ///
 /// ```mlir
 /// %0 = "emitc.member" (%arg0) {member = "a"}
+///     : (!emitc.opaque<"mystruct">) -> i32
+/// %0 = "emitc.member" (%arg0) {member = "a"}
 ///     : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.lvalue<i32>
 /// %1 = "emitc.member" (%arg0) {member = "b"}
 ///     : (!emitc.lvalue<!emitc.opaque<"mystruct">>) -> !emitc.array<2xi32>
@@ -1201,7 +1205,6 @@ pub struct MemberOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
     pub member: Attribute<'a>,
-    #[dtype(strip = "emitc.lvalue")]
     pub operand_ty: Type<'a>,
     pub result: Type<'a>,
 }
@@ -1223,9 +1226,7 @@ pub struct MemberOp<'a> {
 /// int32_t v5 = v1 * v2;
 /// float v6 = v3 * v4;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.mul", results(result))]
+#[mlir::op("emitc.mul", format = "$operand0 `,` $operand1 attr-dict `:` functional-type($operand0 $operand1, $result)", results(result))]
 pub struct MulOp<'a> {
     #[slot(operand0_ty)]
     pub operand0: Value<'a>,
@@ -1251,9 +1252,7 @@ pub struct MulOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v5 = v1 % v2;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.rem", results(result))]
+#[mlir::op("emitc.rem", format = "$operand0 `,` $operand1 attr-dict `:` functional-type($operand0 $operand1, $result)", results(result))]
 pub struct RemOp<'a> {
     #[slot(operand0_ty)]
     pub operand0: Value<'a>,
@@ -1306,9 +1305,7 @@ pub struct ReturnOp<'a> {
 /// float* v8 = v3 - v4;
 /// ptrdiff_t v9 = v5 - v6;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.sub", results(result))]
+#[mlir::op("emitc.sub", format = "$lhs `,` $rhs attr-dict `:` functional-type($lhs $rhs, $result)", results(result))]
 pub struct SubOp<'a> {
     #[slot(lhs_ty)]
     pub lhs: Value<'a>,
@@ -1334,9 +1331,7 @@ pub struct SubOp<'a> {
 /// %1 = emitc.subscript %arg1[%i] : (!emitc.ptr<i32>, index)
 ///        -> !emitc.lvalue<i32>
 /// ```
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("emitc.subscript", results(result))]
+#[mlir::op("emitc.subscript", format = "$value `[` $indices `]` attr-dict `:` functional-type($value $indices, $result)", results(result))]
 pub struct SubscriptOp<'a> {
     #[slot(value_ty)]
     pub value: Value<'a>,
@@ -1430,9 +1425,7 @@ pub struct SwitchOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v2 = -v1;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.unary_minus", results(result))]
+#[mlir::op("emitc.unary_minus", format = "$operand attr-dict `:` functional-type($operand, $result)", results(result))]
 pub struct UnaryMinusOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
@@ -1454,9 +1447,7 @@ pub struct UnaryMinusOp<'a> {
 /// // Code emitted for the operation above.
 /// int32_t v2 = +v1;
 /// ```
-///
-/// Generic form only (directive `operands`).
-#[mlir::op("emitc.unary_plus", results(result))]
+#[mlir::op("emitc.unary_plus", format = "$operand attr-dict `:` functional-type($operand, $result)", results(result))]
 pub struct UnaryPlusOp<'a> {
     #[slot(operand_ty)]
     pub operand: Value<'a>,
@@ -1487,12 +1478,12 @@ pub struct UnaryPlusOp<'a> {
 ///
 /// Since folding is not supported, it can be used with pointers.
 /// As an example, it is valid to create pointers to `variable` operations
-/// by using `apply` operations and pass these to a `call` operation.
+/// by using `address_of` operations and pass these to a `call` operation.
 /// ```mlir
 /// %0 = "emitc.variable"() {value = 0 : i32} : () -> !emitc.lvalue<i32>
 /// %1 = "emitc.variable"() {value = 0 : i32} : () -> !emitc.lvalue<i32>
-/// %2 = emitc.apply "&"(%0) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
-/// %3 = emitc.apply "&"(%1) : (!emitc.lvalue<i32>) -> !emitc.ptr<i32>
+/// %2 = emitc.address_of %0 : !emitc.lvalue<i32>
+/// %3 = emitc.address_of %1 : !emitc.lvalue<i32>
 /// emitc.call_opaque "write"(%2, %3)
 ///   : (!emitc.ptr<i32>, !emitc.ptr<i32>) -> ()
 /// ```
@@ -1579,7 +1570,7 @@ pub struct YieldOp<'a> {
 /// The `emitc` dialect.
 #[mlir::dialect(
     "emitc",
-    ops = [AddOp, AddressOfOp, ApplyOp, AssignOp, BitwiseAndOp, BitwiseLeftShiftOp, BitwiseNotOp, BitwiseOrOp, BitwiseRightShiftOp, BitwiseXorOp, CallOp, CallOpaqueOp, CastOp, ClassOp, CmpOp, ConditionalOp, ConstantOp, DeclareFuncOp, DereferenceOp, DivOp, DoOp, ExpressionOp, FieldOp, FileOp, ForOp, FuncOp, GetFieldOp, GetGlobalOp, GlobalOp, IfOp, IncludeOp, LiteralOp, LoadOp, LogicalAndOp, LogicalNotOp, LogicalOrOp, MemberOfPtrOp, MemberOp, MulOp, RemOp, ReturnOp, SubOp, SubscriptOp, SwitchOp, UnaryMinusOp, UnaryPlusOp, VariableOp, VerbatimOp, YieldOp],
+    ops = [AddOp, AddressOfOp, AssignOp, BitwiseAndOp, BitwiseLeftShiftOp, BitwiseNotOp, BitwiseOrOp, BitwiseRightShiftOp, BitwiseXorOp, CallOp, CallOpaqueOp, CastOp, ClassOp, CmpOp, ConditionalOp, ConstantOp, DeclareFuncOp, DereferenceOp, DivOp, DoOp, ExpressionOp, FieldOp, FileOp, ForOp, FuncOp, GetFieldOp, GetGlobalOp, GlobalOp, IfOp, IncludeOp, LiteralOp, LoadOp, LogicalAndOp, LogicalNotOp, LogicalOrOp, MemberCallOpaqueOp, MemberOfPtrOp, MemberOp, MulOp, RemOp, ReturnOp, SubOp, SubscriptOp, SwitchOp, UnaryMinusOp, UnaryPlusOp, VariableOp, VerbatimOp, YieldOp],
     materializer
 )]
 pub struct EmitcDialect;

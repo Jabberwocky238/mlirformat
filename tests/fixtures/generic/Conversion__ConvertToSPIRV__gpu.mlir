@@ -1,29 +1,30 @@
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (f32) -> ()}> ({
+    "gpu.func"() <{function_type = (f32) -> (), kernel}> ({
     ^bb0(%arg0: f32):
       %0 = "gpu.all_reduce"(%arg0) <{op = #gpu<all_reduce_op add>}> ({
       }) : (f32) -> f32
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "all_reduce", workgroup_attributions = 0 : i64} : () -> ()
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "all_reduce"} : () -> ()
   }) : () -> ()
 }) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.3, [Kernel, Addresses, Groups, GroupNonUniformArithmetic, GroupUniformArithmeticKHR], []>, #spirv.resource_limits<>>} : () -> ()
 
 // -----
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (f32) -> ()}> ({
-    ^bb0(%arg0: f32):
+    "gpu.func"() <{function_type = (f32, memref<f32>) -> (), kernel}> ({
+    ^bb0(%arg0: f32, %arg1: memref<f32>):
       %0 = "gpu.subgroup_reduce"(%arg0) <{cluster_stride = 1 : i32, op = #gpu<all_reduce_op add>}> : (f32) -> f32
+      "memref.store"(%0, %arg1) : (f32, memref<f32>) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "subgroup_reduce", workgroup_attributions = 0 : i64} : () -> ()
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "subgroup_reduce"} : () -> ()
   }) : () -> ()
 }) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.3, [Kernel, Addresses, Groups, GroupNonUniformArithmetic, GroupUniformArithmeticKHR], []>, #spirv.resource_limits<>>} : () -> ()
 
 // -----
 "builtin.module"() ({
   "gpu.module"() <{sym_name = "kernels"}> ({
-    "gpu.func"() <{function_type = (memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, index, index, index, index) -> ()}> ({
+    "gpu.func"() <{function_type = (memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, index, index, index, index) -> (), kernel}> ({
     ^bb0(%arg0: memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, %arg1: memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, %arg2: memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, %arg3: index, %arg4: index, %arg5: index, %arg6: index):
       %0 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index
       %1 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index
@@ -44,7 +45,7 @@
       %16 = "arith.addf"(%14, %15) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
       "memref.store"(%16, %arg2, %12, %13) : (f32, memref<12x4xf32, #spirv.storage_class<StorageBuffer>>, index, index) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "load_store", workgroup_attributions = 0 : i64} : () -> ()
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>, sym_name = "load_store"} : () -> ()
   }) : () -> ()
 }) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader], [SPV_KHR_storage_buffer_storage_class]>, #spirv.resource_limits<>>} : () -> ()
 

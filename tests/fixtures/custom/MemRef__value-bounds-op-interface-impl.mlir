@@ -19,6 +19,17 @@ module {
 
 // -----
 module {
+  func.func @memref_assume_alignment(%arg0: index) -> (index, index) {
+    %alloc = memref.alloc(%arg0) : memref<6x?xf32>
+    %assume_align = memref.assume_alignment %alloc, 16 : memref<6x?xf32>
+    %0 = "test.reify_bound"(%assume_align) <{dim = 0 : i64, type = "EQ"}> : (memref<6x?xf32>) -> index
+    %1 = "test.reify_bound"(%assume_align) <{dim = 1 : i64, type = "EQ"}> : (memref<6x?xf32>) -> index
+    return %0, %1 : index, index
+  }
+}
+
+// -----
+module {
   func.func @memref_cast(%arg0: memref<10xf32>) -> index {
     %cast = memref.cast %arg0 : memref<10xf32> to memref<?xf32>
     %0 = "test.reify_bound"(%cast) <{dim = 0 : i64, type = "EQ"}> : (memref<?xf32>) -> index
@@ -38,21 +49,24 @@ module {
 
 // -----
 module {
-  func.func @memref_dim_all_positive(%arg0: memref<?xf32>, %arg1: index) {
-    %c0 = arith.constant 0 : index
-    %dim = memref.dim %arg0, %arg1 : memref<?xf32>
-    "test.compare"(%dim, %c0) <{cmp = "GE"}> : (index, index) -> ()
-    return
-  }
-}
-
-// -----
-module {
   func.func @memref_expand(%arg0: memref<?xf32>, %arg1: index) -> (index, index) {
     %expand_shape = memref.expand_shape %arg0 [[0, 1]] output_shape [4, %arg1] : memref<?xf32> into memref<4x?xf32>
     %0 = "test.reify_bound"(%expand_shape) <{dim = 0 : i64, type = "EQ"}> : (memref<4x?xf32>) -> index
     %1 = "test.reify_bound"(%expand_shape) <{dim = 1 : i64, type = "EQ"}> : (memref<4x?xf32>) -> index
     return %0, %1 : index, index
+  }
+}
+
+// -----
+module {
+  func.func @memref_extract_strided_metadata_static_metadata(%arg0: memref<4x?xf32, strided<[11, 7], offset: 5>>) -> (index, index, index, index, index) {
+    %base_buffer, %offset, %sizes:2, %strides:2 = memref.extract_strided_metadata %arg0 : memref<4x?xf32, strided<[11, 7], offset: 5>> -> memref<f32>, index, index, index, index, index
+    %0 = "test.reify_bound"(%offset) <{type = "EQ"}> : (index) -> index
+    %1 = "test.reify_bound"(%sizes#0) <{type = "EQ"}> : (index) -> index
+    %2 = "test.reify_bound"(%sizes#1) <{type = "EQ"}> : (index) -> index
+    %3 = "test.reify_bound"(%strides#0) <{type = "EQ"}> : (index) -> index
+    %4 = "test.reify_bound"(%strides#1) <{type = "EQ"}> : (index) -> index
+    return %0, %1, %2, %3, %4 : index, index, index, index, index
   }
 }
 

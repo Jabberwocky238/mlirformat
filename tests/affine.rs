@@ -1,4 +1,4 @@
-//! ⭐ The affine sub-language against `mlir-opt` 22.1.8: every `affine_map<...>` and
+//! ⭐ The affine sub-language against `mlir-opt` 23.1.5: every `affine_map<...>` and
 //! `affine_set<...>` body in the custom-form fixtures must parse, and print back byte for byte.
 //! Those fixtures are mlir-opt's own output, so printing differently means printing something
 //! MLIR would not. (`tests/fixtures/upstream` is the original test input, spacing and redundant
@@ -97,7 +97,7 @@ fn a_map_shows_against_operands() {
     assert_eq!(shown, ["%i + 1", "%n * 2", "%i floordiv 4"]);
 }
 
-/// `affine.store` has no result (only `affine.load` does): a module mlir-opt 22.1.8 printed
+/// `affine.store` has no result (only `affine.load` does): a module mlir-opt 23.1.5 printed
 /// (`affine.for` over a load and a store) parses and prints back byte for byte.
 #[test]
 fn a_store_has_no_result() {

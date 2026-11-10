@@ -264,6 +264,21 @@ module {
     }
     return %0 : i32
   }
+  func.func @index_switch_large_cases(%arg0: index) {
+    scf.index_switch %arg0 
+    case 0 {
+      scf.yield
+    }
+    case 4294967296 {
+      scf.yield
+    }
+    case 8589934592 {
+      scf.yield
+    }
+    default {
+    }
+    return
+  }
   func.func @forall(%arg0: index) {
     scf.forall (%arg1) in (%arg0) {
       "test.foo"(%arg1) : (index) -> ()

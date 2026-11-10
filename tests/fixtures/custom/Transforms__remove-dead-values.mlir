@@ -16,6 +16,19 @@ module @named_module_acceptable {
 }
 
 // -----
+module @named_module_with_dead_args {
+  func.func private @compute(%arg0: i32, %arg1: i32) -> i32 {
+    return %arg0 : i32
+  }
+  func.func @main() -> i32 {
+    %c1_i32 = arith.constant 1 : i32
+    %c2_i32 = arith.constant 2 : i32
+    %0 = call @compute(%c1_i32, %c2_i32) : (i32, i32) -> i32
+    return %0 : i32
+  }
+}
+
+// -----
 module {
   func.func @acceptable_ir_has_cleanable_loop_of_conditional_and_branch_op(%arg0: i1) {
     %c0_i32 = arith.constant 0 : i32
@@ -334,6 +347,27 @@ module @return_void_with_unused_argument {
 
 // -----
 module {
+  func.func private @keep_region_branch_operands_valid(%arg0: memref<f64>) {
+    %false = arith.constant false
+    %cst = arith.constant 2.000000e+00 : f64
+    %0 = memref.load %arg0[] {name = "caller"} : memref<f64>
+    memref.store %cst, %arg0[] {name = "callee"} : memref<f64>
+    %1 = scf.if %false -> (memref<f64>) {
+      scf.yield %arg0 : memref<f64>
+    } else {
+      %2 = bufferization.clone %arg0 : memref<f64> to memref<f64>
+      scf.yield %2 : memref<f64>
+    }
+    %true = arith.constant true
+    %base_buffer, %offset = memref.extract_strided_metadata %arg0 : memref<f64> -> memref<f64>, index
+    %base_buffer_0, %offset_1 = memref.extract_strided_metadata %1 : memref<f64> -> memref<f64>, index
+    bufferization.dealloc (%base_buffer, %base_buffer_0 : memref<f64>, memref<f64>) if (%false, %true)
+    return
+  }
+}
+
+// -----
+module {
   module @dynamically_unreachable {
     func.func @dynamically_unreachable() {
       %c0_i64 = arith.constant 0 : i64
@@ -457,5 +491,39 @@ module {
     }
     return %0#0 : i32
   }
+}
+
+// -----
+module {
+  func.func @replace_dead_operation_results_with_poison(%arg0: vector<1xindex>) -> vector<1xindex> {
+    %0 = scf.while (%arg1 = %arg0) : (vector<1xindex>) -> vector<1xindex> {
+      %true = arith.constant true
+      scf.condition(%true) %arg1 : vector<1xindex>
+    } do {
+    ^bb0(%arg1: vector<1xindex>):
+      scf.yield %arg1 : vector<1xindex>
+    }
+    %1 = scf.while (%arg1 = %0) : (vector<1xindex>) -> vector<1xindex> {
+      %2:3 = "test.three"(%0) : (vector<1xindex>) -> (i1, i32, vector<1xindex>)
+      scf.condition(%2#0) %2#2 : vector<1xindex>
+    } do {
+    ^bb0(%arg1: vector<1xindex>):
+      scf.yield %arg1 : vector<1xindex>
+    }
+    return %1 : vector<1xindex>
+  }
+}
+
+// -----
+module @func_with_non_call_users {
+  func.func private @callee(%arg0: i32, %arg1: i32) {
+    return
+  }
+  func.func @main_func() {
+    %0 = llvm.mlir.constant(1 : i32) : i32
+    call @callee(%0, %0) : (i32, i32) -> ()
+    return
+  }
+  spirv.EntryPoint "GLCompute" @callee
 }
 

@@ -7,67 +7,72 @@
 7	parse	only 1-D vector allowed but found 'vector<4x3xf32>'
 8	parse	cannot use 'tensor<4xf32>' to compose SPIR-V types
 9	parse	only 1/8/16/32/64-bit integer type allowed but found 'i256'
-10	parse	cannot use 'index' to compose SPIR-V types
-11	parse	cannot use '!llvm.struct<()>' to compose SPIR-V types
-12	parse	ArrayStride must be greater than zero
-13	parse	expected array length greater than 0
-15	parse	expected '<'
-16	parse	expected ','
-17	parse	expected non-function type
-18	parse	unknown storage class: SomeStorageClass
-20	parse	expected '<'
-21	parse	expected non-function type
-22	parse	expected non-function type
-23	parse	ArrayStride must be greater than zero
-25	parse	expected ','
-26	parse	expected ','
-27	parse	expected ','
-28	parse	expected ','
+10	parse	only 8/16/32/64-bit float type allowed but found 'f80'
+11	parse	only 8/16/32/64-bit float type allowed but found 'f128'
+12	parse	cannot use 'index' to compose SPIR-V types
+13	parse	cannot use '!llvm.struct<()>' to compose SPIR-V types
+14	parse	ArrayStride must be greater than zero
+15	parse	expected array length greater than 0
+17	parse	expected '<'
+18	parse	expected ','
+19	parse	expected non-function type
+20	parse	unknown storage class: SomeStorageClass
+21	parse	SPIR-V does not allow one-element vectors
+22	parse	vector element type must be a SPIR-V scalar type but found 'index'
+24	parse	expected '<'
+25	parse	expected non-function type
+26	parse	expected non-function type
+27	parse	ArrayStride must be greater than zero
 29	parse	expected ','
 30	parse	expected ','
-31	parse	expected '<'
+31	parse	expected ','
 32	parse	expected ','
 33	parse	expected ','
 34	parse	expected ','
-35	parse	expected ','
+35	parse	expected '<'
 36	parse	expected ','
-38	parse	sampled image must be composed using image type, got 'f32'
-39	parse	sampled image Dim must not be SubpassData or Buffer, got Buffer
-40	parse	sampled image Dim must not be SubpassData or Buffer, got SubpassData
-42	parse	offset specification must be given for all members
-43	parse	offset specification must be given for all members
-44	parse	expected ')'
-45	parse	expected ')'
-46	parse	unbalanced '[' character in pretty dialect name
-47	parse	unbalanced '(' character in pretty dialect name
-48	parse	expected ']'
-49	parse	expected valid keyword
-50	parse	expected ','
-51	parse	expected ']'
-52	parse	expected ']'
-53	parse	expected attribute value
-62	parse	recursive struct reference not nested in struct definition
-63	parse	recursive struct reference not nested in struct definition
-64	parse	identifier already used for an enclosing struct
-68	parse	expected valid keyword
-69	parse	expected ','
-70	parse	expected valid keyword
-71	parse	expected row and column count
-72	parse	expected row and column count
-73	parse	invalid use <id> attribute specification: Subgroup
-78	parse	matrix is expected to have 2, 3, or 4 columns
-79	parse	matrix is expected to have 2, 3, or 4 columns
-80	parse	matrix columns size has to be less than or equal to 4 and greater than or equal 2, but found 5
-81	parse	matrix columns size has to be less than or equal to 4 and greater than or equal 2, but found 1
-82	parse	expected '<'
-83	parse	unbalanced '<' character in pretty dialect name
-84	parse	expected 'x' in dimension list
-85	parse	matrix must be composed using vector type, got 'i32'
-86	parse	matrix must be composed using vector type, got '!spirv.array<16 x f32>'
-87	parse	matrix must be composed using vector type, got '!spirv.rtarray<i32>'
-88	parse	matrix columns' elements must be of Float type, got 'i32'
-89	parse	expected single unsigned integer for number of columns
-90	parse	expected single unsigned integer for number of columns
-97	parse	arm.tensor shape dimensions must be either fully dynamic or completed shaped
-98	parse	arm.tensors do not support rank zero
-100	parse	arm.tensors do not support zero dimensions
+37	parse	expected ','
+38	parse	expected ','
+39	parse	expected ','
+40	parse	expected ','
+43	parse	sampled image must be composed using image type, got 'f32'
+44	parse	sampled image Dim must not be SubpassData or Buffer, got Buffer
+45	parse	sampled image Dim must not be SubpassData or Buffer, got SubpassData
+47	parse	offset specification must be given for all members
+48	parse	offset specification must be given for all members
+49	parse	expected ')'
+50	parse	expected ')'
+51	parse	unbalanced '[' character in pretty dialect name
+52	parse	unbalanced '(' character in pretty dialect name
+53	parse	expected ']'
+54	parse	expected valid keyword
+55	parse	expected ','
+56	parse	expected ']'
+57	parse	expected ']'
+58	parse	expected attribute value
+59	parse	member type must be a valid SPIR-V type
+68	parse	recursive struct reference not nested in struct definition
+69	parse	recursive struct reference not nested in struct definition
+70	parse	identifier already used for an enclosing struct
+74	parse	expected valid keyword
+75	parse	expected ','
+76	parse	expected valid keyword
+77	parse	expected row and column count
+78	parse	expected row and column count
+79	parse	invalid use <id> attribute specification: Subgroup
+84	parse	matrix is expected to have 2, 3, or 4 columns
+85	parse	matrix is expected to have 2, 3, or 4 columns
+86	parse	matrix columns size has to be less than or equal to 4 and greater than or equal 2, but found 5
+87	parse	matrix columns size has to be less than or equal to 4 and greater than or equal 2, but found 1
+88	parse	expected '<'
+89	parse	unbalanced '<' character in pretty dialect name
+90	parse	expected 'x' in dimension list
+91	parse	matrix must be composed using vector type, got 'i32'
+92	parse	matrix must be composed using vector type, got '!spirv.array<16 x f32>'
+93	parse	matrix must be composed using vector type, got '!spirv.rtarray<i32>'
+94	parse	matrix columns' elements must be of Float type, got 'i32'
+95	parse	expected single unsigned integer for number of columns
+96	parse	expected single unsigned integer for number of columns
+104	parse	arm.tensor shape dimensions must be either fully dynamic or completed shaped
+105	parse	arm.tensors do not support rank zero
+107	parse	arm.tensors do not support zero dimensions

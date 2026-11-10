@@ -440,3 +440,11 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @preserve_discardable_attrs(%arg0: tensor<16x8xf32>, %arg1: tensor<8x32xf32>, %arg2: tensor<16x32xf32>) -> tensor<16x32xf32> {
+    %0 = linalg.matmul {another_attr = 42 : i64, my_custom_attr = "preserved"} ins(%arg0, %arg1 : tensor<16x8xf32>, tensor<8x32xf32>) outs(%arg2 : tensor<16x32xf32>) -> tensor<16x32xf32>
+    return %0 : tensor<16x32xf32>
+  }
+}
+

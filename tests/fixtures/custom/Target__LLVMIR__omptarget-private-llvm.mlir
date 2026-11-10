@@ -10,7 +10,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
     %3 = llvm.mlir.constant(1 : i64) : i64
     %4 = omp.map.info var_ptr(%2 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "i"}
     %5 = omp.map.info var_ptr(%arg0 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "d"}
-    omp.target map_entries(%4 -> %arg1, %5 -> %arg2 : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(spmd) map_entries(%4 -> %arg1, %5 -> %arg2 : !llvm.ptr, !llvm.ptr) {
       %6 = llvm.mlir.constant(1 : i32) : i32
       omp.teams {
         omp.parallel private(@_QMmodFfailingEi_private_i32 %arg1 -> %arg3 : !llvm.ptr) {
@@ -27,9 +27,9 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
           omp.terminator
         } {omp.composite}
         omp.terminator
-      }
+      } {omp.combined}
       omp.terminator
-    }
+    } {omp.combined}
     llvm.return
   }
 }

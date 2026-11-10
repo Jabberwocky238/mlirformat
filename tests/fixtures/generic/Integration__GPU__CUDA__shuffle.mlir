@@ -21,7 +21,7 @@
     ^bb2(%12: f32):  // 2 preds: ^bb0, ^bb1
       "memref.store"(%12, %1, %arg3) : (f32, memref<?xf32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%5) <{callee = @printMemrefF32}> : (memref<*xf32>) -> ()
     "func.return"() : () -> ()
   }) : () -> ()

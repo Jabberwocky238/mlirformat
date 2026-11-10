@@ -241,9 +241,7 @@ pub struct DeallocTensorOp<'a> {
 /// same purpose, but since tensor dialect ops only indicate *what* should be
 /// computed but not *where*, it could fold away, causing the computation to
 /// materialize in a different buffer.
-///
-/// Generic form only (directive `operands,`).
-#[mlir::op("bufferization.materialize_in_destination", results(result))]
+#[mlir::op("bufferization.materialize_in_destination", format = "$source `in` (`restrict` $restrict^)? (`writable` $writable^)? $dest attr-dict `:` functional-type($source $dest, $result)", results(result))]
 pub struct MaterializeInDestinationOp<'a> {
     #[slot(source_ty)]
     pub source: Value<'a>,

@@ -11,7 +11,7 @@
       %23 = "arith.constant"() <{value = 1 : i32}> : () -> i32
       "amdgpu.raw_buffer_store"(%22, %arg16, %23) <{boundsCheck = false, operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (vector<2xf32>, memref<?xf32>, i32) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (memref<?xf32>, memref<?xf32>) -> (), sym_name = "vectransferx4"}> ({
@@ -25,7 +25,7 @@
       %17 = "arith.addf"(%16, %16) <{fastmath = #arith.fastmath<none>}> : (vector<4xf32>, vector<4xf32>) -> vector<4xf32>
       "amdgpu.raw_buffer_store"(%17, %arg2, %15) <{boundsCheck = false, operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (vector<4xf32>, memref<?xf32>, i32) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({

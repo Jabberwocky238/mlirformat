@@ -41,3 +41,41 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+#map = affine_map<(d0) -> (d0 * -64 + 128, 64)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128xi32>) -> (), sym_name = "forall_static_bounds_affine_min_simplify"}> ({
+  ^bb0(%arg0: memref<128xi32>):
+    "scf.forall"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>, staticLowerBound = array<i64: 0>, staticStep = array<i64: 1>, staticUpperBound = array<i64: 2>}> ({
+    ^bb0(%arg1: index):
+      %0 = "affine.min"(%arg1) <{map = #map}> : (index) -> index
+      %1 = "arith.index_cast"(%0) : (index) -> i32
+      %2 = "arith.constant"() <{value = 0 : index}> : () -> index
+      "memref.store"(%1, %arg0, %2) : (i32, memref<128xi32>, index) -> ()
+      "scf.forall.in_parallel"() ({
+      ^bb0:
+      }) : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0) -> (d0 * -64 + 128, d0 * -64 + 96, 32)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128xi32>) -> (), sym_name = "forall_static_bounds_multi_result_min_simplify"}> ({
+  ^bb0(%arg0: memref<128xi32>):
+    "scf.forall"() <{operandSegmentSizes = array<i32: 0, 0, 0, 0>, staticLowerBound = array<i64: 0>, staticStep = array<i64: 1>, staticUpperBound = array<i64: 2>}> ({
+    ^bb0(%arg1: index):
+      %0 = "affine.min"(%arg1) <{map = #map}> : (index) -> index
+      %1 = "arith.index_cast"(%0) : (index) -> i32
+      %2 = "arith.constant"() <{value = 0 : index}> : () -> index
+      "memref.store"(%1, %arg0, %2) : (i32, memref<128xi32>, index) -> ()
+      "scf.forall.in_parallel"() ({
+      ^bb0:
+      }) : () -> ()
+    }) : () -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

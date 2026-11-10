@@ -8,13 +8,18 @@
 #sparse2 = #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : compressed), posWidth = 64, crdWidth = 64 }>
 "builtin.module"() ({
   "func.func"() <{function_type = () -> tensor<20x40xf32, #sparse>, sym_name = "bufferization_alloc_tensor"}> ({
-    %14 = "bufferization.alloc_tensor"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> tensor<20x40xf32, #sparse>
-    %15 = "sparse_tensor.load"(%14) : (tensor<20x40xf32, #sparse>) -> tensor<20x40xf32, #sparse>
-    "func.return"(%15) : (tensor<20x40xf32, #sparse>) -> ()
+    %15 = "bufferization.alloc_tensor"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> tensor<20x40xf32, #sparse>
+    %16 = "sparse_tensor.load"(%15) : (tensor<20x40xf32, #sparse>) -> tensor<20x40xf32, #sparse>
+    "func.return"(%16) : (tensor<20x40xf32, #sparse>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (!llvm.ptr) -> tensor<20x40xf32, #sparse>, sym_name = "sparse_tensor_new"}> ({
-  ^bb0(%arg14: !llvm.ptr):
-    %13 = "sparse_tensor.new"(%arg14) : (!llvm.ptr) -> tensor<20x40xf32, #sparse>
+  ^bb0(%arg15: !llvm.ptr):
+    %14 = "sparse_tensor.new"(%arg15) : (!llvm.ptr) -> tensor<20x40xf32, #sparse>
+    "func.return"(%14) : (tensor<20x40xf32, #sparse>) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (tensor<20x40xf32>) -> tensor<20x40xf32, #sparse>, sym_name = "sparse_tensor_new_from_tensor"}> ({
+  ^bb0(%arg14: tensor<20x40xf32>):
+    %13 = "sparse_tensor.new"(%arg14) : (tensor<20x40xf32>) -> tensor<20x40xf32, #sparse>
     "func.return"(%13) : (tensor<20x40xf32, #sparse>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> tensor<20x40xf32>, sym_name = "sparse_tensor_convert"}> ({

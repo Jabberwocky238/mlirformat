@@ -6,7 +6,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_id_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %block_id_x = gpu.block_id  x
+      %block_id_x = gpu.block_id x
       gpu.return
     }
   }
@@ -22,7 +22,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_id_y() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %block_id_y = gpu.block_id  y
+      %block_id_y = gpu.block_id y
       gpu.return
     }
   }
@@ -37,7 +37,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_id_z() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %block_id_z = gpu.block_id  z
+      %block_id_z = gpu.block_id z
       gpu.return
     }
   }
@@ -52,7 +52,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_size_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [32, 1, 1]>} {
-      %block_dim_x = gpu.block_dim  x
+      %block_dim_x = gpu.block_dim x
       gpu.return
     }
   }
@@ -67,7 +67,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_size_y() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [32, 4, 1]>} {
-      %block_dim_y = gpu.block_dim  y
+      %block_dim_y = gpu.block_dim y
       gpu.return
     }
   }
@@ -82,7 +82,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_size_z() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [32, 4, 1]>} {
-      %block_dim_z = gpu.block_dim  z
+      %block_dim_z = gpu.block_dim z
       gpu.return
     }
   }
@@ -97,7 +97,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_local_id_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       gpu.return
     }
   }
@@ -112,7 +112,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_num_workgroups_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %grid_dim_x = gpu.grid_dim  x
+      %grid_dim_x = gpu.grid_dim x
       gpu.return
     }
   }
@@ -147,7 +147,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_size_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<>} {
-      %block_dim_x = gpu.block_dim  x
+      %block_dim_x = gpu.block_dim x
       gpu.return
     }
   }
@@ -162,7 +162,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_size_y() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<>} {
-      %block_dim_y = gpu.block_dim  y
+      %block_dim_y = gpu.block_dim y
       gpu.return
     }
   }
@@ -177,7 +177,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_size_z() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<>} {
-      %block_dim_z = gpu.block_dim  z
+      %block_dim_z = gpu.block_dim z
       gpu.return
     }
   }
@@ -192,7 +192,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_global_id_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %global_id_x = gpu.global_id  x
+      %global_id_x = gpu.global_id x
       gpu.return
     }
   }
@@ -207,7 +207,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_global_id_y() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %global_id_y = gpu.global_id  y
+      %global_id_y = gpu.global_id y
       gpu.return
     }
   }
@@ -222,7 +222,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_global_id_z() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %global_id_z = gpu.global_id  z
+      %global_id_z = gpu.global_id z
       gpu.return
     }
   }

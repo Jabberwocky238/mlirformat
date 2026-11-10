@@ -1,0 +1,16 @@
+1	verify	'nvvm.tensormap.replace' op ordinal is required for global_stride field
+2	verify	'nvvm.tensormap.replace' op ordinal is required for box_dim field
+3	verify	'nvvm.tensormap.replace' op ordinal is not supported for rank field
+4	verify	'nvvm.tensormap.replace' op attribute 'ord' failed to satisfy constraint: 32-bit signless integer attribute whose minimum value is 0 whose maximum value is 4
+5	verify	'nvvm.tensormap.replace' op new_value must be specified and must be an i32 for rank field
+6	verify	'nvvm.tensormap.replace' op new_value must be specified and must be an i32 for rank field
+7	verify	'nvvm.tensormap.replace' op new_value must be specified and must be an i32 for box_dim field
+8	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid elemtype attribute for elemtype field
+9	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid elemtype attribute for elemtype field
+10	verify	'nvvm.tensormap.replace' op new_value must be specified and must be an i64 for global_address field
+11	verify	'nvvm.tensormap.replace' op new_value must be specified and must be an i64 for global_stride field
+12	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid elemtype attribute for elemtype field
+13	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid interleave_layout attribute for interleave_layout field
+14	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid swizzle_mode attribute for swizzle_mode field
+15	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid swizzle_atomicity attribute for swizzle_atomicity field
+16	verify	'nvvm.tensormap.replace' op new_value_attr must be specified and must be a valid fill_mode attribute for fill_mode field

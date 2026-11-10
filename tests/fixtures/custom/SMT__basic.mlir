@@ -8,15 +8,16 @@ module {
     %1 = smt.declare_fun {smt.some_attr} : !smt.int
     %2 = smt.declare_fun {smt.some_attr} : !smt.sort<"uninterpreted_sort">
     %3 = smt.declare_fun {smt.some_attr} : !smt.func<(!smt.int, !smt.bool) !smt.bool>
+    %4 = smt.declare_fun {smt.some_attr} : !smt.func<() !smt.bool>
     %true = smt.constant true {smt.some_attr}
     %false = smt.constant false {smt.some_attr}
     smt.assert %a {smt.some_attr}
     smt.reset {smt.some_attr}
     smt.push 1 {smt.some_attr}
     smt.pop 1 {smt.some_attr}
-    %4:2 = smt.solver(%arg0) {smt.some_attr} : (i8) -> (i8, i32) {
+    %5:2 = smt.solver(%arg0) {smt.some_attr} : (i8) -> (i8, i32) {
     ^bb0(%arg1: i8):
-      %16 = smt.check {smt.some_attr} sat {
+      %18 = smt.check {smt.some_attr} sat {
         %c1_i32 = arith.constant 1 : i32
         smt.yield %c1_i32 : i32
       } unknown {
@@ -26,7 +27,7 @@ module {
         %c-1_i32 = arith.constant -1 : i32
         smt.yield %c-1_i32 : i32
       } -> i32
-      smt.yield %arg1, %16 : i8, i32
+      smt.yield %arg1, %18 : i8, i32
     }
     smt.solver() : () -> () {
     }
@@ -37,17 +38,18 @@ module {
     } unknown {
     } unsat {
     }
-    %5 = smt.eq %0, %0 {smt.some_attr} : !smt.bv<32>
-    %6 = smt.distinct %0, %0 {smt.some_attr} : !smt.bv<32>
-    %7 = smt.eq %a, %a, %a : !smt.bool
-    %8 = smt.distinct %a, %a, %a : !smt.bool
-    %9 = smt.ite %a, %0, %0 {smt.some_attr} : !smt.bv<32>
-    %10 = smt.not %a {smt.some_attr}
-    %11 = smt.and %a, %a, %a {smt.some_attr}
-    %12 = smt.or %a, %a, %a {smt.some_attr}
-    %13 = smt.xor %a, %a, %a {smt.some_attr}
-    %14 = smt.implies %a, %a {smt.some_attr}
-    %15 = smt.apply_func %3(%1, %a) {smt.some_attr} : !smt.func<(!smt.int, !smt.bool) !smt.bool>
+    %6 = smt.eq %0, %0 {smt.some_attr} : !smt.bv<32>
+    %7 = smt.distinct %0, %0 {smt.some_attr} : !smt.bv<32>
+    %8 = smt.eq %a, %a, %a : !smt.bool
+    %9 = smt.distinct %a, %a, %a : !smt.bool
+    %10 = smt.ite %a, %0, %0 {smt.some_attr} : !smt.bv<32>
+    %11 = smt.not %a {smt.some_attr}
+    %12 = smt.and %a, %a, %a {smt.some_attr}
+    %13 = smt.or %a, %a, %a {smt.some_attr}
+    %14 = smt.xor %a, %a, %a {smt.some_attr}
+    %15 = smt.implies %a, %a {smt.some_attr}
+    %16 = smt.apply_func %3(%1, %a) {smt.some_attr} : !smt.func<(!smt.int, !smt.bool) !smt.bool>
+    %17 = smt.apply_func %4() {smt.some_attr} : !smt.func<() !smt.bool>
     return
   }
   func.func @quantifiers() {

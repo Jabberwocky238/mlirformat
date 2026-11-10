@@ -61,6 +61,16 @@ module {
 // -----
 module {
   gpu.module @xevm_module {
+    gpu.func @store_8D_vector(%arg0: vector<2x2x2x2x2x2x2x2xf32>, %arg1: memref<2x2x2x2x2x2x2x2xf32>, %arg2: index) {
+      vector.transfer_write %arg0, %arg1[%arg2, %arg2, %arg2, %arg2, %arg2, %arg2, %arg2, %arg2] {in_bounds = [true, true, true, true, true, true, true, true]} : vector<2x2x2x2x2x2x2x2xf32>, memref<2x2x2x2x2x2x2x2xf32>
+      gpu.return
+    }
+  }
+}
+
+// -----
+module {
+  gpu.module @xevm_module {
     gpu.func @no_store_masked(%arg0: vector<4xf32>, %arg1: memref<4xf32>, %arg2: index) {
       %cst = arith.constant dense<[false, true, false, true]> : vector<4xi1>
       vector.transfer_write %arg0, %arg1[%arg2], %cst {in_bounds = [true]} : vector<4xf32>, memref<4xf32>
@@ -116,6 +126,36 @@ module {
     gpu.func @store_to_subview(%arg0: vector<8xf16>, %arg1: memref<4096x4096xf16>, %arg2: index, %arg3: index) {
       %subview = memref.subview %arg1[%arg2, %arg3] [256, 256] [1, 1] : memref<4096x4096xf16> to memref<256x256xf16, strided<[4096, 1], offset: ?>>
       vector.transfer_write %arg0, %subview[%arg3, %arg3] {in_bounds = [true]} : vector<8xf16>, memref<256x256xf16, strided<[4096, 1], offset: ?>>
+      gpu.return
+    }
+  }
+}
+
+// -----
+module {
+  gpu.module @xevm_module {
+    gpu.func @store_2D_vector_addrspace3(%arg0: vector<8x16xf32>, %arg1: memref<16x32xf32, 3>, %arg2: index) {
+      vector.transfer_write %arg0, %arg1[%arg2, %arg2] {in_bounds = [true, true]} : vector<8x16xf32>, memref<16x32xf32, 3>
+      gpu.return
+    }
+  }
+}
+
+// -----
+module {
+  gpu.module @xevm_module {
+    gpu.func @store_1D_vector_addrspace3(%arg0: vector<8xf32>, %arg1: memref<32xf32, 3>, %arg2: index) {
+      vector.transfer_write %arg0, %arg1[%arg2] {in_bounds = [true]} : vector<8xf32>, memref<32xf32, 3>
+      gpu.return
+    }
+  }
+}
+
+// -----
+module {
+  gpu.module @xevm_module {
+    gpu.func @store_0D_vector_unsupported(%arg0: vector<f32>, %arg1: memref<3xf32>, %arg2: index) {
+      vector.transfer_write %arg0, %arg1[%arg2] : vector<f32>, memref<3xf32>
       gpu.return
     }
   }

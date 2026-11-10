@@ -83,13 +83,45 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (index) -> i4, sym_name = "negative_memref_subview_non_contiguous"}> ({
+  "func.func"() <{function_type = (index) -> i4, sym_name = "memref_subview_dynamic_inner_offset_i4"}> ({
   ^bb0(%arg0: index):
     %0 = "arith.constant"() <{value = 0 : index}> : () -> index
-    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<40x40xi4>
-    %2 = "memref.subview"(%1, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808, 0>, static_sizes = array<i64: 4, 8>, static_strides = array<i64: 1, 1>}> : (memref<40x40xi4>, index) -> memref<4x8xi4, strided<[40, 1], offset: ?>>
-    %3 = "memref.load"(%2, %0, %0) : (memref<4x8xi4, strided<[40, 1], offset: ?>>, index, index) -> i4
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<128xi4>
+    %2 = "memref.subview"(%1, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: 32>, static_strides = array<i64: 1>}> : (memref<128xi4>, index) -> memref<32xi4, strided<[1], offset: ?>>
+    %3 = "memref.load"(%2, %0) : (memref<32xi4, strided<[1], offset: ?>>, index) -> i4
     "func.return"(%3) : (i4) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<()[s0] -> (s0 * 2)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (index) -> i4, sym_name = "memref_subview_aligned_dynamic_inner_offset_i4"}> ({
+  ^bb0(%arg0: index):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "affine.apply"(%arg0) <{map = #map}> : (index) -> index
+    %2 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<128xi4>
+    %3 = "memref.subview"(%2, %1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: 32>, static_strides = array<i64: 1>}> : (memref<128xi4>, index) -> memref<32xi4, strided<[1], offset: ?>>
+    %4 = "memref.load"(%3, %0) : (memref<32xi4, strided<[1], offset: ?>>, index) -> i4
+    "func.return"(%4) : (i4) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x4x8xi4>) -> memref<4x4x8xi4, strided<[32, 8, 1]>>, sym_name = "reinterpret_cast_memref_rank3_static_offset_i4"}> ({
+  ^bb0(%arg0: memref<2x4x8xi4>):
+    %0 = "memref.reinterpret_cast"(%arg0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 0>, static_sizes = array<i64: 4, 4, 8>, static_strides = array<i64: 32, 8, 1>}> : (memref<2x4x8xi4>) -> memref<4x4x8xi4, strided<[32, 8, 1]>>
+    "func.return"(%0) : (memref<4x4x8xi4, strided<[32, 8, 1]>>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<2x4x8xi4>, index) -> memref<4x4x8xi4, strided<[32, 8, 1], offset: ?>>, sym_name = "reinterpret_cast_memref_rank3_dynamic_offset_i4"}> ({
+  ^bb0(%arg0: memref<2x4x8xi4>, %arg1: index):
+    %0 = "memref.reinterpret_cast"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: 4, 4, 8>, static_strides = array<i64: 32, 8, 1>}> : (memref<2x4x8xi4>, index) -> memref<4x4x8xi4, strided<[32, 8, 1], offset: ?>>
+    "func.return"(%0) : (memref<4x4x8xi4, strided<[32, 8, 1], offset: ?>>) -> ()
   }) : () -> ()
 }) : () -> ()
 
@@ -211,22 +243,6 @@
   "func.func"() <{function_type = (memref<32x128xi4, 1>, memref<32x128xi4>) -> (), sym_name = "memref_copy_i4"}> ({
   ^bb0(%arg0: memref<32x128xi4, 1>, %arg1: memref<32x128xi4>):
     "memref.copy"(%arg0, %arg1) : (memref<32x128xi4, 1>, memref<32x128xi4>) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = () -> (), sym_name = "alloc_non_contiguous"}> ({
-    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x8xi4, strided<[1, 8]>>
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (memref<8x8xi4, strided<[1, 8]>>) -> (), sym_name = "argument_non_contiguous"}> ({
-  ^bb0(%arg0: memref<8x8xi4, strided<[1, 8]>>):
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

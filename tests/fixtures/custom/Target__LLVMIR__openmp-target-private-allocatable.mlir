@@ -26,7 +26,7 @@ module {
     %10 = llvm.alloca %9 x f32 {bindc_name = "real_arr"} : (i64) -> !llvm.ptr
     %11 = omp.map.info var_ptr(%5 : !llvm.ptr, i32) map_clauses(implicit) capture(ByCopy) -> !llvm.ptr {name = "mapped_var"}
     %12 = omp.map.info var_ptr(%8 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(to) capture(ByRef) -> !llvm.ptr
-    omp.target map_entries(%11 -> %arg3, %12 -> %arg4 : !llvm.ptr, !llvm.ptr) private(@box.heap_privatizer %8 -> %arg5 [map_idx=1] : !llvm.ptr) {
+    omp.target kernel_type(generic) map_entries(%11 -> %arg3, %12 -> %arg4 : !llvm.ptr, !llvm.ptr) private(@box.heap_privatizer %8 -> %arg5 [map_idx=1] : !llvm.ptr) {
       llvm.call @use_private_var(%arg5) : (!llvm.ptr) -> ()
       omp.terminator
     }

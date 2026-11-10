@@ -13,27 +13,49 @@ keywords! {
         Uniform = "uniform",
         Any = "any",
         Calibrated = "calibrated",
+        Quantile = "quantile",
     }
 }
 
 /// `QuantizedType::MaxStorageBits`.
 const MAX_STORAGE_BITS: u32 = 32;
 
-/// A storage type: its width and signedness.
+/// A storage type (`QuantStorageTypeInterface`): its width and default range.
 #[derive(Clone, Copy)]
 struct Storage {
     width: u32,
-    signed: bool,
+    min: i64,
+    max: i64,
 }
 
 impl Storage {
-    /// `getDefaultMinimumForInteger` / `getDefaultMaximumForInteger`.
+    /// An integer of `width` bits: `getDefaultMinimum` / `getDefaultMaximum`.
+    #[inline]
+    fn int(width: u32, signed: bool) -> Self {
+        let w = width.clamp(1, 64);
+        let (min, max) = match signed {
+            true => (i64::MIN >> (64 - w), i64::MAX >> (64 - w)),
+            false => (0, (u64::MAX >> (64 - w)) as i64),
+        };
+        Self { width, min, max }
+    }
+
+    /// The float storage types: `f8E5M2`, `f8E4M3FN`, `f4E2M1FN` (their largest finite value).
+    #[inline]
+    fn float(k: FloatKind) -> Option<Self> {
+        let (width, max) = match k {
+            FloatKind::F8E5M2 => (8, 57344),
+            FloatKind::F8E4M3FN => (8, 448),
+            FloatKind::F4E2M1FN => (4, 6),
+            _ => return None,
+        };
+        Some(Self { width, min: -max, max })
+    }
+
+    /// `(min, max)`.
     #[inline]
     fn range(self) -> (i64, i64) {
-        match self.signed {
-            true => (-(1i64 << (self.width - 1)), (1i64 << (self.width - 1)) - 1),
-            false => (0, ((1u64 << self.width) - 1) as i64),
-        }
+        (self.min, self.max)
     }
 }
 
@@ -96,22 +118,92 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(v)
     }
 
-    /// `parseStorageType`: an integer type (`i8`, `ui8`) or `u<width>`, 1 to 32 bits.
+    /// `parseStorageType`: a `QuantStorageTypeInterface` type (an integer type `i8` / `ui8`,
+    /// `f8E5M2`, `f8E4M3FN`, `f4E2M1FN`, a `!quant.quantile<..>`) or `u<width>`, 1 to 32 bits.
     fn storage(&mut self) -> R<Storage> {
         self.p.ws();
-        let word = self.p.ident()?;
-        let (signed, width) = match word.strip_prefix('u').filter(|w| !w.is_empty() && w.bytes().all(|c| c.is_ascii_digit())) {
-            Some(w) => (false, w.parse::<u32>().or_else(|_| self.p.err("invalid integer width"))?),
-            None => match crate::Parser::read(word, |p| p.ty()) {
-                Ok(Type::Integer { signedness, width }) => (signedness != Signedness::Unsigned, width),
-                _ if word.starts_with('i') && word[1..].bytes().all(|c| c.is_ascii_digit()) && word.len() > 1 => return self.p.err("invalid integer width"),
-                _ => return self.p.err("illegal storage type prefix"),
+        let start = self.p.pos();
+        let s = match self.p.ty() {
+            Ok(Type::Integer { signedness, width }) => Storage::int(width, signedness != Signedness::Unsigned),
+            Ok(Type::Float(k)) => match Storage::float(k) {
+                Some(s) => s,
+                None => return self.p.err("illegal storage type prefix"),
             },
+            Ok(Type::Extended(e)) if e.name == "quant.quantile" => {
+                let body = e.body.as_deref().unwrap_or("");
+                let mut q = QuantText { p: Parser::new(body, self.p.opt()) };
+                q.quantile().map_err(|e| e.placed(body))?
+            }
+            Ok(_) => return self.p.err("illegal storage type prefix"),
+            Err(_) => {
+                self.p.seek(start);
+                let word = self.p.ident()?;
+                match word.strip_prefix('u') {
+                    Some(w) => Storage::int(w.parse::<u32>().or_else(|_| self.p.err("expected storage type width"))?, false),
+                    None => return self.p.err("illegal storage type prefix"),
+                }
+            }
         };
-        if width == 0 || width > MAX_STORAGE_BITS {
-            return self.p.err(alloc::format!("illegal storage type size: {width}"));
+        if s.width == 0 || s.width > MAX_STORAGE_BITS {
+            return self.p.err(alloc::format!("illegal storage type size: {}", s.width));
         }
-        Ok(Storage { width, signed })
+        Ok(s)
+    }
+
+    /// `parseQuantileType` after `quantile`, and `QuantileType::verifyInvariants`:
+    /// `<storage:quantile, {q, ..}(, <min:max>)?>`, one finite quantile per storage value. Its
+    /// storage range (`QuantileType::getDefaultMinimum` / `Maximum`) as a storage type itself.
+    fn quantile(&mut self) -> R<Storage> {
+        self.p.expect("<")?;
+        let (width, signed) = match self.p.ty()? {
+            Type::Integer { signedness, width } => (width, signedness != Signedness::Unsigned),
+            t @ Type::Float(_) => (t.bit_width().unwrap_or(0), true),
+            _ => return self.p.err("storage type must be an integer or float type"),
+        };
+        self.p.expect(":")?;
+        if !matches!(self.p.ty()?, Type::Float(_)) {
+            return self.p.err("quantile type must be a float type");
+        }
+        self.p.expect(",")?;
+        self.p.expect("{")?;
+        let mut quantiles = Vec::new();
+        if !self.p.eat("}") {
+            loop {
+                quantiles.push(self.float()?);
+                if !self.p.eat(",") {
+                    break;
+                }
+            }
+            self.p.expect("}")?;
+        }
+        let explicit = match self.p.eat(",") {
+            true => {
+                self.p.expect("<")?;
+                let min = self.integer()?;
+                self.p.expect(":")?;
+                let max = self.integer()?;
+                self.p.expect(">")?;
+                Some((min, max))
+            }
+            false => None,
+        };
+        self.p.expect(">")?;
+        if quantiles.is_empty() {
+            return self.p.err("quantile values must not be empty");
+        }
+        if explicit.is_some_and(|(min, max)| min >= max) {
+            return self.p.err("storage min must be less than storage max");
+        }
+        let int = Storage::int(width, signed);
+        let (min, max) = explicit.unwrap_or((int.min, int.max));
+        let expected = i128::from(max) - i128::from(min) + 1;
+        if quantiles.len() as i128 != expected {
+            return self.p.err(alloc::format!("quantile LUT size ({}) must equal the number of representable storage values ({expected})", quantiles.len()));
+        }
+        if quantiles.iter().any(|v| !v.is_finite()) {
+            return self.p.err("quantile values must be finite (no NaN or infinity)");
+        }
+        Ok(Storage { width, min, max })
     }
 
     /// `parseStorageRange`: `<min:max>` inside the storage type's range, `min < max`
@@ -265,6 +357,40 @@ impl<'a, 'd> QuantText<'a, 'd> {
 pub(super) struct Quant;
 
 impl Quant {
+    /// `text` (no whitespace) with each `!quant.uniform<..>`'s scales as the `f64` they are and
+    /// a zero point of `0` left out: `1.0:0` and `1.000000e+00` are one scale.
+    pub(super) fn canonical(text: &str) -> String {
+        let Some(at) = text.find("!quant.uniform<") else { return text.into() };
+        let mut out = String::from(&text[..at]);
+        let mut rest = &text[at..];
+        while !rest.is_empty() {
+            let c = rest.as_bytes()[0];
+            let after_word = out.as_bytes().last().is_some_and(|b| b.is_ascii_alphanumeric() || *b == b'_');
+            let number = (c.is_ascii_digit() || (c == b'-' && rest.as_bytes().get(1).is_some_and(u8::is_ascii_digit))) && !after_word;
+            if !number {
+                out.push(char::from(c));
+                rest = &rest[1..];
+                continue;
+            }
+            let end = 1 + rest[1..].find(|ch: char| !(ch.is_ascii_alphanumeric() || matches!(ch, '.' | '+' | '-'))).unwrap_or(rest.len() - 1);
+            let lit = &rest[..end];
+            rest = &rest[end..];
+            match lit.contains(['.', 'e', 'E']).then(|| lit.parse::<f64>().ok()).flatten() {
+                Some(v) => {
+                    out.push_str(&alloc::format!("{v:e}"));
+                    // `:0` after a scale: the default zero point.
+                    if let Some(tail) = rest.strip_prefix(":0")
+                        && !tail.starts_with(|ch: char| ch.is_ascii_digit())
+                    {
+                        rest = tail;
+                    }
+                }
+                None => out.push_str(lit),
+            }
+        }
+        out
+    }
+
     /// `!quant.<mnemonic><body>`: why `mlir-opt` would not read it.
     fn why(opt: &MlirOpt, mnemonic: &str, body: Option<&str>) -> Result<(), String> {
         let kind = Kind::try_from(mnemonic).map_err(|()| alloc::format!("unknown quantized type {mnemonic}"))?;
@@ -274,6 +400,7 @@ impl Quant {
             Kind::Uniform => q.uniform(),
             Kind::Any => q.any(),
             Kind::Calibrated => q.calibrated(),
+            Kind::Quantile => q.quantile().map(drop),
         };
         r.and_then(|()| {
             q.p.ws();

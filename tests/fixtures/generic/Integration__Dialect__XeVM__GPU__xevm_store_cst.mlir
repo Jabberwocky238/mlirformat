@@ -1,6 +1,6 @@
 "builtin.module"() <{sym_name = "gemm"}> ({
   "gpu.module"() <{sym_name = "kernel"}> ({
-    "gpu.func"() <{function_type = (!llvm.ptr<1>) -> ()}> ({
+    "gpu.func"() <{function_type = (!llvm.ptr<1>) -> (), kernel}> ({
     ^bb0(%arg3: !llvm.ptr<1>):
       %17 = "arith.constant"() <{value = 4.200000e+01 : f32}> : () -> f32
       %18 = "gpu.lane_id"() : () -> index
@@ -8,7 +8,7 @@
       %20 = "llvm.getelementptr"(%arg3, %19) <{elem_type = i32, noWrapFlags = 0 : i32, rawConstantIndices = array<i32: -2147483648>}> : (!llvm.ptr<1>, i64) -> !llvm.ptr<1>
       "llvm.store"(%17, %20) <{ordering = 0 : i64}> : (f32, !llvm.ptr<1>) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "store_constant", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "store_constant"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (memref<8x16xf32>) -> memref<8x16xf32>, sym_name = "test"}> ({
   ^bb0(%arg2: memref<8x16xf32>):

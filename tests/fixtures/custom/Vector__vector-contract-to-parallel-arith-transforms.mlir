@@ -4,6 +4,8 @@
 #map3 = affine_map<(d0, d1, d2) -> (d1, d0, d2)>
 #map4 = affine_map<(d0, d1) -> (d0, d1)>
 #map5 = affine_map<(d0, d1) -> ()>
+#map6 = affine_map<(d0, d1) -> (d1, d0)>
+#map7 = affine_map<(d0, d1) -> (d0)>
 module {
   func.func @parallel_contract_lowering(%arg0: vector<1x1x4xf32>, %arg1: vector<1x1x4xf32>, %arg2: vector<4xf32>) -> vector<4xf32> {
     %0 = vector.contract {indexing_maps = [#map, #map, #map1], iterator_types = ["parallel", "reduction", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<1x1x4xf32>, vector<1x1x4xf32> into vector<4xf32>
@@ -20,6 +22,10 @@ module {
   func.func @parallel_contract_lowering_scalar(%arg0: vector<1x1xf32>, %arg1: vector<1x1xf32>, %arg2: f32) -> f32 {
     %0 = vector.contract {indexing_maps = [#map4, #map4, #map5], iterator_types = ["reduction", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<1x1xf32>, vector<1x1xf32> into f32
     return %0 : f32
+  }
+  func.func @parallel_contract_lowering_non_unit_parallel(%arg0: vector<3x2xf32>, %arg1: vector<3x2xf32>, %arg2: vector<2xf32>) -> vector<2xf32> {
+    %0 = vector.contract {indexing_maps = [#map6, #map6, #map7], iterator_types = ["parallel", "reduction"], kind = #vector.kind<add>} %arg0, %arg1, %arg2 : vector<3x2xf32>, vector<3x2xf32> into vector<2xf32>
+    return %0 : vector<2xf32>
   }
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {

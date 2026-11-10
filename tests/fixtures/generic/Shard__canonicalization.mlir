@@ -52,22 +52,22 @@
   }) : () -> ()
   "func.func"() <{function_type = (tensor<4xf32>) -> tensor<4xf32>, sym_name = "reduce_scatter_empty_grid_axes"}> ({
   ^bb0(%arg4: tensor<4xf32>):
-    %26 = "shard.reduce_scatter"(%arg4) <{grid = @grid0, grid_axes = array<i16>, reduction = #shard<partial sum>, scatter_axis = 0 : index}> : (tensor<4xf32>) -> tensor<4xf32>
+    %26 = "shard.reduce_scatter"(%arg4) <{grid = @grid0, grid_axes = array<i16>, reduction = #shard<partial sum>, scatter_dim = 0 : index}> : (tensor<4xf32>) -> tensor<4xf32>
     "func.return"(%26) : (tensor<4xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<4xf32>) -> tensor<4xf64>, sym_name = "reduce_scatter_empty_grid_axes_different_return_type"}> ({
   ^bb0(%arg3: tensor<4xf32>):
-    %25 = "shard.reduce_scatter"(%arg3) <{grid = @grid0, grid_axes = array<i16>, reduction = #shard<partial sum>, scatter_axis = 0 : index}> : (tensor<4xf32>) -> tensor<4xf64>
+    %25 = "shard.reduce_scatter"(%arg3) <{grid = @grid0, grid_axes = array<i16>, reduction = #shard<partial sum>, scatter_dim = 0 : index}> : (tensor<4xf32>) -> tensor<4xf64>
     "func.return"(%25) : (tensor<4xf64>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<4xf32>) -> tensor<2xf64>, sym_name = "reduce_scatter_default_reduction"}> ({
   ^bb0(%arg2: tensor<4xf32>):
-    %24 = "shard.reduce_scatter"(%arg2) <{grid = @grid0, grid_axes = array<i16: 0>, reduction = #shard<partial sum>, scatter_axis = 0 : index}> : (tensor<4xf32>) -> tensor<2xf64>
+    %24 = "shard.reduce_scatter"(%arg2) <{grid = @grid0, grid_axes = array<i16: 0>, reduction = #shard<partial sum>, scatter_dim = 0 : index}> : (tensor<4xf32>) -> tensor<2xf64>
     "func.return"(%24) : (tensor<2xf64>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<4xf32>) -> tensor<4xf32>, sym_name = "scatter_empty_grid_axes"}> ({
   ^bb0(%arg1: tensor<4xf32>):
-    %23 = "shard.scatter"(%arg1) <{grid = @grid0, grid_axes = array<i16>, root = array<i64>, scatter_axis = 0 : index}> : (tensor<4xf32>) -> tensor<4xf32>
+    %23 = "shard.scatter"(%arg1) <{grid = @grid0, grid_axes = array<i16>, root = array<i64>, scatter_dim = 0 : index}> : (tensor<4xf32>) -> tensor<4xf32>
     "func.return"(%23) : (tensor<4xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<4xf32>) -> tensor<4xf32>, sym_name = "send_empty_grid_axes"}> ({

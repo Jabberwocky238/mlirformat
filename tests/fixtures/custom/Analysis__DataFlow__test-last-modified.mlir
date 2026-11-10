@@ -185,5 +185,9 @@ module {
     memref.store %cst_0, %arg0[] {tag_name = "post"} : memref<f32>
     return {tag = "return"} %arg0 : memref<f32>
   }
+  func.func private @unreachable_private(%arg0: i32) {
+    %0 = arith.index_cast %arg0 {tag = "tag_in_unreachable_private"} : i32 to index
+    return
+  }
 }
 

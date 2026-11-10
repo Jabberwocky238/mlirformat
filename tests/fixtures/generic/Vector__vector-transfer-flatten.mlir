@@ -160,6 +160,18 @@
 }) : () -> ()
 
 // -----
+#map = affine_map<(d0, d1, d2, d3) -> (d1, d2, d3)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<5x4x3x2xi8>) -> vector<1x1x1xi8>, sym_name = "transfer_read_multi_dim_unit_vector"}> ({
+  ^bb0(%arg0: memref<5x4x3x2xi8>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 0 : i8}> : () -> i8
+    %2 = "vector.transfer_read"(%arg0, %0, %0, %0, %0, %1) <{in_bounds = [false, false, false], operandSegmentSizes = array<i32: 1, 4, 1, 0>, permutation_map = #map}> : (memref<5x4x3x2xi8>, index, index, index, index, i8) -> vector<1x1x1xi8>
+    "func.return"(%2) : (vector<1x1x1xi8>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
 #map = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2, d3)>
 "builtin.module"() ({
   "func.func"() <{function_type = (memref<5x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>, vector<5x4x3x2xi8>) -> (), sym_name = "transfer_write_dims_match_contiguous"}> ({
@@ -329,6 +341,17 @@
   ^bb0(%arg0: memref<?x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>, %arg1: vector<1x1x3x2xi8>):
     %0 = "arith.constant"() <{value = 0 : index}> : () -> index
     "vector.transfer_write"(%arg1, %arg0, %0, %0, %0, %0) <{in_bounds = [false, true, true, true], operandSegmentSizes = array<i32: 1, 1, 4, 0>, permutation_map = #map}> : (vector<1x1x3x2xi8>, memref<?x4x3x2xi8, strided<[24, 6, 2, 1], offset: ?>>, index, index, index, index) -> ()
+    "func.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1, d2, d3) -> (d1, d2, d3)>
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<5x4x3x2xi8>, vector<1x1x1xi8>) -> (), sym_name = "transfer_write_multi_dim_unit_vector"}> ({
+  ^bb0(%arg0: memref<5x4x3x2xi8>, %arg1: vector<1x1x1xi8>):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    "vector.transfer_write"(%arg1, %arg0, %0, %0, %0, %0) <{in_bounds = [false, false, false], operandSegmentSizes = array<i32: 1, 1, 4, 0>, permutation_map = #map}> : (vector<1x1x1xi8>, memref<5x4x3x2xi8>, index, index, index, index) -> ()
     "func.return"() : () -> ()
   }) : () -> ()
 }) : () -> ()

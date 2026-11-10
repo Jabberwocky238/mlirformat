@@ -69,7 +69,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 {lowerUnpadLikeWithExtractSlice = false} : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 {lowerUnpadLikeWithExtractSlice = false} : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       %1 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %tiled_op, %forall_op = transform.structured.tile_using_forall %1 num_threads [4, 4] : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       %2 = transform.structured.match ops{["tensor.parallel_insert_slice"]} in %forall_op : (!transform.any_op) -> !transform.op<"tensor.parallel_insert_slice">
@@ -97,7 +97,7 @@ module {
   module attributes {transform.with_named_sequence} {
     transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
       %0 = transform.structured.match ops{["linalg.unpack"]} in %arg0 : (!transform.any_op) -> !transform.op<"linalg.unpack">
-      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">)
+      %empty_op, %transpose_op, %collapse_shape_op, %extract_slice_op, %copy_op = transform.structured.lower_unpack %0 : (!transform.op<"linalg.unpack">) -> (!transform.op<"tensor.empty">, !transform.op<"linalg.transpose">, !transform.op<"tensor.collapse_shape">, !transform.op<"tensor.extract_slice">, !transform.op<"linalg.copy">)
       %1 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
       %tiled_op, %forall_op = transform.structured.tile_using_forall %1 num_threads [4, 4] : (!transform.any_op) -> (!transform.any_op, !transform.any_op)
       %2 = transform.structured.match ops{["tensor.parallel_insert_slice"]} in %forall_op : (!transform.any_op) -> !transform.op<"tensor.parallel_insert_slice">

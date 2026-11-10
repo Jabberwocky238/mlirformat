@@ -182,8 +182,18 @@ module {
 
 // -----
 module {
-  func.func @load_from_buffer_cast(%arg0: index, %arg1: index, %arg2: tensor<?x?xf32>) -> f32 {
+  func.func @load_after_write_from_buffer_cast(%arg0: index, %arg1: index, %arg2: tensor<?x?xf32>) -> f32 {
     %0 = bufferization.to_buffer %arg2 : tensor<?x?xf32> to memref<?x?xf32>
+    linalg.ceil ins(%0 : memref<?x?xf32>) outs(%0 : memref<?x?xf32>)
+    %1 = memref.load %0[%arg0, %arg1] : memref<?x?xf32>
+    return %1 : f32
+  }
+}
+
+// -----
+module {
+  func.func @load_from_buffer_cast(%arg0: index, %arg1: index, %arg2: tensor<?x?xf32>) -> f32 {
+    %0 = bufferization.to_buffer %arg2 read_only : tensor<?x?xf32> to memref<?x?xf32>
     %1 = memref.load %0[%arg0, %arg1] : memref<?x?xf32>
     return %1 : f32
   }

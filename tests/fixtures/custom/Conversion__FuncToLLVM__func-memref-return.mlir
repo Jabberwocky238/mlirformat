@@ -10,9 +10,6 @@ module {
     %0 = call @foo(%arg0) : (memref<10xi8>) -> memref<20xi8>
     return %0 : memref<20xi8>
   }
-  func.func @check_return(%arg0: memref<?xi8>) -> memref<?xi8> {
-    return %arg0 : memref<?xi8>
-  }
   func.func @unconvertible_multiresult(%arg0: memref<?xf32>, %arg1: memref<?xf32>) -> (memref<?xf32>, memref<?xf32>) {
     return %arg0, %arg1 : memref<?xf32>, memref<?xf32>
   }

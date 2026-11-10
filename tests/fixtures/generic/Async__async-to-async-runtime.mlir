@@ -168,3 +168,10 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "async.func"() <{function_type = () -> !async.token, sym_name = "async_func_empty"}> ({
+    "async.return"() : () -> ()
+  }) : () -> ()
+}) : () -> ()
+

@@ -98,11 +98,11 @@ pub enum RoundingMode {
 ///
 /// // Tensor addition.
 /// %x = arith.addf %y, %z : tensor<4x?xbf16>
-/// ```
 ///
-/// TODO: In the distant future, this will accept optional attributes for fast
-/// math, contraction, rounding mode, and other controls.
-#[mlir::op("arith.addf", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+/// // Scalar addition with rounding mode.
+/// %a = arith.addf %b, %c to_nearest_even : f64
+/// ```
+#[mlir::op("arith.addf", format = "$lhs `,` $rhs ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct AddFOp<'a> {
     #[slot(result)]
     pub lhs: Value<'a>,
@@ -110,6 +110,8 @@ pub struct AddFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
     pub result: Type<'a>,
 }
 
@@ -425,8 +427,44 @@ pub struct ConstantOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `arith.convertf`: cast between floating-point types of the same bitwidth
+///
+/// Cast a floating-point value to a different floating-point type of the same
+/// bitwidth. This operation handles conversions between types that have the
+/// same bitwidth but different semantics (e.g., f16 to bf16), which cannot
+/// be represented by `arith.extf` or `arith.truncf`.
+///
+/// The source and destination element types must be different and must have
+/// the same bitwidth. When operating on vectors, casts elementwise.
+#[mlir::op("arith.convertf", format = "$in ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `to` type($out)", results(out))]
+pub struct ConvertFOp<'a> {
+    #[slot(in_ty, name = "in")]
+    pub in_: Value<'a>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
+    #[attr(dialect = "arith.fastmath")]
+    pub fastmath: Option<Attribute<'a>>,
+    pub in_ty: Type<'a>,
+    pub out: Type<'a>,
+}
+
 /// `arith.divf`: floating point division operation
-#[mlir::op("arith.divf", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+///
+/// The `divf` operation takes two operands and returns one result, each of
+/// these is required to be the same type. This type may be a floating point
+/// scalar type, a vector whose element type is a floating point type, or a
+/// floating point tensor.
+///
+/// Example:
+///
+/// ```mlir
+/// // Scalar division.
+/// %a = arith.divf %b, %c : f64
+///
+/// // Scalar division with rounding mode.
+/// %a = arith.divf %b, %c toward_zero : f64
+/// ```
+#[mlir::op("arith.divf", format = "$lhs `,` $rhs ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct DivFOp<'a> {
     #[slot(result)]
     pub lhs: Value<'a>,
@@ -434,6 +472,8 @@ pub struct DivFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
     pub result: Type<'a>,
 }
 
@@ -563,6 +603,11 @@ pub struct ExtSIOp<'a> {
 /// bit-width must be larger than the input bit-width (N > M).
 /// The top-most (N - M) bits of the output are filled with zeros.
 ///
+/// When the `nneg` flag is present, the operand is assumed to have
+/// the most significant bit set to 0. In this case, zero extension is
+/// equivalent to sign extension. When this assumption is violated, the
+/// result is poison.
+///
 /// Example:
 ///
 /// ```mlir
@@ -572,11 +617,16 @@ pub struct ExtSIOp<'a> {
 ///   %4 = arith.extui %3 : i3 to i6  // %4 is 0b000010
 ///
 ///   %5 = arith.extui %0 : vector<2 x i32> to vector<2 x i64>
+///
+///   // Zero extension with nneg flag.
+///   %6 = arith.extui %3 nneg : i3 to i6
 /// ```
-#[mlir::op("arith.extui", format = "$in attr-dict `:` type($in) `to` type($out)", results(out))]
+#[mlir::op("arith.extui", format = "$in (`nneg` $nonNeg^)? attr-dict `:` type($in) `to` type($out)", results(out))]
 pub struct ExtUIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
+    #[attr(name = "nonNeg")]
+    pub non_neg: bool,
     pub in_ty: Type<'a>,
     pub out: Type<'a>,
 }
@@ -632,6 +682,45 @@ pub struct FloorDivSIOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `arith.flush_denormals`: flush denormal floating-point values to zero
+///
+/// The `flush_denormals` operation takes a floating-point value and returns
+/// the input value if it is a normal (or zero, infinity, or NaN) value, or
+/// a zero of the same type if the input is a denormal (subnormal) value.
+/// The sign of zero is preserved when flushing a denormal: negative
+/// denormals flush to `-0.0`, positive denormals flush to `+0.0`.
+///
+/// A denormal number ("subnormal number" in IEEE-754) is a non-zero floating
+/// point number that is smaller (closer to zero) than the smallest normal
+/// number. Denormals fill the underflow gap around zero in floating-point
+/// arithmetics, but may come at a runtime cost on some architectures.
+///
+/// The input and result are required to be the same type. This type may be
+/// a floating-point scalar type, a vector whose element type is a
+/// floating-point type, or a tensor of floats. When operating on vectors
+/// or tensors, the operation is applied elementwise.
+///
+/// Example:
+///
+/// ```mlir
+/// // Scalar denormal flushing.
+/// %a = arith.flush_denormals %b : f32
+///
+/// // SIMD vector element-wise denormal flushing.
+/// %f = arith.flush_denormals %g : vector<4xf32>
+///
+/// // Tensor element-wise denormal flushing.
+/// %x = arith.flush_denormals %y : tensor<4x?xbf16>
+/// ```
+#[mlir::op("arith.flush_denormals", format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+pub struct FlushDenormalsOp<'a> {
+    #[slot(result)]
+    pub operand: Value<'a>,
+    #[attr(dialect = "arith.fastmath", default = "<none>")]
+    pub fastmath: Option<Attribute<'a>>,
+    pub result: Type<'a>,
+}
+
 /// `arith.index_cast`: cast between index and integer types
 ///
 /// Casts between scalar or vector integers and corresponding 'index' scalar or
@@ -652,10 +741,25 @@ pub struct IndexCastOp<'a> {
 /// vectors. Index is an integer of platform-specific bit width. If casting to
 /// a wider integer, the value is zero-extended. If casting to a narrower
 /// integer, the value is truncated.
-#[mlir::op("arith.index_castui", format = "$in attr-dict `:` type($in) `to` type($out)", results(out))]
+///
+/// When the `nneg` flag is present, the operand is assumed to have
+/// the most significant bit set to 0. In this case, zero extension
+/// is equivalent to sign extension. When this assumption is violated,
+/// the result is poison.
+///
+/// Example:
+///
+/// ```mlir
+///   %0 = arith.index_castui %a : i32 to index
+///   %1 = arith.index_castui %a nneg : i32 to index
+///   %2 = arith.index_castui %b nneg : index to i64
+/// ```
+#[mlir::op("arith.index_castui", format = "$in (`nneg` $nonNeg^)? attr-dict `:` type($in) `to` type($out)", results(out))]
 pub struct IndexCastUIOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
+    #[attr(name = "nonNeg")]
+    pub non_neg: bool,
     pub in_ty: Type<'a>,
     pub out: Type<'a>,
 }
@@ -808,11 +912,11 @@ pub struct MinimumFOp<'a> {
 ///
 /// // Tensor pointwise multiplication.
 /// %x = arith.mulf %y, %z : tensor<4x?xbf16>
-/// ```
 ///
-/// TODO: In the distant future, this will accept optional attributes for fast
-/// math, contraction, rounding mode, and other controls.
-#[mlir::op("arith.mulf", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+/// // Scalar multiplication with rounding mode.
+/// %a = arith.mulf %b, %c upward : f64
+/// ```
+#[mlir::op("arith.mulf", format = "$lhs `,` $rhs ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct MulFOp<'a> {
     #[slot(result)]
     pub lhs: Value<'a>,
@@ -820,6 +924,8 @@ pub struct MulFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
     pub result: Type<'a>,
 }
 
@@ -986,6 +1092,8 @@ pub struct OrIOp<'a> {
 ///
 /// Returns the floating point division remainder.
 /// The remainder has the same sign as the dividend (lhs operand).
+///
+/// TODO: Add support for rounding modes.
 #[mlir::op("arith.remf", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct RemFOp<'a> {
     #[slot(result)]
@@ -1060,9 +1168,7 @@ pub struct RemUIOp<'a> {
 /// `arith.sitofp`: cast from integer type to floating-point
 ///
 /// Cast from a value interpreted as a signed integer to the corresponding
-/// floating-point value. If the value cannot be exactly represented, it is
-/// rounded using the default rounding mode. When operating on vectors, casts
-/// elementwise.
+/// floating-point value. When operating on vectors, casts elementwise.
 #[mlir::op("arith.sitofp", format = "$in attr-dict `:` type($in) `to` type($out)", results(out))]
 pub struct SIToFPOp<'a> {
     #[slot(in_ty, name = "in")]
@@ -1307,11 +1413,11 @@ pub struct ShRUIOp<'a> {
 ///
 /// // Tensor subtraction.
 /// %x = arith.subf %y, %z : tensor<4x?xbf16>
-/// ```
 ///
-/// TODO: In the distant future, this will accept optional attributes for fast
-/// math, contraction, rounding mode, and other controls.
-#[mlir::op("arith.subf", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
+/// // Scalar subtraction with rounding mode.
+/// %a = arith.subf %b, %c downward : f64
+/// ```
+#[mlir::op("arith.subf", format = "$lhs `,` $rhs ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct SubFOp<'a> {
     #[slot(result)]
     pub lhs: Value<'a>,
@@ -1319,6 +1425,8 @@ pub struct SubFOp<'a> {
     pub rhs: Value<'a>,
     #[attr(dialect = "arith.fastmath", default = "<none>")]
     pub fastmath: Option<Attribute<'a>>,
+    #[attr(int = "i32")]
+    pub roundingmode: Option<RoundingMode>,
     pub result: Type<'a>,
 }
 
@@ -1365,12 +1473,40 @@ pub struct SubIOp<'a> {
     pub result: Type<'a>,
 }
 
+/// `arith.subui_extended`: extended unsigned integer subtraction operation returning difference and     borrow bit
+///
+/// Performs (N+1)-bit subtraction on zero-extended operands. Returns two
+/// results: the N-bit difference (same type as both operands), and the borrow
+/// bit (boolean-like), where `1` indicates unsigned subtraction underflow
+/// (i.e. `lhs < rhs` when interpreted as unsigned), while `0` indicates no
+/// underflow.
+///
+/// Example:
+///
+/// ```mlir
+/// // Scalar subtraction.
+/// %diff, %borrow = arith.subui_extended %b, %c : i64, i1
+///
+/// // Vector element-wise subtraction.
+/// %d:2 = arith.subui_extended %e, %f : vector<4xi32>, vector<4xi1>
+///
+/// // Tensor element-wise subtraction.
+/// %x:2 = arith.subui_extended %y, %z : tensor<4x?xi8>, tensor<4x?xi1>
+/// ```
+#[mlir::op("arith.subui_extended", format = "$lhs `,` $rhs attr-dict `:` type($diff) `,` type($borrow)", results(diff, borrow))]
+pub struct SubUIExtendedOp<'a> {
+    #[slot(diff)]
+    pub lhs: Value<'a>,
+    #[slot(diff)]
+    pub rhs: Value<'a>,
+    pub diff: Type<'a>,
+    pub borrow: Type<'a>,
+}
+
 /// `arith.truncf`: cast from floating-point to narrower floating-point
 ///
 /// Truncate a floating-point value to a smaller floating-point-typed value.
 /// The destination type must be strictly narrower than the source type.
-/// If the value cannot be exactly represented, it is rounded using the
-/// provided rounding mode or the default one if no rounding mode is provided.
 /// When operating on vectors, casts elementwise.
 #[mlir::op("arith.truncf", format = "$in ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($in) `to` type($out)", results(out))]
 pub struct TruncFOp<'a> {
@@ -1424,13 +1560,28 @@ pub struct TruncIOp<'a> {
 /// `arith.uitofp`: cast from unsigned integer type to floating-point
 ///
 /// Cast from a value interpreted as unsigned integer to the corresponding
-/// floating-point value. If the value cannot be exactly represented, it is
-/// rounded using the default rounding mode. When operating on vectors, casts
-/// elementwise.
-#[mlir::op("arith.uitofp", format = "$in attr-dict `:` type($in) `to` type($out)", results(out))]
+/// floating-point value. When operating on vectors, casts elementwise.
+///
+/// When the `nneg` flag is present, the operand is assumed to have
+/// the most significant bit set to 0. In this case, zero extension is
+/// equivalent to sign extension. When this assumption is violated, the
+/// result is poison.
+///
+/// Example:
+///
+/// ```mlir
+///   // Without nneg flag.
+///   %0 = arith.uitofp %a : i32 to f64
+///
+///   // With nneg flag.
+///   %1 = arith.uitofp %a nneg : i32 to f64
+/// ```
+#[mlir::op("arith.uitofp", format = "$in (`nneg` $nonNeg^)? attr-dict `:` type($in) `to` type($out)", results(out))]
 pub struct UIToFPOp<'a> {
     #[slot(in_ty, name = "in")]
     pub in_: Value<'a>,
+    #[attr(name = "nonNeg")]
+    pub non_neg: bool,
     pub in_ty: Type<'a>,
     pub out: Type<'a>,
 }
@@ -1515,7 +1666,7 @@ pub struct SelectOp<'a> {
 /// The `arith` dialect.
 #[mlir::dialect(
     "arith",
-    ops = [AddFOp, AddIOp, AddUIExtendedOp, AndIOp, BitcastOp, CeilDivSIOp, CeilDivUIOp, CmpFOp, CmpIOp, ConstantOp, DivFOp, DivSIOp, DivUIOp, ExtFOp, ExtSIOp, ExtUIOp, FPToSIOp, FPToUIOp, FloorDivSIOp, IndexCastOp, IndexCastUIOp, MaxNumFOp, MaxSIOp, MaxUIOp, MaximumFOp, MinNumFOp, MinSIOp, MinUIOp, MinimumFOp, MulFOp, MulIOp, MulSIExtendedOp, MulUIExtendedOp, NegFOp, OrIOp, RemFOp, RemSIOp, RemUIOp, SIToFPOp, ScalingExtFOp, ScalingTruncFOp, ShLIOp, ShRSIOp, ShRUIOp, SubFOp, SubIOp, TruncFOp, TruncIOp, UIToFPOp, XOrIOp, SelectOp],
+    ops = [AddFOp, AddIOp, AddUIExtendedOp, AndIOp, BitcastOp, CeilDivSIOp, CeilDivUIOp, CmpFOp, CmpIOp, ConstantOp, ConvertFOp, DivFOp, DivSIOp, DivUIOp, ExtFOp, ExtSIOp, ExtUIOp, FPToSIOp, FPToUIOp, FloorDivSIOp, FlushDenormalsOp, IndexCastOp, IndexCastUIOp, MaxNumFOp, MaxSIOp, MaxUIOp, MaximumFOp, MinNumFOp, MinSIOp, MinUIOp, MinimumFOp, MulFOp, MulIOp, MulSIExtendedOp, MulUIExtendedOp, NegFOp, OrIOp, RemFOp, RemSIOp, RemUIOp, SIToFPOp, ScalingExtFOp, ScalingTruncFOp, ShLIOp, ShRSIOp, ShRUIOp, SubFOp, SubIOp, SubUIExtendedOp, TruncFOp, TruncIOp, UIToFPOp, XOrIOp, SelectOp],
     materializer
 )]
 pub struct ArithDialect;

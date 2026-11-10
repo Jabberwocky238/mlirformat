@@ -38,10 +38,15 @@ module {
     %cst_6 = spirv.Constant dense<4.200000e+00> : !spirv.coopmatrix<16x16xf32, Subgroup, MatrixAcc>
     %cst_7 = spirv.Constant dense<0> : !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>
     %cst_8 = spirv.Constant dense<4> : !spirv.coopmatrix<16x16xi8, Subgroup, MatrixAcc>
+    %cst_9 = spirv.Constant [1 : i32, 2.000000e+00 : f32] : !spirv.struct<(i32, f32)>
+    %cst_10 = spirv.Constant [1 : i32, [dense<2> : vector<2xi32>]] : !spirv.struct<(i32, !spirv.array<1 x vector<2xi32>>)>
     return
   }
 }
 
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -100,6 +105,24 @@ module {
   }
 }
 
+// -----
+// -----
+module {
+  spirv.module Logical GLSL450 {
+    spirv.SpecConstant @x = 3 : i32
+    spirv.SpecConstant @y = 4 : i32
+    spirv.SpecConstant @z = 5 : i32
+    spirv.func @do_nothing() "None" {
+      spirv.Return
+    }
+    spirv.EntryPoint "GLCompute" @do_nothing
+    spirv.ExecutionModeId @do_nothing "LocalSizeHintId" @x, @y, @z
+  }
+}
+
+// -----
+// -----
+// -----
 // -----
 // -----
 module {
@@ -190,6 +213,27 @@ module {
 // -----
 // -----
 // -----
+// -----
+// -----
+// -----
+// -----
+module {
+  spirv.module Logical GLSL450 {
+    spirv.GlobalVariable @var0 {aliased_pointer} : !spirv.ptr<!spirv.ptr<f32, PhysicalStorageBuffer>, Private>
+    spirv.GlobalVariable @var1 {restrict_pointer} : !spirv.ptr<!spirv.ptr<f32, PhysicalStorageBuffer>, Private>
+  }
+}
+
+// -----
+// -----
+// -----
+module {
+  spirv.module Logical GLSL450 {
+    spirv.GlobalVariable @var0 {aliased_pointer} : !spirv.ptr<!spirv.array<4 x !spirv.ptr<f32, PhysicalStorageBuffer>>, Private>
+    spirv.GlobalVariable @var1 {restrict_pointer} : !spirv.ptr<!spirv.array<4 x !spirv.ptr<f32, PhysicalStorageBuffer>>, Private>
+  }
+}
+
 // -----
 // -----
 // -----
@@ -324,6 +368,30 @@ module {
 // -----
 // -----
 // -----
+module {
+  spirv.module Logical GLSL450 {
+    spirv.SpecConstant @sc1 = 1.500000e+00 : f32
+    spirv.SpecConstant @sc2 = 2.500000e+00 : f32
+    spirv.SpecConstantComposite @scc_inner (@sc1, @sc2) : !spirv.array<2 x f32>
+    spirv.SpecConstantComposite @scc_nested (@scc_inner, @scc_inner) : !spirv.array<2 x !spirv.array<2 x f32>>
+  }
+}
+
+// -----
+module {
+  spirv.module Logical GLSL450 {
+    spirv.SpecConstant @sc1 = 1 : i32
+    spirv.SpecConstant @sc2 = 2.500000e+00 : f32
+    spirv.SpecConstant @sc3 = 3.500000e+00 : f32
+    spirv.SpecConstantComposite @scc_vec (@sc2, @sc3) : vector<2xf32>
+    spirv.SpecConstantComposite @scc_struct (@sc1, @scc_vec) : !spirv.struct<(i32, vector<2xf32>)>
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
 // -----
 // -----
 // -----
@@ -353,6 +421,7 @@ module {
   }
 }
 
+// -----
 // -----
 // -----
 // -----

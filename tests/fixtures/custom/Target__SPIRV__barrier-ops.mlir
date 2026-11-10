@@ -19,3 +19,14 @@ module {
   }
 }
 
+// -----
+module {
+  spirv.module Physical64 OpenCL requires #spirv.vce<v1.1, [Kernel, Addresses, NamedBarrier, Linkage], []> {
+    spirv.func @named_barrier(%arg0: i32) "None" {
+      %0 = spirv.NamedBarrierInitialize %arg0 : i32 -> !spirv.named_barrier
+      spirv.MemoryNamedBarrier %0, <Workgroup>, <AcquireRelease|WorkgroupMemory> : !spirv.named_barrier
+      spirv.Return
+    }
+  }
+}
+

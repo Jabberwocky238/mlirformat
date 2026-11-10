@@ -1,11 +1,11 @@
 "builtin.module"() <{sym_name = "test"}> ({
   "gpu.module"() <{sym_name = "test_module"}> ({
-    "gpu.func"() <{function_type = (i32, f32) -> ()}> ({
+    "gpu.func"() <{function_type = (i32, f32) -> (), kernel}> ({
     ^bb0(%arg0: i32, %arg1: f32):
       "gpu.printf"(%arg0) <{format = "Hello: %d\0A"}> : (i32) -> ()
       "gpu.printf"(%arg1) <{format = "Hello: %f\0A"}> : (f32) -> ()
       "gpu.return"() : () -> ()
-    }) {gpu.kernel, sym_name = "test_printf", workgroup_attributions = 0 : i64} : () -> ()
+    }) {sym_name = "test_printf"} : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
     %0 = "arith.constant"() <{value = 1 : index}> : () -> index

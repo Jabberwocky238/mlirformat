@@ -16,7 +16,7 @@ module {
     %1 = gpu.memcpy async [%asyncToken_3] %memref, %arg0 : memref<16x32xf16>, memref<16x32xf16>
     %2 = gpu.memcpy async [%1] %memref_0, %arg1 : memref<32x16xf16>, memref<32x16xf16>
     %3 = gpu.memcpy async [%2] %memref_2, %arg2 : memref<16x16xf16>, memref<16x16xf16>
-    %spMat, %asyncToken_4 = gpu.create_2to4_spmat async [%3]{ PRUNE_AND_CHECK} %c16, %c32, %memref : memref<16x32xf16>
+    %spMat, %asyncToken_4 = gpu.create_2to4_spmat async [%3]{PRUNE_AND_CHECK} %c16, %c32, %memref : memref<16x32xf16>
     %dnTensor, %asyncToken_5 = gpu.create_dn_tensor async [%asyncToken_4] %memref_0, %c32, %c16 : index, index into memref<32x16xf16>
     %dnTensor_6, %asyncToken_7 = gpu.create_dn_tensor async [%asyncToken_5] %memref_2, %c16, %c16 : index, index into memref<16x16xf16>
     %bufferSzs:3, %asyncToken_8 = gpu.spmm_buffer_size async [%asyncToken_7] %spMat, %dnTensor, %dnTensor_6 : index, index, index into f16

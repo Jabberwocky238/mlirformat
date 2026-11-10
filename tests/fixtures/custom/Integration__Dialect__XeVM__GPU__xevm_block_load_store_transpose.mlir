@@ -9,7 +9,7 @@ module @gemm attributes {gpu.container_module} {
       %0 = xevm.blockload2d %arg0, %c32_i32, %c16_i32, %c32_i32_0, %c0_i32, %c0_i32_1 <{elem_size_in_bits = 32 : i32, pack_register = false, tile_height = 16 : i32, tile_width = 8 : i32, transpose = true, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi32>
       %1 = vector.bitcast %0 : vector<8xi32> to vector<8xf32>
       %c0_i32_2 = arith.constant 0 : i32
-      %thread_id_x = gpu.thread_id  x
+      %thread_id_x = gpu.thread_id x
       %2 = arith.index_cast %thread_id_x : index to i64
       %3 = llvm.trunc %2 : i64 to i32
       %4 = arith.sitofp %3 : i32 to f32

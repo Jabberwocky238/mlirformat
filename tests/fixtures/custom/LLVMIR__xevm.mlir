@@ -47,6 +47,50 @@ module {
 
 // -----
 module {
+  func.func @mma_mx(%arg0: vector<8xf32>, %arg1: vector<8xi16>, %arg2: vector<8xi32>, %arg3: vector<2xi8>, %arg4: vector<2xi8>) -> vector<8xf32> {
+    %0 = xevm.mma_mx %arg1, %arg2, %arg3, %arg4, %arg0 {shape = <m = 8, n = 16, k = 64>, types = <d = f32, a = e2m1, b = e2m1, c = f32>} : (vector<8xi16>, vector<8xi32>, vector<2xi8>, vector<2xi8>, vector<8xf32>) -> vector<8xf32>
+    return %0 : vector<8xf32>
+  }
+}
+
+// -----
+module {
+  func.func @truncf_scalar() -> i8 {
+    %cst = arith.constant 1.000000e+00 : bf16
+    %0 = xevm.truncf %cst {src_etype = bf16, dst_etype = f8} : (bf16) -> i8
+    return %0 : i8
+  }
+}
+
+// -----
+module {
+  func.func @truncf_vector() -> vector<8xi4> {
+    %cst = arith.constant dense<1.000000e+00> : vector<8xbf16>
+    %0 = xevm.truncf %cst {src_etype = bf16, dst_etype = e2m1} : (vector<8xbf16>) -> vector<8xi4>
+    return %0 : vector<8xi4>
+  }
+}
+
+// -----
+module {
+  func.func @extf_scalar() -> f16 {
+    %c1_i8 = arith.constant 1 : i8
+    %0 = xevm.extf %c1_i8 {src_etype = bf8, dst_etype = f16} : (i8) -> f16
+    return %0 : f16
+  }
+}
+
+// -----
+module {
+  func.func @extf_vector() -> vector<8xbf16> {
+    %cst = arith.constant dense<1> : vector<8xi4>
+    %0 = xevm.extf %cst {src_etype = e2m1, dst_etype = bf16} : (vector<8xi4>) -> vector<8xbf16>
+    return %0 : vector<8xbf16>
+  }
+}
+
+// -----
+module {
   func.func @memfence() {
     xevm.memfence <{addrspace = #xevm.addr_space<global>, scope = #xevm.mem_scope<workgroup>}>
     return

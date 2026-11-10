@@ -193,27 +193,27 @@
   }) : () -> ()
   "func.func"() <{function_type = (tensor<3x4xf32>) -> tensor<3x1xf64>, sym_name = "reduce_scatter_static_dimensions"}> ({
   ^bb0(%arg10: tensor<3x4xf32>):
-    %10 = "shard.reduce_scatter"(%arg10) <{grid = @grid0, grid_axes = array<i16: 2>, reduction = #shard<partial max>, scatter_axis = 1 : index}> : (tensor<3x4xf32>) -> tensor<3x1xf64>
+    %10 = "shard.reduce_scatter"(%arg10) <{grid = @grid0, grid_axes = array<i16: 2>, reduction = #shard<partial max>, scatter_dim = 1 : index}> : (tensor<3x4xf32>) -> tensor<3x1xf64>
     "func.return"(%10) : (tensor<3x1xf64>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf64>, sym_name = "reduce_scatter_dynamic_dimensions"}> ({
   ^bb0(%arg9: tensor<?xf32>):
-    %9 = "shard.reduce_scatter"(%arg9) <{grid = @grid3, grid_axes = array<i16: 0, 1>, reduction = #shard<partial sum>, scatter_axis = 0 : index}> : (tensor<?xf32>) -> tensor<?xf64>
+    %9 = "shard.reduce_scatter"(%arg9) <{grid = @grid3, grid_axes = array<i16: 0, 1>, reduction = #shard<partial sum>, scatter_dim = 0 : index}> : (tensor<?xf32>) -> tensor<?xf64>
     "func.return"(%9) : (tensor<?xf64>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<3x4xf32>) -> tensor<3x1xf32>, sym_name = "scatter_static_dimensions"}> ({
   ^bb0(%arg8: tensor<3x4xf32>):
-    %8 = "shard.scatter"(%arg8) <{grid = @grid0, grid_axes = array<i16: 2>, root = array<i64: 1>, scatter_axis = 1 : index}> : (tensor<3x4xf32>) -> tensor<3x1xf32>
+    %8 = "shard.scatter"(%arg8) <{grid = @grid0, grid_axes = array<i16: 2>, root = array<i64: 1>, scatter_dim = 1 : index}> : (tensor<3x4xf32>) -> tensor<3x1xf32>
     "func.return"(%8) : (tensor<3x1xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<?xf32>) -> tensor<?xf32>, sym_name = "scatter_dynamic_dimensions"}> ({
   ^bb0(%arg7: tensor<?xf32>):
-    %7 = "shard.scatter"(%arg7) <{grid = @grid3, grid_axes = array<i16: 0, 1>, root = array<i64: 1, 2>, scatter_axis = 0 : index}> : (tensor<?xf32>) -> tensor<?xf32>
+    %7 = "shard.scatter"(%arg7) <{grid = @grid3, grid_axes = array<i16: 0, 1>, root = array<i64: 1, 2>, scatter_dim = 0 : index}> : (tensor<?xf32>) -> tensor<?xf32>
     "func.return"(%7) : (tensor<?xf32>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<8xi8>, index) -> tensor<1xi8>, sym_name = "scatter_dynamic_root"}> ({
   ^bb0(%arg5: tensor<8xi8>, %arg6: index):
-    %6 = "shard.scatter"(%arg5, %arg6) <{grid = @grid0, grid_axes = array<i16: 0, 2>, root = array<i64: 1, -9223372036854775808>, scatter_axis = 0 : index}> : (tensor<8xi8>, index) -> tensor<1xi8>
+    %6 = "shard.scatter"(%arg5, %arg6) <{grid = @grid0, grid_axes = array<i16: 0, 2>, root = array<i64: 1, -9223372036854775808>, scatter_dim = 0 : index}> : (tensor<8xi8>, index) -> tensor<1xi8>
     "func.return"(%6) : (tensor<1xi8>) -> ()
   }) : () -> ()
   "func.func"() <{function_type = (tensor<2xi8>) -> tensor<2xi8>, sym_name = "send_static_destination"}> ({

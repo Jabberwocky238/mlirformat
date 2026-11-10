@@ -1,7 +1,7 @@
 "builtin.module"() ({
   "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (i1)>, linkage = #llvm.linkage<external>, sym_name = "target_if_variable", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
   ^bb0(%arg0: i1):
-    "omp.target"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0>}> ({
+    "omp.target"(%arg0) <{kernel_type = #omp<kernel_type(generic)>, operandSegmentSizes = array<i32: 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0>}> ({
       "omp.terminator"() : () -> ()
     }) : (i1) -> ()
     "llvm.return"() : () -> ()

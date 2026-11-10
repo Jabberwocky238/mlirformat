@@ -62,6 +62,36 @@ module {
 
 // -----
 module {
+  spirv.func @masked_gather(%arg0: vector<4x!spirv.ptr<f32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xf32>) "None" {
+    %0 = spirv.INTEL.MaskedGather %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32> -> vector<4xf32>
+    spirv.Return
+  }
+}
+
+// -----
+module {
+  spirv.func @masked_gather_i32(%arg0: vector<4x!spirv.ptr<i32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xi32>) "None" {
+    %0 = spirv.INTEL.MaskedGather %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<i32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xi32> -> vector<4xi32>
+    spirv.Return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+// -----
+module {
+  spirv.func @masked_scatter(%arg0: vector<4x!spirv.ptr<f32, CrossWorkgroup>>, %arg1: i32, %arg2: vector<4xi1>, %arg3: vector<4xf32>) "None" {
+    spirv.INTEL.MaskedScatter %arg0, %arg1, %arg2, %arg3 : vector<4x!spirv.ptr<f32, CrossWorkgroup>>, i32, vector<4xi1>, vector<4xf32>
+    spirv.Return
+  }
+}
+
+// -----
+// -----
+// -----
+module {
   spirv.module Logical GLSL450 requires #spirv.vce<v1.0, [CacheControlsINTEL], [SPV_INTEL_cache_controls]> {
     spirv.func @foo() "None" {
       %0 = spirv.Variable {cache_control_load_intel = [#spirv.cache_control_load_intel<cache_level = 0, load_cache_control = Uncached>, #spirv.cache_control_load_intel<cache_level = 1, load_cache_control = Cached>, #spirv.cache_control_load_intel<cache_level = 2, load_cache_control = InvalidateAfterR>]} : !spirv.ptr<f32, Function>

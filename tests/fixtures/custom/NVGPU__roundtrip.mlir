@@ -26,5 +26,13 @@ module {
     nvgpu.device_async_wait %1 {numGroups = 1 : i32}
     return
   }
+  func.func @warpgroup_mma_init_accumulator() {
+    %0 = nvgpu.warpgroup.mma.init.accumulator -> <fragmented = vector<64x128xf32>>
+    return
+  }
+  func.func @warpgroup_mma_store(%arg0: !nvgpu.warpgroup.accumulator<fragmented = vector<64x128xf32>>, %arg1: memref<64x128xf32, 3>) {
+    nvgpu.warpgroup.mma.store %arg0, %arg1 : <fragmented = vector<64x128xf32>> to memref<64x128xf32, 3>
+    return
+  }
 }
 

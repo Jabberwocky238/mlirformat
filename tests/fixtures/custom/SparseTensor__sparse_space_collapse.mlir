@@ -14,5 +14,20 @@ module {
     }
     return %1 : index
   }
+  func.func @no_crash_unconsumed_iter_space(%arg0: tensor<4x8xf32, #sparse>, %arg1: tensor<4x8xf32, #sparse>) -> index {
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    %0 = sparse_tensor.extract_iteration_space %arg0 lvls = 0 : tensor<4x8xf32, #sparse> -> !sparse_tensor.iter_space<#sparse, lvls = 0>
+    %1 = sparse_tensor.iterate %arg3 in %0 iter_args(%arg2 = %c0) : !sparse_tensor.iter_space<#sparse, lvls = 0>  -> index {
+      %2 = sparse_tensor.extract_iteration_space %arg0 at %arg3 lvls = 1 : tensor<4x8xf32, #sparse>, !sparse_tensor.iterator<#sparse, lvls = 0> -> !sparse_tensor.iter_space<#sparse, lvls = 1>
+      %3 = sparse_tensor.iterate %arg5 in %2 iter_args(%arg4 = %arg2) : !sparse_tensor.iter_space<#sparse, lvls = 1>  -> index {
+        %4 = sparse_tensor.extract_iteration_space %arg1 lvls = 0 : tensor<4x8xf32, #sparse> -> !sparse_tensor.iter_space<#sparse, lvls = 0>
+        %5 = arith.addi %arg4, %c1 : index
+        sparse_tensor.yield %5 : index
+      }
+      sparse_tensor.yield %3 : index
+    }
+    return %1 : index
+  }
 }
 

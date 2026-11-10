@@ -319,3 +319,27 @@ module {
   }
 }
 
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+module {
+  func.func @fuse_fill_through_rank_reducing_slice(%arg0: tensor<4x96xf32>) -> tensor<4x96xf32> {
+    %cst = arith.constant 1.000000e+00 : f32
+    %0 = tensor.empty() : tensor<4x1x96xf32>
+    %1 = linalg.fill ins(%cst : f32) outs(%0 : tensor<4x1x96xf32>) -> tensor<4x1x96xf32>
+    %extracted_slice = tensor.extract_slice %1[0, 0, 0] [4, 1, 96] [1, 1, 1] : tensor<4x1x96xf32> to tensor<4x96xf32>
+    %2 = linalg.generic {indexing_maps = [#map, #map], iterator_types = ["parallel", "parallel"]} ins(%extracted_slice : tensor<4x96xf32>) outs(%arg0 : tensor<4x96xf32>) {
+    ^bb0(%in: f32, %out: f32):
+      %3 = arith.addf %in, %out : f32
+      linalg.yield %3 : f32
+    } -> tensor<4x96xf32>
+    return %2 : tensor<4x96xf32>
+  }
+  module attributes {transform.with_named_sequence} {
+    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
+      %0 = transform.structured.match ops{["linalg.generic"]} in %arg0 : (!transform.any_op) -> !transform.any_op
+      %transformed, %loops = transform.structured.fuse %0 tile_sizes [0, 32] {apply_cleanup} : (!transform.any_op) -> (!transform.any_op, !transform.op<"scf.for">)
+      transform.yield 
+    }
+  }
+}
+

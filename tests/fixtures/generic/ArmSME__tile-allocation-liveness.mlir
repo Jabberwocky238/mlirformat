@@ -12,18 +12,6 @@
 
 // -----
 "builtin.module"() ({
-  "func.func"() <{function_type = (vector<[4]x[4]xf32>, vector<[4]xf32>, vector<[4]xf32>, index) -> (), sym_name = "value_with_multiple_users"}> ({
-  ^bb0(%arg0: vector<[4]x[4]xf32>, %arg1: vector<[4]xf32>, %arg2: vector<[4]xf32>, %arg3: index):
-    %0 = "arm_sme.insert_tile_slice"(%arg1, %arg0, %arg3) <{layout = #arm_sme.layout<horizontal>}> : (vector<[4]xf32>, vector<[4]x[4]xf32>, index) -> vector<[4]x[4]xf32>
-    %1 = "arm_sme.insert_tile_slice"(%arg2, %arg0, %arg3) <{layout = #arm_sme.layout<horizontal>}> : (vector<[4]xf32>, vector<[4]x[4]xf32>, index) -> vector<[4]x[4]xf32>
-    "test.some_use"(%0) : (vector<[4]x[4]xf32>) -> ()
-    "test.some_use"(%1) : (vector<[4]x[4]xf32>) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
   "func.func"() <{function_type = () -> (), sym_name = "reuse_tiles_after_initial_use"}> ({
     %0 = "arm_sme.get_tile"() : () -> vector<[4]x[4]xf32>
     %1 = "arm_sme.get_tile"() : () -> vector<[4]x[4]xf32>
@@ -104,20 +92,6 @@
     }, {
       %1 = "arm_sme.get_tile"() : () -> vector<[4]x[4]xf32>
       "scf.yield"(%1) : (vector<[4]x[4]xf32>) -> ()
-    }) : (i1) -> vector<[4]x[4]xf32>
-    "test.some_use"(%0) : (vector<[4]x[4]xf32>) -> ()
-    "func.return"() : () -> ()
-  }) : () -> ()
-}) : () -> ()
-
-// -----
-"builtin.module"() ({
-  "func.func"() <{function_type = (i1, vector<[4]x[4]xf32>, vector<[4]x[4]xf32>) -> (), sym_name = "overlapping_branches"}> ({
-  ^bb0(%arg0: i1, %arg1: vector<[4]x[4]xf32>, %arg2: vector<[4]x[4]xf32>):
-    %0 = "scf.if"(%arg0) ({
-      "scf.yield"(%arg1) : (vector<[4]x[4]xf32>) -> ()
-    }, {
-      "scf.yield"(%arg2) : (vector<[4]x[4]xf32>) -> ()
     }) : (i1) -> vector<[4]x[4]xf32>
     "test.some_use"(%0) : (vector<[4]x[4]xf32>) -> ()
     "func.return"() : () -> ()

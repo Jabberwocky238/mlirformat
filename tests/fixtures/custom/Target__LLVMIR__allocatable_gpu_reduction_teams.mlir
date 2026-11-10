@@ -39,16 +39,17 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
     %1 = llvm.alloca %0 x i1 : (i64) -> !llvm.ptr<5>
     %2 = llvm.addrspacecast %1 : !llvm.ptr<5> to !llvm.ptr
     %3 = llvm.getelementptr %2[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>
-    %4 = omp.map.info var_ptr(%2 : !llvm.ptr, f32) map_clauses(tofrom) capture(ByRef) var_ptr_ptr(%3 : !llvm.ptr) -> !llvm.ptr {name = ""}
-    %5 = omp.map.info var_ptr(%2 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(always, to, attach) capture(ByRef) members(%4 : [0] : !llvm.ptr) -> !llvm.ptr {name = "scalar_alloc"}
-    omp.target map_entries(%5 -> %arg0 : !llvm.ptr) {
-      %6 = llvm.mlir.constant(1000000 : i32) : i32
-      %7 = llvm.mlir.constant(1 : i32) : i32
+    %4 = omp.map.info var_ptr(%2 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(tofrom) capture(ByRef) var_ptr_ptr(%3 : !llvm.ptr, f32) -> !llvm.ptr {name = ""}
+    %5 = omp.map.info var_ptr(%2 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(always, to) capture(ByRef) members(%4 : [0] : !llvm.ptr) -> !llvm.ptr {name = "scalar_alloc"}
+    %6 = omp.map.info var_ptr(%2 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8)>) map_clauses(attach) capture(ByRef) var_ptr_ptr(%3 : !llvm.ptr, f32) -> !llvm.ptr {name = "scalar_alloc"}
+    omp.target kernel_type(spmd) map_entries(%5 -> %arg0 : !llvm.ptr) {
+      %7 = llvm.mlir.constant(1000000 : i32) : i32
+      %8 = llvm.mlir.constant(1 : i32) : i32
       omp.teams reduction(byref @add_reduction_byref_box_heap_f32 %arg0 -> %arg1 : !llvm.ptr) {
         omp.parallel {
           omp.distribute {
             omp.wsloop reduction(byref @add_reduction_byref_box_heap_f32 %arg1 -> %arg2 : !llvm.ptr) {
-              omp.loop_nest (%arg3) : i32 = (%7) to (%6) inclusive step (%7) {
+              omp.loop_nest (%arg3) : i32 = (%8) to (%7) inclusive step (%8) {
                 omp.yield
               }
             } {omp.composite}
@@ -56,9 +57,9 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<"dlti.alloca_memory_space" = 5 :
           omp.terminator
         } {omp.composite}
         omp.terminator
-      }
+      } {omp.combined}
       omp.terminator
-    }
+    } {omp.combined}
     llvm.return
   }
 }

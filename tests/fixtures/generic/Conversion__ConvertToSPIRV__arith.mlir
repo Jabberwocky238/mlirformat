@@ -1,18 +1,38 @@
 "builtin.module"() ({
   "func.func"() <{function_type = (i32, i32) -> (), sym_name = "int32_scalar"}> ({
-  ^bb0(%arg2: i32, %arg3: i32):
-    %1 = "arith.addi"(%arg2, %arg3) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
-    %2 = "arith.subi"(%arg2, %arg3) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
-    %3 = "arith.muli"(%arg2, %arg3) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
-    %4 = "arith.divsi"(%arg2, %arg3) : (i32, i32) -> i32
-    %5 = "arith.divui"(%arg2, %arg3) : (i32, i32) -> i32
-    %6 = "arith.remui"(%arg2, %arg3) : (i32, i32) -> i32
+  ^bb0(%arg10: i32, %arg11: i32):
+    %5 = "arith.addi"(%arg10, %arg11) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+    %6 = "arith.subi"(%arg10, %arg11) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+    %7 = "arith.muli"(%arg10, %arg11) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+    %8 = "arith.divsi"(%arg10, %arg11) : (i32, i32) -> i32
+    %9 = "arith.divui"(%arg10, %arg11) : (i32, i32) -> i32
+    %10 = "arith.remui"(%arg10, %arg11) : (i32, i32) -> i32
     "func.return"() : () -> ()
   }) : () -> ()
   "func.func"() <{function_type = (i32, i32) -> (), sym_name = "int32_scalar_srem"}> ({
-  ^bb0(%arg0: i32, %arg1: i32):
-    %0 = "arith.remsi"(%arg0, %arg1) : (i32, i32) -> i32
+  ^bb0(%arg8: i32, %arg9: i32):
+    %4 = "arith.remsi"(%arg8, %arg9) : (i32, i32) -> i32
     "func.return"() : () -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "scalar_ceildivui"}> ({
+  ^bb0(%arg6: i32, %arg7: i32):
+    %3 = "arith.ceildivui"(%arg6, %arg7) : (i32, i32) -> i32
+    "func.return"(%3) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "scalar_ceildivsi"}> ({
+  ^bb0(%arg4: i32, %arg5: i32):
+    %2 = "arith.ceildivsi"(%arg4, %arg5) : (i32, i32) -> i32
+    "func.return"(%2) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (i32, i32) -> i32, sym_name = "scalar_floordivsi"}> ({
+  ^bb0(%arg2: i32, %arg3: i32):
+    %1 = "arith.floordivsi"(%arg2, %arg3) : (i32, i32) -> i32
+    "func.return"(%1) : (i32) -> ()
+  }) : () -> ()
+  "func.func"() <{function_type = (vector<4xi32>, vector<4xi32>) -> vector<4xi32>, sym_name = "vector_ceildivsi"}> ({
+  ^bb0(%arg0: vector<4xi32>, %arg1: vector<4xi32>):
+    %0 = "arith.ceildivsi"(%arg0, %arg1) : (vector<4xi32>, vector<4xi32>) -> vector<4xi32>
+    "func.return"(%0) : (vector<4xi32>) -> ()
   }) : () -> ()
 }) : () -> ()
 

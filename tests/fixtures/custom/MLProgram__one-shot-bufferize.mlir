@@ -25,3 +25,18 @@ module {
   }
 }
 
+// -----
+module {
+  ml_program.global private mutable @state_tensor(dense<0.000000e+00> : tensor<4x75xf32>) : tensor<4x75xf32>
+  func.func @global_load_store_tensor() -> tensor<4x75xf32> {
+    %c0 = arith.constant 0 : index
+    %cst = arith.constant 1.000000e+00 : f32
+    %state_tensor = ml_program.global_load @state_tensor : tensor<4x75xf32>
+    %extracted = tensor.extract %state_tensor[%c0, %c0] : tensor<4x75xf32>
+    %0 = arith.addf %extracted, %cst : f32
+    %inserted = tensor.insert %0 into %state_tensor[%c0, %c0] : tensor<4x75xf32>
+    ml_program.global_store @state_tensor = %inserted : tensor<4x75xf32>
+    return %inserted : tensor<4x75xf32>
+  }
+}
+

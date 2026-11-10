@@ -40,7 +40,7 @@
       "gpu.subgroup_mma_store_matrix"(%18, %10#0, %4, %4) <{leadDimension = 16 : index}> : (!gpu.mma_matrix<16x16xf32, "COp">, memref<16x16xf32>, index, index) -> ()
       "gpu.printf"() <{format = "Success\0A"}> : () -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     %13 = "gpu.dealloc"(%8, %9#0) : (!gpu.async.token, memref<16x16xf16>) -> !gpu.async.token
     %14 = "gpu.dealloc"(%8, %10#0) : (!gpu.async.token, memref<16x16xf32>) -> !gpu.async.token
     "gpu.wait"(%8) : (!gpu.async.token) -> ()

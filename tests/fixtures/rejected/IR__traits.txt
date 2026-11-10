@@ -24,29 +24,31 @@
 29	verify	'test.elementwise_mappable' op if a result is non-scalar, then at least one operand must be non-scalar
 31	verify	'test.child' op expects parent op 'test.parent'
 34	verify	'test.child_with_parent_one_of' op expects parent op to be one of 'test.parent, test.parent1'
-35	verify	'test.SingleBlockImplicitTerminator' op expects a non-empty block
-36	verify	'test.SingleBlockImplicitTerminator' op expects region #0 to have 0 or 1 blocks
-37	verify	'test.SingleBlockImplicitTerminator' op expects regions to end with 'test.finish', found 'test.non_existent_op'
-38	verify	'test.symbol' op requires attribute 'sym_name'
-39	parse	invalid properties {sym_name = "foo_2", sym_visibility} for op test.symbol: Invalid attribute `sym_visibility` in property conversion: unit
-40	verify	'test.symbol' op visibility expected to be one of ["public", "private", "nested"], but got "foo"
-43	verify	'test.symbol_scope' op expects region #0 to have 0 or 1 blocks
-44	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
-45	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
-46	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
-47	verify	'test.attr_sized_operands' op 'operandSegmentSizes' attribute cannot have negative elements
-48	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (3) specified in attribute 'operandSegmentSizes'
-49	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
-51	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
-52	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
-53	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
-54	verify	'test.attr_sized_results' op 'resultSegmentSizes' attribute cannot have negative elements
-55	verify	'test.attr_sized_results' op result count (4) does not match with the total size (3) specified in attribute 'resultSegmentSizes'
-56	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
-63	verify	operand #0 does not dominate this use
-64	verify	operand #0 does not dominate this use
-65	verify	operand #0 does not dominate this use
-66	parse	use of undeclared SSA value name
-67	verify	'test.graph_region' op expects graph region #0 to have 0 or 1 blocks
-69	verify	result type should have trait 'TestTypeTrait'
-71	verify	'attr' attribute should have trait 'TestAttrTrait'
+37	verify	'test.child_with_ancestor' op expects ancestor op 'test.parent'
+41	verify	'test.child_with_ancestor_one_of' op expects ancestor op to be one of 'test.parent, test.parent1'
+42	verify	'test.SingleBlockImplicitTerminator' op expects a non-empty block
+43	verify	'test.SingleBlockImplicitTerminator' op expects region #0 to have 0 or 1 blocks
+44	verify	'test.SingleBlockImplicitTerminator' op expects regions to end with 'test.finish', found 'test.non_existent_op'
+45	verify	'test.symbol' op requires attribute 'sym_name'
+46	parse	invalid properties {sym_name = "foo_2", sym_visibility} for op test.symbol: Invalid attribute `sym_visibility` in property conversion: unit
+47	verify	'test.symbol' op visibility expected to be one of ["public", "private", "nested"], but got "foo"
+50	verify	'test.symbol_scope' op expects region #0 to have 0 or 1 blocks
+51	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+52	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+53	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+54	verify	'test.attr_sized_operands' op 'operandSegmentSizes' attribute cannot have negative elements
+55	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (3) specified in attribute 'operandSegmentSizes'
+56	verify	'test.attr_sized_operands' op operand count (4) does not match with the total size (0) specified in attribute 'operandSegmentSizes'
+58	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+59	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+60	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+61	verify	'test.attr_sized_results' op 'resultSegmentSizes' attribute cannot have negative elements
+62	verify	'test.attr_sized_results' op result count (4) does not match with the total size (3) specified in attribute 'resultSegmentSizes'
+63	verify	'test.attr_sized_results' op result count (4) does not match with the total size (0) specified in attribute 'resultSegmentSizes'
+70	verify	operand #0 does not dominate this use
+71	verify	operand #0 does not dominate this use
+72	verify	operand #0 does not dominate this use
+73	parse	use of undeclared SSA value name
+74	verify	'test.graph_region' op expects graph region #0 to have 0 or 1 blocks
+76	verify	result type should have trait 'TestTypeTrait'
+78	verify	'attr' attribute should have trait 'TestAttrTrait'

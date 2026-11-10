@@ -12,7 +12,7 @@
     %8 = "arith.constant"() <{value = 123 : i32}> : () -> i32
     %9 = "arith.constant"() <{value = 8 : index}> : () -> index
     %10 = "tensor.empty"() : () -> tensor<7x3xi32>
-    %11 = "linalg.unpack"(%arg1, %10, %9) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: -9223372036854775808, 1>}> : (tensor<?x3x?x1xi32>, tensor<7x3xi32>, index) -> tensor<7x3xi32>
+    %11 = "linalg.unpack"(%arg1, %10, %9) <{inner_dims_pos = array<i64: 0, 1>, static_inner_tiles = array<i64: -9223372036854775808, 1>}> {operandSegmentSizes = array<i32: 1, 1, 0, 1>} : (tensor<?x3x?x1xi32>, tensor<7x3xi32>, index) -> tensor<7x3xi32>
     %12 = "tensor.cast"(%11) : (tensor<7x3xi32>) -> tensor<*xi32>
     "func.call"(%12) <{callee = @printMemrefI32}> : (tensor<*xi32>) -> ()
     "func.return"() : () -> ()

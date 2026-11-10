@@ -61,3 +61,26 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (index) -> (), sym_name = "callee", sym_visibility = "private"}> ({
+  }) : () -> ()
+  "func.func"() <{function_type = (tensor<1xf32>, index) -> tensor<1xf32>, sym_name = "shared_outs"}> ({
+  ^bb0(%arg0: tensor<1xf32>, %arg1: index):
+    %0 = "scf.forall"(%arg0) <{operandSegmentSizes = array<i32: 0, 0, 0, 1>, staticLowerBound = array<i64: 0>, staticStep = array<i64: 1>, staticUpperBound = array<i64: 1>}> ({
+    ^bb0(%arg3: index, %arg4: tensor<1xf32>):
+      "scf.forall.in_parallel"() ({
+        "tensor.parallel_insert_slice"(%arg4, %arg4, %arg3) <{operandSegmentSizes = array<i32: 1, 1, 1, 0, 0>, static_offsets = array<i64: -9223372036854775808>, static_sizes = array<i64: 1>, static_strides = array<i64: 1>}> : (tensor<1xf32>, tensor<1xf32>, index) -> ()
+      }) : () -> ()
+    }) : (tensor<1xf32>) -> tensor<1xf32>
+    "scf.forall"(%arg1) <{operandSegmentSizes = array<i32: 0, 1, 0, 0>, staticLowerBound = array<i64: 0>, staticStep = array<i64: 1>, staticUpperBound = array<i64: -9223372036854775808>}> ({
+    ^bb0(%arg2: index):
+      "func.call"(%arg2) <{callee = @callee}> : (index) -> ()
+      "scf.forall.in_parallel"() ({
+      ^bb0:
+      }) : () -> ()
+    }) : (index) -> ()
+    "func.return"(%0) : (tensor<1xf32>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

@@ -355,6 +355,9 @@ module {
     "complex_attr"() {bar = dense<[(1.000000e+00,0.000000e+00), (2.000000e+00,2.000000e+00)]> : tensor<2xcomplex<f32>>} : () -> ()
     "complex_attr"() {bar = dense<> : tensor<0xcomplex<i64>>} : () -> ()
     "complex_attr"() {bar = dense<> : tensor<2x0xcomplex<i64>>} : () -> ()
+    "complex_attr"() {bar = dense<(true,true)> : tensor<complex<i1>>} : () -> ()
+    "complex_attr"() {bar = dense<[(true,true), (false,true)]> : tensor<2xcomplex<i1>>} : () -> ()
+    "complex_attr"() {bar = dense<[(false,true), (true,false)]> : tensor<2xcomplex<i1>>} : () -> ()
     return
   }
   func.func @densevectorattr() {

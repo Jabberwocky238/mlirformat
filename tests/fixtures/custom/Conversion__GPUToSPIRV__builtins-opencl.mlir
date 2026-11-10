@@ -6,7 +6,7 @@ module attributes {gpu.container_module, spirv.target_env = #spirv.target_env<#s
   }
   gpu.module @kernels {
     gpu.func @builtin_workgroup_id_x() kernel attributes {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [16, 1, 1]>} {
-      %block_id_x = gpu.block_id  x
+      %block_id_x = gpu.block_id x
       gpu.return
     }
   }

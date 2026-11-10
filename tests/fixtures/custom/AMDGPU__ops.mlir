@@ -286,11 +286,11 @@ module {
     return
   }
   func.func @raw_buffer_atomic_fadd_f32_to_rank_1(%arg0: f32, %arg1: memref<128xf32>, %arg2: i32, %arg3: i32) {
-    amdgpu.raw_buffer_atomic_fadd {indexOffset = 1 : i32} %arg0 -> %arg1[%arg3] sgprOffset %arg2 : f32 -> memref<128xf32>, i32
+    %0 = amdgpu.raw_buffer_atomic_fadd {indexOffset = 1 : i32} %arg0 -> %arg1[%arg3] sgprOffset %arg2 : f32 -> memref<128xf32>, i32
     return
   }
   func.func @raw_buffer_atomic_fadd_f32_to_rank_4(%arg0: f32, %arg1: memref<128x64x32x16xf32>, %arg2: i32, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32) {
-    amdgpu.raw_buffer_atomic_fadd {indexOffset = 1 : i32} %arg0 -> %arg1[%arg3, %arg4, %arg5, %arg6] sgprOffset %arg2 : f32 -> memref<128x64x32x16xf32>, i32, i32, i32, i32
+    %0 = amdgpu.raw_buffer_atomic_fadd {indexOffset = 1 : i32} %arg0 -> %arg1[%arg3, %arg4, %arg5, %arg6] sgprOffset %arg2 : f32 -> memref<128x64x32x16xf32>, i32, i32, i32, i32
     return
   }
   func.func @raw_buffer_atomic_cmpswap_f32(%arg0: f32, %arg1: f32, %arg2: memref<128x64x32x16xf32>, %arg3: i32, %arg4: i32, %arg5: i32, %arg6: i32, %arg7: i32) {
@@ -302,16 +302,17 @@ module {
     return
   }
   func.func @sched_barrier() {
-    amdgpu.sched_barrier allow = <none>
-    amdgpu.sched_barrier allow = <valu|all_vmem>
+    amdgpu.sched_barrier allow = none
+    amdgpu.sched_barrier allow = valu|all_vmem
+    amdgpu.sched_barrier allow = all
     return
   }
   func.func @mfma(%arg0: vector<4xf16>, %arg1: vector<4xf32>) -> vector<4xf32> {
-    %0 = amdgpu.mfma 16x16x16 %arg0 * %arg0 + %arg1 blgp =  none : vector<4xf16>, vector<4xf16>, vector<4xf32>
+    %0 = amdgpu.mfma 16x16x16 %arg0 * %arg0 + %arg1 blgp = none : vector<4xf16>, vector<4xf16>, vector<4xf32>
     return %0 : vector<4xf32>
   }
   func.func @mfma_with_blocks(%arg0: f32, %arg1: vector<32xf32>) -> vector<32xf32> {
-    %0 = amdgpu.mfma 32x32x1 %arg0 * %arg0 + %arg1 {abid = 1 : i32, blocks = 2 : i32, cbsz = 1 : i32} blgp =  bcast_second_32 : f32, f32, vector<32xf32>
+    %0 = amdgpu.mfma 32x32x1 %arg0 * %arg0 + %arg1 {abid = 1 : i32, blocks = 2 : i32, cbsz = 1 : i32} blgp = bcast_second_32 : f32, f32, vector<32xf32>
     return %0 : vector<32xf32>
   }
   func.func @wmma_f16_16x16x16_f16(%arg0: vector<16xf16>, %arg1: vector<8xf16>) -> vector<8xf16> {
@@ -358,19 +359,49 @@ module {
     %0 = amdgpu.scaled_mfma 32x32x64 (%arg0[0] * %arg1) * (%arg0[1] * %arg1) + %arg2 : f8E8M0FNU, vector<32xf6E2M3FN>, f8E8M0FNU, vector<32xf6E2M3FN>, vector<16xf32>
     return %0 : vector<16xf32>
   }
+  func.func @sparse_mfma(%arg0: vector<4xf16>, %arg1: vector<8xf16>, %arg2: vector<8xf16>, %arg3: vector<16xf16>, %arg4: vector<8xi8>, %arg5: vector<16xi8>, %arg6: vector<16xi8>, %arg7: vector<32xi8>, %arg8: vector<4xf32>, %arg9: vector<4xi32>, %arg10: vector<4xi8>, %arg11: vector<2xi16>, %arg12: i32) {
+    %0 = amdgpu.sparse_mfma 16x16x32 %arg0 * %arg1 + %arg8 sparse(%arg10 : vector<4xi8>) {abid = 3 : i32} : vector<4xf16>, vector<8xf16>, vector<4xf32>
+    %1 = amdgpu.sparse_mfma 16x16x64 %arg4 * %arg5 + %arg9 sparse(%arg11 : vector<2xi16>) {abid = 1 : i32} : vector<8xi8>, vector<16xi8>, vector<4xi32>
+    %2 = amdgpu.sparse_mfma 16x16x64 %arg2 * %arg3 + %arg8 sparse(%arg11 : vector<2xi16>) {abid = 1 : i32} : vector<8xf16>, vector<16xf16>, vector<4xf32>
+    %3 = amdgpu.sparse_mfma 16x16x128 %arg6 * %arg7 + %arg9 sparse(%arg12 : i32) : vector<16xi8>, vector<32xi8>, vector<4xi32>
+    return
+  }
   func.func @transpose_load(%arg0: index, %arg1: index, %arg2: memref<128x32xf16, 3>) -> vector<4xf16> {
     %0 = amdgpu.transpose_load %arg2[%arg0, %arg1] : memref<128x32xf16, 3> -> vector<4xf16>
     return %0 : vector<4xf16>
   }
+  func.func @global_transpose_load(%arg0: index, %arg1: index, %arg2: memref<128x256xf16, #gpu.address_space<global>>) -> vector<8xf16> {
+    %0 = amdgpu.global_transpose_load %arg2[%arg0, %arg1] : memref<128x256xf16, #gpu.address_space<global>> -> vector<8xf16>
+    return %0 : vector<8xf16>
+  }
   func.func @gather_to_lds(%arg0: index, %arg1: index, %arg2: memref<32xf16>, %arg3: memref<32x32xf16>, %arg4: memref<32xf16, #gpu.address_space<workgroup>>, %arg5: memref<32x32xf16, #gpu.address_space<workgroup>>, %arg6: memref<?x?xf16, strided<[?, 1]>, #gpu.address_space<workgroup>>) {
-    amdgpu.gather_to_lds %arg3[%arg0, %arg1], %arg5[%arg0, %arg1] : vector<2xf16>, memref<32x32xf16>, memref<32x32xf16, #gpu.address_space<workgroup>>
+    amdgpu.gather_to_lds async %arg3[%arg0, %arg1], %arg5[%arg0, %arg1] : vector<2xf16>, memref<32x32xf16>, memref<32x32xf16, #gpu.address_space<workgroup>>
+    amdgpu.gather_to_lds async %arg2[%arg0], %arg5[%arg0, %arg1] : vector<2xf16>, memref<32xf16>, memref<32x32xf16, #gpu.address_space<workgroup>>
+    rocdl.asyncmark
     amdgpu.gather_to_lds %arg3[%arg0, %arg1], %arg4[%arg0] : vector<2xf16>, memref<32x32xf16>, memref<32xf16, #gpu.address_space<workgroup>>
-    amdgpu.gather_to_lds %arg2[%arg0], %arg5[%arg0, %arg1] : vector<2xf16>, memref<32xf16>, memref<32x32xf16, #gpu.address_space<workgroup>>
     amdgpu.gather_to_lds %arg2[%arg0], %arg6[%arg0, %arg1] : vector<2xf16>, memref<32xf16>, memref<?x?xf16, strided<[?, 1]>, #gpu.address_space<workgroup>>
+    rocdl.wait.asyncmark 0
+    return
+  }
+  func.func @gather_to_lds_integer_fat_raw_buffer_address_space(%arg0: index, %arg1: memref<32xf16, 7>, %arg2: memref<32xf16, #gpu.address_space<workgroup>>) {
+    amdgpu.gather_to_lds %arg1[%arg0], %arg2[%arg0] : vector<2xf16>, memref<32xf16, 7>, memref<32xf16, #gpu.address_space<workgroup>>
     return
   }
   func.func @gather_to_lds_0d(%arg0: memref<f16>, %arg1: memref<f16, #gpu.address_space<workgroup>>) {
-    amdgpu.gather_to_lds %arg0[], %arg1[] : vector<2xf16>, memref<f16>, memref<f16, #gpu.address_space<workgroup>>
+    amdgpu.gather_to_lds async %arg0[], %arg1[] : vector<2xf16>, memref<f16>, memref<f16, #gpu.address_space<workgroup>>
+    rocdl.asyncmark
+    rocdl.wait.asyncmark 0
+    return
+  }
+  func.func @global_load_async_to_lds(%arg0: index, %arg1: index, %arg2: memref<32xf32, #gpu.address_space<global>>, %arg3: memref<32x32xf32, #gpu.address_space<global>>, %arg4: memref<32xf32, #gpu.address_space<workgroup>>, %arg5: memref<32x32xf32, #gpu.address_space<workgroup>>, %arg6: i1) {
+    amdgpu.global_load_async_to_lds %arg3[%arg0, %arg1], %arg5[%arg0, %arg1] : f32, memref<32x32xf32, #gpu.address_space<global>>, memref<32x32xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg2[%arg0], %arg5[%arg0, %arg1] : f32, memref<32xf32, #gpu.address_space<global>>, memref<32x32xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg3[%arg0, %arg1], %arg5[%arg0, %arg1] : vector<2xf32>, memref<32x32xf32, #gpu.address_space<global>>, memref<32x32xf32, #gpu.address_space<workgroup>>
+    amdgpu.global_load_async_to_lds %arg3[%arg0, %arg1], %arg5[%arg0, %arg1], %arg6 : f32, memref<32x32xf32, #gpu.address_space<global>>, memref<32x32xf32, #gpu.address_space<workgroup>>
+    return
+  }
+  func.func @global_load_async_to_lds_0d(%arg0: memref<f32, #gpu.address_space<global>>, %arg1: memref<f32, #gpu.address_space<workgroup>>) {
+    amdgpu.global_load_async_to_lds %arg0[], %arg1[] : f32, memref<f32, #gpu.address_space<global>>, memref<f32, #gpu.address_space<workgroup>>
     return
   }
   func.func @memory_counter_wait() {
@@ -383,16 +414,16 @@ module {
     amdgpu.memory_counter_wait tensor(5)
     return
   }
-  func.func @make_dma_base(%arg0: index, %arg1: memref<8xi32>, %arg2: memref<8xi32, #gpu.address_space<workgroup>>) {
-    %0 = amdgpu.make_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32>, memref<8xi32, #gpu.address_space<workgroup>> -> !amdgpu.tdm_base<i32>
+  func.func @make_dma_base(%arg0: index, %arg1: memref<8xi32, #gpu.address_space<global>>, %arg2: memref<8xi32, #gpu.address_space<workgroup>>) {
+    %0 = amdgpu.make_dma_base %arg1[%arg0], %arg2[%arg0] : memref<8xi32, #gpu.address_space<global>>, memref<8xi32, #gpu.address_space<workgroup>> -> !amdgpu.tdm_base<i32>
     return
   }
-  func.func @make_dma_descriptor(%arg0: !amdgpu.tdm_base<i32>, %arg1: vector<16xi1>, %arg2: i1, %arg3: memref<8xi32, #gpu.address_space<workgroup>>, %arg4: index, %arg5: i32) {
+  func.func @make_dma_descriptor(%arg0: !amdgpu.tdm_base<i32>, %arg1: vector<16xi1>, %arg2: i1, %arg3: memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg4: index, %arg5: i32) {
     %0 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
     %1 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] padShared(%arg5 every %arg5) : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
     %2 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] workgroupMask %arg1 : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
     %3 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] workgroupMask %arg1 earlyTimeout %arg2 : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
-    %4 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] atomicBarrier(%arg3[%arg4] : memref<8xi32, #gpu.address_space<workgroup>>) : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
+    %4 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] atomicBarrier(%arg3[%arg4] : memref<2x!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>) : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
     %5 = amdgpu.make_dma_descriptor %arg0 globalSize [64, 64] globalStride [64, 1] sharedSize [64, 64] iterate %arg4, %arg5, %arg4 : !amdgpu.tdm_base<i32> -> !amdgpu.tdm_descriptor
     return
   }
@@ -404,6 +435,61 @@ module {
     %4 = amdgpu.scaled_wmma 16x16x128 (%arg8 * %arg0) * (%arg8 * %arg0) + %arg5 {a_first_scale_lane = 0 : i32, b_first_scale_lane = 0 : i32} : vector<8xf8E8M0FNU>, vector<64xf8E4M3FN>, vector<8xf8E8M0FNU>, vector<64xf8E4M3FN>, vector<8xf32>
     %5 = amdgpu.scaled_wmma 32x16x128 (%arg9 * %arg3) * (%arg9 * %arg4) + %arg6 {a_first_scale_lane = 0 : i32, b_first_scale_lane = 0 : i32} : vector<4xf8E4M3FN>, vector<128xf4E2M1FN>, vector<4xf8E4M3FN>, vector<64xf4E2M1FN>, vector<16xf32>
     return
+  }
+  func.func @dpp_vector_src_does_not_assert(%arg0: vector<256xi8>, %arg1: vector<256xi8>) {
+    %0 = amdgpu.dpp %arg1 %arg0 row_shl(1 : i32) : vector<256xi8>
+    return
+  }
+  func.func @ds_barrier_ops(%arg0: memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, %arg1: i64, %arg2: i32) {
+    amdgpu.ds_barrier_init %arg0[], %arg2 : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i32
+    %0 = amdgpu.ds_barrier_poll_state %arg0[] : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>> -> !amdgpu.ds_barrier_state
+    amdgpu.ds_async_barrier_arrive %arg0[] : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>
+    %1 = amdgpu.ds_barrier_arrive %arg0[], %arg1 : memref<!amdgpu.ds_barrier_state, #gpu.address_space<workgroup>>, i64 -> !amdgpu.ds_barrier_state
+    %2 = amdgpu.ds_barrier_state_phase %0 : !amdgpu.ds_barrier_state -> i32
+    %3 = amdgpu.ds_barrier_state_pending_count %0 : !amdgpu.ds_barrier_state -> i32
+    %4 = amdgpu.ds_barrier_state_init_count %0 : !amdgpu.ds_barrier_state -> i32
+    %5 = amdgpu.ds_barrier_state_phase_parity %0 : !amdgpu.ds_barrier_state -> i1
+    return
+  }
+  func.func @dot_f16_f32(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: f32) -> f32 {
+    %0 = amdgpu.dot %arg0 * %arg1 + %arg2 : vector<2xf16>, vector<2xf16>, f32
+    %1 = amdgpu.dot %arg0 * %arg1 + %arg2 {clamp} : vector<2xf16>, vector<2xf16>, f32
+    return %0 : f32
+  }
+  func.func @dot_f16_f16(%arg0: vector<2xf16>, %arg1: vector<2xf16>, %arg2: f16) -> f16 {
+    %0 = amdgpu.dot %arg0 * %arg1 + %arg2 : vector<2xf16>, vector<2xf16>, f16
+    return %0 : f16
+  }
+  func.func @dot_bf16(%arg0: vector<2xbf16>, %arg1: vector<2xbf16>, %arg2: f32, %arg3: bf16) {
+    %0 = amdgpu.dot %arg0 * %arg1 + %arg2 {clamp} : vector<2xbf16>, vector<2xbf16>, f32
+    %1 = amdgpu.dot %arg0 * %arg1 + %arg3 : vector<2xbf16>, vector<2xbf16>, bf16
+    return
+  }
+  func.func @dot_i16(%arg0: vector<2xi16>, %arg1: vector<2xi16>, %arg2: i32) -> i32 {
+    %0 = amdgpu.dot %arg0 * %arg1 + %arg2 : vector<2xi16>, vector<2xi16>, i32
+    %1 = amdgpu.dot %arg0 * %arg1 + %arg2 {clamp} : vector<2xi16>, vector<2xi16>, i32
+    %2 = amdgpu.dot %arg0 * %arg1 + %arg2 {unsignedA, unsignedB} : vector<2xi16>, vector<2xi16>, i32
+    return %0 : i32
+  }
+  func.func @dot_i8(%arg0: vector<4xi8>, %arg1: vector<4xi8>, %arg2: i32) -> i32 {
+    %0 = amdgpu.dot %arg0 * %arg1 + %arg2 : vector<4xi8>, vector<4xi8>, i32
+    %1 = amdgpu.dot %arg0 * %arg1 + %arg2 {clamp, unsignedA, unsignedB} : vector<4xi8>, vector<4xi8>, i32
+    %2 = amdgpu.dot %arg0 * %arg1 + %arg2 {unsignedB} : vector<4xi8>, vector<4xi8>, i32
+    %3 = amdgpu.dot %arg0 * %arg1 + %arg2 {unsignedA} : vector<4xi8>, vector<4xi8>, i32
+    return %0 : i32
+  }
+  func.func @dot_i4(%arg0: vector<8xi4>, %arg1: vector<8xi4>, %arg2: i32) -> i32 {
+    %0 = amdgpu.dot %arg0 * %arg1 + %arg2 : vector<8xi4>, vector<8xi4>, i32
+    %1 = amdgpu.dot %arg0 * %arg1 + %arg2 {clamp, unsignedA, unsignedB} : vector<8xi4>, vector<8xi4>, i32
+    %2 = amdgpu.dot %arg0 * %arg1 + %arg2 {unsignedA} : vector<8xi4>, vector<8xi4>, i32
+    return %0 : i32
+  }
+  func.func @dot_fp8(%arg0: vector<4xf8E4M3FN>, %arg1: vector<4xf8E4M3FN>, %arg2: vector<4xf8E5M2>, %arg3: f32) -> f32 {
+    %0 = amdgpu.dot %arg0 * %arg0 + %arg3 : vector<4xf8E4M3FN>, vector<4xf8E4M3FN>, f32
+    %1 = amdgpu.dot %arg0 * %arg2 + %arg3 : vector<4xf8E4M3FN>, vector<4xf8E5M2>, f32
+    %2 = amdgpu.dot %arg2 * %arg0 + %arg3 : vector<4xf8E5M2>, vector<4xf8E4M3FN>, f32
+    %3 = amdgpu.dot %arg2 * %arg2 + %arg3 : vector<4xf8E5M2>, vector<4xf8E5M2>, f32
+    return %0 : f32
   }
 }
 

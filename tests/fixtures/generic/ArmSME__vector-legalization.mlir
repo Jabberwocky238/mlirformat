@@ -328,6 +328,16 @@
 // -----
 #map = affine_map<(d0, d1) -> (d0, d1)>
 "builtin.module"() ({
+  "func.func"() <{function_type = (index, index, f64, memref<?x?xf64>) -> vector<[4]x1xf64>, sym_name = "xfer_read_scalable_column_f64"}> ({
+  ^bb0(%arg0: index, %arg1: index, %arg2: f64, %arg3: memref<?x?xf64>):
+    %0 = "vector.transfer_read"(%arg3, %arg0, %arg1, %arg2) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<?x?xf64>, index, index, f64) -> vector<[4]x1xf64>
+    "func.return"(%0) : (vector<[4]x1xf64>) -> ()
+  }) : () -> ()
+}) : () -> ()
+
+// -----
+#map = affine_map<(d0, d1) -> (d0, d1)>
+"builtin.module"() ({
   "func.func"() <{function_type = (index, index, f32, memref<?x?xf32>) -> vector<[4]x2xf32>, sym_name = "negative_xfer_read_scalable_column_x2"}> ({
   ^bb0(%arg0: index, %arg1: index, %arg2: f32, %arg3: memref<?x?xf32>):
     %0 = "vector.transfer_read"(%arg3, %arg0, %arg1, %arg2) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = #map}> : (memref<?x?xf32>, index, index, f32) -> vector<[4]x2xf32>

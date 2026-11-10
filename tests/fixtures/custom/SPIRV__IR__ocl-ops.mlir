@@ -15,6 +15,70 @@ module {
 // -----
 // -----
 module {
+  func.func @exp2(%arg0: f32) {
+    %0 = spirv.CL.exp2 %arg0 : f32
+    return
+  }
+  func.func @exp2vec(%arg0: vector<3xf16>) {
+    %0 = spirv.CL.exp2 %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+// -----
+module {
+  func.func @exp10(%arg0: f32) {
+    %0 = spirv.CL.exp10 %arg0 : f32
+    return
+  }
+  func.func @exp10vec(%arg0: vector<3xf16>) {
+    %0 = spirv.CL.exp10 %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+// -----
+module {
+  func.func @log2(%arg0: f32) {
+    %0 = spirv.CL.log2 %arg0 : f32
+    return
+  }
+  func.func @log2vec(%arg0: vector<3xf16>) {
+    %0 = spirv.CL.log2 %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+// -----
+module {
+  func.func @log10(%arg0: f32) {
+    %0 = spirv.CL.log10 %arg0 : f32
+    return
+  }
+  func.func @log10vec(%arg0: vector<3xf16>) {
+    %0 = spirv.CL.log10 %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+// -----
+module {
   func.func @fabs(%arg0: f32) {
     %0 = spirv.CL.fabs %arg0 : f32
     return
@@ -49,6 +113,22 @@ module {
   }
   func.func @sabsi8(%arg0: i8) {
     %0 = spirv.CL.s_abs %arg0 : i8
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+// -----
+module {
+  func.func @clz(%arg0: i32) {
+    %0 = spirv.CL.clz %arg0 : i32
+    return
+  }
+  func.func @clzvec(%arg0: vector<3xi16>) {
+    %0 = spirv.CL.clz %arg0 : vector<3xi16>
     return
   }
 }
@@ -123,6 +203,18 @@ module {
   }
   func.func @rintvec(%arg0: vector<3xf16>) {
     %0 = spirv.CL.rint %arg0 : vector<3xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @trunc(%arg0: f32) {
+    %0 = spirv.CL.trunc %arg0 : f32
+    return
+  }
+  func.func @truncvec(%arg0: vector<3xf16>) {
+    %0 = spirv.CL.trunc %arg0 : vector<3xf16>
     return
   }
 }
@@ -217,6 +309,22 @@ module {
 
 // -----
 module {
+  func.func @erfc(%arg0: f32) {
+    %0 = spirv.CL.erfc %arg0 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @erfc(%arg0: vector<4xf16>) {
+    %0 = spirv.CL.erfc %arg0 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
   func.func @asin(%arg0: f32) {
     %0 = spirv.CL.asin %arg0 : f32
     return
@@ -281,6 +389,22 @@ module {
 
 // -----
 module {
+  func.func @cbrt(%arg0: f32) {
+    %0 = spirv.CL.cbrt %arg0 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @cbrt(%arg0: vector<4xf16>) {
+    %0 = spirv.CL.cbrt %arg0 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
   func.func @atan2(%arg0: f32, %arg1: f32) {
     %0 = spirv.CL.atan2 %arg0, %arg1 : f32
     return
@@ -291,6 +415,157 @@ module {
 module {
   func.func @atan2(%arg0: vector<4xf16>, %arg1: vector<4xf16>) {
     %0 = spirv.CL.atan2 %arg0, %arg1 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @ldexp(%arg0: f32, %arg1: i32) {
+    %0 = spirv.CL.ldexp %arg0, %arg1 : f32, i32 -> f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @ldexp_vec(%arg0: vector<3xf32>, %arg1: vector<3xi32>) {
+    %0 = spirv.CL.ldexp %arg0, %arg1 : vector<3xf32>, vector<3xi32> -> vector<3xf32>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+// -----
+module {
+  func.func @pown(%arg0: f32, %arg1: i32) {
+    %0 = spirv.CL.pown %arg0, %arg1 : f32, i32 -> f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @pown_vec(%arg0: vector<3xf32>, %arg1: vector<3xi32>) {
+    %0 = spirv.CL.pown %arg0, %arg1 : vector<3xf32>, vector<3xi32> -> vector<3xf32>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+module {
+  func.func @rootn(%arg0: f32, %arg1: i32) {
+    %0 = spirv.CL.rootn %arg0, %arg1 : f32, i32 -> f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @rootn_vec(%arg0: vector<3xf32>, %arg1: vector<3xi32>) {
+    %0 = spirv.CL.rootn %arg0, %arg1 : vector<3xf32>, vector<3xi32> -> vector<3xf32>
+    return
+  }
+}
+
+// -----
+// -----
+// -----
+module {
+  func.func @copysign(%arg0: f32, %arg1: f32) {
+    %0 = spirv.CL.copysign %arg0, %arg1 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @copysign(%arg0: vector<4xf16>, %arg1: vector<4xf16>) {
+    %0 = spirv.CL.copysign %arg0, %arg1 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @expm1(%arg0: f32) {
+    %0 = spirv.CL.expm1 %arg0 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @expm1(%arg0: vector<4xf16>) {
+    %0 = spirv.CL.expm1 %arg0 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fdim(%arg0: f32, %arg1: f32) {
+    %0 = spirv.CL.fdim %arg0, %arg1 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fdim(%arg0: vector<4xf16>, %arg1: vector<4xf16>) {
+    %0 = spirv.CL.fdim %arg0, %arg1 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fmod(%arg0: f32, %arg1: f32) {
+    %0 = spirv.CL.fmod %arg0, %arg1 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @fmod(%arg0: vector<4xf16>, %arg1: vector<4xf16>) {
+    %0 = spirv.CL.fmod %arg0, %arg1 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @hypot(%arg0: f32, %arg1: f32) {
+    %0 = spirv.CL.hypot %arg0, %arg1 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @hypot(%arg0: vector<4xf16>, %arg1: vector<4xf16>) {
+    %0 = spirv.CL.hypot %arg0, %arg1 : vector<4xf16>
+    return
+  }
+}
+
+// -----
+module {
+  func.func @log1p(%arg0: f32) {
+    %0 = spirv.CL.log1p %arg0 : f32
+    return
+  }
+}
+
+// -----
+module {
+  func.func @log1p(%arg0: vector<4xf16>) {
+    %0 = spirv.CL.log1p %arg0 : vector<4xf16>
     return
   }
 }

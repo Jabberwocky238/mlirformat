@@ -56,7 +56,7 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<!llvm.ptr<270> = dense<32> : vec
     %14 = llvm.sub %11, %1 : i64
     %15 = omp.map.bounds lower_bound(%1 : i64) upper_bound(%14 : i64) extent(%11 : i64) stride(%13 : i64) start_idx(%9 : i64) {stride_in_bytes = true}
     %16 = llvm.getelementptr %3[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>
-    %17 = omp.map.info var_ptr(%3 : !llvm.ptr, i32) map_clauses(to) capture(ByRef) var_ptr_ptr(%16 : !llvm.ptr) bounds(%15) -> !llvm.ptr {name = ""}
+    %17 = omp.map.info var_ptr(%3 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>) map_clauses(to) capture(ByRef) var_ptr_ptr(%16 : !llvm.ptr, i32) bounds(%15) -> !llvm.ptr {name = ""}
     %18 = omp.map.info var_ptr(%3 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>) map_clauses(always, to) capture(ByRef) members(%17 : [0] : !llvm.ptr) -> !llvm.ptr
     %19 = llvm.getelementptr %4[0, 7, %1, 0] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>
     %20 = llvm.load %19 : !llvm.ptr -> i64
@@ -67,9 +67,9 @@ module attributes {dlti.dl_spec = #dlti.dl_spec<!llvm.ptr<270> = dense<32> : vec
     %25 = llvm.sub %22, %1 : i64
     %26 = omp.map.bounds lower_bound(%1 : i64) upper_bound(%25 : i64) extent(%22 : i64) stride(%24 : i64) start_idx(%20 : i64) {stride_in_bytes = true}
     %27 = llvm.getelementptr %4[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>
-    %28 = omp.map.info var_ptr(%4 : !llvm.ptr, i32) map_clauses(to) capture(ByRef) var_ptr_ptr(%27 : !llvm.ptr) bounds(%26) -> !llvm.ptr {name = ""}
+    %28 = omp.map.info var_ptr(%4 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>) map_clauses(to) capture(ByRef) var_ptr_ptr(%27 : !llvm.ptr, i32) bounds(%26) -> !llvm.ptr {name = ""}
     %29 = omp.map.info var_ptr(%4 : !llvm.ptr, !llvm.struct<(ptr, i64, i32, i8, i8, i8, i8, array<1 x array<3 x i64>>)>) map_clauses(always, to) capture(ByRef) members(%28 : [0] : !llvm.ptr) -> !llvm.ptr
-    omp.target nowait map_entries(%7 -> %arg2, %18 -> %arg3, %17 -> %arg4, %29 -> %arg5, %28 -> %arg6 : !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) private(@firstprivatizer %3 -> %arg7 [map_idx=1], @firstprivatizer_1 %4 -> %arg8 [map_idx=3] : !llvm.ptr, !llvm.ptr) {
+    omp.target kernel_type(generic) nowait map_entries(%7 -> %arg2, %18 -> %arg3, %17 -> %arg4, %29 -> %arg5, %28 -> %arg6 : !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr, !llvm.ptr) private(@firstprivatizer %3 -> %arg7 [map_idx=1], @firstprivatizer_1 %4 -> %arg8 [map_idx=3] : !llvm.ptr, !llvm.ptr) {
       omp.terminator
     }
     %30 = llvm.mlir.constant(48 : i32) : i32

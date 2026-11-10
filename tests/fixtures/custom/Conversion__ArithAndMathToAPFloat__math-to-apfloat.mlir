@@ -14,3 +14,14 @@ module {
   }
 }
 
+// -----
+module {
+  func.func @test_vector() {
+    %cst = arith.constant dense<2.000000e+00> : vector<4xf8E4M3FN>
+    %cst_0 = arith.constant dense<4.000000e+00> : vector<4xf8E4M3FN>
+    %cst_1 = arith.constant dense<8.000000e+00> : vector<4xf8E4M3FN>
+    %0 = math.fma %cst, %cst_0, %cst_1 : vector<4xf8E4M3FN>
+    return
+  }
+}
+

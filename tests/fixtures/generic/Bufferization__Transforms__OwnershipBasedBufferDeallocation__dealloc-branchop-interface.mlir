@@ -229,3 +229,23 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = (f32) -> f32, sym_name = "region_branch_op_followed_by_cf_br"}> ({
+  ^bb0(%arg0: f32):
+    "cf.br"()[^bb1] : () -> ()
+  ^bb1:  // pred: ^bb0
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %2 = "arith.constant"() <{value = 10 : index}> : () -> index
+    %3 = "scf.for"(%0, %2, %1, %arg0) ({
+    ^bb0(%arg1: index, %arg2: f32):
+      %4 = "arith.addf"(%arg2, %arg2) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32
+      "scf.yield"(%4) : (f32) -> ()
+    }) : (index, index, index, f32) -> f32
+    "cf.br"()[^bb2] : () -> ()
+  ^bb2:  // pred: ^bb1
+    "func.return"(%3) : (f32) -> ()
+  }) : () -> ()
+}) : () -> ()
+

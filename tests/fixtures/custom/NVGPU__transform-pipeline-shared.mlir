@@ -1,29 +1,4 @@
 module {
-  func.func @simple_depth_2_unpeeled(%arg0: memref<?xf32>, %arg1: memref<?xf32>) {
-    %c0 = arith.constant 0 : index
-    %c100 = arith.constant 100 : index
-    %c4 = arith.constant 4 : index
-    %alloc = memref.alloc(%c100) : memref<?xf32, #gpu.address_space<workgroup>>
-    %cst = arith.constant 0.000000e+00 : f32
-    %0 = scf.for %arg2 = %c0 to %c100 step %c4 iter_args(%arg3 = %cst) -> (f32) {
-      %1 = vector.transfer_read %arg0[%arg2], %cst : memref<?xf32>, vector<4xf32>
-      vector.transfer_write %1, %alloc[%arg2] : vector<4xf32>, memref<?xf32, #gpu.address_space<workgroup>>
-      %2 = arith.addf %arg3, %arg3 : f32
-      scf.yield %2 : f32
-    }
-    return
-  }
-  module attributes {transform.with_named_sequence} {
-    transform.named_sequence @__transform_main(%arg0: !transform.any_op {transform.readonly}) {
-      %0 = transform.structured.match ops{["scf.for"]} in %arg0 : (!transform.any_op) -> !transform.any_op
-      %1 = transform.nvgpu.pipeline_shared_memory_copies failures(propagate) %0 {depth = 2 : i64} : (!transform.any_op) -> !transform.any_op
-      transform.yield 
-    }
-  }
-}
-
-// -----
-module {
   func.func private @body(index, memref<?xf32, #gpu.address_space<workgroup>>)
   func.func @simple_depth_2_peeled(%arg0: memref<?xf32>) {
     %c0 = arith.constant 0 : index

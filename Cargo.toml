@@ -1,6 +1,6 @@
 [package]
 name = "mlirformat"
-version = "0.6.5"
+version = "0.7.0"
 edition = "2024"
 description = "MLIR text <-> IR <-> typed Rust ops: parser, printer, serde-based #[mlir::op] and dialect plugins"
 license = "MIT"
@@ -17,7 +17,7 @@ members = ["macros"]
 exclude = ["sampleplugin", "tests/nostd"]
 
 [dependencies]
-mlirformat-macros = { path = "macros", version = "0.6.5" }
+mlirformat-macros = { path = "macros", version = "0.7.0" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
 thiserror = { version = "2", default-features = false }
 # A list being read: a few inline, then one allocation of the exact length (`Parser::list`).
@@ -51,7 +51,7 @@ path = "src/cli/main.rs"
 required-features = ["tblgen"]
 
 [dev-dependencies]
-serde_json = "1"
+serde_json = { version = "1", features = ["unbounded_depth"] }
 
 # Generated dialects, one test crate each so they build in parallel (`--features gen-tests`).
 [[test]]

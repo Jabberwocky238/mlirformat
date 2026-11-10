@@ -27,3 +27,12 @@
   }) : () -> ()
 }) : () -> ()
 
+// -----
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> tensor<2x!test.dense_element>, sym_name = "slice_constant_dense_element_type"}> ({
+    %0 = "arith.constant"() <{value = dense<tensor<4x!test.dense_element> : [10 : i32, 9 : i32, 8 : i32, 7 : i32]>}> : () -> tensor<4x!test.dense_element>
+    %1 = "tensor.extract_slice"(%0) <{operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_offsets = array<i64: 1>, static_sizes = array<i64: 2>, static_strides = array<i64: 1>}> : (tensor<4x!test.dense_element>) -> tensor<2x!test.dense_element>
+    "func.return"(%1) : (tensor<2x!test.dense_element>) -> ()
+  }) : () -> ()
+}) : () -> ()
+

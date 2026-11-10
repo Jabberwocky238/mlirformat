@@ -49,7 +49,7 @@
       }) : (f32) -> f32
       "memref.store"(%26, %2, %arg0) : (f32, memref<2xf32>, index) -> ()
       "gpu.terminator"() : () -> ()
-    }) {workgroup_attributions = 0 : i64} : (index, index, index, index, index, index) -> ()
+    }) : (index, index, index, index, index, index) -> ()
     "func.call"(%22) <{callee = @printMemrefF32}> : (memref<*xf32>) -> ()
     "func.call"(%23) <{callee = @printMemrefF32}> : (memref<*xf32>) -> ()
     "func.return"() : () -> ()

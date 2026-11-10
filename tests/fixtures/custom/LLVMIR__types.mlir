@@ -2,9 +2,9 @@ module {
   func.func @primitive() {
     %0 = "some.op"() : () -> !llvm.void
     %1 = "some.op"() : () -> !llvm.ppc_fp128
-    %2 = "some.op"() : () -> !llvm.token
-    %3 = "some.op"() : () -> !llvm.label
-    %4 = "some.op"() : () -> !llvm.metadata
+    %2 = "some.op"() : () -> !llvm.label
+    %3 = "some.op"() : () -> !llvm.metadata
+    %4 = "some.op"() : () -> token
     return
   }
   func.func @func() {
@@ -103,6 +103,15 @@ module {
     %2 = "some.op"() : () -> !llvm.target<"target3", i32, i64, f64>
     %3 = "some.op"() : () -> !llvm.target<"target4", 1, 0, 42>
     %4 = "some.op"() : () -> !llvm.target<"target5", i32, f64, 0, 5>
+    llvm.return
+  }
+}
+
+// -----
+module {
+  llvm.func @byte() {
+    %0 = "some.op"() : () -> !llvm.byte<8>
+    %1 = "some.op"() : () -> !llvm.byte<1>
     llvm.return
   }
 }
