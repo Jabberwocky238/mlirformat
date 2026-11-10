@@ -454,28 +454,42 @@ impl BigUint {
     }
 }
 
-/// The layout of an IEEE-like format: exponent bits and stored mantissa bits.
+/// The layout of an IEEE-like format: exponent bits and stored mantissa bits, and whether it
+/// has no infinities, its one NaN all ones (`fltNonfiniteBehavior::NanOnly`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Layout {
     exp: u32,
     mant: u32,
+    nan_only: bool,
 }
 
 impl Layout {
     fn of(kind: FloatKind) -> Option<Self> {
         Some(match kind {
-            FloatKind::F16 => Self { exp: 5, mant: 10 },
-            FloatKind::BF16 => Self { exp: 8, mant: 7 },
-            FloatKind::TF32 => Self { exp: 8, mant: 10 },
-            FloatKind::F32 => Self { exp: 8, mant: 23 },
-            FloatKind::F64 => Self { exp: 11, mant: 52 },
-            // The 8-bit formats with IEEE semantics (infinities, NaNs); the `FN` / `FNUZ`
-            // ones encode special values (and bias exponents) their own way.
-            FloatKind::F8E5M2 => Self { exp: 5, mant: 2 },
-            FloatKind::F8E4M3 => Self { exp: 4, mant: 3 },
-            FloatKind::F8E3M4 => Self { exp: 3, mant: 4 },
+            FloatKind::F16 => Self::ieee(5, 10),
+            FloatKind::BF16 => Self::ieee(8, 7),
+            FloatKind::TF32 => Self::ieee(8, 10),
+            FloatKind::F32 => Self::ieee(8, 23),
+            FloatKind::F64 => Self::ieee(11, 52),
+            // The 8-bit formats with IEEE semantics (infinities, NaNs), and f8E4M3FN (no
+            // infinities, one NaN); the `FNUZ` ones bias exponents their own way.
+            FloatKind::F8E5M2 => Self::ieee(5, 2),
+            FloatKind::F8E4M3 => Self::ieee(4, 3),
+            FloatKind::F8E3M4 => Self::ieee(3, 4),
+            FloatKind::F8E4M3FN => Self { exp: 4, mant: 3, nan_only: true },
             _ => return None,
         })
+    }
+
+    #[inline]
+    const fn ieee(exp: u32, mant: u32) -> Self {
+        Self { exp, mant, nan_only: false }
+    }
+
+    /// The bits of the one NaN of a `nan_only` format, without the sign.
+    #[inline]
+    fn all_ones(self) -> u64 {
+        (1u64 << (self.exp + self.mant)) - 1
     }
 
     #[inline]
@@ -499,6 +513,9 @@ impl Layout {
         let b = x.to_bits();
         let top = (b >> 63) << (self.exp + self.mant);
         let emax = (1u64 << self.exp) - 1;
+        if self.nan_only && (x.is_nan() || x.is_infinite()) {
+            return top | self.all_ones();
+        }
         if x.is_nan() {
             // The top payload bits survive; the result is quiet.
             let payload = (b & ((1 << 52) - 1)) >> (52 - self.mant);
@@ -540,10 +557,18 @@ impl Layout {
             ue += 1;
         }
         let biased = (ue + self.bias()) as u64;
+        let mant = r as u64 & ((1 << self.mant) - 1);
+        if self.nan_only {
+            // (the top exponent holds normals but the NaN; past them, NaN)
+            if biased > emax || (biased == emax && mant == (1 << self.mant) - 1) {
+                return top | self.all_ones();
+            }
+            return top | (biased << self.mant) | mant;
+        }
         if biased >= emax {
             return top | (emax << self.mant);
         }
-        top | (biased << self.mant) | (r as u64 & ((1 << self.mant) - 1))
+        top | (biased << self.mant) | mant
     }
 
     fn to_f64(self, bits: u64) -> f64 {
@@ -551,7 +576,9 @@ impl Layout {
         let e = ((bits >> self.mant) & ((1 << self.exp) - 1)) as i32;
         let m = bits & ((1 << self.mant) - 1);
         let emax = (1i32 << self.exp) - 1;
-        let mag = if e == emax {
+        let mag = if self.nan_only && e == emax && m == (1 << self.mant) - 1 {
+            f64::NAN
+        } else if e == emax && !self.nan_only {
             if m == 0 { f64::INFINITY } else { f64::from_bits(0x7ff8_0000_0000_0000 | (m << (52 - self.mant))) }
         } else if e == 0 {
             m as f64 * libm_exp2(1 - self.bias() - self.mant as i32)
@@ -641,19 +668,25 @@ impl ApFloat {
     #[inline]
     pub fn largest(kind: FloatKind, negative: bool) -> Self {
         let l = Layout::of(kind).expect("unsupported float format");
-        let bits = (((1u64 << l.exp) - 2) << l.mant) | ((1u64 << l.mant) - 1) | (u64::from(negative) << (l.exp + l.mant));
-        Self { kind, bits }
+        let magnitude = if l.nan_only { l.all_ones() - 1 } else { (((1u64 << l.exp) - 2) << l.mant) | ((1u64 << l.mant) - 1) };
+        Self { kind, bits: magnitude | (u64::from(negative) << (l.exp + l.mant)) }
     }
 
     #[inline]
     pub fn nan(kind: FloatKind) -> Self {
         let l = Layout::of(kind).expect("unsupported float format");
+        if l.nan_only {
+            return Self { kind, bits: l.all_ones() };
+        }
         Self { kind, bits: (((1u64 << l.exp) - 1) << l.mant) | (1 << (l.mant - 1)) }
     }
 
     #[inline]
     pub fn quieted(self) -> Self {
         let l = self.layout();
+        if l.nan_only {
+            return self;
+        }
         Self { kind: self.kind, bits: self.bits | (1 << (l.mant - 1)) }
     }
 
