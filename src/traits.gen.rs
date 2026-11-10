@@ -1394,6 +1394,9 @@ impl OpInfos {
         self.insert(OpInfo { name: "ptr.store", traits: &[Trait::MemoryEffectOpInterface], effects: Effects::Custom, inherent: &["alignment", "volatile_", "nontemporal", "invariantGroup", "ordering", "syncscope"] });
         self.insert(OpInfo { name: "ptr.to_ptr", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "ptr.type_offset", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &["elementType"] });
+        self.insert(OpInfo { name: "quant.dcast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "quant.qcast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
+        self.insert(OpInfo { name: "quant.scast", traits: &[Trait::AlwaysSpeculatableImplTrait, Trait::ConditionallySpeculatable, Trait::MemoryEffectOpInterface], effects: Effects::Known(&[]), inherent: &[] });
         self.insert(OpInfo { name: "rocdl.asyncmark", traits: &[], effects: Effects::Unknown, inherent: &[] });
         self.insert(OpInfo { name: "rocdl.ballot", traits: &[], effects: Effects::Unknown, inherent: &[] });
         self.insert(OpInfo { name: "rocdl.barrier", traits: &[], effects: Effects::Unknown, inherent: &[] });

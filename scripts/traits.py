@@ -47,6 +47,7 @@ TDS = [
     "include/mlir/Dialect/PDL/IR/PDLOps.td",
     "include/mlir/Dialect/PDLInterp/IR/PDLInterpOps.td",
     "include/mlir/Dialect/Ptr/IR/PtrOps.td",
+    "include/mlir/Dialect/Quant/IR/QuantOps.td",
     "include/mlir/Dialect/SCF/IR/SCFOps.td",
     "include/mlir/Dialect/Shape/IR/ShapeOps.td",
     "include/mlir/Dialect/SPIRV/IR/SPIRVOps.td",
