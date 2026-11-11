@@ -16,8 +16,11 @@ cargo install mlirformat    # the `mlirformat` command line
 
 | feature | default | what it is |
 |---|---|---|
-| `std` | yes | Standard library support. Without it the library is `no_std` (needs `alloc`). |
-| `tblgen` | yes | The `mlirformat` command line, which generates dialects from ODS `.td` files. Pulls in `clap` and `serde_json`; implies `std`. |
+| `std` | yes | the standard library (without it the library is `no_std` and needs `alloc`), jemalloc as the global allocator (not on MSVC), moremath's threads for `parse_in` / `print_in` |
+| `tblgen` | yes | the `mlirformat` command line, which generates dialects from ODS `.td` files (TableGen built in, no LLVM needed); pulls in `clap` and `serde_json`; turns on `std` |
+| `gen-tests` | no | test only: the dialects `mlirformat tblgen` generated, one test crate each (`tests/generated/`) |
+| `less` | no | test only: the fixture tests read every 10th file of `tests/fixtures`, the same 10 % on every run (also when neither `less` nor `more` is on) |
+| `more` | no | test only: the fixture tests read every file of `tests/fixtures` (before a minor or major release) |
 
 For the library alone: `cargo add mlirformat --no-default-features`.
 
