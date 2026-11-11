@@ -215,7 +215,7 @@ impl Parse for Func<'_> {
         }
         let (results, res_dicts): (Vec<_>, Vec<_>) = results.into_iter().unzip();
         let op = Func {
-            function_type: Type::Function(FunctionType { inputs, results }),
+            function_type: Type::Function(alloc::boxed::Box::new(FunctionType { inputs, results })),
             arg_attrs: Func::dicts(arg_dicts),
             res_attrs: Func::dicts(res_dicts),
             workgroup_attrib_attrs: Func::dicts(workgroup_dicts),
@@ -289,7 +289,7 @@ impl<'a> LaunchFunc<'a> {
     /// `!gpu.async.token`。
     #[inline]
     fn token() -> Type<'a> {
-        Type::Extended(crate::common::Extended { name: "gpu.async.token".into(), body: None, params: Vec::new() })
+        Type::Extended(alloc::boxed::Box::new(crate::common::Extended { name: "gpu.async.token".into(), body: None, params: Vec::new() }))
     }
 
     /// `(%x, %y, %z)`。

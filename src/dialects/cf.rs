@@ -106,7 +106,10 @@ impl<'a> Switch<'a> {
 
     /// Case values, signed (a splat repeats to the vector's length).
     fn values(&self) -> Option<Vec<i128>> {
-        let Some(Attribute::Builtin { name, body, ty: Some(Type::Shaped(Shaped { shape: Some(dims), .. })) }) = &self.case_values else {
+        let Some((name, body, Some(Shaped { shape: Some(dims), .. }))) = self.case_values.as_ref().and_then(|a| match a {
+            Attribute::Builtin { name, body, ty: Some(t) } => Some((name, body, t.shaped())),
+            _ => None,
+        }) else {
             return self.case_values.is_none().then(Vec::new);
         };
         let [Dim::Static(n)] = dims[..] else { return None };
@@ -153,8 +156,8 @@ impl<'a> Switch<'a> {
             _ => format!("<[{}]>", values.iter().map(|v| format!("{v}")).collect::<Vec<_>>().join(", ")),
         };
         let n = i64::try_from(values.len()).unwrap_or(i64::MAX);
-        let ty = Type::Shaped(Shaped { kind: ShapedKind::Vector, shape: Some(vec![Dim::Static(n)]), elem: alloc::boxed::Box::new(flag_ty.clone()), extras: Vec::new() });
-        Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(ty) }
+        let ty = Type::Shaped(alloc::boxed::Box::new(Shaped { kind: ShapedKind::Vector, shape: Some(vec![Dim::Static(n)]), elem: alloc::boxed::Box::new(flag_ty.clone()), extras: Vec::new() }));
+        Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(*alloc::boxed::Box::new(ty)) }
     }
 }
 
@@ -221,7 +224,7 @@ impl Parse for Switch<'_> {
         p.expect("]")?;
         let op = Switch {
             case_values: (!values.is_empty()).then(|| Switch::dense(&values, &flag_ty)),
-            case_operand_segments: Attribute::DenseArray { ty: Type::int(32), values: segments },
+            case_operand_segments: Attribute::DenseArray { ty: Type::int(32), values: segments.into() },
             flag,
             default_operands,
             case_operands,

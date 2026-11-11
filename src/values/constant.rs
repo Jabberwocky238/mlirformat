@@ -241,7 +241,7 @@ impl<'a> Const<'a> {
         if self.values.len() == 1 || self.values.windows(2).all(|w| w[0] == w[1]) && !self.values.is_empty() {
             return format!("<{}>", self.values[0].print(elem));
         }
-        let Type::Shaped(Shaped { shape: Some(shape), .. }) = &self.ty else { return String::from("<>") };
+        let Some(Shaped { shape: Some(shape), .. }) = self.ty.shaped() else { return String::from("<>") };
         let dims: Vec<usize> = shape.iter().map(|d| if let Dim::Static(k) | Dim::Scalable(k) = d { *k as usize } else { 0 }).collect();
         if self.values.is_empty() {
             return String::from("<>");
@@ -273,7 +273,7 @@ impl<'a> From<Const<'a>> for Attribute<'a> {
     fn from(c: Const<'a>) -> Self {
         if c.elements {
             let body = c.dense_body();
-            return Attribute::Builtin { name: "dense".into(), body: Str::Owned(body), ty: Some(c.ty) };
+            return Attribute::Builtin { name: "dense".into(), body: Str::Owned(body), ty: Some(*alloc::boxed::Box::new(c.ty)) };
         }
         if let Some(parts) = c.values[0].parts() {
             // `complex.constant`'s `[re, im]`.

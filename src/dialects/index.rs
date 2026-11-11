@@ -85,7 +85,8 @@ impl CmpOp<'_> {
     /// `slt` of `#index<cmp_predicate slt>`.
     #[inline]
     fn predicate(&self) -> Option<&str> {
-        let Attribute::Extended { ext: Extended { name, body: Some(body), .. }, ty: None } = &self.pred else { return None };
+        let Attribute::Extended { ext, ty: None } = &self.pred else { return None };
+        let Extended { name, body: Some(body), .. } = &**ext else { return None };
         (name == "index").then_some(())?;
         body.strip_prefix("<cmp_predicate ")?.strip_suffix('>')
     }
@@ -112,7 +113,7 @@ impl Parse for CmpOp<'_> {
         p.expect(",")?;
         let rhs = p.value()?;
         p.expect(")")?;
-        let pred = Attribute::Extended { ext: Extended { name: Str::Borrowed("index"), body: Some(Str::Owned(format!("<cmp_predicate {predicate}>"))), params: alloc::vec::Vec::new() }, ty: None };
+        let pred = Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed("index"), body: Some(Str::Owned(format!("<cmp_predicate {predicate}>"))), params: alloc::vec::Vec::new() }), ty: None };
         let op = CmpOp { pred, lhs, rhs, ty: Type::Index, result: Type::I1, attrs: p.opt_dict()?, loc: p.opt_loc()? };
         Self::owned(op, p)
     }

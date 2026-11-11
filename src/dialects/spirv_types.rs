@@ -362,7 +362,7 @@ impl<'a> From<SpirvType<'a>> for Type<'a> {
             SpirvType::Sampler | SpirvType::NamedBarrier => None,
             _ => Some(Str::Owned(format!("<{}>", t.parts().1))),
         };
-        Type::Extended(Extended { name: Str::Owned(format!("spirv.{}", t.parts().0)), body, params: Vec::new() })
+        Type::Extended(alloc::boxed::Box::new(Extended { name: Str::Owned(format!("spirv.{}", t.parts().0)), body, params: Vec::new() }))
     }
 }
 

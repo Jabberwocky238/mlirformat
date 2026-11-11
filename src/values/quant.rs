@@ -75,6 +75,6 @@ impl<'a> From<UniformQuantized<'a>> for Type<'a> {
         let range = q.range.map_or_else(String::new, |(lo, hi)| format!("<{lo}:{hi}>"));
         let zp = if q.zero_point == 0 { String::new() } else { format!(":{}", q.zero_point) };
         let body = format!("<{}{}{range}:{}, {}{zp}>", if q.signed { 'i' } else { 'u' }, q.width, q.expressed, q.scale);
-        Type::Extended(Extended { name: Str::Borrowed("quant.uniform"), body: Some(Str::Owned(body)), params: Vec::new() })
+        Type::Extended(alloc::boxed::Box::new(Extended { name: Str::Borrowed("quant.uniform"), body: Some(Str::Owned(body)), params: Vec::new() }))
     }
 }

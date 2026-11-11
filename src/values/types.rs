@@ -5,7 +5,7 @@ use crate::Str;
 use alloc::format;
 use alloc::vec::Vec;
 
-use crate::{Attribute, Dim, Extended, FloatKind, Shaped, ShapedKind, Signedness, Type};
+use crate::{FunctionType, Attribute, Dim, Extended, FloatKind, Shaped, ShapedKind, Signedness, Type};
 
 impl Dim {
     /// `ShapedType::kDynamic`: a `?` dim as an integer.
@@ -31,17 +31,44 @@ impl From<&Dim> for i64 {
 }
 
 impl<'a> Type<'a> {
+    /// The shaped type's parts, if it is one.
+    #[inline]
+    pub fn shaped(&self) -> Option<&Shaped<'a>> {
+        match self {
+            Type::Shaped(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// The dialect type's parts, if it is one.
+    #[inline]
+    pub fn extended(&self) -> Option<&Extended<'a>> {
+        match self {
+            Type::Extended(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    /// The function type's parts, if it is one.
+    #[inline]
+    pub fn function(&self) -> Option<&FunctionType<'a>> {
+        match self {
+            Type::Function(f) => Some(f),
+            _ => None,
+        }
+    }
+
     /// `RankedTensorType::get(dims, elem)` ([`Dim::DYNAMIC`] is `?`).
     #[inline]
     pub fn tensor(dims: &[i64], elem: Type<'a>) -> Type<'a> {
-        Type::Shaped(Shaped { kind: ShapedKind::Tensor, shape: Some(dims.iter().map(|d| Dim::from(*d)).collect()), elem: elem.into(), extras: Vec::new() })
+        Type::Shaped(alloc::boxed::Box::new(Shaped { kind: ShapedKind::Tensor, shape: Some(dims.iter().map(|d| Dim::from(*d)).collect()), elem: elem.into(), extras: Vec::new() }))
     }
 
     /// `VectorType::get(shape, elem, scalable)`; `scalable` may be shorter than `shape`.
     #[inline]
     pub fn vector(shape: &[i64], scalable: &[bool], elem: Type<'a>) -> Type<'a> {
         let dims = shape.iter().zip(scalable.iter().chain(core::iter::repeat(&false))).map(|(n, s)| if *s { Dim::Scalable(*n) } else { Dim::Static(*n) }).collect();
-        Type::Shaped(Shaped { kind: ShapedKind::Vector, shape: Some(dims), elem: elem.into(), extras: Vec::new() })
+        Type::Shaped(alloc::boxed::Box::new(Shaped { kind: ShapedKind::Vector, shape: Some(dims), elem: elem.into(), extras: Vec::new() }))
     }
 
     /// `getShape` of a ranked shaped type ([`Dim::DYNAMIC`] for `?`).
@@ -80,7 +107,7 @@ impl<'a> Type<'a> {
     /// `cloneWith`: the type with element type `elem` (a scalar type is replaced outright).
     pub fn with_element(&self, elem: Type<'a>) -> Type<'a> {
         match self {
-            Type::Shaped(s) => Type::Shaped(Shaped { kind: s.kind, shape: s.shape.clone(), elem: elem.into(), extras: if s.kind == ShapedKind::Vector { Vec::new() } else { s.extras.clone() } }),
+            Type::Shaped(s) => Type::Shaped(alloc::boxed::Box::new(Shaped { kind: s.kind, shape: s.shape.clone(), elem: elem.into(), extras: if s.kind == ShapedKind::Vector { Vec::new() } else { s.extras.clone() } })),
             _ => elem,
         }
     }
@@ -128,7 +155,7 @@ impl<'a> Attribute<'a> {
     /// `#ub.poison`.
     #[inline]
     pub fn is_poison(&self) -> bool {
-        matches!(self, Attribute::Extended { ext: Extended { name, .. }, .. } if name == "ub.poison")
+        matches!(self, Attribute::Extended { ext, .. } if ext.name == "ub.poison")
     }
 
     /// `IntegerAttr::get(ty, v)`; for `i1`, a `BoolAttr`.

@@ -176,7 +176,7 @@ impl Parse for FuncOp<'_> {
         let (results, res_dicts): (Vec<_>, Vec<_>) = results.into_iter().unzip();
         let op = FuncOp {
             sym_name,
-            function_type: Type::Function(FunctionType { inputs, results }),
+            function_type: Type::Function(alloc::boxed::Box::new(FunctionType { inputs, results })),
             sym_visibility,
             arg_attrs: FuncOp::dicts(arg_dicts),
             res_attrs: FuncOp::dicts(res_dicts),
@@ -232,7 +232,7 @@ impl Parse for CallIndirect<'_> {
         p.expect(":")?;
         let ty = p.fn_ty()?;
         let (arg_types, results) = (ty.inputs.clone(), ty.results.clone());
-        let op = CallIndirect { callee, callee_operands, callee_ty: Type::Function(ty), arg_types, results, attrs, loc: p.opt_loc()? };
+        let op = CallIndirect { callee, callee_operands, callee_ty: Type::Function(alloc::boxed::Box::new(ty)), arg_types, results, attrs, loc: p.opt_loc()? };
         Self::owned(op, p)
     }
 }

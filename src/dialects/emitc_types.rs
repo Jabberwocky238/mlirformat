@@ -13,7 +13,7 @@ pub struct EmitcType;
 impl EmitcType {
     #[inline]
     fn named<'a>(name: &'static str) -> Type<'a> {
-        Type::Extended(Extended { name: Str::Borrowed(name), body: None, params: Vec::new() })
+        Type::Extended(alloc::boxed::Box::new(Extended { name: Str::Borrowed(name), body: None, params: Vec::new() }))
     }
 
     #[inline]
@@ -29,7 +29,7 @@ impl EmitcType {
     /// `!emitc.<name><body>`.
     #[inline]
     fn wrapped<'a>(name: &'static str, body: alloc::string::String) -> Type<'a> {
-        Type::Extended(Extended { name: Str::Borrowed(name), body: Some(Str::Owned(body)), params: Vec::new() })
+        Type::Extended(alloc::boxed::Box::new(Extended { name: Str::Borrowed(name), body: Some(Str::Owned(body)), params: Vec::new() }))
     }
 
     /// `!emitc.lvalue<ty>`.

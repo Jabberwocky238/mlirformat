@@ -95,7 +95,7 @@ impl Tosa {
     /// `dense<T : ..>` of element type `elem` (`convertFromAttribute`)? `None`: `elem` is no
     /// tosa type that has it.
     pub(super) fn dense_element(elem: &Type<'_>, a: &Attribute<'_>) -> Option<bool> {
-        let Type::Extended(Extended { name, body, .. }) = elem else { return None };
+        let Some(Extended { name, body, .. }) = elem.extended() else { return None };
         match &**name {
             // An `i8` integer (`IntegerAttr`, typed so).
             "tosa.mxint8" => Some(matches!(a, Attribute::Int { ty: Some(Type::Integer { signedness: Signedness::Signless, width: 8 }), .. })),
@@ -121,7 +121,7 @@ impl DialectRules for Tosa {
 
     fn ty(&self, _v: &Verifier<'_>, t: &Type<'_>) -> Result<(), Invalid> {
         match t {
-            Type::Extended(Extended { name, body: Some(body), .. }) if name == "tosa.block_scaled" => {
+            Type::Extended(e) if let Extended { name, body: Some(body), .. } = &**e && name == "tosa.block_scaled" => {
                 Parser::read(body, Self::block_scaled).map(drop).map_err(|e| Invalid::DialectType { ty: t.to_string(), why: e.to_string() })
             }
             _ => Ok(()),

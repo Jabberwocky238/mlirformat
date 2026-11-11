@@ -192,7 +192,7 @@ mod indices {
     /// The attribute for a map body: the alias that already spells it, else the map written out.
     pub fn attr<'a>(body: &str, named: Option<String>) -> Attribute<'a> {
         match named {
-            Some(name) => Attribute::Extended { ext: Extended { name: Str::Owned(name), body: None, params: Vec::new() }, ty: None },
+            Some(name) => Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Owned(name), body: None, params: Vec::new() }), ty: None },
             None => Attribute::Builtin { name: Str::Borrowed("affine_map"), body: Str::Owned(format!("<{body}>")), ty: None },
         }
     }
@@ -305,7 +305,7 @@ macro_rules! memory_ops {
                 let attrs = p.opt_dict()?;
                 p.expect(":")?;
                 let memref_ty = p.ty()?;
-                let Type::Shaped(Shaped { elem, .. }) = &memref_ty else { return p.err("affine memory op: a memref type") };
+                let Some(Shaped { elem, .. }) = memref_ty.shaped() else { return p.err("affine memory op: a memref type") };
                 let result = (**elem).clone();
                 let mut indices = Vec::new();
                 for n in &names {
@@ -696,7 +696,8 @@ const ATOMIC_RMW_KINDS: [&str; 16] = [
 /// `dense<1> : tensor<2xi32>` / `dense<[1, 2]> : tensor<2xi32>` ⇒ how many expressions each of the
 /// `n` bounds has.
 fn groups_of(attr: &Attribute<'_>, n: usize) -> Option<Vec<usize>> {
-    let Attribute::Builtin { name, body, ty: Some(Type::Shaped(Shaped { shape: Some(dims), .. })) } = attr else { return None };
+    let Attribute::Builtin { name, body, ty: Some(t) } = attr else { return None };
+    let Some(Shaped { shape: Some(dims), .. }) = t.shaped() else { return None };
     if name != "dense" || dims.as_slice() != [Dim::Static(i64::try_from(n).ok()?)] {
         return None;
     }
@@ -712,12 +713,12 @@ fn groups_of(attr: &Attribute<'_>, n: usize) -> Option<Vec<usize>> {
 fn groups_attr<'a>(groups: &[usize]) -> Attribute<'a> {
     let shape = alloc::vec![Dim::Static(i64::try_from(groups.len()).unwrap_or_default())];
     let elem = Type::Integer { signedness: Signedness::Signless, width: 32 };
-    let ty = Type::Shaped(Shaped { kind: ShapedKind::Tensor, shape: Some(shape), elem: alloc::boxed::Box::new(elem), extras: Vec::new() });
+    let ty = Type::Shaped(alloc::boxed::Box::new(Shaped { kind: ShapedKind::Tensor, shape: Some(shape), elem: alloc::boxed::Box::new(elem), extras: Vec::new() }));
     let body = match groups {
         [first, rest @ ..] if rest.iter().all(|g| g == first) => format!("<{first}>"),
         _ => format!("<[{}]>", groups.iter().map(|g| format!("{g}")).collect::<Vec<_>>().join(", ")),
     };
-    Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(ty) }
+    Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(*alloc::boxed::Box::new(ty)) }
 }
 
 /// `[1, 2]` as the op holds it.

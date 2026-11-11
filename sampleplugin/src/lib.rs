@@ -194,7 +194,7 @@ sample.comment "say \22hi\22"
         assert_eq!(Weights::try_from(ops[9]).unwrap().weights, [1, 2, 3]);
         assert_eq!(Comment::try_from(ops[10]).unwrap().text, "say \"hi\"");
         let Ok(pack) = Pack::try_from(ops[8]) else { panic!() };
-        let Type::Extended(Extended { params, .. }) = &pack.rhs_types[1] else { panic!() };
+        let Some(Extended { params, .. }) = pack.rhs_types[1].extended() else { panic!() };
         assert_eq!(params[1], Attribute::Type(Type::Float(mlirformat::FloatKind::F32)));
 
         assert!(opt.unregister("sample"));

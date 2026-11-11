@@ -1062,6 +1062,14 @@ impl<T: IntoStatic> IntoStatic for Vec<T> {
     }
 }
 
+impl<T: IntoStatic> IntoStatic for Box<[T]> {
+    type Static = Box<[T::Static]>;
+    #[inline]
+    fn into_static(self) -> Box<[T::Static]> {
+        self.into_vec().into_iter().map(T::into_static).collect()
+    }
+}
+
 impl<T: IntoStatic> IntoStatic for Box<T> {
     type Static = Box<T::Static>;
     #[inline]
@@ -1166,6 +1174,14 @@ impl<T: Reborrow> Reborrow for Vec<T> {
     }
 }
 
+impl<T: Reborrow> Reborrow for Box<[T]> {
+    type Of<'s> = Box<[T::Of<'s>]> where Self: 's;
+    #[inline]
+    fn reborrow(&self) -> Self::Of<'_> {
+        self.iter().map(T::reborrow).collect()
+    }
+}
+
 impl<T: Reborrow> Reborrow for Box<T> {
     type Of<'s> = Box<T::Of<'s>> where Self: 's;
     #[inline]
@@ -1255,9 +1271,9 @@ impl Type<'_> {
             Type::Token => Type::Token,
             Type::Complex(e) => Type::Complex(e.owned().into()),
             Type::Tuple(ts) => Type::Tuple(ts.iter().map(Type::owned).collect()),
-            Type::Function(f) => Type::Function(FunctionType { inputs: f.inputs.iter().map(Type::owned).collect(), results: f.results.iter().map(Type::owned).collect() }),
-            Type::Shaped(s) => Type::Shaped(Shaped { kind: s.kind, shape: s.shape.clone(), elem: s.elem.owned().into(), extras: s.extras.iter().map(Attribute::owned).collect() }),
-            Type::Extended(e) => Type::Extended(e.owned()),
+            Type::Function(f) => Type::Function(alloc::boxed::Box::new(FunctionType { inputs: f.inputs.iter().map(Type::owned).collect(), results: f.results.iter().map(Type::owned).collect() })),
+            Type::Shaped(s) => Type::Shaped(alloc::boxed::Box::new(Shaped { kind: s.kind, shape: s.shape.clone(), elem: s.elem.owned().into(), extras: s.extras.iter().map(Attribute::owned).collect() })),
+            Type::Extended(e) => Type::Extended(alloc::boxed::Box::new(e.owned())),
         }
     }
 }
@@ -1278,7 +1294,7 @@ impl Attribute<'_> {
             Attribute::SymbolRef(p) => Attribute::SymbolRef(p.iter().map(own).collect()),
             Attribute::DenseArray { ty: t, values } => Attribute::DenseArray { ty: t.owned(), values: values.iter().map(own).collect() },
             Attribute::Builtin { name, body, ty: t } => Attribute::Builtin { name: own(name), body: own(body), ty: ty(t) },
-            Attribute::Extended { ext, ty: t } => Attribute::Extended { ext: ext.owned(), ty: ty(t) },
+            Attribute::Extended { ext, ty: t } => Attribute::Extended { ext: alloc::boxed::Box::new(ext.owned()), ty: ty(t) },
         }
     }
 
@@ -1286,7 +1302,7 @@ impl Attribute<'_> {
     #[inline]
     pub fn dialect(name: &str, body: &str) -> Attribute<'static> {
         let body = (!body.is_empty()).then(|| Str::Owned(String::from(body)));
-        Attribute::Extended { ext: Extended { name: Str::Owned(name.into()), body, params: Vec::new() }, ty: None }
+        Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Owned(name.into()), body, params: Vec::new() }), ty: None }
     }
 
     /// `v : i64`, how ODS stores an integer enum.

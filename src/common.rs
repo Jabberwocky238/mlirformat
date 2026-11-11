@@ -153,11 +153,12 @@ ast! {
         /// `token` (MLIR 23): a value that only orders ops, no data.
         Token,
         Complex(Box<Type<'a>>),
-        Tuple(Vec<Type<'a>>),
-        Function(FunctionType<'a>),
-        Shaped(Shaped<'a>),
+        Tuple(Box<[Type<'a>]>),
+        /// The rarer, bigger kinds are boxed, so a type is three words.
+        Function(Box<FunctionType<'a>>),
+        Shaped(Box<Shaped<'a>>),
         /// `!name` or `!name<...>`: dialect type or alias.
-        Extended(Extended<'a>),
+        Extended(Box<Extended<'a>>),
     }
 
     pub enum Attribute<'a> {
@@ -174,11 +175,11 @@ ast! {
         /// `@a::@b`; quoted segments keep their quotes.
         SymbolRef(Vec<Str<'a>>),
         /// `array<i32: 1, 2>`
-        DenseArray { ty: Type<'a>, values: Vec<Str<'a>> },
+        DenseArray { ty: Type<'a>, values: Box<[Str<'a>]> },
         /// Builtin keyword attribute with raw body: `dense<...>`, `affine_map<...>`, `distinct[0]<...>`, ...
         Builtin { name: Str<'a>, body: Str<'a>, ty: Option<Type<'a>> },
         /// `#name` or `#name<...>` with optional `: type`: dialect attribute or alias.
-        Extended { ext: Extended<'a>, ty: Option<Type<'a>> },
+        Extended { ext: Box<Extended<'a>>, ty: Option<Type<'a>> },
     }
 }
 
@@ -204,7 +205,7 @@ impl Extended<'_> {
         }
         let shaped = format!("vector<{}>", body[..end].trim());
         match crate::Parser::read(&shaped, |p| p.ty()).ok()? {
-            Type::Shaped(Shaped { elem, .. }) => Some(elem.owned()),
+            Type::Shaped(s) => Some(s.elem.owned()),
             _ => None,
         }
     }
@@ -707,10 +708,10 @@ impl Field {
         }
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
         if let Some((ns, mnemonic)) = self.keyword_dialect() {
-            return Some(Attribute::Extended { ext: Extended { name: Str::Borrowed(ns), body: Some(Str::Owned(format!("<{mnemonic} {body}>"))), params: Vec::new() }, ty: None });
+            return Some(Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed(ns), body: Some(Str::Owned(format!("<{mnemonic} {body}>"))), params: Vec::new() }), ty: None });
         }
         let body = (!body.is_empty()).then_some(Str::Borrowed(body));
-        Some(Attribute::Extended { ext: Extended { name: Str::Borrowed(d), body, params: Vec::new() }, ty: None })
+        Some(Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed(d), body, params: Vec::new() }), ty: None })
     }
 }
 

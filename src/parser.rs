@@ -584,7 +584,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         if self.peek() == Some(b'!') {
             return self.ty();
         }
-        self.extended_body(SymKind::Type, name).map(Type::Extended)
+        self.extended_body(SymKind::Type, name).map(|e| Type::Extended(e.into()))
     }
 
     /// What follows the name `name` of a dialect type / attribute.
@@ -617,10 +617,10 @@ impl<'a, 'd> Parser<'a, 'd> {
     pub fn ty(&mut self) -> R<Type<'a>> {
         self.ws();
         match self.peek() {
-            Some(b'(') => self.fn_ty().map(Type::Function),
+            Some(b'(') => self.fn_ty().map(|f| Type::Function(f.into())),
             Some(b'!') => self.extended(SymKind::Type).map(|e| match &e {
                 Extended { name, body: None, params } if params.is_empty() && let Some((_, t)) = self.type_aliases.iter().find(|(n, _)| *n == &**name) => t.clone(),
-                _ => Type::Extended(e),
+                _ => Type::Extended(alloc::boxed::Box::new(e)),
             }),
             _ => self.keyword_ty(),
         }
@@ -650,11 +650,11 @@ impl<'a, 'd> Parser<'a, 'd> {
             }
             "tuple" => {
                 self.expect("<")?;
-                Type::Tuple(self.list(">", Self::ty)?)
+                Type::Tuple(self.list(">", Self::ty)?.into())
             }
             _ => {
                 if let Ok(kind) = ShapedKind::try_from(id) {
-                    return self.shaped(kind).map(Type::Shaped);
+                    return self.shaped(kind).map(|s| Type::Shaped(s.into()));
                 }
                 if let Ok(k) = FloatKind::try_from(id) {
                     return Ok(Type::Float(k));
@@ -744,7 +744,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             b'{' => Attribute::Dict(self.dict()?),
             b'"' => Attribute::Str { lit: self.string()?.into(), ty: self.suffix(bare)? },
             b'@' => Attribute::SymbolRef(self.symbol_ref()?),
-            b'#' => Attribute::Extended { ext: self.extended(SymKind::Attr)?, ty: self.suffix(bare)? },
+            b'#' => Attribute::Extended { ext: alloc::boxed::Box::new(self.extended(SymKind::Attr)?), ty: self.suffix(bare)? },
             b'-' | b'+' | b'0'..=b'9' => self.number_attr(bare)?,
             b'!' | b'(' => Attribute::Type(self.ty()?),
             _ => self.keyword_attr(bare)?,
@@ -783,7 +783,7 @@ impl<'a, 'd> Parser<'a, 'd> {
                     self.expect(">")?;
                     Vec::new()
                 };
-                Attribute::DenseArray { ty, values }
+                Attribute::DenseArray { ty, values: values.into() }
             }
             name @ ("dense" | "dense_resource" | "sparse" | "opaque" | "affine_map" | "affine_set"
             | "strided" | "distinct" | "loc")
@@ -797,7 +797,7 @@ impl<'a, 'd> Parser<'a, 'd> {
                 };
                 let typed = matches!(name, "dense" | "dense_resource" | "sparse" | "opaque");
                 let ty = if typed { self.suffix(bare)? } else { None };
-                Attribute::Builtin { name: name.into(), body, ty }
+                Attribute::Builtin { name: name.into(), body, ty: ty }
             }
             _ => {
                 self.pos = start;
@@ -1367,7 +1367,7 @@ impl<'a> Type<'a> {
     /// `i1`, or a shaped `i1` like `self` (`arith.cmpi`'s result).
     pub fn i1_like(&self) -> Type<'a> {
         match self {
-            Type::Shaped(s) => Type::Shaped(Shaped { kind: s.kind, shape: s.shape.clone(), elem: Box::new(Type::I1), extras: s.extras.clone() }),
+            Type::Shaped(s) => Type::Shaped(alloc::boxed::Box::new(Shaped { kind: s.kind, shape: s.shape.clone(), elem: Box::new(Type::I1), extras: s.extras.clone() })),
             _ => Type::I1,
         }
     }
@@ -2383,12 +2383,12 @@ impl Format<'_> {
                                 case.push_str(p.ident()?);
                             }
                             let body = Some(Str::Owned(format!("<{m} {case}>")));
-                            Got::Attr(Attribute::Extended { ext: Extended { name: Str::Borrowed(ns), body, params: Vec::new() }, ty: None })
+                            Got::Attr(Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed(ns), body, params: Vec::new() }), ty: None })
                         }
                         Role::Prop { dialect: Some(d), .. } => {
                             p.ws();
                             let body = Some(Str::Owned(p.group()?.into()));
-                            Got::Attr(Attribute::Extended { ext: Extended { name: Str::Borrowed(d), body, params: Vec::new() }, ty: None })
+                            Got::Attr(Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed(d), body, params: Vec::new() }), ty: None })
                         }
                         Role::Prop { .. } => {
                             // A bare keyword is a user enum case; anything else is an attribute.
@@ -2451,7 +2451,7 @@ impl Format<'_> {
                         }
                     }
                     let ty = Type::Integer { signedness: Signedness::Signless, width: 64 };
-                    r.set(&ints, Attribute::DenseArray { ty, values: statics });
+                    r.set(&ints, Attribute::DenseArray { ty, values: statics.into() });
                     r.set_values(&vals, ops);
                     if let Role::Operand { ty } = vals.role
                         && let Ok(t) = self.field(ty)
@@ -2656,7 +2656,8 @@ impl Format<'_> {
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like(); if f.variadic { self.arity(f, &r, results) } else { 1 }],
                 (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => {
                     let elem: Type<'a> = match r.bound(var).and_then(|t| t.first()) {
-                        Some(Type::Complex(elem) | Type::Shaped(Shaped { elem, .. })) => (**elem).clone(),
+                        Some(Type::Complex(elem)) => (**elem).clone(),
+                        Some(Type::Shaped(s)) => (*s.elem).clone(),
                         Some(Type::Extended(ext)) => ext.shaped_elem().ok_or_else(undetermined)?,
                         _ => return Err(undetermined()),
                     };
@@ -2664,27 +2665,27 @@ impl Format<'_> {
                     // operands, `vector.to_elements`'s results).
                     vec![elem; if f.variadic { self.arity(f, &r, results) } else { 1 }]
                 }
-                (None, Role::Type { infer: Some(Infer::Width(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
-                    Some(Type::Shaped(Shaped { shape: Some(shape), .. })) => match shape.first() {
+                (None, Role::Type { infer: Some(Infer::Width(var)), .. }) => match r.bound(var).and_then(|t| t.first()).and_then(Type::shaped) {
+                    Some(Shaped { shape: Some(shape), .. }) => match shape.first() {
                         Some(Dim::Static(n)) => vec![Type::int(u32::try_from(*n).map_err(|_| undetermined())?)],
                         _ => return Err(undetermined()),
                     },
                     _ => return Err(undetermined()),
                 },
-                (None, Role::Type { infer: Some(Infer::Svbool(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
-                    Some(Type::Shaped(sh @ Shaped { shape: Some(shape), .. })) if let Some((last, outer)) = shape.split_last() => {
+                (None, Role::Type { infer: Some(Infer::Svbool(var)), .. }) => match r.bound(var).and_then(|t| t.first()).and_then(Type::shaped) {
+                    Some(sh @ Shaped { shape: Some(shape), .. }) if let Some((last, outer)) = shape.split_last() => {
                         let last = match last {
                             Dim::Scalable(_) => Dim::Scalable(16),
                             _ => Dim::Static(16),
                         };
                         let shape = outer.iter().cloned().chain([last]).collect();
-                        vec![Type::Shaped(Shaped { shape: Some(shape), ..sh.clone() })]
+                        vec![Type::Shaped(alloc::boxed::Box::new(Shaped { shape: Some(shape), ..sh.clone() }))]
                     }
                     _ => return Err(undetermined()),
                 },
-                (None, Role::Type { infer: Some(Infer::OuterTile(var)), .. }) => match r.bound(var).and_then(|t| t.first()) {
-                    Some(Type::Shaped(sh @ Shaped { shape: Some(shape), .. })) if let Some(Dim::Scalable(n) | Dim::Static(n)) = shape.first() => {
-                        vec![Type::Shaped(Shaped { shape: Some(alloc::vec![Dim::Scalable(*n), Dim::Scalable(*n)]), ..sh.clone() })]
+                (None, Role::Type { infer: Some(Infer::OuterTile(var)), .. }) => match r.bound(var).and_then(|t| t.first()).and_then(Type::shaped) {
+                    Some(sh @ Shaped { shape: Some(shape), .. }) if let Some(Dim::Scalable(n) | Dim::Static(n)) = shape.first() => {
+                        vec![Type::Shaped(alloc::boxed::Box::new(Shaped { shape: Some(alloc::vec![Dim::Scalable(*n), Dim::Scalable(*n)]), ..sh.clone() }))]
                     }
                     _ => return Err(undetermined()),
                 },

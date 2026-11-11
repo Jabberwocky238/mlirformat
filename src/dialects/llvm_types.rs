@@ -255,7 +255,7 @@ impl<'a> From<LlvmType<'a>> for Type<'a> {
     #[inline]
     fn from(l: LlvmType<'a>) -> Self {
         let (m, body) = l.parts(&mut Vec::new());
-        Type::Extended(Extended { name: Str::Owned(format!("llvm.{m}")), body: body.map(Str::Owned), params: Vec::new() })
+        Type::Extended(alloc::boxed::Box::new(Extended { name: Str::Owned(format!("llvm.{m}")), body: body.map(Str::Owned), params: Vec::new() }))
     }
 }
 

@@ -44,7 +44,7 @@ impl<'a> Generic<'a> {
         let Attribute::Array(xs) = types else { return None };
         xs.iter()
             .map(|x| match x {
-                Attribute::Extended { ext: Extended { name, body: Some(b), .. }, .. } if name == "linalg.iterator_type" => {
+                Attribute::Extended { ext, .. } if let Extended { name, body: Some(b), .. } = &**ext && name == "linalg.iterator_type" => {
                     b.strip_prefix('<').and_then(|b| b.strip_suffix('>')).map(String::from)
                 }
                 _ => None,
@@ -56,7 +56,7 @@ impl<'a> Generic<'a> {
     fn iterator_types(names: &Attribute<'a>) -> Option<Attribute<'a>> {
         let Attribute::Array(xs) = names else { return None };
         let types = xs.iter().map(|x| match x {
-            Attribute::Str { lit, ty: None } => Some(Attribute::Extended { ext: Extended { name: Str::Borrowed("linalg.iterator_type"), body: Some(Str::Owned(alloc::format!("<{lit}>"))), params: Vec::new() }, ty: None }),
+            Attribute::Str { lit, ty: None } => Some(Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed("linalg.iterator_type"), body: Some(Str::Owned(alloc::format!("<{lit}>"))), params: Vec::new() }), ty: None }),
             _ => None,
         });
         types.collect::<Option<_>>().map(Attribute::Array)
@@ -762,7 +762,7 @@ impl Dst {
             let n: u64 = p.number()?;
             Ok(Str::Owned(if neg { alloc::format!("-{n}") } else { alloc::format!("{n}") }))
         })?;
-        Ok(Attribute::DenseArray { ty: Type::int(64), values })
+        Ok(Attribute::DenseArray { ty: Type::int(64), values: values.into() })
     }
 
     /// 结果：outs 里的张量（`parseDstStyleOp`）。
@@ -1021,7 +1021,8 @@ pub struct Elementwise<'a> {
 impl Elementwise<'_> {
     /// kind 的名字（`#linalg.elementwise_kind<abs>` ⇒ `abs`）与它的元数。
     fn arity(kind: &Attribute<'_>) -> Option<(String, usize)> {
-        let Attribute::Extended { ext: Extended { name, body: Some(b), .. }, .. } = kind else { return None };
+        let Attribute::Extended { ext, .. } = kind else { return None };
+        let Extended { name, body: Some(b), .. } = &**ext else { return None };
         let k = b.strip_prefix('<')?.strip_suffix('>')?.trim();
         let n = match k {
             "exp" | "log" | "abs" | "ceil" | "floor" | "negf" | "reciprocal" | "round" | "sqrt" | "rsqrt" | "square" | "tanh" | "erf" | "sin" | "cos" | "tan" | "acos"

@@ -295,7 +295,7 @@ impl Builtin {
                 if extras.last().is_some_and(|m| m == "0") {
                     extras.pop();
                 }
-                let shaped = Type::Shaped(crate::Shaped { extras: Vec::new(), ..s.clone() }).to_string();
+                let shaped = Type::Shaped(alloc::boxed::Box::new(crate::Shaped { extras: Vec::new(), ..*s.clone() })).to_string();
                 let head = shaped.strip_suffix('>').unwrap_or(&shaped);
                 alloc::format!("{head}{}>", extras.iter().map(|e| alloc::format!(",{e}")).collect::<String>())
             }
