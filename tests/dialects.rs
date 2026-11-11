@@ -24,6 +24,13 @@ macro_rules! dialects {
             // Hand-written forms for ops ODS describes in C++, as `MlirOpt::upstream` injects
             // them; they are named `affine.*` / `scf.*` / `gpu.*`, so they change nothing for the other dialects.
             opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template()).inject(ScfIf::template()).inject(GpuFunc::template()).inject(LaunchFunc::template());
+            // llvm's only with llvm: its hand-written forms split an attribute dictionary by the ODS
+            // facts of `llvm.*` ops, which only a context that loaded `llvm` has.
+            if $ns == "llvm" {
+                for t in mlirformat::llvm_hand::LlvmHand::templates() {
+                    opt.inject(t);
+                }
+            }
             // linalg's only with linalg: a named op's custom form rebuilds its body with ops of
             // `arith` / `math` / `complex`, whose ODS defaults (`fastmath = none`) those dialects carry.
             if $ns == "linalg" {

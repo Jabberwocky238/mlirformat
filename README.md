@@ -100,7 +100,9 @@ Built in and registered by `MlirOpt::upstream()`: `affine`, `arith`, `async`, `b
 `spirv_types::SpirvType` read and build those dialects' types. An op whose syntax ODS leaves to C++ gets a hand-written form, injected by name
 over the generated one so the generated files stay as `mlirformat tblgen` wrote them:
 `affine_ops` (`affine.for` / `if` / `parallel` / `apply` / `min` / `max` / `load` / `store`),
-`scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`), `linalg_hand`
+`scf_hand` (`scf.for` / `if`), `gpu_hand` (`gpu.func`, `gpu.launch_func`), `llvm_hand` (`llvm.func`,
+`llvm.call`, `llvm.icmp` / `fcmp`, `llvm.getelementptr`: read and written on the generic `Operation`, the typed ops stay
+the generated ones), `linalg_hand`
 (`linalg.generic` / `yield`, the named ops: the OpDSL ones generated from
 `LinalgNamedStructuredOps.yaml` by `scripts/linalg_named.py`, `matmul` / `batch_matmul` /
 `batch_reduce_matmul` / `contract`, `transpose` / `broadcast` / `map` / `reduce` / `elementwise`;
