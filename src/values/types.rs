@@ -1,7 +1,7 @@
 //! Methods on types and attributes, named as MLIR names them: what a shaped type holds, and
 //! the builtin types and attributes built from values.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::format;
 use alloc::vec::Vec;
 
@@ -135,26 +135,26 @@ impl<'a> Attribute<'a> {
     pub fn integer(v: i128, ty: Type<'a>) -> Attribute<'a> {
         match ty {
             Type::Integer { width: 1, .. } => Attribute::Bool(v != 0),
-            _ => Attribute::Int { lit: Cow::Owned(format!("{v}")), ty: Some(ty) },
+            _ => Attribute::Int { lit: Str::Owned(format!("{v}")), ty: Some(ty) },
         }
     }
 
     /// `getIndexAttr(v)`: `v : index`.
     #[inline]
     pub fn index(v: i64) -> Attribute<'a> {
-        Attribute::Int { lit: Cow::Owned(format!("{v}")), ty: Some(Type::Index) }
+        Attribute::Int { lit: Str::Owned(format!("{v}")), ty: Some(Type::Index) }
     }
 
     /// `getDenseI64ArrayAttr`: `array<i64: ...>`.
     #[inline]
     pub fn dense_i64(v: &[i64]) -> Attribute<'a> {
-        Attribute::DenseArray { ty: Type::int(64), values: v.iter().map(|x| Cow::Owned(format!("{x}"))).collect() }
+        Attribute::DenseArray { ty: Type::int(64), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
     }
 
     /// `getDenseI32ArrayAttr`: `array<i32: ...>` (of sizes or counts as well).
     #[inline]
     pub fn dense_i32<T: core::fmt::Display>(v: &[T]) -> Attribute<'a> {
-        Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Cow::Owned(format!("{x}"))).collect() }
+        Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
     }
 
     /// `DenseI64ArrayAttr::asArrayRef` (any integer `array<..>`); `None` for another attribute.

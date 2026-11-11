@@ -1,7 +1,7 @@
 //! EmitC dialect types (`EmitCTypes.td`, `EmitC.cpp`): `!emitc.size_t`, `!emitc.ptr<T>`,
 //! `!emitc.lvalue<T>`, `!emitc.array<NxT>`, ..., and what `EmitC.cpp` says of types.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::vec::Vec;
 use core::fmt::Display;
 
@@ -13,7 +13,7 @@ pub struct EmitcType;
 impl EmitcType {
     #[inline]
     fn named<'a>(name: &'static str) -> Type<'a> {
-        Type::Extended(Extended { name: Cow::Borrowed(name), body: None, params: Vec::new() })
+        Type::Extended(Extended { name: Str::Borrowed(name), body: None, params: Vec::new() })
     }
 
     #[inline]
@@ -29,7 +29,7 @@ impl EmitcType {
     /// `!emitc.<name><body>`.
     #[inline]
     fn wrapped<'a>(name: &'static str, body: alloc::string::String) -> Type<'a> {
-        Type::Extended(Extended { name: Cow::Borrowed(name), body: Some(Cow::Owned(body)), params: Vec::new() })
+        Type::Extended(Extended { name: Str::Borrowed(name), body: Some(Str::Owned(body)), params: Vec::new() })
     }
 
     /// `!emitc.lvalue<ty>`.

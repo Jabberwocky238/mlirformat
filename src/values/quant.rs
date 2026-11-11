@@ -3,7 +3,6 @@
 //! The body of `!quant.uniform<...>` stays text in [`Extended`]; [`UniformQuantized`] reads and
 //! writes it as `mlir-opt` prints it.
 
-use alloc::borrow::Cow;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -66,7 +65,7 @@ impl TryFrom<&Type<'_>> for UniformQuantized<'static> {
             Some((s, z)) => (s.trim(), z.trim().parse().map_err(|_| ())?),
             None => (params.trim(), 0),
         };
-        Ok(UniformQuantized { signed, width, range, expressed, scale: Cow::Owned(String::from(scale)), zero_point })
+        Ok(UniformQuantized { signed, width, range, expressed, scale: Str::Owned(String::from(scale)), zero_point })
     }
 }
 
@@ -76,6 +75,6 @@ impl<'a> From<UniformQuantized<'a>> for Type<'a> {
         let range = q.range.map_or_else(String::new, |(lo, hi)| format!("<{lo}:{hi}>"));
         let zp = if q.zero_point == 0 { String::new() } else { format!(":{}", q.zero_point) };
         let body = format!("<{}{}{range}:{}, {}{zp}>", if q.signed { 'i' } else { 'u' }, q.width, q.expressed, q.scale);
-        Type::Extended(Extended { name: Cow::Borrowed("quant.uniform"), body: Some(Cow::Owned(body)), params: Vec::new() })
+        Type::Extended(Extended { name: Str::Borrowed("quant.uniform"), body: Some(Str::Owned(body)), params: Vec::new() })
     }
 }

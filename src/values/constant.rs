@@ -1,7 +1,7 @@
 //! ⭐ Constant attributes as numbers: `IntegerAttr`, `FloatAttr`, `BoolAttr` and
 //! `DenseElementsAttr` (splat or not) ⇄ [`Const`], printed back exactly as MLIR prints them.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec;
@@ -273,7 +273,7 @@ impl<'a> From<Const<'a>> for Attribute<'a> {
     fn from(c: Const<'a>) -> Self {
         if c.elements {
             let body = c.dense_body();
-            return Attribute::Builtin { name: "dense".into(), body: Cow::Owned(body), ty: Some(c.ty) };
+            return Attribute::Builtin { name: "dense".into(), body: Str::Owned(body), ty: Some(c.ty) };
         }
         if let Some(parts) = c.values[0].parts() {
             // `complex.constant`'s `[re, im]`.
@@ -282,14 +282,14 @@ impl<'a> From<Const<'a>> for Attribute<'a> {
         }
         match c.values[0] {
             Scalar::Int(i) if matches!(c.ty, Type::Integer { width: 1, .. }) => Attribute::Bool(!i.is_zero()),
-            v @ Scalar::Int(_) => Attribute::Int { lit: Cow::Owned(v.print(&c.ty)), ty: Some(c.ty) },
+            v @ Scalar::Int(_) => Attribute::Int { lit: Str::Owned(v.print(&c.ty)), ty: Some(c.ty) },
             v @ (Scalar::Float(_) | Scalar::Wide(_)) => {
                 let lit = v.print(&c.ty);
                 // A float printed as its bits reads back as an integer literal.
                 if lit.starts_with("0x") {
-                    Attribute::Int { lit: Cow::Owned(lit), ty: Some(c.ty) }
+                    Attribute::Int { lit: Str::Owned(lit), ty: Some(c.ty) }
                 } else {
-                    Attribute::Float { lit: Cow::Owned(lit), ty: Some(c.ty) }
+                    Attribute::Float { lit: Str::Owned(lit), ty: Some(c.ty) }
                 }
             }
             Scalar::Complex(..) | Scalar::ComplexFloat(..) => unreachable!("built from parts"),

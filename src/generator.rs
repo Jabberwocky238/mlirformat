@@ -1,6 +1,7 @@
 //! ⭐ IR → text: the printer, the serde `Serializer` that flattens typed ops into a [`Content`],
 //! typed op → [`Operation`], and the runtime assembly-format writer.
 
+use crate::Str;
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::format;
@@ -493,7 +494,7 @@ impl<'a> Region<'a> {
     /// Region `id` of a [`Source`], by reference: what an op handed to the printer holds instead
     /// of its region (a region with no blocks is just empty, not a reference).
     pub fn sourced(id: u64) -> Self {
-        Region { blocks: alloc::vec![Block { label: Some(Cow::Owned(format!("{SOURCED}{id}"))), args: Vec::new(), ops: Vec::new() }] }
+        Region { blocks: alloc::vec![Block { label: Some(Str::Owned(format!("{SOURCED}{id}"))), args: Vec::new(), ops: Vec::new() }] }
     }
 
     /// The id of a region by reference.
@@ -1025,7 +1026,7 @@ struct_impls!(SerializeStruct, SerializeStructVariant);
 
 /// `Cow::Borrowed` text made owned.
 fn own(s: &Str<'_>) -> Str<'static> {
-    Cow::Owned(String::from(&**s))
+    Str::Owned(String::from(&**s))
 }
 
 /// ⭐ The same value borrowing nothing, by move: owned text moves, only borrowed text is copied.
@@ -1041,7 +1042,7 @@ impl IntoStatic for Str<'_> {
     type Static = Str<'static>;
     #[inline]
     fn into_static(self) -> Str<'static> {
-        Cow::Owned(self.into_owned())
+        Str::into_static(self)
     }
 }
 
@@ -1145,7 +1146,7 @@ impl Reborrow for Str<'_> {
     type Of<'s> = Str<'s> where Self: 's;
     #[inline]
     fn reborrow(&self) -> Str<'_> {
-        Cow::Borrowed(self)
+        Str::reborrow(self)
     }
 }
 
@@ -1284,8 +1285,8 @@ impl Attribute<'_> {
     /// `#name<body>` (`#name` when `body` is empty): an enum or other dialect attribute.
     #[inline]
     pub fn dialect(name: &str, body: &str) -> Attribute<'static> {
-        let body = (!body.is_empty()).then(|| Cow::Owned(String::from(body)));
-        Attribute::Extended { ext: Extended { name: Cow::Owned(name.into()), body, params: Vec::new() }, ty: None }
+        let body = (!body.is_empty()).then(|| Str::Owned(String::from(body)));
+        Attribute::Extended { ext: Extended { name: Str::Owned(name.into()), body, params: Vec::new() }, ty: None }
     }
 
     /// `v : i64`, how ODS stores an integer enum.
@@ -1297,7 +1298,7 @@ impl Attribute<'_> {
     /// `n : ty`.
     #[inline]
     pub fn of_int(value: i128, ty: Type<'static>) -> Attribute<'static> {
-        Attribute::Int { lit: Cow::Owned(value.to_string()), ty: Some(ty) }
+        Attribute::Int { lit: Str::Owned(value.to_string()), ty: Some(ty) }
     }
 
     /// A string attribute, escaped as MLIR does (`llvm::printEscapedString`).
@@ -1310,7 +1311,7 @@ impl Attribute<'_> {
                 b => lit.push_str(&format!("\\{b:02X}")),
             }
         }
-        Attribute::Str { lit: Cow::Owned(lit), ty: None }
+        Attribute::Str { lit: Str::Owned(lit), ty: None }
     }
 }
 
@@ -1337,7 +1338,7 @@ impl TryFrom<Content> for Option<Attribute<'static>> {
     fn try_from(c: Content) -> Result<Self, Error> {
         let float = |kind, bits| {
             let lit = crate::ApFloat::from_bits(kind, bits).map_or_else(|| format!("0x{bits:X}"), crate::ApFloat::print);
-            Attribute::Float { lit: Cow::Owned(lit), ty: Some(Type::Float(kind)) }
+            Attribute::Float { lit: Str::Owned(lit), ty: Some(Type::Float(kind)) }
         };
         let int = Attribute::of_int;
         Ok(Some(match c {
@@ -1361,7 +1362,7 @@ impl TryFrom<Content> for Option<Attribute<'static>> {
             // A sequence of one kind of number is a dense array (`Vec<i32>` ⇄ `array<i32: 1, 2>`).
             Content::Seq(xs) if !xs.is_empty() && xs.iter().all(|x| x.dense_type() == xs[0].dense_type() && x.dense_type().is_some()) => {
                 let ty = xs[0].dense_type().unwrap_or(Type::I1);
-                let values = xs.into_iter().map(|x| Self::try_from(x).map(|a| Cow::Owned(a.map_or(String::new(), |a| a.untyped().to_string())))).collect::<Result<_, _>>()?;
+                let values = xs.into_iter().map(|x| Self::try_from(x).map(|a| Str::Owned(a.map_or(String::new(), |a| a.untyped().to_string())))).collect::<Result<_, _>>()?;
                 Attribute::DenseArray { ty, values }
             }
             Content::Seq(xs) => Attribute::Array(xs.into_iter().filter_map(|x| Self::try_from(x).transpose()).collect::<Result<_, _>>()?),
@@ -1417,7 +1418,7 @@ impl<'a> NamedAttr<'a> {
     /// a literal), not copied.
     #[inline]
     pub fn of(name: &'a str, value: Attribute<'a>) -> NamedAttr<'a> {
-        NamedAttr { name: Cow::Borrowed(name), value: (value != Attribute::Unit).then_some(value) }
+        NamedAttr { name: Str::Borrowed(name), value: (value != Attribute::Unit).then_some(value) }
     }
 }
 
@@ -1479,13 +1480,13 @@ impl Operation<'_> {
             props.extend(f.attr(take(f.name)?)?.map(|a| NamedAttr::of(f.name, a)));
         }
         if schema.of_role(|r| matches!(r, Role::Operand { .. })).filter(|f| f.variadic).count() > 1 {
-            let values = sizes.iter().map(|n| Cow::Owned(n.to_string())).collect();
+            let values = sizes.iter().map(|n| Str::Owned(n.to_string())).collect();
             props.push(NamedAttr::of(SEGMENTS, Attribute::DenseArray { ty: Type::int(32), values }));
         }
         props.sort_by(|a, b| a.name.cmp(&b.name));
         let one = |role: Role| schema.of_role(move |r| *r == role).next().map(|f| take(f.name)).transpose();
         Ok(Operation {
-            name: Cow::Borrowed(name),
+            name: Str::Borrowed(name),
             operands,
             successors: schema
                 .of_role(|r| *r == Role::Successor)
@@ -1698,9 +1699,9 @@ impl Format<'_> {
                 Elem::Zip { integers, values } => {
                     s.elem(p).map_err(io)?;
                     let list = v.prop(self.field(integers)?)?;
-                    let items: Vec<Cow<'_, str>> = match list.as_deref() {
-                        Some(Attribute::DenseArray { values, .. }) => values.iter().map(|x| Cow::Borrowed(&**x)).collect(),
-                        Some(Attribute::Array(a)) => a.iter().map(|x| Cow::Owned(Untyped(x).to_string())).collect(),
+                    let items: Vec<Str<'_>> = match list.as_deref() {
+                        Some(Attribute::DenseArray { values, .. }) => values.iter().map(|x| Str::Borrowed(&**x)).collect(),
+                        Some(Attribute::Array(a)) => a.iter().map(|x| Str::Owned(Untyped(x).to_string())).collect(),
                         _ => return Err(format!("`{integers}`: a zipped list needs an integer array").into()),
                     };
                     let mut ops = v.values(self.field(values)?)?.iter();

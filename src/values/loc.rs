@@ -1,7 +1,6 @@
 //! Locations as text: what `loc(...)` holds (an op's `loc`, a block argument's), read and built as
 //! MLIR's `Location` does.
 
-use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -72,8 +71,8 @@ impl<'s> Loc<'s> {
             }
         }
         match kept.as_slice() {
-            [] => Cow::Borrowed(UNKNOWN_LOC),
-            [one] => Cow::Owned(String::from(one.0)),
+            [] => Str::Borrowed(UNKNOWN_LOC),
+            [one] => Str::Owned(String::from(one.0)),
             many => {
                 let mut out = String::from("fused[");
                 for (i, l) in many.iter().enumerate() {
@@ -83,7 +82,7 @@ impl<'s> Loc<'s> {
                     out.push_str(l.0);
                 }
                 out.push(']');
-                Cow::Owned(out)
+                Str::Owned(out)
             }
         }
     }

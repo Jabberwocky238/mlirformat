@@ -65,6 +65,7 @@ mod dialects;
 mod generator;
 mod mliropt;
 mod parser;
+mod text;
 /// The ODS `custom<X>` directives (`mlirformat tblgen` asks `known` before keeping a format).
 pub mod syntax;
 /// What ODS says about each op: traits, interfaces, memory effects (`scripts/traits.py`).

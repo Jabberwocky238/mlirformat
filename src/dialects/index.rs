@@ -1,9 +1,9 @@
 //! `index` (formats from `IndexOps.td`, checked against `mlir-opt` 23.1.5 output). Everything is
 //! `index` unless spelled otherwise.
 
+use crate::Str;
 use core::fmt::{self, Write};
 
-use alloc::borrow::Cow;
 use alloc::format;
 
 use crate::{Attribute, Extended, Op, Parse, Print, Parser, Printer, R, Type, Value, mlir};
@@ -112,7 +112,7 @@ impl Parse for CmpOp<'_> {
         p.expect(",")?;
         let rhs = p.value()?;
         p.expect(")")?;
-        let pred = Attribute::Extended { ext: Extended { name: Cow::Borrowed("index"), body: Some(Cow::Owned(format!("<cmp_predicate {predicate}>"))), params: alloc::vec::Vec::new() }, ty: None };
+        let pred = Attribute::Extended { ext: Extended { name: Str::Borrowed("index"), body: Some(Str::Owned(format!("<cmp_predicate {predicate}>"))), params: alloc::vec::Vec::new() }, ty: None };
         let op = CmpOp { pred, lhs, rhs, ty: Type::Index, result: Type::I1, attrs: p.opt_dict()?, loc: p.opt_loc()? };
         Self::owned(op, p)
     }

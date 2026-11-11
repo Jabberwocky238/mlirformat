@@ -3,7 +3,7 @@
 //! surface form through the same simplifying constructors, so that parsing, folding and
 //! printing land on the text `mlir-opt` prints.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::boxed::Box;
 use alloc::format;
 use alloc::string::String;
@@ -1225,7 +1225,7 @@ impl From<&AffineMap> for Attribute<'_> {
     /// `AffineMapAttr`.
     #[inline]
     fn from(m: &AffineMap) -> Self {
-        Attribute::Builtin { name: Cow::Borrowed("affine_map"), body: Cow::Owned(format!("<{m}>")), ty: None }
+        Attribute::Builtin { name: Str::Borrowed("affine_map"), body: Str::Owned(format!("<{m}>")), ty: None }
     }
 }
 
@@ -1233,6 +1233,6 @@ impl From<&IntegerSet> for Attribute<'_> {
     /// `IntegerSetAttr`.
     #[inline]
     fn from(s: &IntegerSet) -> Self {
-        Attribute::Builtin { name: Cow::Borrowed("affine_set"), body: Cow::Owned(format!("<{s}>")), ty: None }
+        Attribute::Builtin { name: Str::Borrowed("affine_set"), body: Str::Owned(format!("<{s}>")), ty: None }
     }
 }

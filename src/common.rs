@@ -11,7 +11,6 @@
 //! Dialect     a namespace's custom syntax; `#[mlir::op]` structs are typed views of Operation
 //! ```
 
-use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::format;
 use alloc::string::String;
@@ -24,8 +23,7 @@ use serde::de::DeserializeOwned;
 use crate::generator::Printer;
 use crate::parser::{Fields, Parser, R};
 
-/// Source text slice; borrowed after parsing, owned after building or deserializing.
-pub type Str<'a> = Cow<'a, str>;
+pub use crate::text::Str;
 
 keywords! {
     pub enum Signedness { Signless = "i", Signed = "si", Unsigned = "ui" }
@@ -703,16 +701,16 @@ impl Field {
         match self.role {
             // An `I1Attr` is a bool (`DefaultValuedAttr<I1Attr, "0">` is `false`).
             Role::Prop { int: Some("i1"), default: Some(v), dialect: None, .. } => return Some(Attribute::Bool(!matches!(v, "0" | "false"))),
-            Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } => return Some(Attribute::Int { lit: Cow::Borrowed(v), ty: Type::try_from(t).ok() }),
+            Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } => return Some(Attribute::Int { lit: Str::Borrowed(v), ty: Type::try_from(t).ok() }),
             Role::Prop { int: None, default: Some(v @ ("true" | "false")), dialect: None, .. } => return Some(Attribute::Bool(v == "true")),
             _ => {}
         }
         let Role::Prop { dialect: Some(d), default: Some(body), .. } = self.role else { return None };
         if let Some((ns, mnemonic)) = self.keyword_dialect() {
-            return Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body: Some(Cow::Owned(format!("<{mnemonic} {body}>"))), params: Vec::new() }, ty: None });
+            return Some(Attribute::Extended { ext: Extended { name: Str::Borrowed(ns), body: Some(Str::Owned(format!("<{mnemonic} {body}>"))), params: Vec::new() }, ty: None });
         }
-        let body = (!body.is_empty()).then_some(Cow::Borrowed(body));
-        Some(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
+        let body = (!body.is_empty()).then_some(Str::Borrowed(body));
+        Some(Attribute::Extended { ext: Extended { name: Str::Borrowed(d), body, params: Vec::new() }, ty: None })
     }
 }
 

@@ -5,7 +5,7 @@
 //! exactly as `mlir-opt` prints it: nested LLVM types without their `!llvm.` prefix, builtin
 //! types as themselves.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::boxed::Box;
 use alloc::format;
 use alloc::string::String;
@@ -255,7 +255,7 @@ impl<'a> From<LlvmType<'a>> for Type<'a> {
     #[inline]
     fn from(l: LlvmType<'a>) -> Self {
         let (m, body) = l.parts(&mut Vec::new());
-        Type::Extended(Extended { name: Cow::Owned(format!("llvm.{m}")), body: body.map(Cow::Owned), params: Vec::new() })
+        Type::Extended(Extended { name: Str::Owned(format!("llvm.{m}")), body: body.map(Str::Owned), params: Vec::new() })
     }
 }
 

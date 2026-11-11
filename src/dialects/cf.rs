@@ -1,6 +1,5 @@
 //! `cf` (subset).
 
-use alloc::borrow::Cow;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec;
@@ -130,7 +129,7 @@ impl<'a> Switch<'a> {
     /// Reads one destination: `^bb(%a, %b : T, U)` or `^bb`.
     #[allow(clippy::type_complexity)]
     fn dest<'s>(p: &mut Parser<'s, '_>) -> R<(Str<'s>, Vec<Value<'s>>, Vec<Type<'s>>)> {
-        let name = Cow::Borrowed(p.sigil('^')?);
+        let name = Str::Borrowed(p.sigil('^')?);
         let (mut values, mut types) = (Vec::new(), Vec::new());
         if p.eat("(") {
             values.push(p.value()?);
@@ -155,7 +154,7 @@ impl<'a> Switch<'a> {
         };
         let n = i64::try_from(values.len()).unwrap_or(i64::MAX);
         let ty = Type::Shaped(Shaped { kind: ShapedKind::Vector, shape: Some(vec![Dim::Static(n)]), elem: alloc::boxed::Box::new(flag_ty.clone()), extras: Vec::new() });
-        Attribute::Builtin { name: Cow::Borrowed("dense"), body: Cow::Owned(body), ty: Some(ty) }
+        Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(ty) }
     }
 }
 
@@ -214,7 +213,7 @@ impl Parse for Switch<'_> {
             values.push(if raw >= modulus / 2 { raw - modulus } else { raw });
             p.expect(":")?;
             let (name, ops, tys) = Switch::dest(p)?;
-            segments.push(Cow::Owned(format!("{}", ops.len())));
+            segments.push(Str::Owned(format!("{}", ops.len())));
             case_destinations.push(name);
             case_operands.extend(ops);
             case_types.extend(tys);

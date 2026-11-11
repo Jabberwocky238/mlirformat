@@ -7,7 +7,7 @@
 //! included); enum operands (storage classes, decorations, image dims, ...) keep their
 //! `stringify*` names.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::boxed::Box;
 use alloc::format;
 use alloc::string::String;
@@ -360,9 +360,9 @@ impl<'a> From<SpirvType<'a>> for Type<'a> {
     fn from(t: SpirvType<'a>) -> Self {
         let body = match t {
             SpirvType::Sampler | SpirvType::NamedBarrier => None,
-            _ => Some(Cow::Owned(format!("<{}>", t.parts().1))),
+            _ => Some(Str::Owned(format!("<{}>", t.parts().1))),
         };
-        Type::Extended(Extended { name: Cow::Owned(format!("spirv.{}", t.parts().0)), body, params: Vec::new() })
+        Type::Extended(Extended { name: Str::Owned(format!("spirv.{}", t.parts().0)), body, params: Vec::new() })
     }
 }
 

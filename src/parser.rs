@@ -1,6 +1,7 @@
 //! ⭐ Text → IR: the recursive-descent parser, the serde `Deserializer` that builds typed ops out
 //! of a [`Content`], and the runtime assembly-format reader.
 
+use crate::Str;
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::format;
@@ -150,7 +151,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             return r.into_static();
         }
         self.lent.push(r);
-        Region { blocks: alloc::vec![Block { label: Some(Cow::Owned(alloc::format!("{LENT}{}", self.lent.len() - 1))), args: Vec::new(), ops: Vec::new() }] }
+        Region { blocks: alloc::vec![Block { label: Some(Str::Owned(alloc::format!("{LENT}{}", self.lent.len() - 1))), args: Vec::new(), ops: Vec::new() }] }
     }
 
     /// The index a stand-in from [`Parser::lend`] stands for.
@@ -221,7 +222,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             }
         }
         out.push_str(&format!("\":{line}:{col}"));
-        Some(Cow::Owned(out))
+        Some(Str::Owned(out))
     }
 
     /// Reads the ops of the first block on `fork`'s threads (see [`Parser::forked`]).
@@ -540,7 +541,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         let save = self.pos;
         if self.eat_kw("loc") && self.peek() == Some(b'(') {
             let g = self.group()?;
-            return Ok(Some(Cow::Borrowed(&g[1..g.len() - 1])));
+            return Ok(Some(Str::Borrowed(&g[1..g.len() - 1])));
         }
         self.pos = save;
         Ok(None)
@@ -608,7 +609,7 @@ impl<'a, 'd> Parser<'a, 'd> {
                 None => self.pos = end,
             }
         }
-        Ok(Extended { name: name.into(), body: body.map(Cow::Borrowed), params })
+        Ok(Extended { name: name.into(), body: body.map(Str::Borrowed), params })
     }
 
     // ---- types -----------------------------------------------------------
@@ -776,7 +777,7 @@ impl<'a, 'd> Parser<'a, 'd> {
                 let values = if self.eat(":") {
                     self.list(">", |p| {
                         p.ws();
-                        p.nonempty("array element", |c| is_id(c) || matches!(c, b'-' | b'+')).map(Cow::Borrowed)
+                        p.nonempty("array element", |c| is_id(c) || matches!(c, b'-' | b'+')).map(Str::Borrowed)
                     })?
                 } else {
                     self.expect(">")?;
@@ -830,7 +831,7 @@ impl<'a, 'd> Parser<'a, 'd> {
             }
             float
         };
-        let lit = Cow::Borrowed(self.since(start));
+        let lit = Str::Borrowed(self.since(start));
         let ty = self.suffix(bare)?;
         Ok(if float { Attribute::Float { lit, ty } } else { Attribute::Int { lit, ty } })
     }
@@ -903,7 +904,7 @@ impl<'a, 'd> Parser<'a, 'd> {
                     let Some(end) = self.rest().find("#-}") else {
                         return self.err("unterminated `{-#`");
                     };
-                    let body = Cow::Borrowed(&self.rest()[..end]);
+                    let body = Str::Borrowed(&self.rest()[..end]);
                     self.pos += end + 3;
                     Item::Metadata { body }
                 }
@@ -958,7 +959,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         let name = self.string()?.into();
         self.expect("(")?;
         let operands = self.list(")", Self::value)?;
-        let successors = self.opt_list("[", "]", |p| p.sigil('^').map(Cow::Borrowed))?;
+        let successors = self.opt_list("[", "]", |p| p.sigil('^').map(Str::Borrowed))?;
         let properties = if self.eat("<") {
             let a = self.attr()?;
             self.expect(">")?;
@@ -2381,13 +2382,13 @@ impl Format<'_> {
                                 case.push('|');
                                 case.push_str(p.ident()?);
                             }
-                            let body = Some(Cow::Owned(format!("<{m} {case}>")));
-                            Got::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(ns), body, params: Vec::new() }, ty: None })
+                            let body = Some(Str::Owned(format!("<{m} {case}>")));
+                            Got::Attr(Attribute::Extended { ext: Extended { name: Str::Borrowed(ns), body, params: Vec::new() }, ty: None })
                         }
                         Role::Prop { dialect: Some(d), .. } => {
                             p.ws();
-                            let body = Some(Cow::Owned(p.group()?.into()));
-                            Got::Attr(Attribute::Extended { ext: Extended { name: Cow::Borrowed(d), body, params: Vec::new() }, ty: None })
+                            let body = Some(Str::Owned(p.group()?.into()));
+                            Got::Attr(Attribute::Extended { ext: Extended { name: Str::Borrowed(d), body, params: Vec::new() }, ty: None })
                         }
                         Role::Prop { .. } => {
                             // A bare keyword is a user enum case; anything else is an attribute.
@@ -2409,7 +2410,7 @@ impl Format<'_> {
                                 }
                             }
                         }
-                        Role::Successor => Got::Str(Cow::Borrowed(p.sigil('^')?)),
+                        Role::Successor => Got::Str(Str::Borrowed(p.sigil('^')?)),
                         // `$regions` of a variadic region: `{..}, {..}`, maybe none (`scf.reduce`).
                         Role::Region if f.variadic => {
                             let mut rs = Vec::new();
@@ -2829,7 +2830,7 @@ impl Format<'_> {
             props.extend(f.retype(a)?.map(|a| NamedAttr::of(f.name, a)));
         }
         if self.schema.of_role(|r| matches!(r, Role::Operand { .. })).filter(|f| f.variadic).count() > 1 {
-            let values = sizes.iter().map(|n| Cow::Owned(format!("{n}"))).collect();
+            let values = sizes.iter().map(|n| Str::Owned(format!("{n}"))).collect();
             props.push(NamedAttr::of(SEGMENTS, Attribute::DenseArray { ty: Type::int(32), values }));
         }
         props.sort_by(|a, b| a.name.cmp(&b.name));
@@ -2847,7 +2848,7 @@ impl Format<'_> {
             None => Vec::new(),
         };
         Ok(Operation {
-            name: Cow::Borrowed(self.schema.name),
+            name: Str::Borrowed(self.schema.name),
             operands,
             successors,
             properties: (!props.is_empty()).then(|| Attribute::Dict(Parser::exact(props))),

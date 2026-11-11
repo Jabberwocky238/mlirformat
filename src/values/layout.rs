@@ -1,6 +1,6 @@
 //! Memref layouts: `strided<[s0, s1, ...], offset: o>` as values.
 
-use alloc::borrow::Cow;
+use crate::Str;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -49,7 +49,7 @@ impl From<StridedLayout> for Attribute<'_> {
         let num = |n: i64| if n == Dim::DYNAMIC { String::from("?") } else { format!("{n}") };
         let list = l.strides.iter().map(|n| num(*n)).collect::<Vec<_>>().join(", ");
         let body = if l.offset == 0 { format!("<[{list}]>") } else { format!("<[{list}], offset: {}>", num(l.offset)) };
-        Attribute::Builtin { name: Cow::Borrowed("strided"), body: Cow::Owned(body), ty: None }
+        Attribute::Builtin { name: Str::Borrowed("strided"), body: Str::Owned(body), ty: None }
     }
 }
 
