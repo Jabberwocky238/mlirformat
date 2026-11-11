@@ -12,8 +12,6 @@ cargo add mlirformat        # the library
 cargo install mlirformat    # the `mlirformat` command line
 ```
 
-Prebuilt `mlirformat` binaries are attached to each GitHub release.
-
 ## Features
 
 | feature | default | what it is |

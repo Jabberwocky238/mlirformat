@@ -24,7 +24,7 @@ Anything goes. For a bug, the MLIR text that fails and what you expected help th
    `tests/fixtures/` is every llvm-project 23.1.5 `mlir/test` file a vanilla `mlir-opt` 23.1.5
    reads, with its output in custom and generic form; `scripts/fixtures.py` adds the missing ones.
 
-4. Open the pull request. CI runs the same tests.
+4. Open the pull request.
 
 Unfinished or draft pull requests are fine too.
 

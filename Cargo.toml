@@ -9,7 +9,7 @@ readme = "README.md"
 keywords = ["mlir", "parser", "serde", "compiler", "ir"]
 categories = ["parser-implementations", "compilers", "no-std"]
 # The mlir-opt fixtures stay in the repository.
-exclude = ["tests", "examples", ".github"]
+exclude = ["tests", "examples"]
 
 [workspace]
 members = ["macros"]
