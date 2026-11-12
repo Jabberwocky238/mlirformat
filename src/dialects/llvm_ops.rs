@@ -9,11 +9,12 @@
 //!   间接调用 `llvm.call %fp(...) : !llvm.ptr, (...) -> R`
 //! - `llvm.icmp` / `llvm.fcmp`：`llvm.icmp "slt" %a, %b {attrs} : T`（结果是 `i1` 或同形的 `i1` 向量）
 //! - `llvm.getelementptr`：`llvm.getelementptr [inbounds|nusw|nuw] %p[%i, 1] {attrs} : (T, ...) -> R, E`
+//! - `llvm.alloca`：`llvm.alloca [inalloca] %n x E {attrs} : (T) -> R`（`alignment = 0` 不印、读到就丢）
 //!
 //! 打不出来的情形（`vscale_range`、调用的 op bundle 等少见写法）印通用形式；读不懂的写法交回原样文本。
 use crate::common::{Attribute, BlockArg, Extended, FunctionType, NamedAttr, Operation, Region, ShapedKind, Str, Template, Type};
 use crate::generator::Printer;
-use crate::llvm::{CallOp, FCmpOp, GEPOp, ICmpOp, LLVMFuncOp};
+use crate::llvm::{AllocaOp, CallOp, FCmpOp, GEPOp, ICmpOp, LLVMFuncOp};
 use crate::llvm_types::LlvmType;
 use crate::parser::{Parser, R};
 use crate::Op;
@@ -47,8 +48,8 @@ const GEP_NUSW: i64 = 2;
 const GEP_NUW: i64 = 4;
 
 impl LlvmHand {
-    /// 注入 `MlirOpt` 的五个模板（缺省属性照用生成的）。
-    pub fn templates() -> [Template; 5] {
+    /// 注入 `MlirOpt` 的六个模板（缺省属性照用生成的）。
+    pub fn templates() -> [Template; 6] {
         let hand = |generated: Template, parse: for<'a> fn(&mut Parser<'a, '_>) -> R<Operation<'a>>, print: fn(&Operation<'_>, &mut Printer<'_, '_>) -> Option<fmt::Result>| Template { custom: true, parse, print, format: || None, ..generated };
         [
             hand(LLVMFuncOp::template(), Self::parse_func, Self::print_func),
@@ -56,6 +57,7 @@ impl LlvmHand {
             hand(ICmpOp::template(), Self::parse_icmp, Self::print_icmp),
             hand(FCmpOp::template(), Self::parse_fcmp, Self::print_fcmp),
             hand(GEPOp::template(), Self::parse_gep, Self::print_gep),
+            hand(AllocaOp::template(), Self::parse_alloca, Self::print_alloca),
         ]
     }
 
@@ -67,6 +69,11 @@ impl LlvmHand {
             Some(Attribute::Dict(d)) => d.iter().find(|a| a.name == name).and_then(|a| a.value.as_ref()),
             _ => None,
         }
+    }
+
+    /// 固有属性 `name` 在不在（单元属性）
+    fn prop_present(op: &Operation<'_>, name: &str) -> bool {
+        matches!(&op.properties, Some(Attribute::Dict(d)) if d.iter().any(|a| a.name == name))
     }
 
     /// 整数属性的值
@@ -328,6 +335,57 @@ impl LlvmHand {
         let (properties, attributes) = Self::split(p, "llvm.getelementptr", props, dict);
         let loc = p.opt_loc()?;
         Ok(Operation { name: "llvm.getelementptr".into(), operands, properties, attributes, ty, loc, ..Operation::default() })
+    }
+
+    // ---- llvm.alloca -------------------------------------------------------------------
+
+    /// `llvm.alloca [inalloca] %n x E {attrs} : (T) -> R`
+    fn print_alloca(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
+        // 结果不是指针时 C++ 的 parse 不写 `elem_type`，读不回来
+        let Some(Attribute::Type(elem)) = Self::prop(op, "elem_type") else { return None };
+        let ([n], [t], [r]) = (op.operands.as_slice(), op.ty.inputs.as_slice(), op.ty.results.as_slice()) else { return None };
+        let inalloca = Self::prop_present(op, "inalloca");
+        let mut elide = vec!["elem_type", "inalloca"];
+        if Self::int(Self::prop(op, "alignment")).is_none_or(|a| a == 0) {
+            elide.push("alignment");
+        }
+        let attrs = Self::visible(op, &elide);
+        Some((|| {
+            p.op_name(&op.name)?;
+            if inalloca {
+                p.write_str(" inalloca")?;
+            }
+            write!(p, " {n} x {elem}")?;
+            p.attr_dict("", &attrs, &[])?;
+            write!(p, " : ({t}) -> {r}")?;
+            p.loc(&op.loc)
+        })())
+    }
+
+    fn parse_alloca<'a>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
+        let inalloca = p.eat_kw("inalloca");
+        let n = p.value()?;
+        if !p.eat_kw("x") {
+            return p.err(String::from("expected `x`"));
+        }
+        let elem = p.ty()?;
+        let mut dict = p.opt_dict()?;
+        dict.retain(|a| Self::int(a.value.as_ref()) != Some(0) || a.name != "alignment");
+        p.expect(":")?;
+        let ty = p.fn_ty()?;
+        if ty.inputs.len() != 1 || ty.results.len() != 1 {
+            return p.err(String::from("expected trailing function type with one argument and one result"));
+        }
+        let mut props = Vec::new();
+        if matches!(LlvmType::try_from(&ty.results[0]), Ok(LlvmType::Ptr(_))) {
+            props.push(Self::named("elem_type", Attribute::Type(elem)));
+        }
+        if inalloca {
+            props.push(NamedAttr { name: Str::Owned("inalloca".into()), value: None });
+        }
+        let (properties, attributes) = Self::split(p, "llvm.alloca", props, dict);
+        let loc = p.opt_loc()?;
+        Ok(Operation { name: "llvm.alloca".into(), operands: vec![n], properties, attributes, ty, loc, ..Operation::default() })
     }
 
     // ---- llvm.call ---------------------------------------------------------------------
