@@ -1,8 +1,5 @@
-//! `complex` (formats from `ComplexOps.td`, checked against `mlir-opt` 23.1.5 output).
-
 use crate::{Attribute, Type, Value, mlir};
 
-/// `complex [fastmath<…>] : complex<T>` ⇒ `complex<T>`.
 macro_rules! unary {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(ty))]
@@ -16,7 +13,6 @@ macro_rules! unary {
     )*};
 }
 
-/// `complex [fastmath<…>] : complex<T>` ⇒ `T`.
 macro_rules! part {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$complex (`fastmath` `` $fastmath^)? attr-dict `:` type($complex)", results(result))]
@@ -32,7 +28,6 @@ macro_rules! part {
     )*};
 }
 
-/// `lhs, rhs [fastmath<…>] : complex<T>`.
 macro_rules! binary {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
@@ -48,7 +43,6 @@ macro_rules! binary {
     )*};
 }
 
-/// `lhs, rhs : complex<T>` ⇒ `i1`.
 macro_rules! compare {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs attr-dict `:` type($lhs)", results(result))]
@@ -79,14 +73,12 @@ binary! {
 
 compare! { EqualOp = "complex.eq", NotEqualOp = "complex.neq" }
 
-/// `complex.constant [re, im] : complex<T>`.
 #[mlir::op("complex.constant", format = "$value attr-dict `:` type($complex)", results(complex))]
 pub struct ConstantOp<'a> {
     pub value: Attribute<'a>,
     pub complex: Type<'a>,
 }
 
-/// `complex.create %re, %im : complex<T>`.
 #[mlir::op("complex.create", format = "$real `,` $imaginary attr-dict `:` type($complex)", results(complex))]
 pub struct CreateOp<'a> {
     #[slot(elem)]
@@ -106,7 +98,6 @@ pub struct BitcastOp<'a> {
     pub result: Type<'a>,
 }
 
-/// `complex.powi %z, %n : complex<T>, iN`.
 #[mlir::op("complex.powi", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result) `,` type($rhs)", results(result))]
 pub struct PowiOp<'a> {
     #[slot(result)]
@@ -119,7 +110,6 @@ pub struct PowiOp<'a> {
     pub rhs_ty: Type<'a>,
 }
 
-/// The `complex` dialect.
 #[mlir::dialect(
     "complex",
     ops = [ConjOp, CosOp, ExpOp, Expm1Op, LogOp, Log1pOp, NegOp, RsqrtOp, SignOp, SinOp, SqrtOp, TanOp, TanhOp, ReOp, ImOp, AbsOp, AngleOp, AddOp, SubOp, MulOp, DivOp, PowOp, Atan2Op, EqualOp, NotEqualOp, ConstantOp, CreateOp, BitcastOp, PowiOp],

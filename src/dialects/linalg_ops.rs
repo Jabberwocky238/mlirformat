@@ -1,18 +1,3 @@
-//! `linalg` 里 ODS 没描述语法的 op，手写后注入（`MlirOpt::upstream`），`linalg.gen.rs` 不动。
-//!
-//! 照 `LinalgOps.cpp` 的 `GenericOp::print / parse`：
-//!
-//! ```text
-//! linalg.generic {indexing_maps = [..], iterator_types = ["parallel", ..]}
-//!     ins(%a, %b : T, U) outs(%c : V) attrs =  {extra} {
-//! ^bb0(%x: f32, ..):
-//!   ...
-//! } -> tensor<..>
-//! ```
-//!
-//! 前面的字典只放 linalg 的特征属性（doc / indexing_maps / iterator_types / library_call，按名字排）；
-//! iterator_types 在 IR 里是 `#linalg.iterator_type<parallel>`，写出来是字符串。别的属性写在 `attrs =` 后面
-//! （两个空格：一个是 `attrs = ` 自带的，一个是 `printOptionalAttrDict` 的）。
 use crate::common::{Attribute, Extended, NamedAttr, Op, Operation, Parse, Print, Region, Str, Type, Value};
 use crate::generator::{Printer, Sep};
 use crate::mlir;
@@ -21,7 +6,6 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-/// `linalg.generic`。
 #[mlir::op("linalg.generic", custom, results(result_tensors))]
 pub struct Generic<'a> {
     #[slot(inputs_ty)]
@@ -39,7 +23,6 @@ pub struct Generic<'a> {
 }
 
 impl<'a> Generic<'a> {
-    /// `#linalg.iterator_type<parallel>` ⇒ `"parallel"`（写出来的样子）；不是这个形状的 ⇒ `None`。
     fn iterator_names(types: &Attribute<'_>) -> Option<Vec<String>> {
         let Attribute::Array(xs) = types else { return None };
         xs.iter()
@@ -52,7 +35,6 @@ impl<'a> Generic<'a> {
             .collect()
     }
 
-    /// `"parallel"` ⇒ `#linalg.iterator_type<parallel>`（读进来的样子）。
     fn iterator_types(names: &Attribute<'a>) -> Option<Attribute<'a>> {
         let Attribute::Array(xs) = names else { return None };
         let types = xs.iter().map(|x| match x {
@@ -62,7 +44,6 @@ impl<'a> Generic<'a> {
         types.collect::<Option<_>>().map(Attribute::Array)
     }
 
-    /// `ins(%a, %b : T, U)` 之类：值、冒号、类型。
     fn operands(p: &mut Parser<'a, '_>) -> R<(Vec<Value<'a>>, Vec<Type<'a>>)> {
         p.expect("(")?;
         let mut values = alloc::vec![p.value()?];
@@ -142,7 +123,6 @@ impl Parse for Generic<'_> {
     }
 }
 
-/// `linalg.yield %a, %b : f32, f32`（`YieldOp::print`：值、属性字典、冒号与类型；没有值就只剩名字）。
 #[mlir::op("linalg.yield", custom)]
 pub struct Yield<'a> {
     #[slot(values_ty)]
@@ -187,58 +167,39 @@ impl Parse for Yield<'_> {
     }
 }
 
-// ---- 命名的结构化 op（OpDSL：`LinalgNamedStructuredOps.yaml`）--------------------------------
-//
-// 自定义形式里没有区域（`mlir-opt` 不印），读的时候照 op 的 `regionBuilder` 造回来：块参数是各操作数的
-// 元素类型（标量原样），体是 OpDSL 赋值的标量表达式（scripts/linalg_named.py 生成，`linalg_named.gen.rs`），
-// 造法照 `RegionBuilderHelper`；造出来的 op 带上 ODS 的缺省属性，通用形式与 `mlir-opt` 印的逐字相同。
-
-/// OpDSL 赋值里的一个标量表达式（`ScalarExpression`）。
 pub enum Scalar<'s> {
-    /// 第几个块参数（操作数的次序）。
     Arg(usize),
-    /// `scalar_const`：属性的文本（`'12345 : i64'`）。
     Const(&'s str),
-    /// `scalar_index`：第几维的迭代号（`linalg.index`）。
     Index(i64),
     Unary(&'s str, &'s Scalar<'s>),
     Binary(&'s str, &'s Scalar<'s>, &'s Scalar<'s>),
     Ternary(&'s str, &'s Scalar<'s>, &'s Scalar<'s>, &'s Scalar<'s>),
-    /// 类型函数：转成那个类型。
     Cast(Cast<'s>, Ty<'s>, &'s Scalar<'s>),
 }
 
-/// 类型函数：`cast_signed` / `cast_unsigned`，或由 op 的属性选（`#linalg.type_fn<..>`，没写取缺省）。
 pub enum Cast<'s> {
     Signed,
     Unsigned,
     Attr(&'s str),
 }
 
-/// 类型变量：第几个块参数的类型，或预定义的类型（`i32` / `i64` / `f32` / `f64`）。
 pub enum Ty<'s> {
     Arg(usize),
     Named(&'s str),
 }
 
-/// 一个值与它的类型。
 type Typed<'a> = (Value<'a>, Type<'a>);
 
-/// ⭐ 造区域体（`RegionBuilderHelper`）：一个块，造出来的 op 依次排在里面。
 struct RegionBuilder<'o, 'a> {
     opt: &'o crate::MlirOpt,
-    /// op 的属性（类型函数属性在这里找）。
     attrs: &'o [NamedAttr<'a>],
-    /// 类型函数属性的缺省（`cast` ⇒ `cast_signed`）。
     fns: &'o [(&'o str, &'o str)],
     args: Vec<Typed<'a>>,
     ops: Vec<Operation<'a>>,
 }
 
 impl<'o, 'a> RegionBuilder<'o, 'a> {
-    /// 块参数：输入、输出各自的元素类型（`fillStructuredOpRegion`）。
     fn new(opt: &'o crate::MlirOpt, attrs: &'o [NamedAttr<'a>], fns: &'o [(&'o str, &'o str)], operands: &[Type<'a>]) -> Self {
-        // memref / 张量取元素类型，别的（标量、vector）原样（`isa<MemRefType, RankedTensorType>`）
         let elem = |t: &Type<'a>| match t {
             Type::Shaped(s) if matches!(s.kind, crate::common::ShapedKind::MemRef | crate::common::ShapedKind::Tensor) => (*s.elem).clone(),
             t => t.clone(),
@@ -247,8 +208,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         RegionBuilder { opt, attrs, fns, args, ops: Vec::new() }
     }
 
-    /// 造一条 op：ODS 的缺省属性先放，`given` 盖上去，按名字排（属性字典的次序）；ODS 声明的进
-    /// `<{..}>`，别的进 `{..}`。
     fn emit(&mut self, name: &str, operands: &[&Typed<'a>], result: Option<Type<'a>>, given: Vec<NamedAttr<'a>>) -> Typed<'a> {
         let inherent = self.opt.op_info(name).map_or(&[][..], |i| i.inherent);
         let (props, mut attributes): (Vec<_>, Vec<_>) = given.into_iter().partition(|a| inherent.contains(&&*a.name));
@@ -279,7 +238,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         matches!(t, Type::Integer { .. })
     }
 
-    /// `convertScalarToDtype`：一样就不造；整数 ⇄ 浮点、宽窄、index ⇒ 整数各有一条；转不了原样返回（`mlir-opt` 只警告）。
     fn cast(&mut self, v: Typed<'a>, to: &Type<'a>, unsigned: bool) -> Typed<'a> {
         let from = v.1.clone();
         if from == *to {
@@ -302,7 +260,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         self.emit(op, &[&v], Some(to.clone()), Vec::new())
     }
 
-    /// `convertScalarToComplexDtype`：复数 ⇒ 复数逐分量加宽 / 截短，实数（浮点、整数）⇒ 实部、虚部 0。
     fn to_complex(&mut self, v: Typed<'a>, te: &Type<'a>, unsigned: bool) -> Typed<'a> {
         let to = Type::Complex(alloc::boxed::Box::new(te.clone()));
         let width = |t: &Type<'_>| t.bit_width().unwrap_or(0);
@@ -332,7 +289,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         }
     }
 
-    /// `buildUnaryFn`：只收浮点。
     fn unary(&mut self, f: &str, a: Typed<'a>) -> Option<Typed<'a>> {
         if !Self::float(&a.1) {
             return None;
@@ -373,7 +329,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         Some(self.emit(name, &[&a], Some(ty), Vec::new()))
     }
 
-    /// `buildBinaryFn`：全复数、全浮点、全整数（i1 的加乘是或与）。
     fn binary(&mut self, f: &str, a: Typed<'a>, b: Typed<'a>) -> Option<Typed<'a>> {
         let complex = matches!(a.1, Type::Complex(_)) && matches!(b.1, Type::Complex(_));
         if complex {
@@ -412,7 +367,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         Some(self.emit(name, &[&a, &b], Some(ty), Vec::new()))
     }
 
-    /// 类型函数选哪个：属性写了就照它，否则取缺省。
     fn unsigned(&self, c: &Cast<'_>) -> bool {
         match c {
             Cast::Signed => false,
@@ -425,7 +379,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         }
     }
 
-    /// 一个标量表达式：操作数从左往右先造，再造它自己（生成的 `regionBuilder` 的次序）。
     fn eval(&mut self, e: &Scalar<'_>) -> Option<Typed<'a>> {
         Some(match e {
             Scalar::Arg(i) => self.args.get(*i)?.clone(),
@@ -466,7 +419,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         })
     }
 
-    /// 体：各个输出的表达式依次造、`linalg.yield` 收尾（`yieldOutputs`）。
     fn region(mut self, yields: &[Scalar<'_>]) -> Option<Region<'a>> {
         let mut values = Vec::new();
         for y in yields {
@@ -478,20 +430,16 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
     }
 }
 
-/// 命名结构化 op 共用的写法（`printNamedStructuredOp` / `parseNamedStructuredOp`）：
-/// `{属性} ins(..) outs(..) {属性} -> 结果`，区域不写。
 pub struct Named<'a> {
     pub inputs: Vec<Value<'a>>,
     pub inputs_ty: Vec<Type<'a>>,
     pub outputs: Vec<Value<'a>>,
     pub outputs_ty: Vec<Type<'a>>,
-    /// 属性字典里的全部（固有的、可丢的混在一起，读出来再按名字分开）。
     pub attrs: Vec<NamedAttr<'a>>,
     pub results: Vec<Type<'a>>,
 }
 
 impl<'a> Named<'a> {
-    /// 名字之后的部分：固有属性与可丢属性并成一个字典、按名字排，`elide` 的不写。
     pub fn print(p: &mut Printer<'_, '_>, props: &[(&str, Option<&Attribute<'_>>)], attrs: &[NamedAttr<'_>], inputs: (&[Value<'_>], &[Type<'_>]), outputs: (&[Value<'_>], &[Type<'_>]), results: &[Type<'_>], elide: &[&str]) -> fmt::Result {
         let mut all: Vec<NamedAttr<'_>> = props.iter().filter_map(|(n, v)| v.map(|v| NamedAttr { name: Str::Borrowed(n), value: Some(v.clone()) })).collect();
         all.extend(attrs.iter().cloned());
@@ -512,7 +460,6 @@ impl<'a> Named<'a> {
         }
     }
 
-    /// 读进来：属性字典、`ins` / `outs`、又一个属性字典、`-> 结果`。
     pub fn parse(p: &mut Parser<'a, '_>) -> R<Self> {
         let mut attrs = p.opt_dict()?;
         let (inputs, inputs_ty) = if p.eat_kw("ins") { Generic::operands(p)? } else { (Vec::new(), Vec::new()) };
@@ -522,14 +469,12 @@ impl<'a> Named<'a> {
         Ok(Named { inputs, inputs_ty, outputs, outputs_ty, attrs, results })
     }
 
-    /// 固有属性 `name` 从字典里拿走。
     #[inline]
     pub fn take(&mut self, name: &str) -> Option<Attribute<'a>> {
         let at = self.attrs.iter().position(|a| a.name == name)?;
         self.attrs.remove(at).value
     }
 
-    /// 照 `yields` 造区域（`fns`：类型函数属性的缺省）。
     #[inline]
     pub fn region(&self, opt: &crate::MlirOpt, props: &[NamedAttr<'a>], fns: &[(&str, &str)], yields: &[Scalar<'_>]) -> Option<Region<'a>> {
         let types: Vec<Type<'a>> = self.inputs_ty.iter().chain(&self.outputs_ty).cloned().collect();
@@ -537,10 +482,8 @@ impl<'a> Named<'a> {
     }
 }
 
-/// 一条 OpDSL op：与生成的同名结构体同样的字段，只是写法自己来（注入时盖过生成的）。
 macro_rules! named_ops {
     ($($ty:ident = $name:literal { $($attr:ident = $aname:literal),* } [$(($fname:literal, $fdefault:literal)),*] [$($yield:expr),*];)*) => {
-        /// 全部 OpDSL op 的模板（`MlirOpt::upstream` 注入，盖过生成的）。
         #[inline]
         pub fn named_templates() -> Vec<crate::Template> {
             alloc::vec![$($ty::template()),*]
@@ -588,33 +531,21 @@ macro_rules! named_ops {
 
 include!("linalg_named.gen.rs");
 
-// ---- 乘加类（ODS：matmul / batch_matmul / batch_reduce_matmul / contract）--------------------
-//
-// 体都是 `out + cast(a) * cast(b)`（`regionBuilder`）；`indexing_maps` 是固有属性，自定义形式里写在最前面：
-// matmul、batch_matmul、batch_reduce_matmul 不是缺省的才写（`indexing_maps = [..]`，23.1.5 的
-// `BatchReduceMatmulOp::print` 也带前后缀），contract 总写。
-
-/// `indexing_maps` 在自定义形式里怎么写。
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Maps {
-    /// 不是缺省的才写 `indexing_maps = [..]`。
     Keyword,
-    /// 总写 `indexing_maps = [..]`。
     Always,
 }
 
-/// 乘加类的公共部分。
 struct Contraction;
 
 impl Contraction {
-    /// 缺省的映射：`(d0, d1, d2) -> (d0, d2)` 之类的体，拼成数组属性。
     #[inline]
     fn defaults(maps: &[&str]) -> Option<Attribute<'static>> {
         let text = alloc::format!("[{}]", maps.iter().map(|m| alloc::format!("affine_map<{m}>")).collect::<Vec<_>>().join(", "));
         Attribute::try_from(text.as_str()).ok().map(|a| a.owned())
     }
 
-    /// `maps` 是不是缺省的那几个（别名先展开，空白不计）。
     fn is_default(p: &Printer<'_, '_>, maps: &Attribute<'_>, defaults: &[&str]) -> bool {
         let Attribute::Array(xs) = maps else { return false };
         let squash = |s: &str| s.chars().filter(|c| !c.is_whitespace()).collect::<String>();
@@ -622,7 +553,6 @@ impl Contraction {
         xs.len() == defaults.len() && xs.iter().zip(defaults).all(|(x, d)| super::affine_ops::map_body(x, &alias).is_some_and(|b| squash(&b) == squash(d)))
     }
 
-    /// 体：`out + cast(a) * cast(b)`；`signed_only`：不看 `cast` 属性（batch_reduce_matmul）。
     fn body(cast: bool) -> [Scalar<'static>; 1] {
         const A: Scalar<'static> = Scalar::Arg(0);
         const B: Scalar<'static> = Scalar::Arg(1);
@@ -637,7 +567,6 @@ impl Contraction {
 
 macro_rules! contraction_ops {
     ($($ty:ident = $name:literal, $style:ident, [$($map:literal),*], $cast:literal, [$($elide:literal),*];)*) => {
-        /// 乘加类的模板（`MlirOpt::upstream` 注入，盖过生成的）。
         #[inline]
         pub fn contraction_templates() -> Vec<crate::Template> {
             alloc::vec![$($ty::template()),*]
@@ -702,10 +631,7 @@ contraction_ops! {
     Contract = "linalg.contract", Always, [], true, ["indexing_maps"];
 }
 
-// ---- 目标式的 op（ODS：transpose / broadcast / map / reduce / elementwise）-------------------
-
 impl<'o, 'a> RegionBuilder<'o, 'a> {
-    /// `buildIdentityRegion`：交出第一个块参数。
     #[inline]
     fn identity(mut self) -> Region<'a> {
         let first = self.args.first().cloned();
@@ -713,8 +639,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         self.finish()
     }
 
-    /// `addBodyWithPayloadOp`：一条 `payload`（结果是最后一个操作数的元素类型）再 yield 它；
-    /// `init_first`：init 放在最前面；`map_init`：init 也是 payload 的操作数。
     fn payload(mut self, name: &str, attrs: Vec<NamedAttr<'a>>, init_first: bool, map_init: bool) -> Region<'a> {
         let n = self.args.len();
         let operands: Vec<Typed<'a>> = if init_first {
@@ -730,7 +654,6 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
         self.finish()
     }
 
-    /// 一个块：参数、造好的 op。
     #[inline]
     fn finish(self) -> Region<'a> {
         let args = self.args.into_iter().map(|(v, ty)| crate::common::BlockArg { name: v.name, ty, loc: None }).collect();
@@ -738,11 +661,9 @@ impl<'o, 'a> RegionBuilder<'o, 'a> {
     }
 }
 
-/// 目标式 op 共用的几样（`parseDstStyleOp`、`printDenseI64ArrayAttr`、短形式）。
 struct Dst;
 
 impl Dst {
-    /// ` name = [1, 0] `（末尾那个空格 `mlir-opt` 就是这么印的）。
     fn print_dense(p: &mut Printer<'_, '_>, name: &str, a: &Attribute<'_>) -> fmt::Result {
         match a {
             Attribute::DenseArray { values, .. } => write!(p, " {name} = [{}] ", Sep(values, ", ")),
@@ -750,7 +671,6 @@ impl Dst {
         }
     }
 
-    /// `name = [1, 0]` ⇒ `array<i64: 1, 0>`。
     fn parse_dense<'a>(p: &mut Parser<'a, '_>, name: &str) -> R<Attribute<'a>> {
         if !p.eat_kw(name) {
             return p.err(alloc::format!("expected `{name}`"));
@@ -765,13 +685,11 @@ impl Dst {
         Ok(Attribute::DenseArray { ty: Type::int(64), values: values.into() })
     }
 
-    /// 结果：outs 里的张量（`parseDstStyleOp`）。
     #[inline]
     fn results<'a>(outs: &[Type<'a>]) -> Vec<Type<'a>> {
         outs.iter().filter(|t| matches!(t, Type::Shaped(s) if s.kind == crate::common::ShapedKind::Tensor)).cloned().collect()
     }
 
-    /// `canUseShortForm`：体只有一条 payload 加 yield，payload 的操作数正是块参数（次序见那两个开关），yield 交出它。
     fn short<'r, 'a>(r: &'r Region<'a>, init_first: bool, map_init: bool) -> Option<&'r Operation<'a>> {
         if init_first && !map_init {
             return None;
@@ -792,7 +710,6 @@ impl Dst {
         (fits && yields).then_some(payload)
     }
 
-    /// ` { arith.addf }`：payload 的属性（固有的与可丢的并成字典，`fastmath = none` 那一个不写）。
     fn print_short(p: &mut Printer<'_, '_>, payload: &Operation<'_>) -> fmt::Result {
         let mut all: Vec<NamedAttr<'_>> = match &payload.properties {
             Some(Attribute::Dict(xs)) => xs.clone(),
@@ -806,7 +723,6 @@ impl Dst {
         p.write_str(" }")
     }
 
-    /// `{ arith.addf {..} }`：payload 的名字与属性。
     fn parse_short<'a>(p: &mut Parser<'a, '_>) -> R<Option<(String, Vec<NamedAttr<'a>>)>> {
         if !p.eat("{") {
             return Ok(None);
@@ -817,7 +733,6 @@ impl Dst {
         Ok(Some((name, attrs)))
     }
 
-    /// 长形式：换行、`(%in: f32, %init: f32) ` 再接区域（入口块不写标号）。
     fn print_long(p: &mut Printer<'_, '_>, r: &Region<'_>) -> fmt::Result {
         let Some(b) = r.blocks.first() else { return Ok(()) };
         p.nested(|p| {
@@ -831,7 +746,6 @@ impl Dst {
         })
     }
 
-    /// 长形式：`(%in: f32, ..)` 再接区域，参数放进入口块。
     fn parse_long<'a>(p: &mut Parser<'a, '_>) -> R<Region<'a>> {
         p.expect("(")?;
         let args = p.list(")", |p| {
@@ -848,7 +762,6 @@ impl Dst {
     }
 }
 
-/// `linalg.transpose` / `linalg.broadcast`：`ins(..) outs(..) 属性 = [..] {..}`，体是交出输入。
 macro_rules! identity_ops {
     ($($ty:ident = $name:literal, $attr:ident = $aname:literal;)*) => {$(
         #[doc = concat!("`", $name, "`。")]
@@ -899,7 +812,6 @@ identity_ops! {
     Broadcast = "linalg.broadcast", dimensions = "dimensions";
 }
 
-/// `linalg.map`：`{ payload }`（短形式）或换行后 `(参数) { 体 }`（长形式）；init 也是块参数，不进 payload。
 #[mlir::op("linalg.map", custom, results(result))]
 pub struct Map<'a> {
     #[slot(inputs_ty)]
@@ -950,8 +862,6 @@ impl Parse for Map<'_> {
     }
 }
 
-/// `linalg.reduce`：同 map，多一个 ` dimensions = [..] `；短形式的 payload 是 `(init, 输入..)`。
-/// 输入与 init 个数相同（`SameVariadicOperandSize`，通用形式里没有 operandSegmentSizes）：并成一组，写的时候对半分。
 #[mlir::op("linalg.reduce", custom, results(result))]
 pub struct Reduce<'a> {
     #[slot(operands_ty)]
@@ -1002,8 +912,6 @@ impl Parse for Reduce<'_> {
     }
 }
 
-/// `linalg.elementwise kind=#linalg.elementwise_kind<abs> [indexing_maps = [..]] ins(..) outs(..)`：
-/// 体按 kind 是一元 / 二元 / 三元函数（`ElementwiseOp::regionBuilder`）；映射缺省是 arity + 1 个恒等。
 #[mlir::op("linalg.elementwise", custom, results(result_tensors))]
 pub struct Elementwise<'a> {
     #[slot(inputs_ty)]
@@ -1019,7 +927,6 @@ pub struct Elementwise<'a> {
 }
 
 impl Elementwise<'_> {
-    /// kind 的名字（`#linalg.elementwise_kind<abs>` ⇒ `abs`）与它的元数。
     fn arity(kind: &Attribute<'_>) -> Option<(String, usize)> {
         let Attribute::Extended { ext, .. } = kind else { return None };
         let Extended { name, body: Some(b), .. } = &**ext else { return None };
@@ -1034,7 +941,6 @@ impl Elementwise<'_> {
         (name == "linalg.elementwise_kind").then(|| (String::from(k), n))
     }
 
-    /// 缺省映射：arity + 1 个 `rank` 维的恒等。
     #[inline]
     fn defaults(arity: usize, rank: usize) -> Vec<String> {
         let dims = (0..rank).map(|d| alloc::format!("d{d}")).collect::<Vec<_>>().join(", ");
@@ -1092,7 +998,6 @@ impl Parse for Elementwise<'_> {
     }
 }
 
-/// 目标式 op 的模板（`MlirOpt::upstream` 注入，盖过生成的）。
 #[inline]
 pub fn dst_templates() -> Vec<crate::Template> {
     alloc::vec![Transpose::template(), Broadcast::template(), Map::template(), Reduce::template(), Elementwise::template()]

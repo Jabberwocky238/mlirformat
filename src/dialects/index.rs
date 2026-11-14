@@ -1,6 +1,3 @@
-//! `index` (formats from `IndexOps.td`, checked against `mlir-opt` 23.1.5 output). Everything is
-//! `index` unless spelled otherwise.
-
 use crate::Str;
 use core::fmt::{self, Write};
 
@@ -8,7 +5,6 @@ use alloc::format;
 
 use crate::{Attribute, Extended, Op, Parse, Print, Parser, Printer, R, Type, Value, mlir};
 
-/// `lhs, rhs` on `index`.
 macro_rules! binops {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs attr-dict", results(ty))]
@@ -23,7 +19,6 @@ macro_rules! binops {
     )*};
 }
 
-/// `input : A to B`.
 macro_rules! casts {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$input attr-dict `:` type($input) `to` type($output)", results(output))]
@@ -46,7 +41,6 @@ binops! {
 
 casts! { CastSOp = "index.casts", CastUOp = "index.castu" }
 
-/// `index.constant 42`.
 #[mlir::op("index.constant", format = "attr-dict $value", results(result))]
 pub struct ConstantOp<'a> {
     #[attr(int = "index")]
@@ -55,7 +49,6 @@ pub struct ConstantOp<'a> {
     pub result: Type<'a>,
 }
 
-/// `index.bool.constant true`.
 #[mlir::op("index.bool.constant", format = "attr-dict $value", results(result))]
 pub struct BoolConstantOp<'a> {
     pub value: Attribute<'a>,
@@ -69,7 +62,6 @@ pub struct SizeOfOp<'a> {
     pub result: Type<'a>,
 }
 
-/// `index.cmp slt(%a, %b)`: the predicate is `#index<cmp_predicate slt>`, hand-written syntax.
 #[mlir::op("index.cmp", custom, results(result))]
 pub struct CmpOp<'a> {
     pub pred: Attribute<'a>,
@@ -82,7 +74,6 @@ pub struct CmpOp<'a> {
 }
 
 impl CmpOp<'_> {
-    /// `slt` of `#index<cmp_predicate slt>`.
     #[inline]
     fn predicate(&self) -> Option<&str> {
         let Attribute::Extended { ext, ty: None } = &self.pred else { return None };
@@ -91,7 +82,6 @@ impl CmpOp<'_> {
         body.strip_prefix("<cmp_predicate ")?.strip_suffix('>')
     }
 }
-
 
 impl Print for CmpOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -119,7 +109,6 @@ impl Parse for CmpOp<'_> {
     }
 }
 
-/// The `index` dialect.
 #[mlir::dialect(
     "index",
     ops = [AddOp, SubOp, MulOp, DivSOp, DivUOp, CeilDivSOp, CeilDivUOp, FloorDivSOp, RemSOp, RemUOp, MaxSOp, MaxUOp, MinSOp, MinUOp, ShlOp, ShrSOp, ShrUOp, AndOp, OrOp, XOrOp, CastSOp, CastUOp, ConstantOp, BoolConstantOp, SizeOfOp, CmpOp],

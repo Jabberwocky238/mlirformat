@@ -1,7 +1,3 @@
-//! XeGPU types and attributes as `mlir-opt` reads them: `#xegpu.layout` (`LayoutAttr::verify`),
-//! `#xegpu.scatter_tdesc_attr` (`ScatterTensorDescAttr::verify`) and `!xegpu.tensor_desc`
-//! (`TensorDescType::parse` / `verify`), in `XeGPU/IR/XeGPUDialect.cpp`.
-
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
@@ -9,7 +5,6 @@ use super::{DialectRules, Invalid, Verifier};
 use crate::{Attribute, MlirOpt, Parser, Type};
 
 keywords! {
-    /// The `#xegpu.layout` parameters.
     enum LayoutKey {
         SgLayout = "sg_layout",
         SgData = "sg_data",
@@ -21,14 +16,12 @@ keywords! {
 }
 
 keywords! {
-    /// The XeGPU attributes checked here.
     enum AttrKind {
         Layout = "layout",
         BlockTdesc = "block_tdesc_attr",
     }
 }
 
-/// `#xegpu.layout<..>`'s parameters; absent ones empty (`getEffective*AsInt`).
 #[derive(Default)]
 struct Layout {
     sg_layout: Option<Vec<i64>>,
@@ -40,7 +33,6 @@ struct Layout {
 }
 
 impl Layout {
-    /// The body `<sg_layout = [2, 4], ...>`.
     fn read(opt: &MlirOpt, body: &str) -> Result<Self, String> {
         let mut p = Parser::new(body, opt);
         let mut l = Layout::default();
@@ -83,7 +75,6 @@ impl Layout {
         r.map(|()| l).map_err(|e| e.placed(body).to_string())
     }
 
-    /// `LayoutAttr::verify`.
     fn verify(&self) -> Result<(), String> {
         let len = |x: &Option<Vec<i64>>| x.as_ref().map(Vec::len);
         let (sl, sd, id, ll, ld, or) = (len(&self.sg_layout), len(&self.sg_data), len(&self.inst_data), len(&self.lane_layout), len(&self.lane_data), len(&self.order));
@@ -105,20 +96,16 @@ impl Layout {
         Err(why.into())
     }
 
-    /// `getRank`.
     fn rank(&self) -> usize {
         [&self.sg_layout, &self.inst_data, &self.lane_layout].into_iter().find_map(|x| x.as_ref().map(Vec::len)).unwrap_or(0)
     }
 
-    /// `DistributeLayoutAttr::isDistributable`: over subgroups (`sg_layout` / `sg_data`), then
-    /// instructions (`inst_data`), then lanes (`lane_layout` / `lane_data`).
     fn distributes(&self, shape: &[i64]) -> bool {
         let get = |x: &Option<Vec<i64>>| x.clone().unwrap_or_default();
         let mut cur = shape.to_vec();
         if self.sg_layout.is_some() {
             let Some(next) = Self::distributed(&cur, &get(&self.sg_layout), &get(&self.sg_data)) else { return false };
             cur = next;
-            // `dropSgLayoutAndData`: nothing left.
             if self.inst_data.is_none() && self.lane_layout.is_none() {
                 return true;
             }
@@ -128,7 +115,6 @@ impl Layout {
                 return false;
             }
             cur.clone_from(inst);
-            // `dropInstData` without a lane layout: nothing left.
             if self.lane_layout.is_none() {
                 return true;
             }
@@ -136,8 +122,6 @@ impl Layout {
         Self::distributed(&cur, &get(&self.lane_layout), &get(&self.lane_data)).is_some()
     }
 
-    /// `computeDistributedShape`: each dim divided by its `layout` factor when `layout × sub`
-    /// divides it, or, wrapping around, exactly `sub`.
     fn distributed(shape: &[i64], layout: &[i64], sub: &[i64]) -> Option<Vec<i64>> {
         if sub.is_empty() || layout.len() < shape.len() || sub.len() < shape.len() {
             return None;
@@ -153,17 +137,14 @@ impl Layout {
     }
 }
 
-/// `memory_space = slm`, `chunk_size = 8`: an encoding's parameters, as text by name.
 fn params(body: &str) -> Vec<(&str, &str)> {
     let inner = body.trim().strip_prefix('<').and_then(|b| b.strip_suffix('>')).unwrap_or("");
     inner.split(',').filter_map(|kv| kv.split_once('=')).map(|(k, v)| (k.trim(), v.trim())).collect()
 }
 
-/// The XeGPU dialect's rules.
 pub(super) struct XeGpu;
 
 impl XeGpu {
-    /// `!xegpu.tensor_desc<dims x T, encoding, layout>`.
     fn tensor_desc(opt: &MlirOpt, body: &str) -> Result<(), String> {
         let mut p = Parser::new(body, opt);
         let mut shape = Vec::new();
@@ -212,7 +193,6 @@ impl XeGpu {
                         return Err("SLM is only supported for 1D block tensor".into());
                     }
                 }
-                // An alias or another dialect's attribute: not read here.
                 None => {}
             }
         }

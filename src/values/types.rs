@@ -1,6 +1,3 @@
-//! Methods on types and attributes, named as MLIR names them: what a shaped type holds, and
-//! the builtin types and attributes built from values.
-
 use crate::Str;
 use alloc::format;
 use alloc::vec::Vec;
@@ -8,12 +5,10 @@ use alloc::vec::Vec;
 use crate::{FunctionType, Attribute, Dim, Extended, FloatKind, Shaped, ShapedKind, Signedness, Type};
 
 impl Dim {
-    /// `ShapedType::kDynamic`: a `?` dim as an integer.
     pub const DYNAMIC: i64 = i64::MIN;
 }
 
 impl From<i64> for Dim {
-    /// [`Dim::DYNAMIC`] is `?`.
     #[inline]
     fn from(n: i64) -> Self {
         if n == Dim::DYNAMIC { Dim::Dynamic } else { Dim::Static(n) }
@@ -21,7 +16,6 @@ impl From<i64> for Dim {
 }
 
 impl From<&Dim> for i64 {
-    /// `?` is [`Dim::DYNAMIC`]; a scalable dim is its base size.
     fn from(d: &Dim) -> Self {
         match d {
             Dim::Static(n) | Dim::Scalable(n) => *n,
@@ -31,7 +25,6 @@ impl From<&Dim> for i64 {
 }
 
 impl<'a> Type<'a> {
-    /// The shaped type's parts, if it is one.
     #[inline]
     pub fn shaped(&self) -> Option<&Shaped<'a>> {
         match self {
@@ -40,7 +33,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// The dialect type's parts, if it is one.
     #[inline]
     pub fn extended(&self) -> Option<&Extended<'a>> {
         match self {
@@ -49,7 +41,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// The function type's parts, if it is one.
     #[inline]
     pub fn function(&self) -> Option<&FunctionType<'a>> {
         match self {
@@ -58,20 +49,17 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// `RankedTensorType::get(dims, elem)` ([`Dim::DYNAMIC`] is `?`).
     #[inline]
     pub fn tensor(dims: &[i64], elem: Type<'a>) -> Type<'a> {
         Type::Shaped(alloc::boxed::Box::new(Shaped { kind: ShapedKind::Tensor, shape: Some(dims.iter().map(|d| Dim::from(*d)).collect()), elem: elem.into(), extras: Vec::new() }))
     }
 
-    /// `VectorType::get(shape, elem, scalable)`; `scalable` may be shorter than `shape`.
     #[inline]
     pub fn vector(shape: &[i64], scalable: &[bool], elem: Type<'a>) -> Type<'a> {
         let dims = shape.iter().zip(scalable.iter().chain(core::iter::repeat(&false))).map(|(n, s)| if *s { Dim::Scalable(*n) } else { Dim::Static(*n) }).collect();
         Type::Shaped(alloc::boxed::Box::new(Shaped { kind: ShapedKind::Vector, shape: Some(dims), elem: elem.into(), extras: Vec::new() }))
     }
 
-    /// `getShape` of a ranked shaped type ([`Dim::DYNAMIC`] for `?`).
     pub fn dims(&self) -> Option<Vec<i64>> {
         match self {
             Type::Shaped(s) => s.dims(),
@@ -79,7 +67,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// `getElementTypeOrSelf`: the element type of a shaped type, or the type itself.
     pub fn element_type(&self) -> &Type<'a> {
         match self {
             Type::Shaped(s) => &s.elem,
@@ -87,7 +74,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// `getNumElements` of a static shape (1 for a scalar); `None` when dynamic or unranked.
     pub fn element_count(&self) -> Option<usize> {
         let Type::Shaped(s) = self else { return Some(1) };
         s.shape.as_ref()?.iter().try_fold(1usize, |n, d| match d {
@@ -96,7 +82,6 @@ impl<'a> Type<'a> {
         })
     }
 
-    /// A ranked shaped type's dims.
     pub fn shape(&self) -> Option<&[Dim]> {
         match self {
             Type::Shaped(s) => s.shape.as_deref(),
@@ -104,7 +89,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// `cloneWith`: the type with element type `elem` (a scalar type is replaced outright).
     pub fn with_element(&self, elem: Type<'a>) -> Type<'a> {
         match self {
             Type::Shaped(s) => Type::Shaped(alloc::boxed::Box::new(Shaped { kind: s.kind, shape: s.shape.clone(), elem: elem.into(), extras: if s.kind == ShapedKind::Vector { Vec::new() } else { s.extras.clone() } })),
@@ -112,8 +96,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// What an integer type means for its values: width and signedness (`index` is
-    /// `IndexType::kInternalStorageBitWidth` wide).
     pub fn int_width(&self) -> Option<(u32, Signedness)> {
         match self {
             Type::Integer { signedness, width } => Some((*width, *signedness)),
@@ -122,7 +104,6 @@ impl<'a> Type<'a> {
         }
     }
 
-    /// `getIntOrFloatBitWidth` of the element type (`index` is 64 wide).
     pub fn bit_width(&self) -> Option<u32> {
         match self.element_type() {
             Type::Integer { width, .. } => Some(*width),
@@ -144,7 +125,6 @@ impl<'a> Type<'a> {
 }
 
 impl Shaped<'_> {
-    /// `getShape` when ranked ([`Dim::DYNAMIC`] for `?`).
     #[inline]
     pub fn dims(&self) -> Option<Vec<i64>> {
         Some(self.shape.as_ref()?.iter().map(i64::from).collect())
@@ -152,13 +132,11 @@ impl Shaped<'_> {
 }
 
 impl<'a> Attribute<'a> {
-    /// `#ub.poison`.
     #[inline]
     pub fn is_poison(&self) -> bool {
         matches!(self, Attribute::Extended { ext, .. } if ext.name == "ub.poison")
     }
 
-    /// `IntegerAttr::get(ty, v)`; for `i1`, a `BoolAttr`.
     pub fn integer(v: i128, ty: Type<'a>) -> Attribute<'a> {
         match ty {
             Type::Integer { width: 1, .. } => Attribute::Bool(v != 0),
@@ -166,25 +144,21 @@ impl<'a> Attribute<'a> {
         }
     }
 
-    /// `getIndexAttr(v)`: `v : index`.
     #[inline]
     pub fn index(v: i64) -> Attribute<'a> {
         Attribute::Int { lit: Str::Owned(format!("{v}")), ty: Some(Type::Index) }
     }
 
-    /// `getDenseI64ArrayAttr`: `array<i64: ...>`.
     #[inline]
     pub fn dense_i64(v: &[i64]) -> Attribute<'a> {
         Attribute::DenseArray { ty: Type::int(64), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
     }
 
-    /// `getDenseI32ArrayAttr`: `array<i32: ...>` (of sizes or counts as well).
     #[inline]
     pub fn dense_i32<T: core::fmt::Display>(v: &[T]) -> Attribute<'a> {
         Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
     }
 
-    /// `DenseI64ArrayAttr::asArrayRef` (any integer `array<..>`); `None` for another attribute.
     pub fn dense_values(&self) -> Option<Vec<i64>> {
         match self {
             Attribute::DenseArray { values, .. } => Some(values.iter().map(|v| v.parse().unwrap_or(0)).collect()),

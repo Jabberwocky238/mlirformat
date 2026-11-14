@@ -1,6 +1,3 @@
-//! Shared by the integration tests: the paired `mlir-opt` fixtures and how one op is judged
-//! against them.
-
 #![allow(dead_code)]
 
 use std::collections::BTreeMap;
@@ -10,23 +7,15 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use mlirformat::{Attribute, Item, MlirOpt, Module, Operation, Role};
 
-/// The `mlir-opt` 23.1.5 output for llvm-project's `mlir/test` files, generic and custom form.
 pub struct Fixtures;
 
-/// How one op fares against `mlir-opt`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Verdict {
-    /// No op of this name in the op table.
     Unknown,
-    /// Printed generic: the typed op declines it, or has no custom form.
     Generic,
-    /// Custom form printed exactly as `mlir-opt` prints it, and reparsed to the same op.
     Matched,
-    /// Reparsed to the same op; `mlir-opt`'s text not comparable (multi-line, or elided there).
     Reparsed,
-    /// Custom form that `mlir-opt` does not print.
     Mismatch(String),
-    /// Custom form that does not parse back to the same op.
     Broken(String),
 }
 
@@ -35,8 +24,6 @@ impl Fixtures {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
     }
 
-    /// Replaces SSA names (`%arg0`, `%c1_i64`, ...), block names and alias numbers (`#map3`) by
-    /// `_`, so the two outputs are comparable.
     pub fn anon(s: &str) -> String {
         let name = |c: &char| c.is_ascii_alphanumeric() || matches!(c, '_' | '$' | '.' | '-' | '#');
         let mut out = String::new();
@@ -58,7 +45,6 @@ impl Fixtures {
         out
     }
 
-    /// Ops with whether they are visible in custom form: `mlir-opt` elides linalg named ops' bodies.
     fn walk<'x, 'a>(ops: &'x [Operation<'a>], parent: Option<&'x Operation<'a>>, visible: bool, f: &mut impl FnMut(&'x Operation<'a>, Option<&'x Operation<'a>>, bool)) {
         for op in ops {
             f(op, parent, visible);
@@ -67,17 +53,13 @@ impl Fixtures {
         }
     }
 
-    /// 两个 op 的调试写法里第一处不同，连同它所在的字段名 —— 失败归类就靠它。
     fn first_diff(a: &Operation<'_>, b: &Operation<'_>) -> String {
-        // 回读成了原文 ⇒ 印得出、却解析不回去。这是和「某个字段算错」完全不同的毛病，
-        // 单列出来，别混在字段差异里。
         if b.raw.is_some() && a.raw.is_none() {
             return format!("{} 的自定义形式解析不回去（退回原文）", a.name);
         }
         let (x, y) = (format!("{a:#?}"), format!("{b:#?}"));
         let mut field = String::from("?");
         for (p, q) in x.lines().zip(y.lines()) {
-            // 记住最近一个 `名字: ` 开头的行，作为差异所在的字段。
             if let Some((name, _)) = p.trim().split_once(": ")
                 && !name.is_empty()
                 && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
@@ -91,21 +73,16 @@ impl Fixtures {
         format!("{field} | 行数不同 {} vs {}", x.lines().count(), y.lines().count())
     }
 
-    /// Does `op` say nothing beyond being there? Whether such a terminator is written at all is
-    /// its parent's choice, so its own text says nothing about matching `mlir-opt`.
     fn bare(op: &Operation<'_>) -> bool {
         op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
     }
 
-    /// Does `opt` print `op` only in generic form (`"vector.mask"(%m) ({ ... })`)?
     fn generic_only(opt: &MlirOpt, op: &Operation<'_>) -> bool {
         let text = opt.show(op).to_string();
         let body = if op.results.is_empty() { text.as_str() } else { text.split_once(" = ").map_or(text.as_str(), |(_, b)| b) };
         body.starts_with('"')
     }
 
-    /// The files of fixture directory `dir` the tests read, sorted: all of them with feature
-    /// `more`, otherwise (`less`, the default) every 10th -- the same 10% on every run.
     pub fn sample(dir: &Path) -> Vec<PathBuf> {
         let mut files: Vec<PathBuf> = fs::read_dir(dir).unwrap().map(|e| e.unwrap().path()).filter(|p| p.extension().is_some_and(|e| e == "mlir")).collect();
         files.sort();
@@ -115,13 +92,10 @@ impl Fixtures {
         files
     }
 
-    /// The generic fixture files the tests read ([`Self::sample`]).
     pub fn files() -> Vec<PathBuf> {
         Self::sample(&Self::dir().join("generic"))
     }
 
-    /// ⭐ Every op of every generic fixture (nested ones too), on all cores: `f(file, op, visible,
-    /// anonymized custom output)`; the `Some`s are collected (order: by file, then by op).
     pub fn map<T: Send>(f: impl Fn(&Path, &Operation<'_>, Option<&Operation<'_>>, bool, &str, &[(String, String)]) -> Option<T> + Sync) -> Vec<T> {
         let files = Self::files();
         let next = AtomicUsize::new(0);
@@ -139,9 +113,6 @@ impl Fixtures {
                             let mut out = Vec::new();
                             for chunk in src.split("// -----") {
                                 let m = Module::try_from(chunk.trim_start_matches('-')).unwrap();
-                                // An op's custom form may have to look inside an alias the module
-                                // defines (an `affine` memory op and its `#map`), so judging it
-                                // one op at a time still needs the module's table.
                                 let aliases = m.aliases();
                                 let ops: Vec<_> = m.items.into_iter().filter_map(|i| if let Item::Op(op) = i { Some(op) } else { None }).collect();
                                 Self::walk(&ops, None, true, &mut |op, parent, visible| out.extend(f(path, op, parent, visible, &custom, &aliases)));
@@ -158,7 +129,6 @@ impl Fixtures {
         per_file.into_iter().flat_map(|(_, out)| out).collect()
     }
 
-    /// Every op of every generic fixture, in order (single-threaded callers with state).
     pub fn each(mut f: impl FnMut(&Path, &Operation<'_>, bool, &str)) {
         for path in Self::files() {
             let src = fs::read_to_string(&path).unwrap();
@@ -171,8 +141,6 @@ impl Fixtures {
         }
     }
 
-    /// ⭐ One generated dialect (`opt` registers it alone) against `mlir-opt`: prints its tally,
-    /// fails on a custom form that `mlir-opt` does not print or that does not parse back.
     pub fn check_dialect(opt: &MlirOpt, ns: &str) {
         let verdicts = Self::map(|path, op, parent, visible, custom, aliases| {
             (op.name.split_once('.').map(|(n, _)| n) == Some(ns)).then(|| (path.file_name().unwrap().to_string_lossy().into_owned(), Self::judge(opt, op, parent, visible, custom, aliases)))
@@ -200,51 +168,38 @@ impl Fixtures {
         assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     }
 
-    /// ⭐ Judges `op` printed with `opt` against `mlir-opt`'s custom output of its file.
     pub fn judge(opt: &MlirOpt, op: &Operation<'_>, parent: Option<&Operation<'_>>, visible: bool, custom: &str, aliases: &[(String, String)]) -> Verdict {
         if opt.template(&op.name).is_none() {
             return Verdict::Unknown;
         }
         let text = opt.show_in(aliases, op).to_string();
-        // Result names are mlir-opt's choice (`%low, %high` vs `%36:2`): compare from the op name on.
         let body = if op.results.is_empty() { text.as_str() } else { text.split_once(" = ").map_or(text.as_str(), |(_, b)| b) };
         if body.starts_with('"') {
             return Verdict::Generic;
         }
-        // A `DefaultValuedOptionalAttr` at its default: printed by neither, so not read back.
         let mut plain = op.clone();
         Elided::optional_defaults(opt, &mut plain);
         match opt.parse_op_in(aliases, &text) {
             Ok(back) if back == plain || Elided::same(&plain, &back, aliases) => {}
-            // ⭐ 报出**第一处不同的字段**，不是光说「往返不一致」—— 这样几百条失败能按
-            // 字段归类，一眼看出是同一个毛病还是几种。
             Ok(back) => return Verdict::Broken(format!("往返不一致 [{}]: {text}", Self::first_diff(&plain, &back))),
             Err(e) => return Verdict::Broken(format!("{e}: {text}")),
         }
         if !visible || text.contains('\n') {
             return Verdict::Reparsed;
         }
-        // A bare terminator its parent writes nothing for is not rendered on its own, here or by
-        // mlir-opt; judging its text against the file would only ever report the omission.
         if Self::bare(op) && parent.is_some_and(|par| !opt.show_in(aliases, par).to_string().contains(&*op.name)) {
             return Verdict::Reparsed;
         }
-        // A block's terminator with nothing but discardable attributes: `mlir-opt` elides it,
-        // attributes and all (`scf.if`'s `scf.yield {then}`), a loss this crate does not copy.
         let last = |par: &Operation<'_>| par.regions.iter().flat_map(|r| &r.blocks).any(|b| b.ops.last().is_some_and(|l| core::ptr::eq(l, op)));
         if !op.attributes.is_empty() && Self::bare(&Operation { attributes: Vec::new(), ..op.clone() }) && parent.is_some_and(last) {
             return Verdict::Reparsed;
         }
-        // Nor can a block's terminator be judged under a parent only C++ prints in custom form
-        // (`vector.mask`, `memref.alloca_scope`): there `mlir-opt` may leave it out.
         if parent.is_some_and(|par| Self::generic_only(opt, par) && par.regions.iter().flat_map(|r| &r.blocks).any(|b| b.ops.last().is_some_and(|l| core::ptr::eq(l, op)))) {
             return Verdict::Reparsed;
         }
-        // `spirv.SpecConstantOperation wraps "spirv.IAdd"(..)`: C++ prints the wrapped op generic.
         if parent.is_some_and(|par| par.name == "spirv.SpecConstantOperation") {
             return Verdict::Reparsed;
         }
-        // Inside its own dialect's regions an op prints without its prefix (`return`).
         let (full, short) = (&*op.name, op.name.split_once('.').map_or(&*op.name, |(_, n)| n));
         let long = if body.starts_with(full) { body.to_string() } else { body.replacen(short, full, 1) };
         let brief = long.replacen(full, short, 1);
@@ -252,21 +207,13 @@ impl Fixtures {
     }
 }
 
-/// linalg 的命名 op 自定义形式里没有区域（`mlir-opt` 不印）：读回来的体是照 `regionBuilder` 造的，里面的
-/// 名字由 mlirformat 起，缺省的 `indexing_maps` 是内联的 `affine_map<..>` 而不是 `#map` 别名。这两样
-/// 自定义形式本来就留不住，比较之前两边一起抹掉：linalg op 区域里的名字按位置重起，`indexing_maps` 里的别名展开；
-/// 可丢的 `linalg.memoized_indexing_maps` 去掉（`printNamedStructuredOp` 不印它）。
 pub struct Elided;
 
 impl Elided {
-    /// `op` 及其里面每条 linalg op 都抹一遍。
     pub fn normalize(op: &mut Operation<'_>, aliases: &[(String, String)]) {
-        // 函数的空 `arg_attrs = []` / `res_attrs = []`：自定义形式写不出来，`mlir-opt` 也照样丢
-        // （`function_interface_impl::printFunctionOp` 只印非空字典）。
         if let Some(Attribute::Dict(props)) = &mut op.properties {
             props.retain(|a| !(matches!(&*a.name, "arg_attrs" | "res_attrs") && matches!(&a.value, Some(Attribute::Array(xs)) if xs.is_empty())));
         }
-        // `gpu.func` 旧的可丢弃 `gpu.kernel`：印成 `kernel`，读回来是固有的 `kernel`（`mlir-opt` 一样）。
         if op.name == "gpu.func" && let Some(i) = op.attributes.iter().position(|a| a.name == "gpu.kernel") {
             op.attributes.remove(i);
             let props = op.properties.get_or_insert_with(|| Attribute::Dict(Vec::new()));
@@ -291,8 +238,6 @@ impl Elided {
         }
     }
 
-    /// `DefaultValuedOptionalAttr` 等于缺省值的属性：`mlir-opt` 不印，读回来就没有了 —— 抹掉
-    /// （`op` 及其里面每条 op）。
     pub fn optional_defaults(opt: &MlirOpt, op: &mut Operation<'_>) {
         if let Some(f) = opt.template(&op.name).and_then(|t| (t.format)())
             && let Some(Attribute::Dict(props)) = &mut op.properties
@@ -311,7 +256,6 @@ impl Elided {
         }
     }
 
-    /// 整个模块：每条 op 都抹一遍。
     pub fn module(m: &mut Module<'_>) {
         let aliases = m.aliases();
         for i in &mut m.items {
@@ -321,7 +265,6 @@ impl Elided {
         }
     }
 
-    /// 区域里的块参数 `__aN`、op 的结果 `__vN`（N 是它在块里的位置），引用一并改。
     fn rename(op: &mut Operation<'_>) {
         let mut names: BTreeMap<String, String> = BTreeMap::new();
         for r in &op.regions {
@@ -368,7 +311,6 @@ impl Elided {
         }
     }
 
-    /// `indexing_maps = [#map, ..]` ⇒ 内联的 `affine_map<..>`。
     fn expand(op: &mut Operation<'_>, aliases: &[(String, String)]) {
         let Some(mlirformat::Attribute::Dict(props)) = &mut op.properties else { return };
         for p in props.iter_mut().filter(|p| p.name == "indexing_maps") {
@@ -385,7 +327,6 @@ impl Elided {
         }
     }
 
-    /// 抹掉之后相等。
     pub fn same(a: &Operation<'_>, b: &Operation<'_>, aliases: &[(String, String)]) -> bool {
         let (mut a, mut b) = (a.clone(), b.clone());
         Self::normalize(&mut a, aliases);

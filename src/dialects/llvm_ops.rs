@@ -1,17 +1,3 @@
-//! `llvm` 里 ODS 把语法交给 C++ 的 op，手写读写后注入（`MlirOpt::upstream`），`llvm.gen.rs` 不动。
-//!
-//! 照 LLVM 23.1.5 `LLVMDialect.cpp` 的 `print` / `parse` 写，直接在通用的 [`Operation`] 上读写（这几个 op 的固有属性多，
-//! `llvm.func` 有六十多个），类型化读取照用生成的结构体（`llvm::LLVMFuncOp` 等）：
-//!
-//! - `llvm.func`：`llvm.func [linkage] [hidden|protected] [(local_)unnamed_addr] [cconv] @f(%a: T {attrs}, ...) [-> R]
-//!   [comdat(@c)] [attributes {...}] [{ body }]`；声明（没有函数体）的形参只写类型，可变参数写 `...`
-//! - `llvm.call`：`llvm.call [cconv] [tail|musttail|notail] @f(%a, ...) [vararg(!llvm.func<..>)] {attrs} : (T {attrs}, ...) -> R`；
-//!   间接调用 `llvm.call %fp(...) : !llvm.ptr, (...) -> R`
-//! - `llvm.icmp` / `llvm.fcmp`：`llvm.icmp "slt" %a, %b {attrs} : T`（结果是 `i1` 或同形的 `i1` 向量）
-//! - `llvm.getelementptr`：`llvm.getelementptr [inbounds|nusw|nuw] %p[%i, 1] {attrs} : (T, ...) -> R, E`
-//! - `llvm.alloca`：`llvm.alloca [inalloca] %n x E {attrs} : (T) -> R`（`alignment = 0` 不印、读到就丢）
-//!
-//! 打不出来的情形（`vscale_range`、调用的 op bundle 等少见写法）印通用形式；读不懂的写法交回原样文本。
 use crate::common::{Attribute, BlockArg, Extended, FunctionType, NamedAttr, Operation, Region, ShapedKind, Str, Template, Type};
 use crate::generator::Printer;
 use crate::llvm::{AllocaOp, CallOp, FCmpOp, GEPOp, ICmpOp, LLVMFuncOp};
@@ -25,30 +11,27 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-/// `llvm` 手写的读写。
 pub struct LlvmHand;
 
-/// `ICmpPredicate` 按编号的名字
 const ICMP: [&str; 10] = ["eq", "ne", "slt", "sle", "sgt", "sge", "ult", "ule", "ugt", "uge"];
-/// `FCmpPredicate` 按编号的名字
+
 const FCMP: [&str; 16] = ["_false", "oeq", "ogt", "oge", "olt", "ole", "one", "ord", "ueq", "ugt", "uge", "ult", "ule", "une", "uno", "_true"];
-/// 链接方式的关键字（`#llvm.linkage<…>` 的内容）
+
 const LINKAGES: [&str; 11] = ["private", "internal", "available_externally", "linkonce", "weak", "common", "appending", "extern_weak", "linkonce_odr", "weak_odr", "external"];
-/// `visibility_` 按编号的关键字（0 不写）
+
 const VISIBILITIES: [&str; 3] = ["", "hidden", "protected"];
-/// `unnamed_addr` 按编号的关键字（0 不写）
+
 const UNNAMED_ADDRS: [&str; 3] = ["", "local_unnamed_addr", "unnamed_addr"];
-/// 尾调用方式的关键字（`#llvm.tailcallkind<…>` 的内容）
+
 const TAIL_KINDS: [&str; 4] = ["none", "tail", "musttail", "notail"];
-/// `rawConstantIndices` 里「这一项是下一个动态下标」的标记（`GEPOp::kDynamicIndex`）
+
 const DYNAMIC_INDEX: i64 = i32::MIN as i64;
-/// `noWrapFlags` 的位：`inbounds_flag` / `nusw` / `nuw`；`inbounds` = 前两个
+
 const GEP_INBOUNDS_FLAG: i64 = 1;
 const GEP_NUSW: i64 = 2;
 const GEP_NUW: i64 = 4;
 
 impl LlvmHand {
-    /// 注入 `MlirOpt` 的六个模板（缺省属性照用生成的）。
     pub fn templates() -> [Template; 6] {
         let hand = |generated: Template, parse: for<'a> fn(&mut Parser<'a, '_>) -> R<Operation<'a>>, print: fn(&Operation<'_>, &mut Printer<'_, '_>) -> Option<fmt::Result>| Template { custom: true, parse, print, format: || None, ..generated };
         [
@@ -61,9 +44,6 @@ impl LlvmHand {
         ]
     }
 
-    // ---- 公用 ------------------------------------------------------------------------
-
-    /// 固有属性 `name`（`<{...}>` 里的）
     fn prop<'o, 'a>(op: &'o Operation<'a>, name: &str) -> Option<&'o Attribute<'a>> {
         match &op.properties {
             Some(Attribute::Dict(d)) => d.iter().find(|a| a.name == name).and_then(|a| a.value.as_ref()),
@@ -71,12 +51,10 @@ impl LlvmHand {
         }
     }
 
-    /// 固有属性 `name` 在不在（单元属性）
     fn prop_present(op: &Operation<'_>, name: &str) -> bool {
         matches!(&op.properties, Some(Attribute::Dict(d)) if d.iter().any(|a| a.name == name))
     }
 
-    /// 整数属性的值
     fn int(a: Option<&Attribute<'_>>) -> Option<i64> {
         match a {
             Some(Attribute::Int { lit, .. }) => lit.parse().ok(),
@@ -84,7 +62,6 @@ impl LlvmHand {
         }
     }
 
-    /// `#dialect.name<body>` 的 body（不带尖括号）
     fn enum_body<'o>(a: Option<&'o Attribute<'_>>, name: &str) -> Option<&'o str> {
         match a {
             Some(Attribute::Extended { ext, .. }) if ext.name == name => ext.body.as_deref()?.strip_prefix('<')?.strip_suffix('>'),
@@ -92,7 +69,6 @@ impl LlvmHand {
         }
     }
 
-    /// `#dialect.name<body>`
     fn enum_attr<'a>(name: &str, body: &str) -> Attribute<'a> {
         Attribute::Extended { ext: Box::new(Extended { name: Str::Owned(name.into()), body: Some(Str::Owned(format!("<{body}>"))), params: Vec::new() }), ty: None }
     }
@@ -105,7 +81,6 @@ impl LlvmHand {
         Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
     }
 
-    /// `array<i32: …>` 的各项
     fn i32s(a: Option<&Attribute<'_>>) -> Option<Vec<i64>> {
         match a {
             Some(Attribute::DenseArray { values, .. }) => values.iter().map(|v| v.parse().ok()).collect(),
@@ -113,7 +88,6 @@ impl LlvmHand {
         }
     }
 
-    /// 固有属性与可丢弃属性合在一起按名字排好（C++ `getAttrs()`），去掉 `elide` 里的
     fn visible<'a>(op: &Operation<'a>, elide: &[&str]) -> Vec<NamedAttr<'a>> {
         let props = match &op.properties {
             Some(Attribute::Dict(d)) => d.as_slice(),
@@ -124,12 +98,10 @@ impl LlvmHand {
         all
     }
 
-    /// `fastmathFlags` 是 `none` 就不印（`processFMFAttr`）
     fn fastmath_elided(op: &Operation<'_>) -> bool {
         Self::enum_body(Self::prop(op, "fastmathFlags"), "llvm.fastmath") == Some("none")
     }
 
-    /// 读到的属性字典按 ODS 分成固有属性（`props` 里，按名字排好）与可丢弃属性
     fn split<'a>(p: &Parser<'a, '_>, name: &str, mut props: Vec<NamedAttr<'a>>, dict: Vec<NamedAttr<'a>>) -> (Option<Attribute<'a>>, Vec<NamedAttr<'a>>) {
         let inherent = p.opt().op_info(name).map_or(&[][..], |i| i.inherent);
         let mut attrs = Vec::new();
@@ -144,7 +116,6 @@ impl LlvmHand {
         NamedAttr { name: Str::Owned(name.into()), value: Some(value) }
     }
 
-    /// `i` 号的非空字典（`arg_attrs` / `res_attrs`）
     fn nth<'o, 'a>(attrs: Option<&'o Attribute<'a>>, i: usize) -> Option<&'o Attribute<'a>> {
         match attrs {
             Some(Attribute::Array(ds)) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
@@ -152,12 +123,10 @@ impl LlvmHand {
         }
     }
 
-    /// 各字典，除非全是空的
     fn dicts<'a>(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
         ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
     }
 
-    /// `(T {attrs}, ...)`
     fn types_with_attrs(p: &mut Printer<'_, '_>, types: &[Type<'_>], attrs: Option<&Attribute<'_>>) -> fmt::Result {
         p.write_char('(')?;
         for (i, t) in types.iter().enumerate() {
@@ -169,14 +138,11 @@ impl LlvmHand {
         p.write_char(')')
     }
 
-    /// `(T {attrs}, ...)`，读回各类型与字典
     fn parse_types_with_attrs<'a>(p: &mut Parser<'a, '_>) -> R<(Vec<Type<'a>>, Vec<Vec<NamedAttr<'a>>>)> {
         p.expect("(")?;
         let items = p.list(")", |p| Ok((p.ty()?, p.opt_dict()?)))?;
         Ok(items.into_iter().unzip())
     }
-
-    // ---- llvm.icmp / llvm.fcmp ---------------------------------------------------------
 
     fn print_icmp(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
         Self::print_cmp(op, p, &ICMP)
@@ -186,7 +152,6 @@ impl LlvmHand {
         Self::print_cmp(op, p, &FCMP)
     }
 
-    /// `llvm.icmp "slt" %a, %b {attrs} : T`
     fn print_cmp(op: &Operation<'_>, p: &mut Printer<'_, '_>, names: &[&str]) -> Option<fmt::Result> {
         let pred = names.get(usize::try_from(Self::int(Self::prop(op, "predicate"))?).ok()?)?;
         let ([a, b], [t, _]) = (op.operands.as_slice(), op.ty.inputs.as_slice()) else { return None };
@@ -221,13 +186,11 @@ impl LlvmHand {
         let dict = p.opt_dict()?;
         p.expect(":")?;
         let t = p.ty()?;
-        // `getI1SameShape`：向量就是同形的 `i1` 向量
         let res = match &t {
             Type::Shaped(s) if s.kind == ShapedKind::Vector => Type::Shaped(Box::new(crate::common::Shaped { elem: Box::new(Type::I1), ..(**s).clone() })),
             _ => Type::I1,
         };
         let mut props = vec![Self::named("predicate", Self::i64_attr(i64::try_from(index).unwrap_or(0)))];
-        // C++ 的 parse 给 fcmp 写上缺省的 fastmath
         if name == "llvm.fcmp" && !dict.iter().any(|a| a.name == "fastmathFlags") {
             props.push(Self::named("fastmathFlags", Self::enum_attr("llvm.fastmath", "none")));
         }
@@ -236,9 +199,6 @@ impl LlvmHand {
         Ok(Operation { name: name.into(), operands: vec![a, b], properties, attributes, ty: FunctionType { inputs: vec![t.clone(), t], results: vec![res] }, loc, ..Operation::default() })
     }
 
-    // ---- llvm.getelementptr ------------------------------------------------------------
-
-    /// `noWrapFlags` 的写法（`stringifyGEPNoWrapFlags`）：0 不写
     fn gep_flags(v: i64) -> String {
         let mut parts = Vec::new();
         match v & (GEP_INBOUNDS_FLAG | GEP_NUSW) {
@@ -337,11 +297,7 @@ impl LlvmHand {
         Ok(Operation { name: "llvm.getelementptr".into(), operands, properties, attributes, ty, loc, ..Operation::default() })
     }
 
-    // ---- llvm.alloca -------------------------------------------------------------------
-
-    /// `llvm.alloca [inalloca] %n x E {attrs} : (T) -> R`
     fn print_alloca(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
-        // 结果不是指针时 C++ 的 parse 不写 `elem_type`，读不回来
         let Some(Attribute::Type(elem)) = Self::prop(op, "elem_type") else { return None };
         let ([n], [t], [r]) = (op.operands.as_slice(), op.ty.inputs.as_slice(), op.ty.results.as_slice()) else { return None };
         let inalloca = Self::prop_present(op, "inalloca");
@@ -387,8 +343,6 @@ impl LlvmHand {
         let loc = p.opt_loc()?;
         Ok(Operation { name: "llvm.alloca".into(), operands: vec![n], properties, attributes, ty, loc, ..Operation::default() })
     }
-
-    // ---- llvm.call ---------------------------------------------------------------------
 
     fn print_call(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
         let sizes = Self::i32s(Self::prop(op, "operandSegmentSizes"))?;
@@ -443,7 +397,6 @@ impl LlvmHand {
             if let Some(Attribute::Type(t)) = Self::prop(op, "var_callee_type") {
                 write!(p, " vararg({t})")?;
             }
-            // `printOpBundles`：`["tag"(%a, %b : T, T), "tag2"()]`
             if !tags.is_empty() {
                 p.write_str(" [")?;
                 let mut at = 0;
@@ -503,7 +456,6 @@ impl LlvmHand {
         } else {
             None
         };
-        // `parseOpBundles`：`["tag"(%a : T), ...]`
         let (mut bundle_values, mut bundle_types, mut bundle_sizes, mut tags) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         let bundled = p.eat("[");
         if bundled {
@@ -559,7 +511,6 @@ impl LlvmHand {
         if let Some(c) = callee {
             props.push(Self::named("callee", Attribute::SymbolRef(vec![c.into()])));
         }
-        // C++ 的 parse 总把这几个写上（缺省值也写）
         props.push(Self::named("CConv", Self::enum_attr("llvm.cconv", cconv.unwrap_or("ccc"))));
         props.push(Self::named("TailCallKind", Self::enum_attr("llvm.tailcallkind", tail.unwrap_or("none"))));
         if !dict.iter().any(|a| a.name == "fastmathFlags") {
@@ -579,10 +530,6 @@ impl LlvmHand {
         Ok(Operation { name: "llvm.call".into(), operands, properties, attributes, ty: FunctionType { inputs, results }, loc, ..Operation::default() })
     }
 
-    // ---- llvm.func ---------------------------------------------------------------------
-
-    /// `LLVM::isCompatibleType` 拒收的内建类型（tensor / memref、index、tuple、函数类型……）之外都收；
-    /// 方言类型（`!llvm.*`、ptr 方言的 `!ptr.ptr<…>`）收
     fn compatible(t: &Type<'_>) -> bool {
         match t {
             Type::Integer { .. } | Type::Float(_) | Type::Extended(_) => true,
@@ -595,7 +542,6 @@ impl LlvmHand {
         let Some(Attribute::Str { lit: name, .. }) = Self::prop(op, "sym_name") else { return None };
         let Some(Attribute::Type(fty)) = Self::prop(op, "function_type") else { return None };
         let Ok(LlvmType::Func { ret, params, vararg }) = LlvmType::try_from(fty) else { return None };
-        // 读回去重建的函数类型要和原来一字不差；`unnamed_addr` 读回去总有（C++ 的 parse 总写上），原来没有就不印成自定义形式
         let rebuilt: Type<'_> = LlvmType::Func { ret: ret.clone(), params: params.clone(), vararg }.into();
         if Self::prop(op, "vscale_range").is_some() || rebuilt != *fty || Self::prop(op, "unnamed_addr").is_none() {
             return None;
@@ -712,7 +658,6 @@ impl LlvmHand {
         };
         let dict = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
         let mut body = if p.peek_ws() == Some(b'{') { Some(p.region()?) } else { None };
-        // 可变参数只能在最后；形参与返回值都要是 LLVM 兼容的类型（C++ `buildLLVMFunctionType`）
         if entries.iter().rev().skip(1).any(Option::is_none) {
             return p.err("variadic arguments must be in the end of the argument list");
         }
@@ -740,7 +685,6 @@ impl LlvmHand {
             Self::named("function_type", Attribute::Type(function_type)),
             Self::named("unnamed_addr", Self::i64_attr(unnamed)),
         ];
-        // C++ 的 parse 总把这几个写上（缺省值也写）
         props.push(Self::named("linkage", Self::enum_attr("llvm.linkage", linkage.unwrap_or("external"))));
         props.push(Self::named("visibility_", Self::i64_attr(visibility)));
         props.push(Self::named("CConv", Self::enum_attr("llvm.cconv", cconv.unwrap_or("ccc"))));
@@ -760,7 +704,6 @@ impl LlvmHand {
     }
 }
 
-/// 跳过空白看下一个字节
 trait PeekWs {
     fn peek_ws(&mut self) -> Option<u8>;
 }
@@ -771,4 +714,3 @@ impl PeekWs for Parser<'_, '_> {
         self.peek()
     }
 }
-

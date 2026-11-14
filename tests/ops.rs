@@ -1,7 +1,3 @@
-//! Typed ops against the paired `mlir-opt` fixtures: every op of the generic output that the
-//! upstream op table knows prints exactly as `mlir-opt` prints its custom form, and parses back
-//! to the same op.
-
 mod common;
 
 use std::collections::BTreeMap;
@@ -27,7 +23,7 @@ fn upstream_ops_match_mlir_opt() {
     assert!(failures.is_empty(), "{} failures:\n{}", failures.len(), failures.join("\n"));
     assert!(hits.len() > 20);
 }
-/// A user-defined op: a struct and `#[mlir::op]` are all it takes.
+
 #[mlir::op("arith.maxsi", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
 pub struct ArithMax<'a> {
     #[slot(result)]
@@ -53,8 +49,6 @@ fn user_op_converts_both_ways() {
     assert_eq!(opt.show(&m).to_string(), "%0 = \"arith.maxsi\"(%a, %b) : (i32, i32) -> i32\n");
 }
 
-/// An optional operand whose value and type sit in two optional groups (as `mlirformat tblgen`
-/// writes `Optional<…>` / `Variadic<…>` operands of an ODS format such as CalVX's `vec.compact`).
 #[mlir::op("test.compact", format = "$input (`,` $mask^)? attr-dict `:` type($input) (`,` type($mask)^)? `->` type($result)", results(result))]
 pub struct Compact<'a> {
     #[slot(input_ty)]
@@ -87,8 +81,6 @@ fn dialects_register_and_unregister() {
     assert!(opt.namespaces().all(|ns| ns != "arith"));
 }
 
-/// Typed ops through any self-describing format and back: `#[mlir::op]`'s `Deserialize` goes
-/// through `Content`, enums (`Type`, `Attribute`, a predicate) and absent defaults included.
 #[test]
 fn ops_round_trip_through_serde() {
     macro_rules! round_trip {
@@ -110,7 +102,6 @@ fn ops_round_trip_through_serde() {
     }
 }
 
-/// A float property read back from the text its op prints.
 #[mlir::op("test.scale", format = "attr-dict")]
 pub struct Scale {
     pub by: Option<f64>,
@@ -119,8 +110,6 @@ pub struct Scale {
 
 #[test]
 fn float_properties_print_as_float_literals() {
-    // Rust's `{:e}` writes 3.0 as `3e0`, which MLIR does not read as a float: printed as MLIR prints a float, every
-    // value reads back bit for bit (an inf / a NaN as its bits)
     for (by, low) in [(3.0, 3.0), (0.1, 0.1), (1e-5, -2.5), (-0.0, 1e30), (f64::INFINITY, f32::NEG_INFINITY), (f64::NAN, f32::NAN)] {
         let text = Scale::new(Some(by), Some(low)).to_string();
         let back = Scale::try_from(text.as_str()).unwrap_or_else(|e| panic!("{text}: {e}"));

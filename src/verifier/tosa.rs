@@ -1,21 +1,13 @@
-//! `tosa` ops with a C++ parser, as `mlir-opt` reads them: `tosa.cond_if` (`IfOp::parse` in
-//! `Tosa/IR/TosaOps.cpp`); the `DenseElementTypeInterface` of `!tosa.mxint8` and
-//! `!tosa.block_scaled<..>` (what a type-first `dense<T : [..]>` of them may hold), and a
-//! `block_scaled`'s scale values (`parseScaleValues`).
-
 use alloc::string::{String, ToString};
 
 use super::{DialectRules, Invalid, Verifier};
 use crate::{Attribute, Extended, Operation, Parser, Piece, R, Signedness, Type};
 
-/// The `tosa` dialect's rules.
 pub(super) struct Tosa;
 
 impl Tosa {
-    /// `tosa.cond_if %c (%a = %x, ..)? : T (fn type)?` or `: T (-> types)?`, before its regions.
     fn cond_if(p: &mut Parser<'_, '_>) -> R<()> {
         p.value()?;
-        // `parseOptionalAssignmentList`: how many operands it binds.
         let mut operands = None;
         if p.eat("(") {
             let mut n = 0;
@@ -52,8 +44,6 @@ impl Tosa {
 }
 
 impl Tosa {
-    /// `<BLOCK_SHAPE_32:f8E8M0FNU:f8E4M3FN, {1.0, 2.0 : f8E8M0FNU}>` ⇒ (scale type, value type,
-    /// the scale values written, if any).
     fn block_scaled<'a>(p: &mut Parser<'a, '_>) -> R<(Type<'a>, Type<'a>, bool)> {
         p.expect("<")?;
         p.ident()?;
@@ -66,7 +56,6 @@ impl Tosa {
             p.expect("{")?;
             loop {
                 p.ws();
-                // `parseFloat`: a decimal integer literal is no float.
                 let lit = p.rest();
                 let end = lit.find(|c: char| !(c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'))).unwrap_or(lit.len());
                 let lit = &lit[..end];
@@ -91,20 +80,14 @@ impl Tosa {
         Ok((scale, value, scales))
     }
 
-    /// The `DenseElementTypeInterface` of a tosa type: may element `a` be stored in a
-    /// `dense<T : ..>` of element type `elem` (`convertFromAttribute`)? `None`: `elem` is no
-    /// tosa type that has it.
     pub(super) fn dense_element(elem: &Type<'_>, a: &Attribute<'_>) -> Option<bool> {
         let Some(Extended { name, body, .. }) = elem.extended() else { return None };
         match &**name {
-            // An `i8` integer (`IntegerAttr`, typed so).
             "tosa.mxint8" => Some(matches!(a, Attribute::Int { ty: Some(Type::Integer { signedness: Signedness::Signless, width: 8 }), .. })),
             "tosa.block_scaled" => {
-                // A type tosa would not read holds nothing.
                 let Ok((_, value, _)) = Parser::read(body.as_deref()?, Self::block_scaled) else { return Some(false) };
                 match value {
                     Type::Extended(_) => Self::dense_element(&value, a),
-                    // A float of the value type itself.
                     v => Some(matches!(a, Attribute::Float { ty: Some(t), .. } if *t == v)),
                 }
             }

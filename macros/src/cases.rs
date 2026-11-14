@@ -1,11 +1,7 @@
-//! `#[derive(Cases)]`: an integer enum's `TryFrom<i64>`, by case value.
-
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Error, Fields, ItemEnum};
 
-/// A case's value is its position: generated enums fill the values they skip with hidden
-/// `__N` variants, which no value converts to.
 pub fn expand(item: &ItemEnum) -> syn::Result<TokenStream> {
     let ty = &item.ident;
     let mut arms = Vec::new();
@@ -24,7 +20,6 @@ pub fn expand(item: &ItemEnum) -> syn::Result<TokenStream> {
         impl ::core::convert::TryFrom<i64> for #ty {
             type Error = i64;
 
-            /// The case of value `v`; `Err(v)` when no case has it.
             #[inline]
             fn try_from(v: i64) -> ::core::result::Result<Self, i64> {
                 match v {

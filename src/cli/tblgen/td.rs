@@ -1,20 +1,6 @@
-//! The TableGen front end behind `mlirformat tblgen`: `.td` ⇒ the resolved records, as the JSON that
-//! `llvm-tblgen --dump-json` (LLVM 23.1.5) prints — byte for byte. A port of `llvm/lib/TableGen`
-//! (TGLexer, TGParser, Record, JSONBackend), so no LLVM build is needed to generate a dialect.
-//!
-//! ```text
-//! Lexer    buffers (one per include), #ifdef / #define, locations = buffer + offset
-//! Keeper   types and values interned by content (equal ids ⇔ the same value, as LLVM compares pointers),
-//!          records, resolveReferences and every operator's fold
-//! Parser   class / def / defm / multiclass / foreach / if / let / defvar / defset / deftype / assert / dump
-//! json     !instanceof, !tablegen_json_version, one object per def (sorted keys, compact)
-//! ```
-//!
-//! ⚠ Not implemented: `!match` and `!instances` (they need regular expressions; no MLIR `.td` uses them).
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-/// A parse error (`file:line: error: …`).
 #[derive(Debug)]
 pub struct Error(String);
 
@@ -30,8 +16,6 @@ impl std::fmt::Display for Error {
     }
 }
 
-/// `llvm-tblgen --dump-json td -I includes…`, in process. Several `.td` files are one run, read
-/// in order (as a main file including each of them would be).
 pub fn dump_json(tds: &[PathBuf], includes: &[PathBuf]) -> Result<String, Error> {
     let src = match tds {
         [td] => Sources::new(td, includes)?,
@@ -42,23 +26,18 @@ pub fn dump_json(tds: &[PathBuf], includes: &[PathBuf]) -> Result<String, Error>
     Ok(p.k.json(&p.lex.src))
 }
 
-// ======================================================================== lex
-
-/// A source location: buffer number and byte offset in it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 pub struct Loc {
     pub buf: u32,
     pub off: u32,
 }
 
-/// One source file. `parent` = where it was included from (none for the main file).
 pub struct Buffer {
     pub name: String,
     pub text: Vec<u8>,
     parent: Option<Loc>,
 }
 
-/// All buffers (as `llvm::SourceMgr`): an `include` is looked up as given (relative to the current directory), then in each `-I`, then beside the file including it.
 pub struct Sources {
     pub bufs: Vec<Buffer>,
     includes: Vec<PathBuf>,
@@ -70,16 +49,11 @@ impl Sources {
         Ok(Self { bufs: vec![Buffer { name: main.display().to_string(), text, parent: None }], includes: includes.to_vec() })
     }
 
-    /// One run over several files: an unnamed main buffer that includes each, in order.
     pub fn joined(tds: &[PathBuf], includes: &[PathBuf]) -> Self {
         let text = tds.iter().map(|td| format!("include \"{}\"\n", td.display())).collect::<String>().into_bytes();
         Self { bufs: vec![Buffer { name: String::new(), text, parent: None }], includes: includes.to_vec() }
     }
 
-    /// Opens an included file: the new buffer number, `None` if not found. Last, a name is looked
-    /// up next to the file that includes it, as each upstream build passes its own source
-    /// directory as `-I` (`ArmSMEOps.td`'s `include "ArmSME.td"`): a path the `.td` declares
-    /// relative to itself resolves wherever it is entered from.
     fn include(&mut self, name: &str, at: Loc) -> Option<u32> {
         let beside = Path::new(&self.bufs[at.buf as usize].name).parent().map(|d| d.join(name));
         let found = std::iter::once(PathBuf::from(name)).chain(self.includes.iter().map(|d| d.join(name))).chain(beside).find_map(|p| std::fs::read(&p).ok().map(|t| (p, t)));
@@ -88,7 +62,6 @@ impl Sources {
         Some(self.bufs.len() as u32 - 1)
     }
 
-    /// `file:line` (as `SourceMgr::getFormattedLocationNoOffset`: the file name without its directory).
     #[must_use]
     pub fn format(&self, loc: Loc) -> String {
         let buf = &self.bufs[loc.buf as usize];
@@ -98,7 +71,6 @@ impl Sources {
     }
 }
 
-/// Bang operators.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Bang {
     Concat, Add, Sub, Mul, Div, Not, Log2, And, Or, Xor, Sra, Srl, Shl, ListConcat, ListFlatten, ListSplat, StrConcat, Interleave,
@@ -107,17 +79,13 @@ pub enum Bang {
     GetDagName, SetDagArg, SetDagName, Repr,
 }
 
-/// Token kinds (as `tgtok::TokKind`; numeric and string values live on the [`Lexer`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Tok {
     Eof, Minus, Plus, LSquare, RSquare, LBrace, RBrace, LParen, RParen, Less, Greater, Colon, Semi, Comma, Dot, Equal, Question, Paste,
     DotDotDot, True, False, IntVal, BinaryIntVal,
-    // types and keywords
     Bit, Bits, Code, Dag, ElseKw, Field, In, Int, List, String, Then,
-    // object starts (`isObjectStart`)
     Assert, Class, Def, Defm, Defset, Deftype, Defvar, Dump, Foreach, If, Let, MultiClass,
     Bang(Bang),
-    // with a string value
     Id, StrVal, VarName, CodeFragment,
 }
 
@@ -128,7 +96,6 @@ impl Tok {
     }
 }
 
-/// Preprocessor control: whether this `#ifdef` / `#else` level is active.
 #[derive(Clone, Copy)]
 struct Prep {
     is_else: bool,
@@ -164,7 +131,6 @@ impl Lexer {
         &self.src.bufs[self.buf as usize].text
     }
 
-    /// The `i`-th character ahead (NUL past the end, like the 0 terminating a MemoryBuffer).
     fn peek(&self, i: usize) -> i32 {
         self.text().get(self.pos + i).map_or(0, |&c| i32::from(c))
     }
@@ -186,7 +152,6 @@ impl Lexer {
         Err(Error::new(format!("{}: error: {}", self.src.format(loc), msg.into())))
     }
 
-    /// The width of a binary literal (digits after `0b`).
     #[must_use]
     pub fn binary_width(&self) -> usize {
         self.pos - self.tok_start - 2
@@ -217,7 +182,6 @@ impl Lexer {
         }
     }
 
-    /// End of a file: back to where it was included.
     fn process_eof(&mut self) -> Result<bool, Error> {
         match self.src.bufs[self.buf as usize].parent {
             Some(at) => {
@@ -308,7 +272,6 @@ impl Lexer {
         }
     }
 
-    /// A digit: `0x…` / `0b…` / decimal; digits followed by identifier characters ⇒ an identifier (`4i32`).
     fn lex_digits(&mut self, c: i32) -> Result<Tok, Error> {
         let mut next = 0;
         if (c as u8).is_ascii_digit() {
@@ -381,7 +344,6 @@ impl Lexer {
             return self.error(self.loc(), "invalid number");
         }
         let digits = std::str::from_utf8(&self.text()[num_start..self.pos]).unwrap_or("");
-        // as strtoll / strtoull: negative numbers signed, the rest unsigned and reinterpreted
         self.int_val = if minus {
             digits.parse::<i64>().map_err(|_| Error::new(format!("{}: error: number out of range", self.src.format(self.loc()))))?
         } else {
@@ -527,7 +489,6 @@ impl Lexer {
         }
     }
 
-    /// A `[{ … }]` code block, otherwise `[`.
     fn lex_bracket(&mut self) -> Result<Tok, Error> {
         if self.peek(0) != i32::from(b'{') {
             return Ok(Tok::LSquare);
@@ -626,8 +587,6 @@ impl Lexer {
         Ok(Tok::Bang(op))
     }
 
-    // ---- preprocessor (`#ifdef` / `#ifndef` / `#else` / `#endif` / `#define`, at line start only) ----
-
     fn prep_exit_include(&mut self, must_be_empty: bool) -> Result<(), Error> {
         if let Some(p) = self.prep.last().and_then(|s| s.last()) {
             return self.error(p.at, "reached EOF without matching #endif");
@@ -637,7 +596,6 @@ impl Lexer {
         Ok(())
     }
 
-    /// Whether a directive follows `#` (it must be followed by blanks, an end of line or a comment).
     fn prep_directive(&self) -> Option<&'static str> {
         ["ifdef", "ifndef", "else", "endif", "define"].into_iter().find(|word| {
             let w = word.as_bytes();
@@ -666,7 +624,6 @@ impl Lexer {
         String::from_utf8_lossy(&self.text()[self.tok_start..self.pos]).into_owned()
     }
 
-    /// Only comments may follow a directive.
     fn prep_skip_directive_end(&mut self) -> Result<bool, Error> {
         while !self.at_end() {
             match self.text()[self.pos] {
@@ -690,7 +647,6 @@ impl Lexer {
         Ok(true)
     }
 
-    /// Processes one directive; `live` = then lex the next live token (`None` = the directive only, while skipping a region).
     fn lex_preprocessor(&mut self, kind: &str, live: bool) -> Result<Option<Tok>, Error> {
         self.tok_start = self.pos;
         self.pos += kind.len();
@@ -760,7 +716,6 @@ impl Lexer {
         self.prep.last().is_none_or(|s| s.iter().all(|p| p.defined))
     }
 
-    /// Skips an inactive region until an `#else` / `#endif` makes processing active again.
     fn prep_skip_region(&mut self) -> Result<(), Error> {
         loop {
             while !self.at_end() && self.text()[self.pos] != b'\n' {
@@ -805,9 +760,7 @@ impl Lexer {
         Ok(())
     }
 }
-// ======================================================================== init
 
-/// A type id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Ty(u32);
 
@@ -819,11 +772,9 @@ pub enum TyKind {
     Str,
     Dag,
     List(Ty),
-    /// A record type: a set of classes (sorted by name; empty = any record).
     Record(Vec<RecId>),
 }
 
-/// A value id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct I(u32);
 
@@ -893,7 +844,6 @@ pub enum TernOp {
     SetDagName,
 }
 
-/// A template argument: by position or by (qualified) name.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ArgKey {
     Pos(u32),
@@ -906,9 +856,7 @@ pub enum Init {
     Bit(bool),
     Bits(Vec<I>),
     Int(i64),
-    /// `anonymous_N` (the name of an anonymous record not yet final).
     Anon(u32),
-    /// A string; `true` = code format (`[{…}]`).
     Str(String, bool),
     List(Vec<I>, Ty),
     Un(UnOp, I, Ty),
@@ -922,14 +870,12 @@ pub enum Init {
     Var(I, Ty),
     VarBit(I, u32),
     Def(RecId),
-    /// `Class<args>` not yet instantiated (the arguments are [`Init::Arg`]s).
     VarDef(RecId, Vec<I>),
     Field(I, I, Ty),
     Dag(I, Option<I>, Vec<I>, Vec<Option<I>>),
     Arg(I, ArgKey),
 }
 
-/// All types, values and records (as `RecordKeeper` + `RecordKeeperImpl`).
 pub struct Keeper {
     tys: Vec<TyKind>,
     ty_pool: HashMap<TyKind, Ty>,
@@ -940,10 +886,8 @@ pub struct Keeper {
     pub defs: BTreeMap<String, RecId>,
     pub globals: BTreeMap<String, I>,
     anon: u32,
-    /// The record a `VarDefInit` instantiated (LLVM keeps it in the node's `Def`) and where it first appeared.
     instantiated: HashMap<I, I>,
     vardef_loc: HashMap<I, Loc>,
-    /// The first fatal error (LLVM's PrintFatalError exits; here it is kept and reported by the parser at a statement boundary).
     pub fatal: Option<String>,
     pub bit: Ty,
     pub int: Ty,
@@ -991,8 +935,6 @@ impl Keeper {
         }
     }
 
-    // ---------------- types ----------------
-
     pub fn ty(&mut self, kind: TyKind) -> Ty {
         if let Some(&t) = self.ty_pool.get(&kind) {
             return t;
@@ -1016,7 +958,6 @@ impl Keeper {
         self.ty(TyKind::Bits(n))
     }
 
-    /// The element type (`None` for a non-list).
     #[must_use]
     pub fn elem(&self, t: Ty) -> Option<Ty> {
         match self.kind(t) {
@@ -1025,7 +966,6 @@ impl Keeper {
         }
     }
 
-    /// A set of classes ⇒ the record type (sorted by name).
     pub fn record_ty(&mut self, classes: &[RecId]) -> Ty {
         let mut v = classes.to_vec();
         v.sort_by_key(|&c| self.rec_name(c));
@@ -1046,7 +986,6 @@ impl Keeper {
         }
     }
 
-    /// `RecTy::typeIsConvertibleTo`。
     #[must_use]
     pub fn convertible(&self, a: Ty, b: Ty) -> bool {
         let kb = self.kind(b);
@@ -1077,7 +1016,6 @@ impl Keeper {
         }
     }
 
-    /// `RecTy::typeIsA`。
     #[must_use]
     pub fn type_is_a(&self, a: Ty, b: Ty) -> bool {
         match (self.kind(a), self.kind(b)) {
@@ -1088,7 +1026,6 @@ impl Keeper {
         }
     }
 
-    /// `resolveTypes`: the common type of two types.
     pub fn resolve_types(&mut self, t1: Ty, t2: Ty) -> Option<Ty> {
         if t1 == t2 {
             return Some(t1);
@@ -1118,7 +1055,6 @@ impl Keeper {
         None
     }
 
-    /// Whether some class of the record type `t` is `class` or derives from it.
     #[must_use]
     pub fn ty_is_subclass(&self, t: Ty, class: RecId) -> bool {
         match self.kind(t) {
@@ -1127,9 +1063,6 @@ impl Keeper {
         }
     }
 
-    // ---------------- values ----------------
-
-    /// Interns a value.
     pub fn get(&mut self, init: Init) -> I {
         if let Some(&i) = self.pool.get(&init) {
             return i;
@@ -1173,14 +1106,12 @@ impl Keeper {
         self.get(Init::Def(r))
     }
 
-    /// A fresh anonymous name (`anonymous_N`, N counting up).
     pub fn new_anonymous_name(&mut self) -> I {
         let n = self.anon;
         self.anon += 1;
         self.get(Init::Anon(n))
     }
 
-    /// A string value (`StringInit`).
     #[must_use]
     pub fn as_str(&self, i: I) -> Option<&str> {
         match self.init(i) {
@@ -1202,7 +1133,6 @@ impl Keeper {
         matches!(self.init(i), Init::Unset)
     }
 
-    /// The type (`TypedInit::getType`; `?` and template arguments have none).
     pub fn type_of(&mut self, i: I) -> Option<Ty> {
         Some(match self.init(i).clone() {
             Init::Unset | Init::Arg(..) => return None,
@@ -1219,7 +1149,6 @@ impl Keeper {
         })
     }
 
-    /// `Record::getType`: the record type of the direct superclasses.
     pub fn rec_type(&mut self, r: RecId) -> Ty {
         let supers = self.recs[r.0 as usize].supers.clone();
         self.record_ty(&supers)
@@ -1230,15 +1159,11 @@ impl Keeper {
         self.unquoted(self.recs[r.0 as usize].name)
     }
 
-    /// `Record::isSubClassOf` (recursively through the direct superclasses).
     #[must_use]
     pub fn is_subclass_of(&self, r: RecId, class: RecId) -> bool {
         self.recs[r.0 as usize].supers.iter().any(|&s| s == class || self.is_subclass_of(s, class))
     }
 
-    // ---------------- conversions (convertInitializerTo / getCastTo / getBit / bit ranges) ----------------
-
-    /// `convertInitializerTo`。
     pub fn convert(&mut self, i: I, t: Ty) -> Option<I> {
         let tk = self.kind(t).clone();
         match self.init(i).clone() {
@@ -1301,7 +1226,6 @@ impl Keeper {
         }
     }
 
-    /// All known bits ⇒ an integer (`BitsInit::convertInitializerToInt`).
     #[must_use]
     pub fn bits_to_int(&self, bits: &[I]) -> Option<i64> {
         let mut v: i64 = 0;
@@ -1314,7 +1238,6 @@ impl Keeper {
         Some(v)
     }
 
-    /// `getCastTo`。
     pub fn cast_to(&mut self, i: I, t: Ty) -> Option<I> {
         match self.init(i).clone() {
             Init::Unset => Some(i),
@@ -1336,7 +1259,6 @@ impl Keeper {
         }
     }
 
-    /// `getBit`。
     pub fn get_bit(&mut self, i: I, n: u32) -> I {
         match self.init(i).clone() {
             Init::Unset | Init::Bit(_) | Init::VarBit(..) => i,
@@ -1348,7 +1270,6 @@ impl Keeper {
         }
     }
 
-    /// `convertInitializerBitRange`。
     pub fn bit_range(&mut self, i: I, bits: &[u32]) -> Option<I> {
         match self.init(i).clone() {
             Init::Unset | Init::Arg(..) => None,
@@ -1375,7 +1296,6 @@ impl Keeper {
         }
     }
 
-    /// `getFieldType`。
     pub fn field_type(&mut self, i: I, name: I) -> Option<Ty> {
         if let Init::Def(r) = *self.init(i) {
             return self.recs[r.0 as usize].value(name).map(|v| v.ty);
@@ -1388,7 +1308,6 @@ impl Keeper {
         cs.iter().find_map(|&c| self.recs[c.0 as usize].value(name).map(|v| v.ty))
     }
 
-    /// `isConcrete`。
     #[must_use]
     pub fn is_concrete(&self, i: I) -> bool {
         match self.init(i) {
@@ -1404,7 +1323,6 @@ impl Keeper {
         }
     }
 
-    /// `isComplete`。
     #[must_use]
     pub fn is_complete(&self, i: I) -> bool {
         match self.init(i) {
@@ -1416,8 +1334,6 @@ impl Keeper {
         }
     }
 
-    // ---------------- printing (getAsString / getAsUnquotedString) ----------------
-
     #[must_use]
     pub fn unquoted(&self, i: I) -> String {
         match self.init(i) {
@@ -1426,7 +1342,6 @@ impl Keeper {
         }
     }
 
-    /// `getAsString`。
     #[must_use]
     pub fn string(&self, i: I) -> String {
         let s = |x: I| self.string(x);
@@ -1542,7 +1457,6 @@ impl Keeper {
         }
     }
 }
-// ======================================================================== record
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct RecId(u32);
@@ -1558,12 +1472,10 @@ pub enum Kind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FieldKind {
     Normal,
-    /// Declared with `field`: may stay non-concrete (`!fields` in the JSON).
     NonconcreteOk,
     TemplateArg,
 }
 
-/// A field (`RecordVal`).
 #[derive(Clone, Debug)]
 pub struct Val {
     pub name: I,
@@ -1588,7 +1500,6 @@ pub struct Record {
     pub vals: Vec<Val>,
     pub asserts: Vec<Assertion>,
     pub dumps: Vec<(Loc, I)>,
-    /// The direct superclasses (as `DirectSuperClasses`).
     pub supers: Vec<RecId>,
     pub kind: Kind,
 }
@@ -1608,14 +1519,12 @@ impl Record {
         self.targs.contains(&name)
     }
 
-    /// The name (`getName`; `anonymous_N` for an anonymous record not yet named).
     #[must_use]
     pub fn name_str(&self, k: &Keeper) -> String {
         k.unquoted(self.name)
     }
 }
 
-/// `Resolver`: variable name ⇒ value.
 pub trait Resolver {
     fn resolve(&mut self, k: &mut Keeper, var: I) -> Option<I>;
     fn current(&self) -> Option<RecId>;
@@ -1627,7 +1536,6 @@ pub trait Resolver {
     }
 }
 
-/// `MapResolver`: a table; a value is resolved against the whole table the first time it is used.
 pub struct MapResolver {
     map: HashMap<I, (I, bool)>,
     cur: Option<RecId>,
@@ -1666,7 +1574,6 @@ impl Resolver for MapResolver {
     }
 }
 
-/// `RecordResolver`: variables are the current record's fields (resolved fully, guarding against cycles).
 pub struct RecordResolver {
     cur: RecId,
     cache: HashMap<I, Option<I>>,
@@ -1723,7 +1630,6 @@ impl Resolver for RecordResolver {
     }
 }
 
-/// `ShadowResolver`: hides some names (the loop variables of `!foreach` / `!foldl`).
 pub struct ShadowResolver<'r> {
     pub inner: &'r mut dyn Resolver,
     pub shadowed: HashSet<I>,
@@ -1746,7 +1652,6 @@ impl Resolver for ShadowResolver<'_> {
     }
 }
 
-/// `TrackUnresolvedResolver`: records whether a variable could not be resolved.
 pub struct TrackUnresolved<'r> {
     pub inner: Option<&'r mut dyn Resolver>,
     pub found: bool,
@@ -1780,7 +1685,6 @@ impl Resolver for TrackUnresolved<'_> {
     }
 }
 
-/// `HasReferenceResolver`: only checks whether a name is referenced.
 pub struct HasReference {
     pub var: I,
     pub found: bool,
@@ -1813,20 +1717,17 @@ impl Keeper {
         &mut self.recs[r.0 as usize]
     }
 
-    /// Adds a record.
     pub fn add_record(&mut self, rec: Record) -> RecId {
         self.recs.push(rec);
         RecId(self.recs.len() as u32 - 1)
     }
 
-    /// Copies a record (`Record(const Record &)`: dumps are not copied).
     pub fn copy_record(&mut self, r: RecId) -> RecId {
         let mut rec = self.rec(r).clone();
         rec.dumps.clear();
         self.add_record(rec)
     }
 
-    /// `RecordVal::setValue`: cast to the field's type; a `bits` field is split into single bits. `Err` if the cast fails.
     pub fn set_val(&mut self, r: RecId, name: I, v: I) -> Result<(), ()> {
         let ty = self.rec(r).value(name).expect("field exists").ty;
         let Some(mut val) = self.cast_to(v, ty) else { return Err(()) };
@@ -1840,7 +1741,6 @@ impl Keeper {
         Ok(())
     }
 
-    /// `Record::resolveReferences(Resolver &, SkipVal)`。
     pub fn resolve_record(&mut self, r: RecId, res: &mut dyn Resolver, skip: Option<I>) {
         let old = self.rec(r).name;
         let new = self.resolve(old, res);
@@ -1879,7 +1779,6 @@ impl Keeper {
         }
     }
 
-    /// `Record::resolveReferences(NewName)`: resolve fully against the record's own fields.
     pub fn resolve_record_self(&mut self, r: RecId, new_name: Option<I>) {
         let mut res = RecordResolver::new(r);
         res.name = new_name;
@@ -1887,7 +1786,6 @@ impl Keeper {
         self.resolve_record(r, &mut res, None);
     }
 
-    /// All superclasses (depth first, a superclass's superclasses before it, as `getSuperClasses`).
     #[must_use]
     pub fn all_supers(&self, r: RecId) -> Vec<RecId> {
         let mut out = Vec::new();
@@ -1898,7 +1796,6 @@ impl Keeper {
         out
     }
 
-    /// Checks the assertions (`checkRecordAssertions`): a false condition is an error.
     pub fn check_assertions(&mut self, r: RecId) {
         let mut res = RecordResolver::new(r);
         res.fin = true;
@@ -1910,7 +1807,6 @@ impl Keeper {
         }
     }
 
-    /// `CheckAssert`。
     pub fn check_assert(&mut self, cond: I, msg: I) {
         let int = self.int;
         match self.convert(cond, int).and_then(|c| self.as_int(c)) {
@@ -1923,7 +1819,6 @@ impl Keeper {
         }
     }
 
-    /// Prints a record (`operator<<(raw_ostream &, const Record &)`, for `!repr`).
     #[must_use]
     pub fn print_record(&self, r: RecId) -> String {
         let rec = self.rec(r);
@@ -1961,11 +1856,8 @@ impl Keeper {
         format!("{field}{ty} {} = {}", self.unquoted(v.name), self.string(v.value))
     }
 }
-// ======================================================================== eval
-// ================ evaluation: resolveReferences and every operator's Fold (as Record.cpp) ================
 
 impl Keeper {
-    /// `Init::resolveReferences`。
     pub fn resolve(&mut self, i: I, r: &mut dyn Resolver) -> I {
         match self.init(i).clone() {
             Init::Unset | Init::Bit(_) | Init::Int(_) | Init::Str(..) | Init::Def(_) => i,
@@ -2171,13 +2063,11 @@ impl Keeper {
         }
     }
 
-    /// `FieldInit::get`: typed as the field.
     pub fn field(&mut self, rec: I, name: I) -> I {
         let t = self.field_type(rec, name).unwrap_or(self.unset_ty());
         self.get(Init::Field(rec, name, t))
     }
 
-    /// A placeholder when the field type is unknown (an assertion failure in LLVM; never reached).
     fn unset_ty(&self) -> Ty {
         self.any_record
     }
@@ -2202,8 +2092,6 @@ impl Keeper {
         let int = self.int;
         self.convert(i, int).and_then(|c| self.as_int(c))
     }
-
-    // ---------------- unary ----------------
 
     pub fn fold_un(&mut self, u: I, cur: Option<RecId>, is_final: bool) -> I {
         let Init::Un(op, lhs, t) = self.init(u).clone() else { return u };
@@ -2350,9 +2238,6 @@ impl Keeper {
         u
     }
 
-    // ---------------- binary ----------------
-
-    /// `BinOpInit::CompareInit`。
     fn compare(&mut self, op: BinOp, l: I, r: I) -> Option<bool> {
         if let (Some(a), Some(b)) = (self.to_int(l), self.to_int(r)) {
             return Some(match op {
@@ -2382,7 +2267,6 @@ impl Keeper {
         None
     }
 
-    /// A dag argument by index or by name.
     fn dag_arg_no(&self, dag: I, key: I) -> Result<usize, String> {
         let Init::Dag(_, _, args, names) = self.init(dag) else { return Err("not a dag".into()) };
         if let Some(pos) = self.as_int(key) {
@@ -2589,9 +2473,6 @@ impl Keeper {
         b
     }
 
-    // ---------------- ternary ----------------
-
-    /// `ItemApply`: resolve `rhs` with `lhs` bound to `item`.
     fn item_apply(&mut self, lhs: I, item: I, rhs: I, cur: Option<RecId>) -> I {
         let mut r = MapResolver::new(cur);
         r.set(lhs, item);
@@ -2873,7 +2754,6 @@ impl Keeper {
         f
     }
 
-    /// `VarDefInit::Fold`: instantiate once every argument is resolved.
     pub fn fold_vardef(&mut self, x: I) -> I {
         if let Some(&d) = self.instantiated.get(&x) {
             return d;
@@ -2886,7 +2766,6 @@ impl Keeper {
         if !r.found { self.instantiate(x) } else { x }
     }
 
-    /// `VarDefInit::instantiate`: a new anonymous record (`anonymous_N`), resolved with the arguments, given its class and added to the defs.
     pub fn instantiate(&mut self, x: I) -> I {
         if let Some(&d) = self.instantiated.get(&x) {
             return d;
@@ -2921,10 +2800,7 @@ impl Keeper {
         d
     }
 }
-// ======================================================================== parse
-// ================ parsing (as TGParser.cpp) ================
 
-/// How a `let` sets its field (`LetMode`): `let x = v`, `let append x = v`, `let prepend x = v`.
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 enum LetMode {
     #[default]
@@ -2934,7 +2810,6 @@ enum LetMode {
 }
 
 impl LetMode {
-    /// The contextual keyword an identifier is, if it is one.
     fn of(id: &str) -> Self {
         match id {
             "append" => Self::Append,
@@ -2944,7 +2819,6 @@ impl LetMode {
     }
 }
 
-/// One `let` item.
 #[derive(Clone)]
 struct LetRecord {
     name: I,
@@ -2954,7 +2828,6 @@ struct LetRecord {
     mode: LetMode,
 }
 
-/// A record, a loop, an assertion or a dump (`RecordsEntry`).
 #[derive(Clone)]
 enum Entry {
     Rec(RecId),
@@ -2980,7 +2853,6 @@ struct MultiClass {
 enum ScopeKind {
     Local,
     Record(RecId),
-    /// foreach: the loop variable (none for an `if`).
     Loop(Option<I>),
     MultiClass(usize),
 }
@@ -2995,7 +2867,6 @@ struct Defset {
     elements: Vec<I>,
 }
 
-/// A subclass reference `Class<args>` (for defm, `rec` is the multiclass's placeholder record).
 struct SubClassRef {
     start: Loc,
     rec: RecId,
@@ -3063,7 +2934,6 @@ impl Parser {
         self.lex.error(loc, msg)
     }
 
-    /// Reports a fatal error recorded during evaluation.
     fn check(&mut self) -> R<()> {
         match self.k.fatal.take() {
             Some(m) => Err(Error::new(format!("{}: error: {m}", self.lex.src.format(self.lex.loc())))),
@@ -3083,9 +2953,6 @@ impl Parser {
         self.cur_mc.map(|m| self.multiclasses[m].rec)
     }
 
-    // ---------------- names ----------------
-
-    /// `QualifyName`: `record:name` (`::` for a multiclass).
     fn qualify(&mut self, rec: RecId, name: I) -> I {
         let sep = if self.k.rec(rec).kind == Kind::MultiClass { "::" } else { ":" };
         let rn = self.k.rec(rec).name;
@@ -3100,7 +2967,6 @@ impl Parser {
         self.qualify(rec, name)
     }
 
-    /// `TGVarScope::getVar`: look a variable up from the innermost scope out.
     fn get_var(&mut self, name: I) -> Option<I> {
         let sname = self.k.as_str(name).unwrap_or("").to_string();
         for n in (0..self.scopes.len()).rev() {
@@ -3153,9 +3019,6 @@ impl Parser {
         None
     }
 
-    // ---------------- semantics ----------------
-
-    /// `AddValue`: set an existing field of that name, otherwise add it.
     fn add_value(&mut self, rec: Option<RecId>, loc: Loc, rv: Val) -> R<()> {
         let rec = rec.or_else(|| self.mc_rec()).expect("a current record");
         if self.k.rec(rec).value(rv.name).is_some() {
@@ -3175,7 +3038,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `SetValue`。
     fn set_value(&mut self, rec: Option<RecId>, loc: Loc, name: I, bits: &[u32], v: I, allow_self: bool, mode: LetMode) -> R<()> {
         let rec = rec.or_else(|| self.mc_rec()).expect("a current record");
         let Some((cur, fty)) = self.k.rec(rec).value(name).map(|v| (v.value, v.ty)) else {
@@ -3244,7 +3106,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `resolveArguments`: the given arguments plus defaults for the rest, each handed to `f`.
     fn resolve_args(&mut self, rec: RecId, args: &[I], loc: Loc, mut f: impl FnMut(&mut Self, I, I)) -> R<()> {
         let names = self.k.rec(rec).targs.clone();
         let mut unsolved = names.clone();
@@ -3272,7 +3133,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `AddSubClass`: copy the fields, resolve with the arguments, record the superclass.
     fn add_subclass(&mut self, cur: RecId, sc: &SubClassRef) -> R<()> {
         let class = sc.rec;
         let fields: Vec<Val> = self.k.rec(class).vals.iter().filter(|v| v.kind != FieldKind::TemplateArg).cloned().collect();
@@ -3317,7 +3177,6 @@ impl Parser {
         }
     }
 
-    /// `addEntry`。
     fn add_entry(&mut self, e: Entry) -> R<()> {
         if let Some(l) = self.loops.last_mut() {
             l.entries.push(e);
@@ -3356,7 +3215,6 @@ impl Parser {
         r
     }
 
-    /// `resolve(ForeachLoop)`。
     fn resolve_loop(&mut self, l: &ForeachLoop, substs: &mut Vec<(I, I)>, fin: bool, mut dest: Option<&mut Vec<Entry>>, loc: Option<Loc>) -> R<()> {
         let mut r = self.map_of(substs, None);
         let mut list = self.k.resolve(l.list, &mut r);
@@ -3395,7 +3253,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `resolve(vector<RecordsEntry>)`。
     fn resolve_entries(&mut self, src: &[Entry], substs: &mut Vec<(I, I)>, fin: bool, mut dest: Option<&mut Vec<Entry>>, loc: Option<Loc>) -> R<()> {
         for e in src {
             match e {
@@ -3437,7 +3294,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `addDefOne`: fix the name, resolve fully, add to the defs.
     fn add_def_one(&mut self, rec: RecId) -> R<()> {
         let mut new_name = None;
         let name = self.k.rec_name(rec);
@@ -3471,8 +3327,6 @@ impl Parser {
         self.k.defs.insert(name, rec);
         Ok(())
     }
-
-    // ---------------- objects ----------------
 
     pub fn parse_file(&mut self) -> R<()> {
         self.next()?;
@@ -3628,7 +3482,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `ParseDeclaration`: `[field] type name [= value]`.
     fn parse_declaration(&mut self, cur: Option<RecId>, targs: bool) -> R<I> {
         let has_field = self.consume(Tok::Field)?;
         let ty = self.parse_type()?;
@@ -3754,8 +3607,6 @@ impl Parser {
         self.set_value(Some(cur), id_loc, field, &bits, v, false, mode)
     }
 
-    /// `ParseLetModeAndName`: an optional `append` / `prepend` (contextual: a field may be named
-    /// so) and the field name; the current token is an identifier.
     fn parse_let_mode_and_name(&mut self) -> R<(LetMode, Loc, I)> {
         let loc = self.lex.loc();
         let id = self.lex.str_val.clone();
@@ -3781,7 +3632,6 @@ impl Parser {
         self.add_entry(Entry::Rec(cur))
     }
 
-    /// `ParseObjectName`: no name ⇒ `?`; in a multiclass, a name not referencing `NAME` gets a `NAME #` prefix.
     fn parse_object_name(&mut self, mc: Option<usize>) -> R<I> {
         if matches!(self.tok(), Tok::Colon | Tok::Semi | Tok::LBrace) {
             return Ok(self.k.unset);
@@ -3827,7 +3677,6 @@ impl Parser {
         Ok(m)
     }
 
-    /// `ParseSubClassReference`。
     fn parse_subclass_ref(&mut self, cur: Option<RecId>, defm: bool) -> R<SubClassRef> {
         let start = self.lex.loc();
         let rec = if defm {
@@ -3845,7 +3694,6 @@ impl Parser {
         Ok(sc)
     }
 
-    /// `ParseTemplateArgValueList`: positional arguments first, then `name=value`.
     fn parse_template_arg_value_list(&mut self, cur: Option<RecId>, args_rec: RecId) -> R<(Vec<I>, Vec<Loc>)> {
         let targs = self.k.rec(args_rec).targs.clone();
         let mut out = Vec::new();
@@ -3896,7 +3744,6 @@ impl Parser {
         }
     }
 
-    /// `CheckTemplateArgValues`: cast the arguments to the parameter types.
     fn check_template_arg_values(&mut self, args: Vec<I>, locs: &[Loc], args_rec: RecId) -> R<Vec<I>> {
         let targs = self.k.rec(args_rec).targs.clone();
         let mut out = Vec::with_capacity(args.len());
@@ -4228,7 +4075,6 @@ impl Parser {
         Ok(())
     }
 
-    /// `resolveArgumentsOfMultiClass`: `multiclass::NAME` ⇒ the defm name, plus the arguments.
     fn multiclass_substs(&mut self, m: usize, args: &[I], defm_name: I, loc: Loc) -> R<Vec<(I, I)>> {
         let rec = self.multiclasses[m].rec;
         let q = self.qualified_name(rec);
@@ -4310,8 +4156,6 @@ impl Parser {
         }
         Ok(())
     }
-
-    // ---------------- types and ranges ----------------
 
     fn parse_type(&mut self) -> R<Ty> {
         Ok(match self.tok() {
@@ -4450,9 +4294,6 @@ impl Parser {
         Ok(r)
     }
 
-    // ---------------- values ----------------
-
-    /// `ParseIDValue`。
     fn parse_id_value(&mut self, cur: Option<RecId>, name: I, loc: Loc, mode: Mode) -> R<I> {
         if let Some(v) = self.get_var(name) {
             return Ok(v);
@@ -4888,8 +4729,6 @@ impl Parser {
         }
         Ok(self.k.get(Init::Dag(op, op_name, args, names)))
     }
-
-    // ---------------- bang operators ----------------
 
     fn parse_operation(&mut self, cur: Option<RecId>, item: Option<Ty>, op: Bang) -> R<I> {
         let (int, s, dag) = (self.k.int, self.k.string, self.k.dag);
@@ -5468,10 +5307,7 @@ impl Parser {
         Ok(v)
     }
 }
-// ======================================================================== json
-// ================ JSON back end (as JSONBackend.cpp; keys sorted bytewise, compact, as llvm::json) ================
 
-/// A JSON value (only the kinds needed).
 enum Json {
     Null,
     Bool(bool),
@@ -5482,7 +5318,6 @@ enum Json {
 }
 
 impl Json {
-    /// As `llvm::json`'s `quote`: backslash before `"` and `\`, control characters as `\t` `\n` `\r` or `\u00xx`, the rest as is.
     fn quote(out: &mut String, s: &str) {
         out.push('"');
         for c in s.chars() {
@@ -5534,7 +5369,6 @@ impl Json {
 }
 
 impl Keeper {
-    /// `JSONEmitter::translateInit`。
     fn json_init(&self, i: I) -> Json {
         match self.init(i) {
             Init::Unset => return Json::Null,
@@ -5576,7 +5410,6 @@ impl Keeper {
         Json::Obj(obj)
     }
 
-    /// The whole `--dump-json` output (with the final newline).
     #[must_use]
     pub fn json(&self, src: &Sources) -> String {
         let mut root = BTreeMap::new();
@@ -5619,4 +5452,3 @@ impl Keeper {
         out
     }
 }
-

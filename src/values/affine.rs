@@ -1,8 +1,3 @@
-//! ⭐ Affine expressions and maps in canonical form, as `AffineExpr.cpp`, `AffineMap.cpp`, the
-//! affine part of `AffineParser.cpp` and `AsmPrinter.cpp`: read from [`affine_expr`](crate::affine_expr)'s
-//! surface form through the same simplifying constructors, so that parsing, folding and
-//! printing land on the text `mlir-opt` prints.
-
 use crate::Str;
 use alloc::boxed::Box;
 use alloc::format;
@@ -14,7 +9,6 @@ use core::fmt;
 use crate::Attribute;
 use crate::affine_expr::{Cmp, Expr, Map, Op, Set};
 
-/// `AffineExprKind` of a binary expression.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Bin {
     Add,
@@ -24,7 +18,6 @@ pub enum Bin {
     CeilDiv,
 }
 
-/// An affine expression. Equality is structural, like MLIR's uniqued storage.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AffineExpr {
     Dim(u32),
@@ -45,15 +38,12 @@ fn ceil_div(a: i64, b: i64) -> i64 {
     if (a % b != 0) && ((a < 0) == (b < 0)) { q + 1 } else { q }
 }
 
-/// `mod`: the result has the divisor's sign... MLIR's `mod` is always non-negative for a
-/// positive divisor.
 fn modulo(a: i64, b: i64) -> i64 {
     let r = a % b;
     if r < 0 { r + b } else { r }
 }
 
 impl AffineExpr {
-    /// `std::gcd` on unsigned values.
     #[inline]
     pub fn gcd(a: u64, b: u64) -> u64 {
         if b == 0 { a } else { Self::gcd(b, a % b) }
@@ -130,7 +120,6 @@ impl AffineExpr {
         }
     }
 
-    /// `getAffineBinaryOpExpr`.
     pub fn binary(k: Bin, l: AffineExpr, r: AffineExpr) -> Self {
         match k {
             Bin::Add => l.add(r),
@@ -141,7 +130,6 @@ impl AffineExpr {
         }
     }
 
-    /// `orderCommutativeArgs`: dims before symbols, each by position.
     fn order(a: AffineExpr, b: AffineExpr) -> (AffineExpr, AffineExpr) {
         match (&a, &b) {
             (Sym(x), Sym(y)) | (Dim(x), Dim(y)) => {
@@ -156,7 +144,6 @@ impl AffineExpr {
         }
     }
 
-    /// `operator+`.
     pub fn add(self, o: AffineExpr) -> Self {
         if let Some(s) = Self::simplify_add(&self, &o) {
             return s;
@@ -205,7 +192,6 @@ impl AffineExpr {
             return Some(ll.clone().add(rhs.clone()).add(Const(lrc)));
         }
         let (_, rl, rr) = rhs.bin()?;
-        // `expr - (expr floordiv c) * c` is `expr mod c`.
         if rr.as_const() == Some(-1)
             && let Some((lrl, lrr)) = rl.bin_of(Bin::Mul)
         {
@@ -230,7 +216,6 @@ impl AffineExpr {
         None
     }
 
-    /// `operator*`.
     pub fn mul(self, o: AffineExpr) -> Self {
         if let Some(s) = Self::simplify_mul(&self, &o) {
             return s;
@@ -271,7 +256,6 @@ impl AffineExpr {
         None
     }
 
-    /// Unary minus: `* -1`.
     #[inline]
     pub fn neg(self) -> Self {
         self.mul(Const(-1))
@@ -341,7 +325,6 @@ impl AffineExpr {
         None
     }
 
-    /// `operator%`.
     pub fn modulo(self, o: AffineExpr) -> Self {
         if let Some(s) = Self::simplify_mod(&self, &o) {
             return s;
@@ -375,7 +358,6 @@ impl AffineExpr {
         None
     }
 
-    /// `replaceDimsAndSymbols`: rebuilt (and so simplified) only where something changed.
     pub fn replace(&self, dims: &[AffineExpr], syms: &[AffineExpr]) -> AffineExpr {
         match self {
             Const(_) => self.clone(),
@@ -399,7 +381,6 @@ impl AffineExpr {
         f(self);
     }
 
-    /// `getAffineExprFromFlatForm`.
     pub fn from_flat(flat: &[i64], dims: u32, syms: u32, locals: &[AffineExpr]) -> AffineExpr {
         let mut e = Const(0);
         for j in 0..(dims + syms) as usize {
@@ -422,7 +403,6 @@ impl AffineExpr {
         e
     }
 
-    /// `getSemiAffineExprFromFlatForm`.
     fn from_flat_semi(flat: &[i64], dims: u32, syms: u32, locals: &[AffineExpr]) -> AffineExpr {
         let base = (dims + syms) as usize;
         let mut entries: Vec<((u32, i64), i64, AffineExpr)> = Vec::new();
@@ -470,8 +450,6 @@ impl AffineExpr {
             entries.push(((j as u32, offset_dim), flat[j], Dim(j as u32)));
             offset_dim -= 1;
         }
-        // `llvm::sort` of (unsigned, signed) pairs: the signed half compares as unsigned in
-        // the pair's `unsigned` view the C++ sorts through.
         entries.sort_by(|a, b| a.0.0.cmp(&b.0.0).then((a.0.1 as i32 as u32).cmp(&(b.0.1 as i32 as u32))));
         let mut e = Const(0);
         for (_, c, x) in entries {
@@ -490,7 +468,6 @@ impl AffineExpr {
         e
     }
 
-    /// The flattened form `[dims, symbols, locals, constant]` and the number of locals.
     pub fn flatten(&self, dims: u32, syms: u32) -> Option<(Vec<i64>, usize)> {
         let mut fl = Flattener::new(dims, syms);
         fl.walk(self)?;
@@ -498,7 +475,6 @@ impl AffineExpr {
         Some((fl.stack.pop()?, n))
     }
 
-    /// `simplifyAffineExpr`.
     pub fn simplify(&self, dims: u32, syms: u32) -> AffineExpr {
         let expr = if self.is_pure_affine() { self.clone() } else { self.simplify_semi(dims, syms) };
         let mut fl = Flattener::new(dims, syms);
@@ -588,7 +564,6 @@ impl AffineExpr {
         })
     }
 
-    /// `simplifySemiAffine`.
     fn simplify_semi(&self, dims: u32, syms: u32) -> AffineExpr {
         match self {
             Const(_) | Dim(_) | Sym(_) => self.clone(),
@@ -611,7 +586,6 @@ impl AffineExpr {
     }
 }
 
-/// `SimpleAffineExprFlattener`: rows of `[dims, symbols, locals, constant]`.
 struct Flattener {
     dims: u32,
     syms: u32,
@@ -661,7 +635,6 @@ impl Flattener {
         self.locals.push(e);
     }
 
-    /// `addLocalVariableSemiAffine`: `lhs` becomes the local standing for `e`.
     fn semi_affine_local(&mut self, e: AffineExpr) {
         let loc = self.find_local(&e);
         if loc.is_none() {
@@ -791,7 +764,6 @@ impl Flattener {
     }
 }
 
-/// `BindingStrength` of the printer.
 #[derive(Clone, Copy, PartialEq)]
 enum Strength {
     Weak,
@@ -799,7 +771,6 @@ enum Strength {
 }
 
 impl AffineExpr {
-    /// `printAffineExprInternal`.
     fn print(&self, f: &mut String, s: Strength) {
         let (k, l, r) = match self {
             Sym(p) => return f.push_str(&format!("s{p}")),
@@ -875,7 +846,6 @@ impl fmt::Display for AffineExpr {
     }
 }
 
-/// An affine map: `(d0, ...)[s0, ...] -> (results)`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AffineMap {
     pub dims: u32,
@@ -884,7 +854,6 @@ pub struct AffineMap {
 }
 
 impl fmt::Display for AffineMap {
-    /// `printAffineMap`, without the `affine_map<...>` wrapper.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dims: Vec<String> = (0..self.dims).map(|i| format!("d{i}")).collect();
         write!(f, "({})", dims.join(", "))?;
@@ -897,7 +866,6 @@ impl fmt::Display for AffineMap {
     }
 }
 
-/// `IntegerSet`: `(dims)[syms] : (constraints)`, each `== 0` or `>= 0`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IntegerSet {
     pub dims: u32,
@@ -918,16 +886,12 @@ impl fmt::Display for IntegerSet {
     }
 }
 
-// ---- folding and rewriting helpers (AffineMap.cpp, AffineExpr.cpp, the affine ops) -------
-
 impl AffineMap {
-    /// `AffineMap::replace(expr, replacement, numDims, numSymbols)`.
     #[inline]
     pub fn replace_expr(&self, from: &AffineExpr, to: &AffineExpr, nd: u32, ns: u32) -> Self {
         Self { dims: nd, syms: ns, results: self.results.iter().map(|r| r.replace_sub(from, to)).collect() }
     }
 
-    /// `shiftDims(n)` then `shiftSymbols(m)`.
     #[inline]
     pub fn shifted(&self, nd: u32, ns: u32) -> Self {
         let dims: Vec<AffineExpr> = (0..self.dims).map(|d| AffineExpr::Dim(d + nd)).collect();
@@ -935,7 +899,6 @@ impl AffineMap {
         self.replace(&dims, &syms, self.dims + nd, self.syms + ns)
     }
 
-    /// `partialConstantFold` / `constantFold`: the results when all fold, `Err` on poison.
     pub fn constant_fold(&self, consts: &[Option<i64>]) -> Result<Option<Vec<i64>>, ()> {
         let mut out = Vec::new();
         for r in &self.results {
@@ -949,7 +912,6 @@ impl AffineMap {
 }
 
 impl AffineExpr {
-    /// `replace(DenseMap{from: to})`.
     pub fn replace_sub(&self, from: &AffineExpr, to: &AffineExpr) -> AffineExpr {
         if self == from {
             return to.clone();
@@ -966,7 +928,6 @@ impl AffineExpr {
         }
     }
 
-    /// `AffineExprConstantFolder`: `Err` on poison (division by zero, mod by < 1).
     pub fn const_eval(&self, dims: u32, consts: &[Option<i64>]) -> Result<Option<i64>, ()> {
         use Bin as B;
         Ok(match self {
@@ -1003,7 +964,6 @@ impl AffineExpr {
 }
 
 impl AffineExpr {
-    /// `getBoundForAffineExpr`.
     pub fn bound(&self, nd: u32, ns: u32, lbs: &[Option<i64>], ubs: &[Option<i64>], upper: bool) -> Option<i64> {
         use Bin as B;
         if let AffineExpr::Bin(k, l, r) = self {
@@ -1049,7 +1009,6 @@ impl AffineExpr {
 }
 
 impl AffineExpr {
-    /// `replace(DenseMap)`: whole subexpressions found in `map` are swapped.
     pub fn replace_all(&self, map: &[(AffineExpr, AffineExpr)]) -> AffineExpr {
         if let Some((_, to)) = map.iter().find(|(f, _)| f == self) {
             return to.clone();
@@ -1067,11 +1026,7 @@ impl AffineExpr {
     }
 }
 
-// ---- from the surface form -------------------------------------------------------------
-
 impl AffineExpr {
-    /// `AffineParser`: surface expression `e` built through the simplifying constructors, its
-    /// names looked up in `names` (dims, then symbols).
     fn of(e: &Expr<'_>, names: &[(&str, AffineExpr)]) -> Option<Self> {
         Some(match e {
             Expr::Id(n) => names.iter().find(|(m, _)| m == n)?.1.clone(),
@@ -1092,7 +1047,6 @@ impl AffineExpr {
         })
     }
 
-    /// The names of a surface header, as dims and symbols.
     #[inline]
     fn names<'n>(dims: &[&'n str], syms: Option<&Vec<&'n str>>) -> Vec<(&'n str, AffineExpr)> {
         let dims = dims.iter().enumerate().map(|(i, n)| (*n, Dim(i as u32)));
@@ -1123,14 +1077,12 @@ impl TryFrom<&Set<'_>> for IntegerSet {
 }
 
 impl AffineMap {
-    /// The body of an `affine_map<...>` / `affine_set<...>`, with or without its brackets.
     #[inline]
     fn unbracket(text: &str) -> &str {
         let t = text.trim();
         t.strip_prefix('<').and_then(|x| x.strip_suffix('>')).unwrap_or(t)
     }
 
-    /// Parses `(d0, ...)[s0, ...] -> (exprs)`, with or without the `<`...`>` around it.
     #[inline]
     pub fn parse(text: &str) -> Option<Self> {
         Self::try_from(&Map::try_from(Self::unbracket(text)).ok()?).ok()
@@ -1150,7 +1102,6 @@ impl AffineMap {
         self.dims as usize == self.results.len() && self.results.iter().enumerate().all(|(i, r)| *r == Dim(i as u32))
     }
 
-    /// The single constant result, if any.
     pub fn single_constant(&self) -> Option<i64> {
         match &self.results[..] {
             [r] => r.as_const(),
@@ -1158,13 +1109,11 @@ impl AffineMap {
         }
     }
 
-    /// `simplifyAffineMap`.
     #[inline]
     pub fn simplified(&self) -> Self {
         Self { results: self.results.iter().map(|r| r.simplify(self.dims, self.syms)).collect(), ..self.clone() }
     }
 
-    /// `AffineMap::compose`: `self ∘ other` (other's results feed self's dims).
     pub fn compose(&self, other: &AffineMap) -> Self {
         let dims: Vec<AffineExpr> = other.results.iter().map(|r| r.replace(&[], &(0..other.syms).map(|s| Sym(s + self.syms)).collect::<Vec<_>>())).collect();
         let syms: Vec<AffineExpr> = (0..self.syms).map(Sym).collect();
@@ -1172,13 +1121,11 @@ impl AffineMap {
         Self { dims: other.dims, syms: self.syms + other.syms, results }.simplified()
     }
 
-    /// `replaceDimsAndSymbols`, with new dim and symbol counts.
     #[inline]
     pub fn replace(&self, dims: &[AffineExpr], syms: &[AffineExpr], ndims: u32, nsyms: u32) -> Self {
         Self { dims: ndims, syms: nsyms, results: self.results.iter().map(|r| r.replace(dims, syms)).collect() }
     }
 
-    /// Whether dim `d` appears in a result.
     #[inline]
     pub fn uses_dim(&self, d: u32) -> bool {
         self.results.iter().any(|r| r.is_function_of_dim(d))
@@ -1200,7 +1147,6 @@ impl IntegerSet {
 impl TryFrom<&Attribute<'_>> for AffineMap {
     type Error = ();
 
-    /// An `affine_map<...>` attribute.
     fn try_from(a: &Attribute<'_>) -> Result<Self, ()> {
         match a {
             Attribute::Builtin { name, body, .. } if name == "affine_map" => AffineMap::parse(body).ok_or(()),
@@ -1212,7 +1158,6 @@ impl TryFrom<&Attribute<'_>> for AffineMap {
 impl TryFrom<&Attribute<'_>> for IntegerSet {
     type Error = ();
 
-    /// An `affine_set<...>` attribute.
     fn try_from(a: &Attribute<'_>) -> Result<Self, ()> {
         match a {
             Attribute::Builtin { name, body, .. } if name == "affine_set" => IntegerSet::parse(body).ok_or(()),
@@ -1222,7 +1167,6 @@ impl TryFrom<&Attribute<'_>> for IntegerSet {
 }
 
 impl From<&AffineMap> for Attribute<'_> {
-    /// `AffineMapAttr`.
     #[inline]
     fn from(m: &AffineMap) -> Self {
         Attribute::Builtin { name: Str::Borrowed("affine_map"), body: Str::Owned(format!("<{m}>")), ty: None }
@@ -1230,7 +1174,6 @@ impl From<&AffineMap> for Attribute<'_> {
 }
 
 impl From<&IntegerSet> for Attribute<'_> {
-    /// `IntegerSetAttr`.
     #[inline]
     fn from(s: &IntegerSet) -> Self {
         Attribute::Builtin { name: Str::Borrowed("affine_set"), body: Str::Owned(format!("<{s}>")), ty: None }

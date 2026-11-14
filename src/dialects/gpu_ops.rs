@@ -1,9 +1,3 @@
-//! `gpu` 里 ODS 没描述语法的 op，手写后注入（`MlirOpt::upstream`），`gpu.gen.rs` 不动。
-//!
-//! - `gpu.func`：C++ 手写的语法（`GPUFuncOp::print` / `parse`），同 `func.func`，多出 `workgroup(...)` /
-//!   `private(...)` 两组归属（入口块在函数形参之后的参数）与 `kernel` 关键字。
-//! - `gpu.launch_func`：ODS 有格式，但用了三条 C++ 指令（`AsyncDependencies`、`LaunchDimType`、
-//!   `LaunchFuncOperands`）；空格照 ODS 生成的打印器：每个元素前一个空格（`<` 前没有），空的指令照样占一个。
 use crate::common::{Attribute, BlockArg, FunctionType, NamedAttr, Op, Parse, Print, Region, Str, Type, Value};
 use crate::generator::{Printer, Sep};
 use crate::mlir;
@@ -12,11 +6,6 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-/// `gpu.func @name(%a: T, ...) [-> R] [workgroup(%w : T, ...)] [private(%p : T, ...)] [kernel] [attributes {...}] { body }`。
-///
-/// `sym_name` 是可丢弃属性，`kernel`（MLIR 23 起是固有的 unit 属性；旧的可丢弃 `gpu.kernel` 照样认）、
-/// `workgroup_attributions`（不为 0 才有）是固有属性，自定义形式把它们拆进头部；形参的 `{attrs}` 走
-/// `arg_attrs` / `res_attrs`。
 #[mlir::op("gpu.func", custom)]
 pub struct Func<'a> {
     #[attr]
@@ -33,22 +22,18 @@ pub struct Func<'a> {
     pub body: Region<'a>,
 }
 
-/// 头部拆出去的可丢弃属性（`gpu.kernel`：旧写法，印成 `kernel`）。
 const HEAD: [&str; 2] = ["sym_name", "gpu.kernel"];
 
 impl<'a> Func<'a> {
-    /// 可丢弃属性 `name`。
     #[inline]
     fn attr(&self, name: &str) -> Option<&Option<Attribute<'a>>> {
         self.attrs.iter().find(|a| a.name == name).map(|a| &a.value)
     }
 
-    /// 三个 `known_*` 固有属性，带名字。
     fn known(&self) -> [(&'static str, &Option<Attribute<'a>>); 3] {
         [("known_block_size", &self.known_block_size), ("known_cluster_size", &self.known_cluster_size), ("known_grid_size", &self.known_grid_size)]
     }
 
-    /// `workgroup_attributions` 的个数（没有 ⇒ 0）。
     fn workgroups(&self) -> Option<usize> {
         match &self.workgroup_attributions {
             None => Some(0),
@@ -57,7 +42,6 @@ impl<'a> Func<'a> {
         }
     }
 
-    /// `i` 号形参 / 结果的非空字典。
     fn nth<'x>(attrs: &'x Option<Attribute<'a>>, i: usize) -> Option<&'x Attribute<'a>> {
         match attrs {
             Some(Attribute::Array(ds)) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
@@ -65,14 +49,11 @@ impl<'a> Func<'a> {
         }
     }
 
-    /// `Some([dicts])`，除非每个字典都是空的。
     #[inline]
     fn dicts(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
         ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
     }
 
-    /// `workgroup(%w : T {attrs}, ...)`：一组归属（空的不印），各自的字典来自 `dicts`
-    /// （`printAttributions`）。
     fn attributions(p: &mut Printer<'_, '_>, keyword: &str, args: &[BlockArg<'_>], dicts: &Option<Attribute<'a>>) -> fmt::Result {
         if args.is_empty() {
             return Ok(());
@@ -87,7 +68,6 @@ impl<'a> Func<'a> {
         p.write_char(')')
     }
 
-    /// 读一组归属：`(%w : T {attrs}, ...)` ⇒ 块参数与各自的字典。
     fn parse_attributions(p: &mut Parser<'a, '_>, keyword: &str) -> R<(Vec<BlockArg<'a>>, Vec<Vec<NamedAttr<'a>>>)> {
         if !p.eat_kw(keyword) {
             return Ok((Vec::new(), Vec::new()));
@@ -105,7 +85,6 @@ impl<'a> Func<'a> {
 
 impl Print for Func<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
-        // ⛔ `workgroup_attributions = 0`：自定义形式读回去不会有它，往返不一致 ⇒ 走通用形式。
         let (Type::Function(ty), Some(Some(Attribute::Str { lit: name, .. })), Some(workgroups)) = (&self.function_type, self.attr("sym_name"), self.workgroups()) else {
             return self.print_generic(p);
         };
@@ -154,7 +133,6 @@ impl Print for Func<'_> {
         if self.kernel || self.attr("gpu.kernel").is_some() {
             p.write_str(" kernel")?;
         }
-        // `printFunctionAttributes`：`getAttrs()` 是固有属性（known_*）和可丢弃属性合成的一个字典，按名字排序。
         let mut attrs = self.attrs.clone();
         for (name, a) in self.known() {
             if let Some(a) = a {
@@ -204,7 +182,6 @@ impl Parse for Func<'_> {
         attrs.push(NamedAttr { name: "sym_name".into(), value: Some(Attribute::Str { lit: Str::Owned(sym_name), ty: None }) });
         let workgroup_attributions = (!workgroup.is_empty()).then(|| Attribute::Int { lit: Str::Owned(alloc::format!("{}", workgroup.len())), ty: Some(Type::int(64)) });
         attrs.sort_by(|a, b| a.name.cmp(&b.name));
-        // 字典里的固有属性是属性（property）。
         let mut known = |name: &str| attrs.iter().position(|a| a.name == name).and_then(|i| attrs.remove(i).value);
         let (known_block_size, known_grid_size, known_cluster_size) = (known("known_block_size"), known("known_grid_size"), known("known_cluster_size"));
         args.extend(workgroup);
@@ -233,8 +210,6 @@ impl Parse for Func<'_> {
     }
 }
 
-/// `gpu.launch_func [async] [[%deps]] [<%obj : T>] @m::@k [clusters in (x, y, z)] blocks in (x, y, z)
-/// threads in (x, y, z) [: T] [dynamic_shared_memory_size %s] [cooperative] [args(%a : T, ...)] {attrs}`。
 #[mlir::op("gpu.launch_func", custom, results(async_token))]
 pub struct LaunchFunc<'a> {
     #[slot(async_dependencies_ty, name = "asyncDependencies")]
@@ -286,13 +261,11 @@ pub struct LaunchFunc<'a> {
 }
 
 impl<'a> LaunchFunc<'a> {
-    /// `!gpu.async.token`。
     #[inline]
     fn token() -> Type<'a> {
         Type::Extended(alloc::boxed::Box::new(crate::common::Extended { name: "gpu.async.token".into(), body: None, params: Vec::new() }))
     }
 
-    /// `(%x, %y, %z)`。
     fn triple(p: &mut Parser<'a, '_>) -> R<[Value<'a>; 3]> {
         p.expect("(")?;
         let x = p.value()?;
@@ -317,7 +290,6 @@ impl Print for LaunchFunc<'_> {
         }
         p.op_name(Self::NAME)?;
         p.write_char(' ')?;
-        // custom<AsyncDependencies>
         if !self.async_token.is_empty() {
             p.write_str("async")?;
         }
@@ -333,7 +305,6 @@ impl Print for LaunchFunc<'_> {
         }
         write!(p, " blocks in ({}, {}, {})", self.grid_size_x, self.grid_size_y, self.grid_size_z)?;
         write!(p, " threads in ({}, {}, {})", self.block_size_x, self.block_size_y, self.block_size_z)?;
-        // custom<LaunchDimType>
         p.write_char(' ')?;
         if self.grid_size_x_ty != Type::Index {
             write!(p, ": {}", self.grid_size_x_ty)?;
@@ -344,7 +315,6 @@ impl Print for LaunchFunc<'_> {
         if self.cooperative {
             p.write_str(" cooperative")?;
         }
-        // custom<LaunchFuncOperands>
         p.write_char(' ')?;
         if !self.kernel_operands.is_empty() {
             p.write_str("args(")?;

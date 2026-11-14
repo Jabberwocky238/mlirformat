@@ -1,12 +1,9 @@
-//! `arith` (subset; formats from `ArithOps.td`, checked against `mlir-opt` 23.1.5 output).
-
 use core::fmt::{self, Write};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{Attribute, Op, Parse, Print, Parser, Printer, R, Type, Value, mlir};
 
-/// `lhs, rhs : T` binary ops without properties.
 macro_rules! binops {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
@@ -20,7 +17,6 @@ macro_rules! binops {
     )*};
 }
 
-/// `lhs, rhs <kw><flags> : T` binary ops with a defaulted dialect-attribute property.
 macro_rules! flagged {
     ($format:literal, $field:ident = $key:literal, $attr:literal: $($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = $format, results(result))]
@@ -36,7 +32,6 @@ macro_rules! flagged {
     )*};
 }
 
-/// `lhs, rhs exact : T` binary ops with a unit `isExact` property.
 macro_rules! exact {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs (`exact` $isExact^)? attr-dict `:` type($result)", results(result))]
@@ -52,7 +47,6 @@ macro_rules! exact {
     )*};
 }
 
-/// `in : A to B` casts.
 macro_rules! casts {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$in attr-dict `:` type($in) `to` type($out)", results(out))]
@@ -65,7 +59,6 @@ macro_rules! casts {
     )*};
 }
 
-/// `lhs, rhs <roundingmode> fastmath<..> : T`: the float binary ops with a rounding mode.
 macro_rules! rounded {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs ($roundingmode^)? (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
@@ -83,7 +76,6 @@ macro_rules! rounded {
     )*};
 }
 
-/// `in nneg : A to B`: the casts with a unit `nonNeg` property.
 macro_rules! nneg_casts {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$in (`nneg` $nonNeg^)? attr-dict `:` type($in) `to` type($out)", results(out))]
@@ -98,7 +90,6 @@ macro_rules! nneg_casts {
     )*};
 }
 
-/// Enum properties: an MLIR integer case value (declaration order) or the case keyword.
 macro_rules! predicates {
     ($($(#[$m:meta])* $ty:ident { $($case:ident $(= $kw:literal)?),* $(,)? })*) => {$(
         $(#[$m])*
@@ -138,15 +129,12 @@ casts! {
 }
 
 predicates! {
-    /// `arith.cmpi` predicates.
     CmpIPredicate { eq, ne, slt, sle, sgt, sge, ult, ule, ugt, uge }
-    /// `arith.cmpf` predicates.
     CmpFPredicate {
         AlwaysFalse = "false", oeq, ogt, oge, olt, ole, one, ord, ueq, ugt, uge, ult, ule, une, uno, AlwaysTrue = "true",
     }
 }
 
-/// `arith.truncf` rounding modes (`i32` case values).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, mlir::Cases)]
 #[allow(non_camel_case_types)]
 pub enum RoundingMode {
@@ -183,8 +171,6 @@ pub struct TruncF<'a> {
     pub out: Type<'a>,
 }
 
-/// `arith.select %c, %a, %b : T`, or `: C, T` when the condition is a vector / tensor of `i1`:
-/// hand-written syntax (the condition's type is spelled only when it is not `i1`).
 #[mlir::op("arith.select", custom, results(result))]
 pub struct Select<'a> {
     #[slot(condition_ty)]
@@ -196,7 +182,6 @@ pub struct Select<'a> {
     pub condition_ty: Type<'a>,
     pub result: Type<'a>,
 }
-
 
 impl Print for Select<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -227,7 +212,6 @@ impl Parse for Select<'_> {
     }
 }
 
-/// `operand fastmath<..> : T`: the float unary ops.
 macro_rules! float_unary {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
@@ -286,7 +270,6 @@ pub struct TruncI<'a> {
     pub out: Type<'a>,
 }
 
-/// `%low, %high = lhs, rhs : T`: the full product in two halves.
 macro_rules! extended_mul {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs attr-dict `:` type($lhs)", results(low, high))]
@@ -304,7 +287,6 @@ macro_rules! extended_mul {
 
 extended_mul! { MulSIExtended = "arith.mulsi_extended", MulUIExtended = "arith.mului_extended" }
 
-/// `%sum, %overflow = lhs, rhs : T, i1`.
 #[mlir::op("arith.addui_extended", format = "$lhs `,` $rhs attr-dict `:` type($sum) `,` type($overflow)", results(sum, overflow))]
 pub struct AddUIExtended<'a> {
     #[slot(sum)]
@@ -315,7 +297,6 @@ pub struct AddUIExtended<'a> {
     pub overflow: Type<'a>,
 }
 
-/// `%diff, %borrow = lhs, rhs : T, i1`.
 #[mlir::op("arith.subui_extended", format = "$lhs `,` $rhs attr-dict `:` type($diff) `,` type($borrow)", results(diff, borrow))]
 pub struct SubUIExtended<'a> {
     #[slot(diff)]
@@ -378,7 +359,6 @@ pub struct ScalingTruncF<'a> {
     pub out: Type<'a>,
 }
 
-/// The `arith` dialect.
 #[mlir::dialect(
     "arith",
     ops = [AndI, OrI, XOrI, MaxSI, MaxUI, MinSI, MinUI, DivSI, DivUI, RemSI, RemUI, CeilDivSI, CeilDivUI, FloorDivSI, ShRSI, ShRUI, AddI, SubI, MulI, ShLI, AddF, SubF, MulF, DivF, RemF, MaximumF, MinimumF, MaxNumF, MinNumF, IndexCast, IndexCastUI, ExtSI, ExtUI, SIToFP, UIToFP, FPToSI, FPToUI, Bitcast, NegF, CmpI, CmpF, Constant, ExtF, TruncF, Select, TruncI, MulSIExtended, MulUIExtended, AddUIExtended, SubUIExtended, FlushDenormals, ConvertF, ScalingExtF, ScalingTruncF],

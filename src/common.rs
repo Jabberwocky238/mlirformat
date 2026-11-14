@@ -1,16 +1,3 @@
-//! Everything an MLIR IR is made of, plus the traits dialects build on. Reading text is
-//! `parser.rs`, writing it is `generator.rs`; this file only defines.
-//!
-//! ```text
-//! Module      top-level ops + type / attribute aliases
-//! Operation   the one instruction: results, name, operands, successors, properties, regions,
-//!             attributes, signature, location (a custom form no dialect understood stays raw)
-//! Region      blocks;   Block: label, typed arguments, ops;   Value: an SSA name
-//! Type        builtin types structured; dialect types `!ns.name<...>` as name + body
-//! Attribute   compile-time constants; dialect attributes `#ns.name<...>` as name + body
-//! Dialect     a namespace's custom syntax; `#[mlir::op]` structs are typed views of Operation
-//! ```
-
 use alloc::boxed::Box;
 use alloc::format;
 use alloc::string::String;
@@ -39,42 +26,31 @@ keywords! {
 }
 
 ast! {
-    /// A whole `.mlir` file.
     pub struct Module<'a> {
         pub items: Vec<Item<'a>>,
     }
 
     pub enum Item<'a> {
-        /// `#name = <attr>`
         AttrAlias { name: Str<'a>, value: Attribute<'a> },
-        /// `!name = <type>`
         TypeAlias { name: Str<'a>, ty: Type<'a> },
-        /// `{-# ... #-}`, raw body between the markers.
         Metadata { body: Str<'a> },
         Op(Operation<'a>),
     }
 
-    /// ⭐ The one instruction. Generic form: `%r = "name"(operands)[^succ] <{props}> (regions) {attrs} : type loc(...)`.
     #[derive(Default)]
     pub struct Operation<'a> {
         pub results: Vec<ResultDef<'a>>,
-        /// Raw (still escaped) op name.
         pub name: Str<'a>,
         pub operands: Vec<Value<'a>>,
-        /// Block labels without the `^`.
         pub successors: Vec<Str<'a>>,
         pub properties: Option<Attribute<'a>>,
         pub regions: Vec<Region<'a>>,
         pub attributes: Vec<NamedAttr<'a>>,
         pub ty: FunctionType<'a>,
-        /// Raw contents of `loc(...)`.
         pub loc: Option<Str<'a>>,
-        /// A custom form no dialect understood: the text after the name, with nested regions
-        /// still parsed. The structured fields above are then empty.
         pub raw: Option<Vec<Piece<'a>>>,
     }
 
-    /// `%name` or `%name:count` on the left of `=`.
     pub struct ResultDef<'a> {
         pub name: Str<'a>,
         pub count: Option<u32>,
@@ -85,7 +61,6 @@ ast! {
         Region(Region<'a>),
     }
 
-    /// An SSA value: `%name` or `%name#index`.
     pub struct Value<'a> {
         pub name: Str<'a>,
         pub index: Option<u32>,
@@ -96,7 +71,6 @@ ast! {
     }
 
     pub struct Block<'a> {
-        /// Label without the `^`; `None` for an implicit entry block.
         pub label: Option<Str<'a>>,
         pub args: Vec<BlockArg<'a>>,
         pub ops: Vec<Operation<'a>>,
@@ -108,7 +82,6 @@ ast! {
         pub loc: Option<Str<'a>>,
     }
 
-    /// `name = value`, or a bare `name` (unit attribute). A quoted name keeps its quotes.
     pub struct NamedAttr<'a> {
         pub name: Str<'a>,
         pub value: Option<Attribute<'a>>,
@@ -123,25 +96,19 @@ ast! {
     pub enum Dim {
         Static(i64),
         Dynamic,
-        /// Scalable vector dim `[n]`.
         Scalable(i64),
     }
 
     pub struct Shaped<'a> {
         pub kind: ShapedKind,
-        /// `None` for unranked (`*`).
         pub shape: Option<Vec<Dim>>,
         pub elem: Box<Type<'a>>,
-        /// Encoding / layout / memory space attributes after the element type.
         pub extras: Vec<Attribute<'a>>,
     }
 
-    /// Dialect type/attribute (`!ns.name<...>`, `#ns.name<...>`) or alias (`!t`, `#map`).
     pub struct Extended<'a> {
         pub name: Str<'a>,
-        /// Raw body including delimiters. Printed verbatim when present.
         pub body: Option<Str<'a>>,
-        /// Structured parameters from a [`Dialect`]; printed as `<p, ...>` when there is no body.
         pub params: Vec<Attribute<'a>>,
     }
 
@@ -150,42 +117,31 @@ ast! {
         Float(FloatKind),
         Index,
         NoneType,
-        /// `token` (MLIR 23): a value that only orders ops, no data.
         Token,
         Complex(Box<Type<'a>>),
         Tuple(Box<[Type<'a>]>),
-        /// The rarer, bigger kinds are boxed, so a type is three words.
         Function(Box<FunctionType<'a>>),
         Shaped(Box<Shaped<'a>>),
-        /// `!name` or `!name<...>`: dialect type or alias.
         Extended(Box<Extended<'a>>),
     }
 
     pub enum Attribute<'a> {
         Unit,
         Bool(bool),
-        /// Raw literal (decimal or hex), optional `: type`.
         Int { lit: Str<'a>, ty: Option<Type<'a>> },
         Float { lit: Str<'a>, ty: Option<Type<'a>> },
-        /// Raw (still escaped) string contents.
         Str { lit: Str<'a>, ty: Option<Type<'a>> },
         Type(Type<'a>),
         Array(Vec<Attribute<'a>>),
         Dict(Vec<NamedAttr<'a>>),
-        /// `@a::@b`; quoted segments keep their quotes.
         SymbolRef(Vec<Str<'a>>),
-        /// `array<i32: 1, 2>`
         DenseArray { ty: Type<'a>, values: Box<[Str<'a>]> },
-        /// Builtin keyword attribute with raw body: `dense<...>`, `affine_map<...>`, `distinct[0]<...>`, ...
         Builtin { name: Str<'a>, body: Str<'a>, ty: Option<Type<'a>> },
-        /// `#name` or `#name<...>` with optional `: type`: dialect attribute or alias.
         Extended { ext: Box<Extended<'a>>, ty: Option<Type<'a>> },
     }
 }
 
 impl Extended<'_> {
-    /// The element type of a shaped dialect type, whose first parameter is `dims x element`
-    /// (`!gpu.mma_matrix<16x16xf32, "COp">` ⇒ `f32`): what an ODS element-type constraint means.
     pub fn shaped_elem(&self) -> Option<Type<'static>> {
         let body = self.body.as_deref()?.strip_prefix('<')?;
         let mut depth = 0usize;
@@ -199,7 +155,6 @@ impl Extended<'_> {
             }
             None
         })?;
-        // A type on its own (`!spirv.ptr<vector<4xf32>, Function>`), else a shape (`16x16xf32`).
         if let Ok(t) = crate::Parser::read(body[..end].trim(), |p| p.ty()) {
             return Some(t.owned());
         }
@@ -212,8 +167,6 @@ impl Extended<'_> {
 }
 
 impl Operation<'_> {
-    /// Gives back what its lists grew past their length: `Vec` starts at 4 and doubles, so a
-    /// one-attribute dict held 4 × 184 B. Called on every op the parser makes.
     pub(crate) fn shrink_to_fit(&mut self) {
         self.results.shrink_to_fit();
         self.operands.shrink_to_fit();
@@ -237,12 +190,6 @@ impl Type<'_> {
     }
 }
 
-// ---- errors ------------------------------------------------------------------------------
-
-/// A text error with its position. Inside a parse only the offset is known (`line` 0): most
-/// errors there are a guess that failed and is backtracked, and finding the line of each one
-/// scanned the text up to it — quadratic in the input. The parse fills the line in for the one
-/// that is returned ([`ParseError::placed`]).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{line}:{col}: {msg}")]
 pub struct ParseError {
@@ -260,13 +207,11 @@ impl ParseError {
         Self { offset, line, col, msg: msg.into() }
     }
 
-    /// At `offset`, its line not looked up yet.
     #[inline]
     pub fn unplaced(offset: usize, msg: impl Into<String>) -> Self {
         Self { offset, line: 0, col: 0, msg: msg.into() }
     }
 
-    /// With its line and column in `src`, when they are not known yet.
     pub fn placed(self, src: &str) -> Self {
         match self.line {
             0 => Self::at(src, self.offset, self.msg),
@@ -275,7 +220,6 @@ impl ParseError {
     }
 }
 
-/// A conversion error (typed op ⇄ [`Operation`], serde).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("{0}")]
 pub struct Error(pub String);
@@ -308,9 +252,6 @@ impl serde::de::Error for Error {
     }
 }
 
-// ---- dialects and typed ops --------------------------------------------------------------
-
-/// Which kind of extended symbol a body belongs to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SymKind {
     Type,
@@ -326,87 +267,52 @@ impl SymKind {
     }
 }
 
-/// ⭐ A typed op: a struct written with `#[mlir::op]`, a typed view of [`Operation`]. Conversions
-/// go through serde; the custom form follows [`Op::FORMAT`] unless `print` / `parse` are written
-/// by hand (`func.func`, `builtin.module`).
-/// ⭐ 写出自定义形式 —— 和 [`Parse`] 对偶，一如 `From` 之于 `Into`。
 pub trait Print {
-    /// 写出自定义形式，op 名在内。
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result;
 }
 
-/// ⭐ 从自定义形式读回 —— 和 [`Print`] 对偶。
-///
-/// **这一对的法则是 `parse(print(x)) == x`。** `#[mlir::op(format = "…")]` 由**一条格式串**
-/// 同时生成两侧，法则因此自动成立——这正是「实现 `From` 就白得 `Into`」的那个形状。
-/// 写 `custom` 的 op 自己写两侧，就脱离了这条保证：两个函数可以互相说谎，法则只能靠
-/// `tests/dialects.rs` 拿 `mlir-opt` 的真实输出去守。⛔ 所以 `custom` 是逃生口，不是选项，
-/// 能用格式串说清的就别手写。
 pub trait Parse: Sized {
-    /// 读 op 名之后的那一截。
     fn parse(p: &mut Parser<'_, '_>) -> R<Self>;
 }
 
 pub trait Op: Print + Parse + Serialize + DeserializeOwned {
-    /// Fully qualified name, e.g. `"arith.addi"`.
     const NAME: &'static str;
-    /// Each field's serde name, in order ([`Field::name`]): what `Deserialize` asks for.
     const KEYS: &'static [&'static str];
-    /// Each field, in the order of [`KEYS`](Self::KEYS); `#[mlir::op]` writes them.
     const FIELDS: &'static [Field];
-    /// ODS-style assembly format (see [`Elem`]).
     const FORMAT: &'static str;
-    /// Whether the op has a custom form; `false` (`#[mlir::op]` without `format`): it always prints
-    /// generic, typed conversions still work.
     const CUSTOM: bool = true;
 
-    /// The op out of its serialized fields (`Serialize` the other way round); `#[mlir::op]`
-    /// writes it — a field after another, no visitor per op.
     fn from_fields(f: &mut Fields) -> Result<Self, Error>;
 
-    /// The other way round: the fields by move, each serialized but a region, which goes as
-    /// itself ([`Content::region`]); `#[mlir::op]` writes it.
     fn into_fields(self) -> Result<Vec<(&'static str, Content)>, Error>;
 
-    /// The fields borrowed, each serialized (a region too); `#[mlir::op]` writes it.
     fn fields(&self) -> Result<Vec<(&'static str, Content)>, Error>;
 
-    /// The op's `Serialize`, shared by every op: its [`fields`](Self::fields) as a struct.
     #[inline]
     fn serialize_fields<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         Content::Struct(Self::NAME, self.fields().map_err(serde::ser::Error::custom)?).serialize(s)
     }
 
-    /// The op as its [`Content`], by move: what `Serialize` gives, regions left as they are.
     #[inline]
     fn into_content(self) -> Result<Content, Error> {
         Ok(Content::Struct(Self::NAME, self.into_fields()?))
     }
 
-    /// The op out of the [`Content`] of a struct.
     #[inline]
     fn from_content(c: Content) -> Result<Self, Error> {
         Self::from_fields(&mut Fields::try_from(c)?)
     }
 
-    /// This op written generically. A hand-written [`print`](Self::print) ends here whenever the
-    /// custom form cannot say what the op holds — the generic form always can, and is still
-    /// valid MLIR.
     #[inline]
     fn print_generic(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         p.generic(&Operation::of_op(self).map_err(|_| fmt::Error)?)
     }
 
-    /// Hands back an op that owns its text. A hand-written [`parse`](Self::parse) builds its op
-    /// out of pieces borrowed from the parser; those borrows end with the call, so the op it
-    /// returns has to be owned: its borrowed text is copied, the rest (regions above all) moves.
-    /// It takes the borrowed op as an argument rather than `self` because the two differ in lifetime.
     #[inline]
     fn owned<B: Op>(borrowed: B, p: &mut Parser<'_, '_>) -> R<Self> {
         borrowed.into_content().and_then(Self::from_content).or_else(|e| p.err(e.0))
     }
 
-    /// 照 [`FORMAT`](Self::FORMAT) 写出去 —— `#[mlir::op]` 生成的 [`Print`] 走这里。
     fn print_by_format(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         if !Self::CUSTOM {
             return self.print_generic(p);
@@ -414,7 +320,6 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
         Format::of::<Self>().map_err(|_| fmt::Error)?.print(self, p)
     }
 
-    /// 照 [`FORMAT`](Self::FORMAT) 读回来 —— `#[mlir::op]` 生成的 [`Parse`] 走这里。
     fn parse_by_format(p: &mut Parser<'_, '_>) -> R<Self> {
         if !Self::CUSTOM {
             return p.err(format!("`{}` has no custom form", Self::NAME));
@@ -422,7 +327,6 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
         Format::of::<Self>().or_else(|e| p.err(e.0))?.parse(p)
     }
 
-    /// ⭐ The op's blueprint: an empty template to inject into an [`MlirOpt`](crate::MlirOpt).
     fn template() -> Template
     where
         Self: 'static,
@@ -431,62 +335,38 @@ pub trait Op: Print + Parse + Serialize + DeserializeOwned {
     }
 }
 
-/// A typed op with its type erased: what an [`MlirOpt`](crate::MlirOpt) keeps in its op table.
 #[derive(Clone, Copy)]
 pub struct Template {
     pub name: &'static str,
-    /// Whether the typed op has a custom assembly format; `false` ⇒ it only ever prints generic
-    /// (ODS syntax the format engine cannot express, e.g. a C++ `print` / `parse`).
     pub custom: bool,
-    /// Custom form (after the name) → op.
     pub parse: for<'a> fn(&mut Parser<'a, '_>) -> R<Operation<'a>>,
-    /// Op → custom form; `None` when the op does not fit the typed op (it then prints generic).
     pub print: fn(&Operation<'_>, &mut Printer<'_, '_>) -> Option<fmt::Result>,
-    /// The properties the op declares a default for, with it (what an ODS builder sets).
     pub defaults: fn() -> Vec<NamedAttr<'static>>,
-    /// Its ODS format tokenized, if it has one: built once when an [`MlirOpt`](crate::MlirOpt)
-    /// takes the op, not once per op read or printed.
     pub format: fn() -> Option<Format<'static>>,
 }
 
-/// What ODS declares of a dialect as a whole (`Dialect` in `DialectBase.td`): the dialect-level
-/// counterpart of an op's traits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct DialectTraits {
-    /// `dependentDialects`: the namespaces loaded along with it.
     pub dependents: &'static [&'static str],
-    /// `hasConstantMaterializer`: it turns an attribute into one of its constant ops.
     pub constant_materializer: bool,
-    /// `hasCanonicalizer`: it has canonicalization patterns of its own, besides its ops'.
     pub canonicalizer: bool,
 }
 
-/// ⭐ A dialect (MLIR's `Dialect`): the value a context loads and keeps — its namespace, its
-/// traits, its ops with their ODS facts, and how its types and attributes read.
-/// `#[mlir::dialect("arith", ops = [..])]` implements it on a unit struct (`ArithDialect`);
-/// load one with `MlirOpt::load(ArithDialect)`.
 pub trait Dialect: Send + Sync {
-    /// Namespace, e.g. `"func"` for `func.call`, `!func.x`, `#func.x`.
     fn namespace(&self) -> &'static str;
 
-    /// What ODS declares of the dialect itself.
     #[inline]
     fn traits(&self) -> DialectTraits {
         DialectTraits::default()
     }
 
-    /// The op table.
     fn ops(&self) -> Vec<Template>;
 
-    /// Its ops' ODS facts (traits, effects, inherent attributes): the upstream rows of its
-    /// namespace.
     #[inline]
     fn op_infos(&self) -> Vec<crate::OpInfo> {
         crate::OpInfos::upstream().of_dialect(self.namespace())
     }
 
-    /// Structures the body of `!ns.name<...>` / `#ns.name<...>`, positioned at its opening
-    /// delimiter; `None` keeps it raw.
     #[inline]
     fn parse_params<'a>(&self, kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>> {
         let _ = (kind, name, p);
@@ -494,12 +374,6 @@ pub trait Dialect: Send + Sync {
     }
 }
 
-
-// ---- the serde data model ----------------------------------------------------------------
-
-/// ⭐ One value of the serde data model: typed op ⇄ [`Operation`] goes through it. It keeps
-/// integer widths and enum / variant / field names: enough to tell a `Type` from an `Attribute`
-/// from a plain Rust value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Content {
     Bool(bool),
@@ -524,17 +398,11 @@ pub enum Content {
     Seq(Vec<Content>),
     Map(Vec<(Content, Content)>),
     Struct(&'static str, Vec<(&'static str, Content)>),
-    /// `(enum, variant index, variant, payload)`.
     Variant(&'static str, u32, &'static str, Box<Payload>),
-    /// An attribute read off an op: deserializes as whatever the field asks for — `bool` (unit
-    /// attribute present), an integer / float / string, a user enum (case value or name), or the
-    /// `Attribute` itself.
     Attr(Attribute<'static>),
-    /// A region carried as itself ([`Content::region`]): nothing serialized, nothing copied.
     Region(Box<Region<'static>>),
 }
 
-/// What an enum variant carries.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Payload {
     Unit,
@@ -543,48 +411,25 @@ pub enum Payload {
     Struct(Vec<(&'static str, Content)>),
 }
 
-// ---- field roles -------------------------------------------------------------------------
-
-/// How a type variable the custom form does not spell is recovered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Infer {
-    /// Exactly `i1` (`cf.cond_br`'s condition).
     I1,
-    /// `i1` shaped like type variable `.0` (`arith.cmpi`'s result).
     I1Like(&'static str),
-    /// The type of attribute `.0` (`arith.constant`'s result).
     TypeOf(&'static str),
-    /// The same type(s) as type variable `.0` (`arith.mulsi_extended`'s high half).
     Same(&'static str),
-    /// Always type `.0` (`index`'s operands and results).
     Is(&'static str),
-    /// The element type of type variable `.0`: `complex<T>`, a tensor / vector / memref of `T` (`complex.re`'s result).
     ElemOf(&'static str),
-    /// The signless integer as wide as type variable `.0`'s leading dimension
-    /// (`x86.avx512.mask.scalef`'s mask: `vector<16xf32>` ⇒ `i16`).
     Width(&'static str),
-    /// Type variable `.0`'s vector with its trailing dim widened to 16 (`arm_sve.convert_from_svbool`'s
-    /// source: `vector<2x[4]xi1>` ⇒ `vector<2x[16]xi1>`).
     Svbool(&'static str),
-    /// The scalable square tile of type variable `.0`'s leading dim (`arm_sme.outerproduct`'s
-    /// result: `vector<[4]xf32>` ⇒ `vector<[4]x[4]xf32>`).
     OuterTile(&'static str),
-    /// `!llvm.struct<(T, i1)>` of type variable `.0` (`llvm.cmpxchg`'s result: the old value, whether it was
-    /// exchanged; upstream's `getValAndBoolStructType`).
     Pair(&'static str),
-    /// The field of type variable `.0` (an `!llvm.struct` / `!llvm.array`) at the `position` property
-    /// (`llvm.extractvalue`'s result; upstream's `custom<InsertExtractValueElementType>`).
     Field(&'static str),
 }
 
-/// A field's MLIR role, as `#[mlir::op]` writes it in [`Op::FIELDS`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
     Operand { ty: &'static str },
-    /// `strip`: a dialect type `type($x)` prints without its `!ns.name` (`<f32>`), unless `qualified`.
     Type { result: Option<usize>, infer: Option<Infer>, strip: Option<&'static str> },
-    /// `optional`: the `default` is ODS's `DefaultValuedOptionalAttr`'s, which only elides it in
-    /// print; parsing and building leave it absent.
     Prop { unit: bool, int: Option<&'static str>, dialect: Option<&'static str>, default: Option<&'static str>, dense: Option<&'static str>, symbol: bool, bits: Option<&'static str>, optional: bool },
     Region,
     Successor,
@@ -592,40 +437,27 @@ pub enum Role {
     Loc,
 }
 
-/// One field of a typed op: `#[mlir::op]` writes them as constants ([`Op::FIELDS`]).
 #[derive(Debug, Clone, Copy)]
 pub struct Field {
-    /// The MLIR-facing name (`$name` in the format, the property name), also the serde name;
-    /// `{}` for the discardable attributes, `@` for the location.
     pub name: &'static str,
     pub variadic: bool,
     pub role: Role,
-    /// The field's Rust type.
     pub ty: FieldType,
 }
 
-/// A typed op's shape: its name (the struct's serde name) and fields.
 #[derive(Debug, Clone, Copy)]
 pub struct Schema {
     pub name: &'static str,
     pub fields: &'static [Field],
 }
 
-/// ⭐ How a property field's Rust type holds its attribute: `#[mlir::op]` says it of each field
-/// ([`Field::ty`]), so an op is read and written through its schema without building the typed
-/// op — only a field of another Rust type goes through it, and only that field.
 #[derive(Clone, Copy)]
 pub enum FieldType {
-    /// An `Attribute` (`required`) or an `Option<Attribute>` — or not a property at all: the
-    /// attribute as it is.
     Attr { required: bool },
-    /// Any other Rust type (a user enum, a number, a string, `bool`): what the field makes of an
-    /// attribute, `Content::Attr` in and the field's own [`Content`] out.
     Typed(fn(Content) -> Result<Content, Error>),
 }
 
 impl FieldType {
-    /// [`Typed`](Self::Typed) for a field of type `T`: generic in the field's type, not the op's.
     #[inline]
     pub const fn of<T: Serialize + DeserializeOwned>() -> Self {
         Self::Typed(Self::through::<T>)
@@ -657,7 +489,6 @@ impl Schema {
         self.fields.iter().filter(move |f| pick(&f.role))
     }
 
-    /// The properties declaring a default, with it (what an ODS builder sets).
     #[inline]
     pub fn defaults(&self) -> Vec<NamedAttr<'static>> {
         self.of_role(|r| matches!(r, Role::Prop { optional: false, .. })).filter_map(|f| f.default_attr().map(|a| NamedAttr::of(f.name, a))).collect()
@@ -665,7 +496,6 @@ impl Schema {
 }
 
 impl Field {
-    /// The element type of a dense array property, which the custom form does not print.
     pub fn dense_ty(&self) -> Option<Type<'static>> {
         let Role::Prop { dense: Some(el), .. } = self.role else { return None };
         Some(match el {
@@ -680,15 +510,12 @@ impl Field {
         })
     }
 
-    /// A dialect enum spelled by its bare case (`gpu<dim` ⇒ `x` for `#gpu<dim x>`): the
-    /// namespace and the mnemonic.
     #[inline]
     pub fn keyword_dialect(&self) -> Option<(&'static str, &'static str)> {
         let Role::Prop { dialect: Some(d), .. } = self.role else { return None };
         d.split_once('<')
     }
 
-    /// A bit enum property's cases (`overflow<nsw, nuw>`).
     pub fn bit_enum(&self) -> Option<BitEnum> {
         let Role::Prop { bits: Some(b), .. } = self.role else { return None };
         let mut parts = b.splitn(3, '/');
@@ -697,10 +524,8 @@ impl Field {
         Some(BitEnum { mnemonic, sep, cases })
     }
 
-    /// A property's default value (`#dialect.attr<default>`, or an integer `0 : i64`).
     pub fn default_attr(&self) -> Option<Attribute<'static>> {
         match self.role {
-            // An `I1Attr` is a bool (`DefaultValuedAttr<I1Attr, "0">` is `false`).
             Role::Prop { int: Some("i1"), default: Some(v), dialect: None, .. } => return Some(Attribute::Bool(!matches!(v, "0" | "false"))),
             Role::Prop { int: Some(t), default: Some(v), dialect: None, .. } => return Some(Attribute::Int { lit: Str::Borrowed(v), ty: Type::try_from(t).ok() }),
             Role::Prop { int: None, default: Some(v @ ("true" | "false")), dialect: None, .. } => return Some(Attribute::Bool(v == "true")),
@@ -715,18 +540,13 @@ impl Field {
     }
 }
 
-/// A bit enum property (`NamedEnumProp<IntegerOverflowFlags, "overflow">`, `EnumProp<GEPNoWrapFlags>`):
-/// stored as its integer, spelled as its set cases.
 pub struct BitEnum {
-    /// `overflow` ⇒ `overflow<...>`; empty: the cases alone.
     pub mnemonic: &'static str,
     pub sep: &'static str,
-    /// `(keyword, value)`; a group's value has several bits.
     pub cases: Vec<(&'static str, u64)>,
 }
 
 impl BitEnum {
-    /// The cases of `value`, groups first (`printBitEnumPrimaryGroups`): `inbounds|nuw`.
     pub fn show(&self, value: u64) -> String {
         let (groups, single): (Vec<_>, Vec<_>) = self.cases.iter().filter(|(_, v)| *v != 0).partition(|(_, v)| v.count_ones() > 1);
         let mut left = value;
@@ -744,7 +564,6 @@ impl BitEnum {
         if self.mnemonic.is_empty() { list } else { format!("{}<{list}>", self.mnemonic) }
     }
 
-    /// The value of case `word`.
     #[inline]
     pub fn value(&self, word: &str) -> Option<u64> {
         self.cases.iter().find(|(k, _)| *k == word).map(|(_, v)| *v)
@@ -752,10 +571,6 @@ impl BitEnum {
 }
 
 impl Module<'_> {
-    /// The attribute aliases the module defines, each as `(name, the attribute's text)`. An op
-    /// whose custom form has to look inside an alias — an `affine` memory op and its `#map` —
-    /// reads it back from here, through [`Printer::alias`](crate::Printer::alias) or
-    /// [`Parser::alias`](crate::Parser::alias).
     pub fn aliases(&self) -> Vec<(String, String)> {
         self.items
             .iter()
@@ -767,48 +582,20 @@ impl Module<'_> {
     }
 }
 
-// ---- assembly formats --------------------------------------------------------------------
-
-/// One element of an ODS-style assembly format.
-///
-/// ```text
-/// `lit`                     literal (keyword or punctuation; `` `` `` suppresses the next space, `` ` ` `` writes one)
-/// $x                        a field: operand(s), type variable, property, successor, region
-/// type($x)                  the type(s) of operand group `x` (or type variable `x`)
-/// functional-type($a, $b)   `(types of a) -> types of b`; each side may list several,
-///                           space-separated (`functional-type($x $y, $r)`: ODS's `operands`)
-/// attr-dict                 discardable attributes and the properties the format does not spell
-/// ( ... $x^ ... )?          optional group, present when anchor `x` is (non-empty / true / not default)
-/// custom<X>($a, $b)         a directive declared in [`crate::syntax`], expanded here and now
-/// oilist(`a` $x | `b` $y)   clauses in any order, each at most once, each present with its first
-///                           variable (ODS `OIListElement`)
-/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Elem<'f> {
     Lit(&'f str),
     Var(&'f str),
-    /// `qualified($x)`: an attribute variable printed with its dialect prefix.
     QVar(&'f str),
-    /// `type($x)`; `true` inside `qualified(...)`.
     TypeOf(&'f str, bool),
-    /// `functional-type(..)`: the inputs' and the results' variables, in order.
     FnType(Vec<&'f str>, Vec<&'f str>),
-    /// `attr-dict`; `true` for `attr-dict-with-keyword` (`attributes {...}`).
     AttrDict(bool),
     Group { anchor: &'f str, elems: Vec<Elem<'f>> },
-    /// One list, two co-indexed fields: `integers` holds each static item, and the `kDynamic`
-    /// sentinel wherever the item is the next operand of `values` instead. ODS has no way to
-    /// say this, which is why upstream drops to C++ for it — see [`crate::syntax`].
     Zip { integers: &'f str, values: &'f str },
-    /// What a `custom<X>(...)` call site stands for. It stays one element, because that is what
-    /// ODS spaces it as: the parts inside are written tight, however they are declared.
     Custom { name: &'f str, parts: Vec<Elem<'f>> },
-    /// `oilist(..|..)`: its clauses, each a [`Elem::Group`] anchored at its first variable; read
-    /// in any order, printed in this one.
     OiList(Vec<Elem<'f>>),
 }
 
-/// A tokenized assembly format with its op's schema.
 pub struct Format<'f> {
     pub elems: Vec<Elem<'f>>,
     pub schema: Schema,
@@ -833,7 +620,6 @@ impl<'f> Format<'f> {
         self.schema.field(name).ok_or_else(|| format!("{}: format names no field `{name}`", self.schema.name).into())
     }
 
-    /// `type($x)`: `x` if it is a type variable, else its operand group's type variable.
     pub fn type_var(&self, name: &str) -> Result<&Field, Error> {
         let f = self.field(name)?;
         match f.role {
@@ -843,9 +629,6 @@ impl<'f> Format<'f> {
         }
     }
 
-    /// How many times `type($name)` spells its type variable `var`: once per operand when `name`
-    /// is a variadic group whose operands share one type (`amdgpu.raw_buffer_load`'s
-    /// `type($indices)`: `i32, i32`), else once. `len`: the group's operand count.
     pub fn shared_count(&self, name: &str, var: &Field, len: impl FnOnce(&Field) -> usize) -> usize {
         match self.schema.field(name) {
             Some(f) if f.variadic && !var.variadic && matches!(f.role, Role::Operand { .. }) => len(f).max(1),
@@ -853,14 +636,10 @@ impl<'f> Format<'f> {
         }
     }
 
-    /// Is variable `name` followed by a `:` literal (`attr-dict` aside)? Its attribute then
-    /// carries no `: type` suffix.
     pub fn before_colon(&self, name: &str) -> bool {
         let mut flat = Vec::new();
         Elem::flatten(&self.elems, &mut flat);
         let mut after = flat.into_iter().skip_while(|e| **e != Elem::Var(name) && **e != Elem::QVar(name)).skip(1);
-        // Past `attr-dict` and variadic operands, which may both be empty (`llvm.inline_asm`'s
-        // `$constraints $operands `:``).
         let maybe_empty = |e: &&Elem<'_>| match e {
             Elem::AttrDict(_) => true,
             Elem::Var(n) => self.schema.field(n).is_some_and(|f| f.variadic && matches!(f.role, Role::Operand { .. })),
@@ -869,15 +648,12 @@ impl<'f> Format<'f> {
         after.find(|e| !maybe_empty(e)) == Some(&Elem::Lit(":"))
     }
 
-    /// Does the format have `attr-dict-with-keyword`? Its `attributes` then starts the dictionary
-    /// (`gpu.module @m attributes {..}`), not a value.
     pub fn keyword_dict(&self) -> bool {
         let mut flat = Vec::new();
         Elem::flatten(&self.elems, &mut flat);
         flat.contains(&&Elem::AttrDict(true))
     }
 
-    /// Is `word` one of the format's literals?
     #[inline]
     pub fn literal(&self, word: &str) -> bool {
         let mut flat = Vec::new();
@@ -885,7 +661,6 @@ impl<'f> Format<'f> {
         flat.contains(&&Elem::Lit(word))
     }
 
-    /// Fields the format spells by name (the other properties go through `attr-dict`).
     #[inline]
     pub fn spelled(&self) -> Vec<&'f str> {
         let mut out = Vec::new();
@@ -895,7 +670,6 @@ impl<'f> Format<'f> {
 }
 
 impl<'f> Elem<'f> {
-    /// Elements up to the end of the input or a group's closing `)`.
     fn list(mut rest: &'f str, op: &str) -> Result<(Vec<Self>, &'f str), Error> {
         let bad = |m: String| Error(format!("{op}: format: {m}"));
         let var = |s: &'f str| -> Result<(&'f str, &'f str), Error> {
@@ -931,13 +705,11 @@ impl<'f> Elem<'f> {
                 }
                 Some('(') => {
                     let (elems, tail) = Self::list(&rest[1..], op)?;
-                    // `$x^`, or `type($x)^`, outside any nested group: the anchor is `x`.
                     let anchor = Self::anchor(&rest[1..]).ok_or_else(|| bad("a group needs an anchor `$x^`".into()))?;
                     (Self::Group { anchor, elems }, tail.strip_prefix(")?").ok_or_else(|| bad("a group must end with `)?`".into()))?)
                 }
                 _ if rest.starts_with("attr-dict-with-keyword") => (Self::AttrDict(true), &rest["attr-dict-with-keyword".len()..]),
                 _ if rest.starts_with("attr-dict") => (Self::AttrDict(false), &rest["attr-dict".len()..]),
-                // `qualified(x)`: types and attributes always print with their dialect prefix here.
                 _ if rest.starts_with("qualified(") => {
                     let (mut inner, tail) = Self::list(&rest["qualified(".len()..], op)?;
                     let (Some(elem), true) = (inner.pop(), inner.is_empty()) else { return Err(bad("`qualified(...)` takes one element".into())) };
@@ -954,7 +726,6 @@ impl<'f> Elem<'f> {
                     (Self::TypeOf(name, false), tail.strip_prefix('^').unwrap_or(tail))
                 }
                 _ if rest.starts_with("functional-type(") => {
-                    // One side: `$a`, or `$a $b ..`.
                     let side = |mut s: &'f str, end: char| -> Result<(Vec<&'f str>, &'f str), Error> {
                         let mut names = Vec::new();
                         loop {
@@ -977,7 +748,6 @@ impl<'f> Elem<'f> {
         }
     }
 
-    /// `oilist(..|..)` past its `(`: each clause a group anchored at its first variable.
     fn oilist(mut rest: &'f str, op: &str) -> Result<(Self, &'f str), Error> {
         let bad = |m: &str| Error(format!("{op}: format: oilist: {m}"));
         let mut clauses = Vec::new();
@@ -995,7 +765,6 @@ impl<'f> Elem<'f> {
         }
     }
 
-    /// The `^` of a group's own elements (`group` past its `(`), not of a group nested in it.
     fn anchor(group: &'f str) -> Option<&'f str> {
         let (mut depth, mut quoted) = (0usize, false);
         for (i, c) in group.char_indices() {
@@ -1016,7 +785,6 @@ impl<'f> Elem<'f> {
         None
     }
 
-    /// Elements in order, groups opened.
     fn flatten<'x>(elems: &'x [Self], out: &mut Vec<&'x Self>) {
         for e in elems {
             match e {
@@ -1030,7 +798,6 @@ impl<'f> Elem<'f> {
         for e in elems {
             match e {
                 Self::Var(n) | Self::QVar(n) => out.push(n),
-                // Both halves are spelled by the list, so neither goes through `attr-dict`.
                 Self::Zip { integers, values } => out.extend([integers, values]),
                 Self::Group { elems, .. } | Self::Custom { parts: elems, .. } | Self::OiList(elems) => Self::names(elems, out),
                 _ => {}
@@ -1038,15 +805,12 @@ impl<'f> Elem<'f> {
         }
     }
 
-    /// Tokenizes without a schema: what `mlirformat tblgen` asks before it keeps a format, so
-    /// an unknown directive or a wrong argument count makes the op generic instead of broken.
     #[inline]
     pub fn check(src: &'f str, op: &str) -> Result<(), Error> {
         let (_, rest) = Self::list(src, op)?;
         if rest.trim().is_empty() { Ok(()) } else { Err(Error(format!("{op}: format: unexpected `{rest}`"))) }
     }
 
-    /// `custom<Name>(a, b)`, past the `custom<` ⇒ what the rule stands for, and the rest.
     fn custom(after: &'f str, op: &str) -> Result<(Self, &'f str), Error> {
         let bad = |m: String| Error(format!("{op}: format: {m}"));
         let (name, tail) = after.split_once('>').ok_or_else(|| bad("`custom<` without its `>`".into()))?;
@@ -1064,7 +828,6 @@ impl<'f> Elem<'f> {
         Ok((Self::Custom { name, parts }, &tail[end + 1..]))
     }
 
-    /// Where the `)` closing the paren we are inside sits; literals may hold parens of their own.
     fn close(s: &str) -> Option<usize> {
         let (mut depth, mut lit) = (0i32, false);
         for (i, c) in s.char_indices() {
@@ -1080,7 +843,6 @@ impl<'f> Elem<'f> {
         None
     }
 
-    /// The argument list's top-level pieces.
     fn pieces(s: &'f str) -> Vec<&'f str> {
         let (mut out, mut depth, mut lit, mut start) = (Vec::new(), 0i32, false, 0usize);
         for (i, c) in s.char_indices() {

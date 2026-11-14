@@ -1,16 +1,3 @@
-//! Op coverage over the `mlir-opt` fixtures: per dialect, how many op occurrences (and distinct ops)
-//! the upstream op table knows and converts to a typed op. Run with `--nocapture` for the table.
-//!
-//! Locked in: every registered dialect covers every one of its ops that the fixtures use, except
-//! the ops upstream defines in C++ instead of ODS (`NOT_IN_ODS`). An op whose typed op is
-//! generic-only (`#[mlir::op]` without `format`: ODS syntax the format engine cannot express) prints
-//! generic by design and is counted as such, not as a decline.
-//!
-//! A decline (an op with a custom form that its typed op cannot print) fails for the hand-written
-//! dialects, where every op was written against `mlir-opt`'s output. For the dialects generated
-//! from ODS (`GENERATED`) it is only counted: they fall back to the generic form, which is valid
-//! MLIR, and `tests/dialects.rs` checks every custom form they do print against `mlir-opt`.
-
 mod common;
 
 use std::collections::BTreeMap;
@@ -18,19 +5,13 @@ use std::collections::BTreeMap;
 use common::Fixtures;
 use mlirformat::{MlirOpt, Printer};
 
-/// One dialect's tally.
 #[derive(Default)]
 struct Tally {
-    /// Occurrences of each op name.
     ops: BTreeMap<String, usize>,
-    /// Occurrences the op table knows / converts.
     known: usize,
     converted: usize,
-    /// Distinct op names the op table does not know.
     missing: BTreeMap<String, usize>,
-    /// Occurrences of ops whose typed op is generic-only.
     generic: usize,
-    /// Known ops with a custom form left generic.
     declined: Vec<String>,
 }
 
@@ -40,22 +21,15 @@ impl Tally {
     }
 }
 
-/// What the op table makes of one op.
 enum Seen {
     Missing,
     Converted,
-    /// The typed op is generic-only: it prints generic by design.
     Generic,
     Declined(String),
 }
 
-/// Ops that upstream defines in C++ rather than in ODS, so `mlirformat tblgen` cannot see them:
-/// `affine.dma_start` / `affine.dma_wait` are `AffineDmaStartOp` / `AffineDmaWaitOp` in
-/// `mlir/Dialect/Affine/IR/AffineOps.h` (LLVM 23.1.5). `shape.print` / `shape.unknown_shape` are
-/// defined nowhere: `mlir/test/Dialect/Shape/ops.mlir` writes them in generic form, unregistered.
 const NOT_IN_ODS: &[&str] = &["affine.dma_start", "affine.dma_wait", "shape.print", "shape.unknown_shape"];
 
-/// The built-in dialects that come from `mlirformat tblgen` (`src/dialects/*.gen.rs`).
 const GENERATED: &[&str] = &["affine", "async", "bufferization", "emitc", "gpu", "linalg", "llvm", "memref", "pdl", "scf", "shape", "tensor", "tosa", "vector", "amdgpu", "arm_neon", "arm_sme", "arm_sve", "nvgpu", "nvvm", "rocdl", "spirv", "xegpu", "xevm"];
 
 fn percent(part: usize, whole: usize) -> f64 {

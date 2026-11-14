@@ -1,15 +1,8 @@
-//! A dialect defined outside `mlirformat`: structs with `#[mlir::op]`, an enum with
-//! `#[mlir::dialect]` struct, then `MlirOpt::load(SampleDialect)`. It covers every role: operands
-//! (single, variadic, several variadic groups), type variables (spelled, inferred), properties
-//! (number, enum, unit, optional, dense array, attr-dict), regions, successors, a hand-written
-//! op and a type-parameter hook.
-
 use core::fmt::{self, Write};
 
 use mlirformat::{Attribute, Content, Op, Parse, Parser, Print, Printer, R, Region, Str, SymKind, Type, Value, mlir};
 use serde::{Deserialize, Serialize};
 
-/// `sample.add %a, %b : T`
 #[mlir::op("sample.add", format = "$lhs `,` $rhs attr-dict `:` type($result)", results(result))]
 pub struct Add<'a> {
     #[slot(result)]
@@ -19,8 +12,6 @@ pub struct Add<'a> {
     pub result: Type<'a>,
 }
 
-/// `sample.scale %x {factor = 3 : i64} : T`: a property the format does not spell goes
-/// through `attr-dict`.
 #[mlir::op("sample.scale", format = "$input attr-dict `:` type($result)", results(result))]
 pub struct Scale<'a> {
     #[slot(result)]
@@ -29,7 +20,6 @@ pub struct Scale<'a> {
     pub result: Type<'a>,
 }
 
-/// Rounding modes: case value 0 / 1 in generic form, the keyword in custom form.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Mode {
@@ -37,7 +27,6 @@ pub enum Mode {
     Zero,
 }
 
-/// `sample.round zero %x : f32 -> i32`
 #[mlir::op("sample.round", format = "$mode $input attr-dict `:` type($input) `->` type($result)", results(result))]
 pub struct Round<'a> {
     pub mode: Mode,
@@ -47,8 +36,6 @@ pub struct Round<'a> {
     pub result: Type<'a>,
 }
 
-/// `sample.tag %x unit_flag? note "..." : T`: optional groups anchored on a unit property and
-/// an optional string.
 #[mlir::op("sample.tag", format = "$input (`checked` $checked^)? (`note` $note^)? attr-dict `:` type($input)")]
 pub struct Tag<'a> {
     #[slot(ty)]
@@ -58,7 +45,6 @@ pub struct Tag<'a> {
     pub ty: Type<'a>,
 }
 
-/// `sample.loop %lo to %hi { ... } : index`: a region.
 #[mlir::op("sample.loop", format = "$lower `to` $upper $body attr-dict `:` type($lower)")]
 pub struct Loop<'a> {
     #[slot(ty)]
@@ -69,7 +55,6 @@ pub struct Loop<'a> {
     pub ty: Type<'a>,
 }
 
-/// `sample.jump ^bb1(%x : i32)`: a successor with its operands.
 #[mlir::op("sample.jump", format = "$dest (`(` $args^ `:` type($args) `)`)? attr-dict")]
 pub struct Jump<'a> {
     #[successor]
@@ -79,8 +64,6 @@ pub struct Jump<'a> {
     pub arg_types: Vec<Type<'a>>,
 }
 
-/// `sample.pack lhs(%a) rhs(%b, %c) : (i32) (f32, f32)`: two variadic groups
-/// (`operandSegmentSizes` in generic form).
 #[mlir::op("sample.pack", format = "`lhs` `(` $lhs `)` `rhs` `(` $rhs `)` attr-dict `:` `(` type($lhs) `)` `(` type($rhs) `)`")]
 pub struct Pack<'a> {
     #[slot(lhs_types)]
@@ -91,7 +74,6 @@ pub struct Pack<'a> {
     pub rhs_types: Vec<Type<'a>>,
 }
 
-/// `sample.weights %x [1, 2, 3] : i32`: a `Vec<i64>` property is a dense array.
 #[mlir::op("sample.weights", format = "$input $weights attr-dict `:` type($input)")]
 pub struct Weights<'a> {
     #[slot(ty)]
@@ -100,7 +82,6 @@ pub struct Weights<'a> {
     pub ty: Type<'a>,
 }
 
-/// `sample.comment "text"`: hand-written syntax (`custom`), no lifetime.
 #[mlir::op("sample.comment", custom)]
 pub struct Comment {
     pub text: String,
@@ -125,7 +106,6 @@ impl Parse for Comment {
     }
 }
 
-/// Structures `!sample.vec<4 x f32>` into `[4 : index, f32]`.
 fn params<'a>(kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec<Attribute<'a>>>> {
     (kind == SymKind::Type && name == "sample.vec").then(|| {
         p.expect("<")?;
@@ -137,7 +117,6 @@ fn params<'a>(kind: SymKind, name: &str, p: &mut Parser<'a, '_>) -> Option<R<Vec
     })
 }
 
-/// The `sample` dialect.
 #[mlir::dialect("sample", ops = [Add, Scale, Round, Tag, Loop, Jump, Pack, Weights, Comment], params = params)]
 pub struct SampleDialect;
 

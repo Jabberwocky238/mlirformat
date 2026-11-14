@@ -1,16 +1,9 @@
-//! ⭐ The affine sub-language against `mlir-opt` 23.1.5: every `affine_map<...>` and
-//! `affine_set<...>` body in the custom-form fixtures must parse, and print back byte for byte.
-//! Those fixtures are mlir-opt's own output, so printing differently means printing something
-//! MLIR would not. (`tests/fixtures/upstream` is the original test input, spacing and redundant
-//! parentheses included, so it says nothing about how MLIR prints.)
-
 mod common;
 
 use mlirformat::affine_expr::{Map, Set};
 use std::fmt::Display;
 use std::path::Path;
 
-/// The bodies of every `tag<...>` in `src`, brackets excluded and nesting respected.
 fn bodies<'a>(src: &'a str, tag: &str) -> Vec<&'a str> {
     let mut out = Vec::new();
     let (mut rest, open) = (src, format!("{tag}<"));
@@ -19,7 +12,6 @@ fn bodies<'a>(src: &'a str, tag: &str) -> Vec<&'a str> {
         let b = body.as_bytes();
         let (mut depth, mut end) = (1usize, None);
         for k in 0..b.len() {
-            // `->` and `>=` are not brackets.
             let arrow = (b[k] == b'>' && k > 0 && b[k - 1] == b'-') || (b[k] == b'>' && b.get(k + 1) == Some(&b'='));
             match b[k] {
                 b'<' => depth += 1,
@@ -44,7 +36,6 @@ fn bodies<'a>(src: &'a str, tag: &str) -> Vec<&'a str> {
     out
 }
 
-/// Round trips every body of one kind, returning the ones that did not come back identical.
 fn check<'a, T>(src: &'a str, tag: &str) -> Vec<String>
 where
     T: TryFrom<&'a str> + Display,
@@ -52,14 +43,12 @@ where
 {
     let mut bad = Vec::new();
     for body in bodies(src, tag) {
-        // FileCheck patterns are not MLIR.
         if body.contains("{{") || body.contains("[[") {
             continue;
         }
         match T::try_from(body) {
             Ok(v) => {
                 let back = v.to_string();
-                // The source may be laid out over several lines; compare without that.
                 let tidy = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
                 if tidy(&back) != tidy(body) {
                     bad.push(format!("{tag}<{body}> printed back as <{back}>"));
@@ -87,8 +76,6 @@ fn affine_bodies_round_trip() {
     assert!(bad.is_empty(), "{} failures:\n{}", bad.len(), bad.iter().take(30).cloned().collect::<Vec<_>>().join("\n"));
 }
 
-/// The substitution an `affine` op's custom form needs: `affine.load %A[%i + 1]` is the map
-/// `(d0) -> (d0 + 1)` shown against the operand `%i`.
 #[test]
 fn a_map_shows_against_operands() {
     let map = Map::try_from("(d0)[s0] -> (d0 + 1, s0 * 2, d0 floordiv 4)").expect("parse");
@@ -97,8 +84,6 @@ fn a_map_shows_against_operands() {
     assert_eq!(shown, ["%i + 1", "%n * 2", "%i floordiv 4"]);
 }
 
-/// `affine.store` has no result (only `affine.load` does): a module mlir-opt 23.1.5 printed
-/// (`affine.for` over a load and a store) parses and prints back byte for byte.
 #[test]
 fn a_store_has_no_result() {
     let mlir_opt = "module {

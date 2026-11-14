@@ -1,5 +1,3 @@
-//! `cf` (subset).
-
 use alloc::format;
 use alloc::string::String;
 use alloc::vec;
@@ -48,14 +46,6 @@ pub struct Assert<'a> {
     pub arg_ty: Type<'a>,
 }
 
-/// ```mlir
-/// cf.switch %flag : i32, [
-///   default: ^bb1(%a : f32),
-///   42: ^bb2(%b, %c : f32, f32),
-///   43: ^bb3
-/// ]
-/// ```
-/// Hand-written syntax: one case per line, case values printed unsigned (`-1 : i32` ⇒ `4294967295`).
 #[mlir::op("cf.switch", custom)]
 pub struct Switch<'a> {
     #[slot(flag_ty)]
@@ -68,16 +58,13 @@ pub struct Switch<'a> {
     pub default_destination: Str<'a>,
     #[successor(name = "caseDestinations")]
     pub case_destinations: Vec<Str<'a>>,
-    /// `dense<[v, …]> : vector<NxT>` (absent without cases).
     pub case_values: Option<Attribute<'a>>,
-    /// `array<i32: n, …>`: operands per case.
     pub case_operand_segments: Attribute<'a>,
     pub flag_ty: Type<'a>,
     pub default_types: Vec<Type<'a>>,
     pub case_types: Vec<Type<'a>>,
 }
 
-/// One destination: `^bb(%a, %b : T, U)` or `^bb`.
 struct Dest<'x, 'a>(&'x str, &'x [Value<'a>], &'x [Type<'a>]);
 
 impl fmt::Display for Dest<'_, '_> {
@@ -96,7 +83,6 @@ impl fmt::Display for Dest<'_, '_> {
 }
 
 impl<'a> Switch<'a> {
-    /// The flag's bit width (`index` counts as 64).
     fn width(&self) -> u32 {
         match self.flag_ty {
             Type::Integer { width, .. } => width,
@@ -104,7 +90,6 @@ impl<'a> Switch<'a> {
         }
     }
 
-    /// Case values, signed (a splat repeats to the vector's length).
     fn values(&self) -> Option<Vec<i128>> {
         let Some((name, body, Some(Shaped { shape: Some(dims), .. }))) = self.case_values.as_ref().and_then(|a| match a {
             Attribute::Builtin { name, body, ty: Some(t) } => Some((name, body, t.shaped())),
@@ -122,14 +107,12 @@ impl<'a> Switch<'a> {
         }
     }
 
-    /// Operands per case.
     #[inline]
     fn segments(&self) -> Option<Vec<usize>> {
         let Attribute::DenseArray { values, .. } = &self.case_operand_segments else { return None };
         values.iter().map(|v| v.parse().ok()).collect()
     }
 
-    /// Reads one destination: `^bb(%a, %b : T, U)` or `^bb`.
     #[allow(clippy::type_complexity)]
     fn dest<'s>(p: &mut Parser<'s, '_>) -> R<(Str<'s>, Vec<Value<'s>>, Vec<Type<'s>>)> {
         let name = Str::Borrowed(p.sigil('^')?);
@@ -149,7 +132,6 @@ impl<'a> Switch<'a> {
         Ok((name, values, types))
     }
 
-    /// `dense<…> : vector<NxT>` of these values (a splat when they are all equal).
     fn dense(values: &[i128], flag_ty: &Type<'a>) -> Attribute<'a> {
         let body = match values {
             [first, rest @ ..] if rest.iter().all(|v| v == first) => format!("<{first}>"),
@@ -160,7 +142,6 @@ impl<'a> Switch<'a> {
         Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(*alloc::boxed::Box::new(ty)) }
     }
 }
-
 
 impl Print for Switch<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -211,7 +192,6 @@ impl Parse for Switch<'_> {
         let (mut values, mut segments, mut case_destinations, mut case_operands, mut case_types) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
         while p.eat(",") {
             let raw = p.bare_attr()?.int().or_else(|e| p.err(e.0))?;
-            // Printed unsigned: back to the signed value of the flag's width.
             let modulus = 1i128 << width;
             values.push(if raw >= modulus / 2 { raw - modulus } else { raw });
             p.expect(":")?;
@@ -240,7 +220,6 @@ impl Parse for Switch<'_> {
     }
 }
 
-/// The `cf` dialect.
 #[mlir::dialect(
     "cf",
     ops = [Br, CondBr, Assert, Switch],

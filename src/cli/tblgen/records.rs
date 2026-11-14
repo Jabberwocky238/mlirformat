@@ -1,27 +1,9 @@
-//! ⭐ The records behind `mlirformat tblgen`: MLIR ODS (`.td`) → `<dialect>.gen.rs`, one `#[mlir::op]` struct per op and a
-//! `#[mlir::dialect]` struct listing them. TableGen itself resolves the records (`--dump-json`, classes,
-//! `let`s and multiclasses included); this file only reads them.
-//!
-//! ```text
-//! operands     #[slot(T)]; Variadic / Optional ⇒ Vec
-//! results      #[dtype], in order (`results(...)`)
-//! type vars    one per class of SameOperandsAndResultType / SameTypeOperands / AllTypesMatch /
-//!              TypesMatchWith; unspelled ones inferred: i1 like (`getI1SameShape`), element type,
-//!              a buildable type (`I1`, `Index`, …)
-//! properties   UnitAttr ⇒ bool; integer enums ⇒ a Rust enum (`TryFrom<i64>` by case value); dialect
-//!              enum attrs (`#arith.overflow<…>`) ⇒ #[attr(dialect, default)]; the rest ⇒ Attribute;
-//!              Option when optional or defaulted (`None`: the default)
-//! regions / successors   #[region] / #[successor], variadic ⇒ Vec
-//! assemblyFormat         kept as is; C++ syntax or unsupported directives ⇒ `generic`
-//! ```
-
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use serde_json::{Map, Value as Json};
 
-/// Why records could not be read.
 #[derive(Debug)]
 pub enum TdError {
     Tblgen(String),
@@ -37,48 +19,32 @@ impl std::fmt::Display for TdError {
     }
 }
 
-/// ⭐ The resolved TableGen records of one `.td` file (`llvm-tblgen --dump-json`).
 pub struct Records {
     all: Map<String, Json>,
-    /// The `.td` file's name: ops defined in it are the ones generated.
     file: String,
 }
 
-/// One dialect to generate.
 pub struct GenDialect {
-    /// Namespace (`arith`).
     pub name: String,
     pub ops: Vec<GenOp>,
-    /// Integer enums the ops use: name ⇒ cases `(keyword, value)`.
     pub enums: BTreeMap<String, Vec<(String, i64)>>,
-    /// What the `Dialect` record declares: `dependentDialects` (as namespaces),
-    /// `hasConstantMaterializer`, `hasCanonicalizer`.
     pub dependents: Vec<String>,
     pub materializer: bool,
     pub canonicalizer: bool,
 }
 
-/// One op to generate.
 pub struct GenOp {
-    /// Rust struct name (`AddIOp`).
     pub rust: String,
-    /// Full op name (`arith.addi`).
     pub name: String,
     pub summary: String,
-    /// The ODS `description`, dedented.
     pub description: String,
-    /// `None` ⇒ generic form only.
     pub format: Option<String>,
-    /// Why there is no custom form (for the doc comment).
     pub generic_why: Option<String>,
     pub results: Vec<String>,
     pub fields: Vec<GenField>,
 }
 
 impl GenOp {
-    /// The text without its common indentation and the blank lines around it, as Python's
-    /// `inspect.cleandoc`: the first line is stripped on its own (it often follows `[{` directly),
-    /// the others lose the indentation they share.
     fn dedent(text: &str) -> String {
         let text = text.trim_start_matches(['\n', '\r']);
         let mut lines: Vec<&str> = text.lines().map(str::trim_end).collect();
@@ -92,10 +58,6 @@ impl GenOp {
         lines.join("\n").trim_matches('\n').to_string()
     }
 
-    /// ⭐ The description as rustdoc lines (after a blank `///`): Markdown kept, but no code
-    /// block is ever a doctest — a fence without a language (or with only pandoc attributes,
-    /// ```` ``` {.ebnf} ````, which rustdoc reads as no language) and an indented block become
-    /// ```` ```text ````; a fenced block keeps its language (`mlir` is not Rust to rustdoc).
     fn doc(&self) -> Vec<String> {
         if self.description.is_empty() {
             return Vec::new();
@@ -130,7 +92,6 @@ impl GenOp {
         out
     }
 
-    /// Ends an open code block (its trailing blank lines dropped).
     fn close(out: &mut Vec<String>) {
         while out.last().is_some_and(String::is_empty) {
             out.pop();
@@ -139,7 +100,6 @@ impl GenOp {
     }
 }
 
-/// One struct field: marker attribute, Rust name and type.
 pub struct GenField {
     pub marker: String,
     pub ident: String,
@@ -147,9 +107,6 @@ pub struct GenField {
 }
 
 impl GenField {
-    /// The marker as written out: `name = "x"` dropped when `x` is the field's own name, the
-    /// default of `#[mlir::op]`, and on a type variable the format does not spell (`$x`): its
-    /// name never leaves the op.
     fn shown(&self, format: Option<&str>) -> String {
         let named = self.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).unwrap_or_default();
         let spelled = format.is_some_and(|f| f.match_indices(&format!("${named}")).any(|(i, m)| !f[i + m.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_')));
@@ -165,14 +122,11 @@ impl GenField {
     }
 }
 
-/// An operand / result group or a type variable class member.
 struct Group {
     name: String,
     variadic: bool,
     result: bool,
-    /// MLIR type of a buildable constraint (`i1`, `index`).
     fixed: Option<String>,
-    /// One dialect type (`EmitC_LValueType` ⇒ `emitc.lvalue`): `type($x)` prints it stripped.
     strip: Option<String>,
 }
 
@@ -184,14 +138,11 @@ const KEYWORDS: &[&str] = &[
 ];
 
 impl Records {
-    /// Parses `td` with the include directories (the in-process TableGen front end, [`super::td`]).
-    /// The records of `tds`, one TableGen run; the first file is the one ops are "defined in".
     pub fn parse(tds: &[PathBuf], includes: &[PathBuf]) -> Result<Self, TdError> {
         let json = super::td::dump_json(tds, includes).map_err(|e| TdError::Tblgen(e.to_string()))?;
         Self::from_json(&json, &tds[0])
     }
 
-    /// Records already dumped (`llvm-tblgen --dump-json` output) for `td`.
     pub fn from_json(text: &str, td: &Path) -> Result<Self, TdError> {
         let Json::Object(all) = serde_json::from_str(text).map_err(|e| TdError::Json(e.to_string()))? else { return Err(TdError::Json("not an object".into())) };
         Ok(Self { all, file: td.file_name().map_or_else(String::new, |f| f.to_string_lossy().into_owned()) })
@@ -209,7 +160,6 @@ impl Records {
         self.field(name, key)?.as_str()
     }
 
-    /// The def a field points to (`{"def": …}`).
     fn def_of(value: &Json) -> Option<&str> {
         value.get("def")?.as_str()
     }
@@ -218,54 +168,38 @@ impl Records {
         name == class || self.field(name, "!superclasses").and_then(Json::as_array).is_some_and(|s| s.iter().any(|c| c == class))
     }
 
-    /// `Arg<constraint, …>` ⇒ `constraint`.
     fn unwrap_arg<'x>(&'x self, name: &'x str) -> &'x str {
         if self.is_a(name, "OpVariable") { self.field(name, "constraint").and_then(Self::def_of).unwrap_or(name) } else { name }
     }
 
-    /// `(constraint, name)` pairs of a dag field (`arguments`, `results`, `regions`, `successors`).
     fn dag<'x>(&'x self, op: &str, key: &str) -> Vec<(&'x str, &'x str)> {
         let args = self.field(op, key).and_then(|d| d.get("args")).and_then(Json::as_array);
-        // An unnamed one (`outs Index`) comes back as `""`.
         args.into_iter().flatten().filter_map(|a| Some((self.unwrap_arg(Self::def_of(a.get(0)?)?), a.get(1).and_then(Json::as_str).unwrap_or("")))).collect()
     }
 
-    /// The MLIR spelling of a buildable type (`$_builder.getIntegerType(32)` ⇒ `i32`，
-    /// `$_builder.getType<::mlir::pdl::TypeType>()` ⇒ `!pdl.type`)。
-    ///
-    /// ⭐ 这决定了一个结果类型能不能写进**描述**里。写不进去，解析时就填不出结果类型，
-    /// 整条退回原文 —— pdl 整个方言的 `matched` 为 0 就是这么来的。
     fn buildable(&self, constraint: &str) -> Option<String> {
         self.buildable_call(self.text(constraint, "builderCall").filter(|c| !c.is_empty())?, Some(constraint))
     }
 
-    /// [`Self::buildable`] of a builder call; `constraint`: the record it came from, if any.
     fn buildable_call(&self, call: &str, constraint: Option<&str>) -> Option<String> {
         let inner = |p: &str| call.split_once(p).and_then(|(_, r)| r.split_once(')')).map(|(n, _)| n.trim());
         let packed = call.split_whitespace().collect::<String>();
         Some(match () {
-            // `VectorType::get({2}, $_builder.getI16Type())` ⇒ `vector<2xi16>`: before the scalar
-            // cases, which its element call would match.
             _ if let Some((dims, elem)) = packed.strip_prefix("::mlir::VectorType::get({").and_then(|r| r.strip_suffix(')')).and_then(|r| r.split_once("},")) => {
                 format!("vector<{}x{}>", dims.replace(',', "x"), self.buildable_call(elem, None)?)
             }
             _ if call.contains("getIndexType") => "index".into(),
             _ if call.contains("getNoneType") => "none".into(),
             _ if call.contains("getIntegerType(") => format!("i{}", inner("getIntegerType(")?),
-            // `$_builder.getI16Type()`.
             _ if let Some(w) = packed.split_once(".getI").and_then(|(_, r)| r.strip_suffix("Type()")).filter(|w| w.parse::<u32>().is_ok()) => format!("i{w}"),
-            // Before `f16`: `BFloat16Type>` contains `Float16Type>`.
             _ if call.contains("getBF16Type") || call.contains("BFloat16Type>") => "bf16".into(),
             _ if call.contains("getF16Type") || call.contains("Float16Type>") => "f16".into(),
             _ if call.contains("getF32Type") || call.contains("Float32Type>") => "f32".into(),
             _ if call.contains("getF64Type") || call.contains("Float64Type>") => "f64".into(),
-            // The builtin `token` (MLIR 23; LLVM's `!llvm.token` is gone).
             _ if call.contains("::mlir::TokenType>") => "token".into(),
-            // LLVM's opaque pointer (`<3>`: in address space 3).
             _ if let Some(space) = packed.split_once("LLVMPointerType>(").and_then(|(_, r)| r.strip_suffix(')')).filter(|n| n.parse::<u32>().is_ok()) => {
                 if space == "0" { "!llvm.ptr".into() } else { format!("!llvm.ptr<{space}>") }
             }
-            // 方言自己的类型：记录里直接有方言与助记符（`PDL_Type` ⇒ `!pdl.type`）。
             _ if call.trim_end().ends_with(">()") && let Some(c) = constraint && let Some(m) = self.text(c, "mnemonic").filter(|m| !m.is_empty()) => {
                 let dialect = self.field(c, "dialect").and_then(Self::def_of)?;
                 format!("!{}.{m}", self.text(dialect, "name")?)
@@ -274,10 +208,6 @@ impl Records {
         })
     }
 
-    /// A dialect type's builder call spelled out from the type definitions, nesting included:
-    /// `getType<::mlir::pdl::ValueType>()` ⇒ `!pdl.value`,
-    /// `::mlir::pdl::RangeType::get($_builder.getType<::mlir::pdl::ValueType>())` ⇒ `!pdl.range<value>`
-    /// (a parameter of the outer type's own dialect prints without its `!dialect.` prefix).
     fn spell(&self, call: &str) -> Option<String> {
         if let Some(cpp) = call.strip_suffix(">()").and_then(|c| c.rsplit_once("getType<")).map(|(_, t)| t) {
             let (dialect, mnemonic) = self.type_def_by_cpp(cpp)?;
@@ -290,7 +220,6 @@ impl Records {
         Some(format!("!{dialect}.{mnemonic}<{inner}>"))
     }
 
-    /// The (dialect, mnemonic) of the type definition whose C++ class is `cpp` (`::mlir::pdl::RangeType`).
     fn type_def_by_cpp(&self, cpp: &str) -> Option<(String, String)> {
         let def = self.type_def_of_cpp(cpp)?;
         let mnemonic = self.text(def, "mnemonic").filter(|m| !m.is_empty())?;
@@ -298,8 +227,6 @@ impl Records {
         Some((self.text(dialect, "name")?.into(), mnemonic.into()))
     }
 
-    /// The `attrName` (`ub.poison`) of the parameterless attribute definition whose C++ class is
-    /// `cpp` (`::mlir::ub::PoisonAttr`).
     fn bare_attr_def(&self, cpp: &str) -> Option<String> {
         let defs = self.all.get("!instanceof").and_then(|i| i.get("AttrDef")).and_then(Json::as_array)?;
         let def = defs.iter().filter_map(Json::as_str).find(|d| self.text(d, "cppType") == Some(cpp))?;
@@ -307,14 +234,10 @@ impl Records {
         params.is_empty().then(|| self.text(def, "attrName").map(String::from)).flatten()
     }
 
-    /// ⭐ The dialects with ops defined in this file.
-    /// `only`: that dialect, with its ops from every file (a wrapper `.td` that includes them).
     pub fn dialects(&self, only: Option<&str>) -> Vec<GenDialect> {
         let ops: Vec<&str> = self.all.get("!instanceof").and_then(|i| i.get("Op")).and_then(Json::as_array).into_iter().flatten().filter_map(Json::as_str).collect();
         let here = |op: &&str| self.field(op, "!locs").and_then(Json::as_array).and_then(|l| l.first()).and_then(Json::as_str).is_some_and(|l| l.starts_with(&format!("{}:", self.file)));
         let ns = |op: &str| self.field(op, "opDialect").and_then(Self::def_of).and_then(|d| self.text(d, "name"));
-        // A dialect with ops in `td` takes its ops from every file `td` includes too
-        // (`TosaOps.td` includes `TosaShapeOps.td` and `TosaUtilOps.td`).
         let mut by_dialect: BTreeMap<String, Vec<&str>> = match only {
             Some(n) => [(n.into(), Vec::new())].into(),
             None => ops.iter().copied().filter(here).filter_map(ns).map(|n| (n.into(), Vec::new())).collect(),
@@ -329,7 +252,6 @@ impl Records {
             .map(|(name, ops)| {
                 let record = ops.first().and_then(|op| self.field(op, "opDialect")).and_then(Self::def_of);
                 let flag = |f: &str| record.and_then(|r| self.field(r, f)).and_then(Json::as_i64) == Some(1);
-                // `arith::ArithDialect` ⇒ `arith`, `LLVM::LLVMDialect` ⇒ `llvm`.
                 let dependents = record
                     .and_then(|r| self.field(r, "dependentDialects"))
                     .and_then(Json::as_array)
@@ -351,7 +273,6 @@ impl Records {
             .collect()
     }
 
-    /// `snake_case` Rust identifier of an ODS name.
     fn ident(name: &str) -> String {
         let mut out = String::new();
         for (i, c) in name.chars().enumerate() {
@@ -370,7 +291,6 @@ impl Records {
         out
     }
 
-    /// `UpperCamelCase` of a keyword (`to_nearest_even` ⇒ `ToNearestEven`).
     fn camel(word: &str) -> String {
         let mut out: String = word.split(|c: char| !c.is_ascii_alphanumeric()).filter(|w| !w.is_empty()).map(|w| w[..1].to_ascii_uppercase() + &w[1..]).collect();
         if out.is_empty() || out.starts_with(|c: char| c.is_ascii_digit()) {
@@ -379,8 +299,6 @@ impl Records {
         out
     }
 
-    /// An integer enum attribute's cases `(keyword, value)` if their values ascend from 0 (a gap
-    /// becomes a hidden variant: a variant's index is its value).
     fn int_enum(&self, attr: &str) -> Option<(String, Vec<(String, i64)>, u64)> {
         if !self.is_a(attr, "IntEnumAttr") && !self.is_a(attr, "IntEnumAttrInfo") {
             return None;
@@ -395,17 +313,12 @@ impl Records {
             })
             .collect::<Option<Vec<_>>>()?
             .into_iter()
-            // A negative case is a sentinel no valid attribute holds (`RoundingMode`'s `invalid`,
-            // which `ValidRoundingModeAttr` confines away): a case's value is its position here.
             .filter(|(_, v)| *v >= 0)
             .collect();
         let ascending = cases.first().is_some_and(|(_, v)| *v >= 0) && cases.windows(2).all(|w| w[0].1 < w[1].1) && cases.last().is_some_and(|(_, v)| *v < 256);
         ascending.then(|| (self.text(attr, "className").unwrap_or(attr).to_string(), cases, self.field(attr, "bitwidth").and_then(Json::as_u64).unwrap_or(64)))
     }
 
-    /// A bit enum property stored as its integer (`EnumProp<GEPNoWrapFlags>`,
-    /// `NamedEnumPropWithAttrForm<IntegerOverflowFlags, "overflow", ..>`) ⇒ (`mnemonic/sep/case=v;..`,
-    /// width, default value).
     fn bit_enum_prop(&self, prop: &str) -> Option<(String, u64, Option<i64>)> {
         let wrapped = self.field(prop, "baseProperty").and_then(Self::def_of);
         let prop = wrapped.filter(|_| !self.is_a(prop, "EnumProp")).unwrap_or(prop);
@@ -425,39 +338,29 @@ impl Records {
         Some((format!("{mnemonic}/{sep}/{}", cases.join(";")), self.field(info, "bitwidth").and_then(Json::as_u64).unwrap_or(32), default))
     }
 
-    /// The dialect type a type constraint is exactly (`Arg<EmitC_LValueType, ..>` ⇒ `emitc.lvalue`),
-    /// when it is written `<...>`: by its assembly format, or by a C++ printer
-    /// (`hasCustomAssemblyFormat`: `!async.value<f32>` ⇒ `<f32>`).
     fn type_def(&self, constraint: &str) -> Option<String> {
         let c = self.field(constraint, "constraint").and_then(Self::def_of).unwrap_or(constraint);
         let c = self.field(c, "baseType").and_then(Self::def_of).unwrap_or(c);
-        // ODS prints `type($x)` stripped whenever the constraint's C++ class is a dialect type,
-        // not only for the `TypeDef` itself: `LLVM_PointerInAddressSpace<3>` is an
-        // `LLVMPointerType`, so `<3>`.
         let def = if self.is_a(c, "TypeDef") { c } else { self.type_def_of_cpp(self.text(c, "cppType")?)? };
         let custom = self.field(def, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(def, "mnemonic").is_some_and(|m| !m.is_empty());
         let angled = self.text(def, "assemblyFormat").map(str::trim_start).is_some_and(|f| f.starts_with("`<`") || f.starts_with("(`<`"));
         (custom || angled).then(|| self.text(def, "typeName").map(String::from)).flatten()
     }
 
-    /// The `TypeDef` whose C++ class is `cpp` (`::mlir::LLVM::LLVMPointerType`).
     fn type_def_of_cpp(&self, cpp: &str) -> Option<&str> {
         let defs = self.all.get("!instanceof").and_then(|i| i.get("TypeDef")).and_then(Json::as_array)?;
         defs.iter().filter_map(Json::as_str).find(|d| self.text(d, "cppType") == Some(cpp))
     }
 
-    /// The value of an integer enum's case `symbol`.
     fn case_value(&self, attr: &str, symbol: &str) -> Option<i64> {
         let cases = self.field(attr, "enumerants")?.as_array()?;
         cases.iter().filter_map(|c| Self::def_of(c)).find(|c| self.text(c, "symbol") == Some(symbol)).and_then(|c| self.field(c, "value")?.as_i64())
     }
 
-    /// A dialect enum attribute spelled `#ns.mnemonic<case>` ⇒ (`ns.mnemonic`, its enum's cases by symbol).
     fn dialect_enum(&self, attr: &str) -> Option<(String, BTreeMap<String, String>)> {
         let format = self.text(attr, "assemblyFormat").map(|f| f.split_whitespace().collect::<String>());
         (self.is_a(attr, "EnumAttr") && matches!(format.as_deref(), Some("`<`$value`>`" | "$value"))).then_some(())?;
         let name = self.text(attr, "attrName")?.to_string();
-        // `$value`: stored `#gpu<dim x>`, spelled `x` ⇒ `gpu<dim`.
         let name = if format.as_deref() == Some("$value") { name.replacen('.', "<", 1) } else { name };
         let info = self.field(attr, "enum").and_then(Self::def_of)?;
         let cases = self.field(info, "enumerants").and_then(Json::as_array).into_iter().flatten().filter_map(|c| {
@@ -467,8 +370,6 @@ impl Records {
         Some((name, cases.collect()))
     }
 
-    /// A C++ attribute wrapping one enum, spelled by its `AttrDef` as `#ns.mnemonic<case>`
-    /// (`Linkage` ⇒ `LinkageAttr` ⇒ `#llvm.linkage<external>`) ⇒ like [`Self::dialect_enum`].
     fn wrapped_enum(&self, attr: &str) -> Option<(String, BTreeMap<String, String>)> {
         (self.is_a(attr, "DialectAttr") && !self.is_a(attr, "AttrDef")).then_some(())?;
         let def = self.text(attr, "storageType")?.rsplit("::").next()?;
@@ -483,11 +384,8 @@ impl Records {
         Some((self.text(def, "attrName")?.to_string(), cases.collect()))
     }
 
-    /// A property field: (marker, Rust type).
     fn property(&self, constraint: &str, ods: &str, dialect: &mut GenDialect) -> (String, String) {
         let (marker, ty) = self.property_of(constraint, ods, dialect);
-        // `DefaultValuedOptionalAttr`: the default only elides it in print (ODS's
-        // `genNonDefaultValueCheck`); parsing and building leave it absent.
         let optional = self.field(constraint, "isOptional").and_then(Json::as_i64) == Some(1) || self.is_a(constraint, "OptionalAttr");
         match marker.strip_suffix(")]") {
             Some(head) if optional && head.contains(", default = ") => (format!("{head}, optional)]"), ty),
@@ -495,18 +393,12 @@ impl Records {
         }
     }
 
-    /// [`Self::property`] before `optional`.
     fn property_of(&self, constraint: &str, ods: &str, dialect: &mut GenDialect) -> (String, String) {
         let unit = |c: &str| self.is_a(c, "UnitAttr") || self.is_a(c, "UnitProp");
         let base = self.field(constraint, "baseAttr").and_then(Self::def_of).unwrap_or(constraint);
-        // The constraint and what it wraps (`DefaultValuedAttr<ConfinedAttr<I32Attr, ..>, "0">`).
         let chain: Vec<&str> = core::iter::successors(Some(constraint), |c| self.field(c, "baseAttr").and_then(Self::def_of)).collect();
         let optional = self.field(constraint, "isOptional").and_then(Json::as_i64) == Some(1) || self.is_a(constraint, "OptionalAttr");
-        // As ODS's `Attribute::hasDefaultValue`: a `defaultValue` set, by `DefaultValuedAttr` or on
-        // the attribute itself (`ArmSME_TileSliceLayoutAttr`: `TileSliceLayout::Horizontal`).
         let defaulted = self.text(constraint, "defaultValue").is_some_and(|v| !v.is_empty());
-        // A `DefaultValuedOptionalAttr`'s too, marked `optional` by [`Self::property`]: it is
-        // never filled in (`memref.load` parses without `nontemporal`).
         let filled = defaulted;
         let name = format!("name = {ods:?}");
         if unit(constraint) || unit(base) {
@@ -518,10 +410,8 @@ impl Records {
                 None => (format!("#[attr({name}, int = \"i{width}\", bits = {bits:?})]"), "Attribute<'a>".into()),
             };
         }
-        // Through wrappers too (`OptionalAttr<DefaultValuedAttr<AsmATTOrIntel, ..>>`).
         if let Some((enum_rec, (rust, cases, width))) = core::iter::once(base).chain(chain.iter().skip(2).copied()).find_map(|c| Some((c, self.int_enum(c)?))) {
             dialect.enums.insert(rust.clone(), cases);
-            // `DefaultValuedAttr<AtomicOrdering, "AtomicOrdering::not_atomic">`: the case's value.
             let default = filled.then(|| chain.iter().find_map(|c| self.text(c, "defaultValue").filter(|v| !v.is_empty()))).flatten().and_then(|v| self.case_value(enum_rec, v.rsplit("::").next()?));
             return match default {
                 Some(v) => (format!("#[attr({name}, int = \"i{width}\", default = \"{v}\")]"), format!("Option<{rust}>")),
@@ -529,13 +419,11 @@ impl Records {
                 None => (format!("#[attr({name}, int = \"i{width}\")]"), rust),
             };
         }
-        // Through a `ConfinedAttr` too (`DefaultValuedAttr<ConfinedAttr<SaturationModeAttr, ..>>`).
         if let Some((attr, cases)) = core::iter::once(base).chain(chain.iter().skip(2).copied()).find_map(|c| self.dialect_enum(c).or_else(|| self.wrapped_enum(c))) {
             let default = filled
                 .then(|| self.text(constraint, "defaultValue"))
                 .flatten()
                 .and_then(|v| v.rsplit("::").next())
-                // `{}`: a bit enum with nothing set, its `none` case.
                 .and_then(|symbol| if symbol == "{}" { cases.values().find(|c| *c == "none") } else { cases.get(symbol) })
                 .map(|case| if attr.contains('<') { format!(", default = {case:?}") } else { format!(", default = \"<{case}>\"") });
             return match default {
@@ -544,15 +432,10 @@ impl Records {
                 None => (format!("#[attr({name}, dialect = {attr:?})]"), "Attribute<'a>".into()),
             };
         }
-        // `DefaultValuedAttr<PoisonAttrInterface, "{}">`: the default is what the attribute's
-        // `constBuilderCall` builds, a parameterless `AttrDef` (`#ub.poison`) — the value is a mere
-        // placeholder there.
         if filled && let Some(attr) = chain.iter().find_map(|c| self.text(c, "constBuilderCall")?.strip_suffix("::get($_builder.getContext())").and_then(|cpp| self.bare_attr_def(cpp))) {
             return (format!("#[attr({name}, dialect = {attr:?}, default = \"\")]"), "Option<Attribute<'a>>".into());
         }
         let ty = if optional || defaulted { "Option<Attribute<'a>>" } else { "Attribute<'a>" };
-        // An `AttrDef` spelled `` `kw` `=` $param `` (`#xevm<src_etype src_etype = f16>`): stripped,
-        // it is `src_etype = f16`, read as a bare case.
         if self.is_a(base, "AttrDef")
             && let (Some(attr), Some(f)) = (self.text(base, "attrName"), self.text(base, "assemblyFormat"))
             && let [kw, eq, param] = f.split_whitespace().collect::<Vec<_>>()[..]
@@ -560,8 +443,6 @@ impl Records {
         {
             return (format!("#[attr({name}, dialect = {:?})]", attr.replacen('.', "<", 1)), ty.into());
         }
-        // An attribute of one `AttrDef`: ODS prints it stripped (`<function = @f, tag = <id = 1>>`).
-        // A custom printer too (`LLVM_ConstantRangeAttr`: `range <i32, 0, 32>`).
         let custom = self.field(base, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) && self.text(base, "mnemonic").is_some_and(|m| !m.is_empty());
         if self.is_a(base, "AttrDef") && (custom || self.text(base, "assemblyFormat").is_some_and(|f| f.trim_start().starts_with("`<`"))) && let Some(attr) = self.text(base, "attrName") {
             return (format!("#[attr({name}, dialect = {attr:?})]"), ty.into());
@@ -570,40 +451,31 @@ impl Records {
             return (format!("#[attr({name}, dense = {el:?})]"), ty.into());
         }
         let default = filled.then(|| self.text(constraint, "defaultValue")).flatten();
-        // `I64Attr`, `IndexAttr`: the custom form leaves the integer's type out (`linalg.index 0`,
-        // `gpu.lane_id upper_bound 64`).
         if let Some(int) = chain.iter().find_map(|c| Self::int_attr(c)) {
-            // A C++ integer literal: `15`, or `0xf` (`amdgpu.dpp`'s masks).
             let number = default.and_then(|v| v.parse::<i64>().ok().or_else(|| i64::from_str_radix(v.strip_prefix("0x")?, 16).ok()));
             return match number {
                 Some(v) => (format!("#[attr({name}, int = \"{int}\", default = \"{v}\")]"), "Option<Attribute<'a>>".into()),
                 None => (format!("#[attr({name}, int = \"{int}\")]"), ty.into()),
             };
         }
-        // `DefaultValuedAttr<BoolAttr, "false">`.
         if chain.iter().any(|c| self.is_a(c, "BoolAttr")) && let Some(v) = default.filter(|v| matches!(*v, "true" | "false")) {
             return (format!("#[attr({name}, default = \"{v}\")]"), "Option<Attribute<'a>>".into());
         }
-        // A `SymbolNameAttr` prints as `@name`, a `StrAttr` as `"name"`.
         if self.is_a(base, "SymbolNameAttr") || self.is_a(constraint, "SymbolNameAttr") {
             return (format!("#[attr({name}, symbol)]"), ty.into());
         }
         (format!("#[attr({name})]"), ty.into())
     }
 
-    /// `I64Attr` ⇒ `i64`, `IndexAttr` ⇒ `index`: an integer attribute of a fixed type.
     fn int_attr(def: &str) -> Option<String> {
         match def {
             "IndexAttr" => return Some("index".into()),
-            // `F64Attr`: a float the custom form also prints without its type (`5.000000e-01`).
             "F16Attr" | "F32Attr" | "F64Attr" => return Some(def[..3].to_lowercase()),
             _ => {}
         }
         def.strip_prefix('I')?.strip_suffix("Attr")?.parse::<u32>().ok().filter(|w| [1, 8, 16, 32, 64].contains(w)).map(|w| format!("i{w}"))
     }
 
-    /// `DenseI64ArrayAttr` ⇒ `i64`. The custom form prints such an attribute as a bare list, so
-    /// its element type only survives a round trip if the declaration carries it.
     fn dense_array(def: &str) -> Option<&'static str> {
         let el = def.strip_prefix("Dense")?.strip_suffix("ArrayAttr")?;
         Some(match el {
@@ -618,8 +490,7 @@ impl Records {
         })
     }
 
-    /// ⭐ One op.
-    #[allow(clippy::too_many_lines)] // one pass over the op's record, in field order
+    #[allow(clippy::too_many_lines)]
     fn op(&self, op: &str, dialect: &mut GenDialect) -> GenOp {
         let rust = op.split_once('_').map_or(op, |(_, r)| r).to_string();
         let name = format!("{}.{}", dialect.name, self.text(op, "opName").unwrap_or(""));
@@ -651,7 +522,6 @@ impl Records {
         let outs = self.dag(op, "results");
         let unnamed = outs.len();
         for (k, (constraint, ods)) in outs.into_iter().enumerate() {
-            // ODS calls an unnamed result by its position; the op needs a field for it all the same.
             let ods = match ods {
                 "" if unnamed == 1 => String::from("result"),
                 "" => format!("result{k}"),
@@ -662,7 +532,6 @@ impl Records {
             groups.push(Group { name: ods.clone(), variadic, result: true, fixed: self.buildable(base), strip: self.type_def(constraint) });
             results.push(ods);
         }
-        // Type variable classes (union-find over the groups).
         let mut parent: Vec<usize> = (0..groups.len()).collect();
         fn find(parent: &mut [usize], i: usize) -> usize {
             let mut r = i;
@@ -686,8 +555,6 @@ impl Records {
                 "SameOperandsAndResultType" => (0..groups.len()).collect(),
                 "SameTypeOperands" => (0..groups.len()).filter(|&i| !groups[i].result).collect(),
                 _ if self.is_a(t, "AllTypesMatch") => self.field(t, "values").and_then(Json::as_array).into_iter().flatten().filter_map(|v| index(v.as_str()?)).collect(),
-                // `vector.from_elements`：各操作数的类型就是那个形状类型的元素类型。
-                // ⛔ 它派生自 `PredOpTrait` 而不是 `TypesMatchWith`，所以要单独认。
                 _ if self.is_a(t, "ShapedTypeMatchesElementCountAndTypes") => {
                     if let (Some(shaped), Some(elements)) = (self.text(t, "shaped").and_then(index), self.text(t, "elements").and_then(index)) {
                         infer.insert(elements, format!("el = {}", groups[shaped].name));
@@ -697,47 +564,33 @@ impl Records {
                 _ if self.is_a(t, "TypesMatchWith") => {
                     let (Some(lhs), Some(rhs)) = (self.text(t, "lhs").and_then(index), self.text(t, "rhs").and_then(index)) else { continue };
                     let transformer = self.text(t, "transformer").unwrap_or("");
-                    // `::llvm::cast<Type>($_self)` 就是恒等（`OptionalTypesMatchWith` 这么写）。
                     let plain = transformer.trim().strip_prefix("::llvm::cast<Type>(").and_then(|r| r.strip_suffix(')')).unwrap_or(transformer).trim();
                     match () {
                         _ if plain == "$_self" => vec![lhs, rhs],
-                        // `VectorType::get({shape[0]}, i1)`: the operand is a 1-D vector, so that is its
-                        // `i1` shape (`x86vector.avx512.mask.compress`'s mask).
                         _ if transformer.contains("getI1SameShape") || plain.split_whitespace().collect::<String>() == "VectorType::get({::llvm::cast<VectorType>($_self).getShape()[0]},IntegerType::get($_self.getContext(),1))" => {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `getMatchingBoolType` (`getUnaryOpResultType` before MLIR 23): `i1`, or
-                        // a vector of as many `i1` (SPIR-V's comparisons).
                         _ if plain == "getMatchingBoolType($_self)" => {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `cloneWith({}, i1)`: the same shape, scalable dims included, of `i1`
-                        // (`arm_sme.tile_load`'s mask).
                         _ if plain.split_whitespace().collect::<String>().ends_with("($_self).cloneWith({},IntegerType::get($_ctxt,1))") => {
                             infer.insert(rhs, format!("i1 = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // The trailing dim widened to 16 (`arm_sve.convert_from_svbool`'s source:
-                        // `vector<2x[4]xi1>` ⇒ `vector<2x[16]xi1>`).
                         _ if plain.split_whitespace().collect::<String>() == "VectorType(VectorType::Builder(::llvm::cast<VectorType>($_self)).setDim(::llvm::cast<VectorType>($_self).getRank()-1,16))" => {
                             infer.insert(rhs, format!("svbool = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `IntegerType::get(ctx, shape[0])`: as many bits as lanes.
                         _ if plain.split_whitespace().collect::<String>() == "IntegerType::get($_self.getContext(),(::llvm::cast<VectorType>($_self).getShape()[0]))" => {
                             infer.insert(rhs, format!("width = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `VectorType::get({ size, size }, elem, { true, true })` of `lhs`'s leading
-                        // dim: the outer product's scalable tile (`arm_sme.outerproduct`).
                         _ if plain.split_whitespace().collect::<String>().contains("returnVectorType::get({size,size},vectorType.getElementType(),{true,true});") => {
                             infer.insert(rhs, format!("outer = {}", groups[lhs].name));
                             Vec::new()
                         }
-                        // `!async.value<T>` ⇒ `T`: its first parameter, as an element type (a SPIR-V pointer's
-                        // pointee, a sampled image's image).
                         _ if !plain.contains("VectorType::get") && (transformer.contains("getElementType()") || (plain.contains("cast<") && [">($_self).getValueType()", ">($_self).getPointeeType()", ">($_self).getImageType()"].iter().any(|g| plain.ends_with(g)))) && !groups[lhs].variadic => {
                             infer.insert(rhs, format!("el = {}", groups[lhs].name));
                             Vec::new()
@@ -751,10 +604,6 @@ impl Records {
                 unite(&mut parent, w[0], w[1]);
             }
         }
-        // Types upstream builds in C++ that a rule here covers: `llvm.cmpxchg`'s result
-        // (`getValAndBoolStructType`: `!llvm.struct<(T, i1)>` of the value's type), and the type that
-        // `custom<InsertExtractValueElementType>(type($x), ref(type($container)), ref($position))` reads
-        // (the container's field at the position: `llvm.extractvalue`'s result, `llvm.insertvalue`'s value).
         if op == "LLVM_AtomicCmpXchgOp"
             && let (Some(res), Some(_)) = (index("res"), index("val"))
         {
@@ -769,8 +618,7 @@ impl Records {
             }
         }
         let classes: Vec<usize> = (0..groups.len()).map(|i| find(&mut parent, i)).collect();
-        // Each class's variable: its first result, else `<first operand>_ty`.
-        let mut var_of: BTreeMap<usize, (String, String)> = BTreeMap::new(); // class ⇒ (rust ident, MLIR name)
+        let mut var_of: BTreeMap<usize, (String, String)> = BTreeMap::new();
         for (i, g) in groups.iter().enumerate().filter(|(_, g)| g.result) {
             var_of.entry(classes[i]).or_insert((Self::ident(&g.name), g.name.clone()));
         }
@@ -787,14 +635,12 @@ impl Records {
             }
         };
         let class_fixed = |c: usize| groups.iter().enumerate().filter(|(i, _)| classes[*i] == c).find_map(|(_, g)| g.fixed.clone());
-        // Names the inference rules point at are groups; they mean those groups' variables.
         let var_name = |n: &str| index(n).map(|i| var_of[&classes[i]].1.clone()).unwrap_or_default();
         let class_infer = |c: usize| {
             let rule = infer.iter().find(|(i, _)| classes[**i] == c).map(|(_, r)| {
                 let (kind, target) = r.split_once(" = ").unwrap_or((r, ""));
                 format!("{kind} = {}", Self::ident(&var_name(target)))
             });
-            // 方言类型（`!pdl.type`）不是合法的 Rust 标识符，加引号走字符串那条路。
             rule.or_else(|| class_fixed(c).map(|t| if t.contains(['!', '<']) { format!("is = {t:?}") } else { format!("is = {t}") }))
         };
         let mut fields = Vec::new();
@@ -808,7 +654,6 @@ impl Records {
             let entries = self.dag(op, key);
             let count = entries.len();
             for (k, (constraint, ods_name)) in entries.into_iter().enumerate() {
-                // An unnamed one (`spirv.module`'s body) is called by its position.
                 let ods_name = &*match ods_name {
                     "" if count == 1 => String::from(marker),
                     "" => format!("{marker}{k}"),
@@ -824,7 +669,6 @@ impl Records {
                 fields.push(GenField { marker: format!("#[{marker}(name = {ods_name:?})]"), ident: Self::ident(ods_name), ty: ty.into() });
             }
         }
-        // Type variables: operand-only classes, then results (each result its own field).
         let mut emitted = BTreeSet::new();
         for (i, g) in groups.iter().enumerate() {
             let c = classes[i];
@@ -849,13 +693,6 @@ impl Records {
         GenOp { rust, name, summary, description, format, generic_why, results: results.iter().map(|r| Self::ident(r)).collect(), fields }
     }
 
-    /// The `operands` / `results` directives spelled out as the op's own groups: `operands` ⇒
-    /// `$a `,` $b`, `type(results)` ⇒ `type($r)`. ODS prints them as one comma list, which is
-    /// what the spelled out form prints too while each group is one value (or there is one
-    /// group); otherwise, and inside `functional-type(..)`, the directive is left for the check
-    /// to refuse.
-    /// `variadic`: which of `results` are `Variadic` / `Optional` (a variadic of a fixed type is
-    /// no `Vec` field: `memref.extract_strided_metadata`'s `index` sizes).
     fn spell_groups(format: &str, fields: &[GenField], results: &[String], variadic: &[bool]) -> String {
         let name_of = |f: &GenField| f.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).map(String::from);
         let operands: Vec<(String, bool)> = fields.iter().filter(|f| f.marker.starts_with("#[slot(")).filter_map(|f| Some((name_of(f)?, f.ty.starts_with("Vec<")))).collect();
@@ -864,13 +701,11 @@ impl Records {
             if groups.len() > 1 && groups.iter().any(|(_, v)| *v) {
                 return None;
             }
-            // `type(operands)` prints each type whole (`!llvm.ptr<6>`): no `type($x)` stripping.
             let one = |(n, _): &(String, bool)| if typed { format!("qualified(type(${n}))") } else { format!("${n}") };
             Some(groups.iter().map(one).collect::<Vec<_>>().join(" `,` "))
         };
         let (mut out, mut rest) = (String::new(), format);
         while !rest.is_empty() {
-            // A literal is copied as it is.
             if let Some(lit) = rest.strip_prefix('`') {
                 let end = lit.find('`').map_or(rest.len(), |e| e + 2);
                 out.push_str(&rest[..end]);
@@ -881,8 +716,6 @@ impl Records {
             let directive = [("type(operands)", &operands, true), ("type(results)", &results, true), ("operands", &operands, false), ("results", &results, false)]
                 .into_iter()
                 .find(|(w, _, _)| word_start && rest.starts_with(w) && !rest[w.len()..].starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_'));
-            // Inside `functional-type(` the list is one argument: its variables space-separated,
-            // at most one of them variadic.
             let in_fn = out.trim_end().ends_with("functional-type(") || (out.trim_end().ends_with(',') && out.contains("functional-type(") && !out.rsplit("functional-type(").next().is_some_and(|t| t.contains(')')));
             let listed = |g: &[(String, bool)]| (g.iter().filter(|(_, v)| *v).count() <= 1 && !g.is_empty()).then(|| g.iter().map(|(n, _)| format!("${n}")).collect::<Vec<_>>().join(" "));
             match directive {
@@ -908,16 +741,11 @@ impl Records {
         out
     }
 
-    /// The assembly format if the runtime format engine can read it, else why not.
     fn format(&self, op: &str, fields: &[GenField], results: &[String], variadic: &[bool]) -> (Option<String>, Option<String>) {
-        // An `assemblyFormat` wins over an inherited `hasCustomAssemblyFormat`
-        // (`OpEmitter::genParser`: SPIR-V's base op sets the bit, most of its ops a format).
         let Some(raw) = self.text(op, "assemblyFormat").filter(|f| !f.trim().is_empty()) else {
             let why = if self.field(op, "hasCustomAssemblyFormat").and_then(Json::as_i64) == Some(1) { "custom C++ syntax" } else { "no assembly format" };
             return (None, Some(why.into()));
         };
-        // `custom<InsertExtractValueElementType>(...)` prints nothing: the type it names is inferred (a
-        // `#[dtype(field = ..)]` rule, above).
         let raw = match raw.split_once("custom<InsertExtractValueElementType>(") {
             Some((head, tail)) => {
                 let mut depth = 1;
@@ -934,7 +762,6 @@ impl Records {
             None => String::from(raw),
         };
         let format = Self::spell_groups(&raw.split_whitespace().collect::<Vec<_>>().join(" "), fields, results, variadic);
-        // Outside literals, only `$name`, type(), functional-type(), qualified(), attr-dict and groups.
         let mut rest = format.as_str();
         let known: BTreeSet<String> = fields.iter().filter_map(|f| f.marker.split("name = \"").nth(1).and_then(|n| n.split('"').next()).map(String::from)).collect();
         while let Some(c) = rest.chars().next() {
@@ -951,8 +778,6 @@ impl Records {
                     &rest[end..]
                 }
                 ' ' | '(' | ')' | '?' | '^' | ',' | '|' => &rest[1..],
-                // A directive we have a rule for: step over the name so its arguments are
-                // still checked as fields; `Elem::check` below settles the argument count.
                 _ if rest.starts_with("custom<") => {
                     let after = &rest["custom<".len()..];
                     match after.split_once('>') {
@@ -967,13 +792,9 @@ impl Records {
                 },
             };
         }
-        // A result type the format neither spells nor infers comes from C++ (`inferReturnTypes`:
-        // `llvm.cmpxchg`'s `!llvm.struct<(T, i1)>`).
         for r in results {
-            // Its own variable with no rule (`strip` decides only how it prints).
             let own = format!("#[dtype(name = {r:?}");
             let ruleless = |m: &str| m.strip_prefix(&own).is_some_and(|rest| rest == ")]" || (rest.starts_with(", strip = ") && rest.matches(" = ").count() == 1));
-            // An operand sharing the variable may spell it: `vector.fma ... : type($lhs)`.
             let slot = format!("#[slot({}, name = \"", Self::ident(r));
             let shared = fields.iter().filter_map(|f| f.marker.strip_prefix(&slot)?.split('"').next()).any(|o| format.contains(&format!("type(${o})")));
             if fields.iter().any(|f| ruleless(&f.marker)) && !shared && !format.contains(&format!("${r}")) && !format.contains("results") {
@@ -988,18 +809,14 @@ impl Records {
 }
 
 impl GenDialect {
-    /// `arith.gen.rs`.
     pub fn file_name(&self) -> String {
         format!("{}.gen.rs", self.name.replace('.', "_"))
     }
 
-    /// ⭐ The generated Rust module.
-    /// `params`: the dialect's `Dialect::parse_params` hook (a path), if any.
     pub fn render(&self, source: &str, params: Option<&str>) -> String {
         let mut out = String::new();
         let _ = writeln!(out, "//! `{}` dialect: generated by `mlirformat tblgen` from `{source}`. Do not edit.", self.name);
         let _ = writeln!(out, "#![allow(non_camel_case_types, unused_imports, clippy::all, rustdoc::all)]\n");
-        // `__Vec as Vec`: the file also compiles in `no_std` crates (no `Vec` in their prelude).
         let _ = writeln!(out, "use mlirformat::{{mlir, Attribute, Region, Str, Type, Value, __Vec as Vec}};\n");
         for (name, cases) in &self.enums {
             let _ = writeln!(out, "#[derive(Debug, Clone, Copy, PartialEq, Eq, mlirformat::__serde::Serialize, mlirformat::__serde::Deserialize, mlir::Cases)]");
@@ -1030,7 +847,6 @@ impl GenDialect {
             let _ = writeln!(out, "pub struct {}<'a> {{", op.rust);
             for f in &op.fields {
                 let marker = f.shown(op.format.as_deref());
-                // A bare marker the field's type already says (`#[mlir::op]` infers it) is left out.
                 let typed = ["Type<", "Region<", "Value<"].iter().any(|t| f.ty.contains(t));
                 if matches!(marker.as_str(), "#[dtype]" | "#[region]") || marker == "#[attr]" && !typed {
                     let _ = writeln!(out, "    pub {}: {},", f.ident, f.ty);

@@ -1,10 +1,5 @@
-//! `llvm` ops whose result type upstream builds in C++ (`llvm.cmpxchg`'s `!llvm.struct<(T, i1)>`, the field type
-//! `custom<InsertExtractValueElementType>` reads): their custom forms parse into ops (not raw text), with that type,
-//! and print back to themselves.
-
 use mlirformat::{Item, MlirOpt, Operation};
 
-/// Every op under `ops` (not raw), with its result types as written.
 fn walk<'a>(ops: &'a [Operation<'a>], out: &mut Vec<(String, Vec<String>)>) {
     for op in ops {
         assert!(op.raw.is_none(), "`{}` stayed raw text", op.name);

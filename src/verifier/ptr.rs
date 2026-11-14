@@ -1,17 +1,12 @@
-//! `ptr` attributes as `mlir-opt` reads them: `#ptr.spec` (`SpecAttr::verify`, `Ptr/IR/PtrAttrs.cpp`).
-
 use alloc::string::ToString;
 use alloc::vec::Vec;
 
 use super::{DialectRules, Invalid, Verifier};
 use crate::Attribute;
 
-/// The `ptr` dialect's rules.
 pub(super) struct Ptr;
 
 impl Ptr {
-    /// `<size = 64, abi = 64, preferred = 64[, index = 64]>`: every entry whole bytes, the
-    /// preferred alignment no smaller than the ABI one.
     fn spec(body: &str) -> Result<(), &'static str> {
         let inner = body.trim().strip_prefix('<').and_then(|b| b.strip_suffix('>')).unwrap_or("");
         let entries: Vec<(&str, u64)> = inner.split(',').filter_map(|kv| kv.split_once('=')).filter_map(|(k, v)| Some((k.trim(), v.trim().parse().ok()?))).collect();

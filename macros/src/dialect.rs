@@ -1,19 +1,9 @@
-//! `#[mlir::dialect]` on a dialect struct: its namespace, its op structs and its traits, as an
-//! implementation of `mlirformat::Dialect`.
-//!
-//! ```ignore
-//! #[mlir::dialect("arith", ops = [AddI, SubI], dependents = ["ub"], materializer, canonicalizer)]
-//! pub struct ArithDialect;
-//! ```
-
 use proc_macro2::TokenStream as Ts;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{Error, Fields, Ident, ItemStruct, LitStr, Path, Token, bracketed};
 
-/// `"ns"`, then: `ops = [Op, ..]` (its `#[mlir::op]` structs), `params = path::to::fn` (the
-/// `Dialect::parse_params` hook), `dependents = ["ns", ..]`, `materializer`, `canonicalizer`.
 pub struct DialectArgs {
     ns: LitStr,
     ops: Vec<Path>,
@@ -90,7 +80,6 @@ impl DialectArgs {
                 }
 
                 fn ops(&self) -> ::mlirformat::__Vec<::mlirformat::Template> {
-                    // `<AddI as Op>::template()`: the lifetime is left to inference (`'static`).
                     ::mlirformat::__vec![#(<#ops as ::mlirformat::Op>::template()),*]
                 }
 

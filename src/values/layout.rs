@@ -1,5 +1,3 @@
-//! Memref layouts: `strided<[s0, s1, ...], offset: o>` as values.
-
 use crate::Str;
 use alloc::format;
 use alloc::string::String;
@@ -7,7 +5,6 @@ use alloc::vec::Vec;
 
 use crate::{Attribute, Dim, Shaped};
 
-/// `StridedLayoutAttr`: strides and offset, [`Dim::DYNAMIC`] for `?`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StridedLayout {
     pub strides: Vec<i64>,
@@ -15,7 +12,6 @@ pub struct StridedLayout {
 }
 
 impl StridedLayout {
-    /// `isIdentity`: `strided<[]>` or `strided<[1]>`, no offset.
     #[inline]
     pub fn is_identity(&self) -> bool {
         self.offset == 0 && matches!(self.strides[..], [] | [1])
@@ -25,7 +21,6 @@ impl StridedLayout {
 impl TryFrom<&Attribute<'_>> for StridedLayout {
     type Error = ();
 
-    /// `strided<[s0, s1], offset: o>`.
     fn try_from(a: &Attribute<'_>) -> Result<Self, ()> {
         let Attribute::Builtin { name, body, .. } = a else { return Err(()) };
         if name != "strided" {
@@ -44,7 +39,6 @@ impl TryFrom<&Attribute<'_>> for StridedLayout {
 }
 
 impl From<StridedLayout> for Attribute<'_> {
-    /// As MLIR prints it: a zero offset left out.
     fn from(l: StridedLayout) -> Self {
         let num = |n: i64| if n == Dim::DYNAMIC { String::from("?") } else { format!("{n}") };
         let list = l.strides.iter().map(|n| num(*n)).collect::<Vec<_>>().join(", ");
@@ -54,15 +48,11 @@ impl From<StridedLayout> for Attribute<'_> {
 }
 
 impl Attribute<'_> {
-    /// A `MemRefLayoutAttrInterface`: `strided<...>` or `affine_map<...>`.
     #[inline]
     pub fn is_layout(&self) -> bool {
         matches!(self, Attribute::Builtin { name, .. } if name == "strided" || name == "affine_map")
     }
 
-    /// An identity `affine_map` layout, symbols or not: `AffineMap::isIdentity`, which is what
-    /// the printer asks before it leaves a memref's layout out (`memref<?xf32, affine_map<(d0)[s0]
-    /// -> (d0)>>` prints as `memref<?xf32>`, though it is not that type).
     #[inline]
     pub fn is_identity_map(&self) -> bool {
         crate::AffineMap::try_from(self).is_ok_and(|m| m.is_identity())
@@ -70,19 +60,16 @@ impl Attribute<'_> {
 }
 
 impl<'a> Shaped<'a> {
-    /// The memref's layout attribute, when it has one.
     #[inline]
     pub fn layout(&self) -> Option<&Attribute<'a>> {
         self.extras.iter().find(|a| a.is_layout())
     }
 
-    /// The memref's `strided` layout, when that is its layout.
     #[inline]
     pub fn strided(&self) -> Option<StridedLayout> {
         StridedLayout::try_from(self.layout()?).ok()
     }
 
-    /// `getMemorySpace`: the attribute after the layout, when there is one.
     #[inline]
     pub fn memory_space(&self) -> Option<&Attribute<'a>> {
         self.extras.iter().find(|a| !a.is_layout())

@@ -1,29 +1,13 @@
-//! MLIR text ⇄ IR ⇄ typed Rust ops.
-//!
-//! * [`MlirOpt`] is the central converter: register dialects, inject ops, parse, print.
-//! * The generic op form is parsed fully; a custom form is structured when its op is in the
-//!   op table, else kept as raw text (nested regions still parsed).
-//! * A typed op is a struct with `#[mlir::op]`: serde turns it into / out of an [`Operation`],
-//!   its assembly format gives the custom form.
-//!
-//! Layout: `common` (what an IR is), `parser` (text → IR), `generator` (IR → text), `verifier`
-//! (what `mlir-opt` would refuse to read), `mliropt` (the converter, re-exporting everything
-//! public), `dialects` (upstream dialects).
-//!
-//! `no_std` compatible (needs `alloc`).
-
 #![no_std]
 
 extern crate alloc;
 
-/// With `std`, every program linking mlirformat allocates through jemalloc (`Cargo.toml`).
 #[cfg(all(feature = "std", not(target_env = "msvc")))]
 #[global_allocator]
 static JEMALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
-/// Lets `#[mlir::op]` output use `::mlirformat::` paths inside this crate too.
+
 extern crate self as mlirformat;
 
-/// Declares IR nodes with the common derive set.
 macro_rules! ast {
     ($($(#[$m:meta])* $vis:vis $kw:ident $name:ident $(<$lt:lifetime>)? { $($body:tt)* })*) => {$(
         $(#[$m])*
@@ -33,7 +17,6 @@ macro_rules! ast {
     )*};
 }
 
-/// Declares a fieldless keyword enum with `Display` and `TryFrom<&str>`.
 macro_rules! keywords {
     ($($(#[$m:meta])* $vis:vis enum $name:ident { $($var:ident = $s:literal),* $(,)? })*) => {$(
         $(#[$m])*
@@ -58,7 +41,6 @@ macro_rules! keywords {
     )*};
 }
 
-/// The affine expression sub-language inside `affine_map<...>` and `affine_set<...>`.
 pub mod affine_expr;
 mod common;
 mod dialects;
@@ -66,19 +48,18 @@ mod generator;
 mod mliropt;
 mod parser;
 mod text;
-/// The ODS `custom<X>` directives (`mlirformat tblgen` asks `known` before keeping a format).
+
 pub mod syntax;
-/// What ODS says about each op: traits, interfaces, memory effects (`scripts/traits.py`).
+
 mod traits;
-/// What attribute and type text means as values.
+
 mod values;
-/// What `mlir-opt` rejects while reading, checked on the IR read ([`Verify`]).
+
 mod verifier;
 
-/// `#[mlir::op]`, `#[mlir::dialect]`.
 pub use mlirformat_macros as mlir;
 pub use mliropt::*;
-/// What [`MlirOpt::parse_in`] runs on: `moremath`'s executors.
+
 pub use moremath::{Execute, Executor, ThreadSingle};
 #[cfg(feature = "std")]
 pub use moremath::ThreadMulti;

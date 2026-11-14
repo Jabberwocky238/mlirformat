@@ -1,5 +1,3 @@
-//! `#[mlir::op]`: each field's MLIR role as a constant (`Op::FIELDS`), the conversions forwarded.
-
 use proc_macro2::TokenStream as Ts;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
@@ -36,10 +34,8 @@ impl Parse for OpArgs {
     }
 }
 
-/// A field's role as written.
 enum Kind {
     Slot(Ident),
-    /// `(rule, argument)`: `i1`, `i1 = x`, `of = x`；`is` 的写法另走 [`Marked::fixed`]。
     DType(Option<(String, Option<Ident>)>, Option<String>),
     Prop { int: Option<String>, dialect: Option<String>, default: Option<String>, dense: Option<String>, symbol: bool, bits: Option<String>, optional: bool },
     Region,
@@ -49,15 +45,12 @@ enum Kind {
 struct Marked {
     ident: Ident,
     name: String,
-    /// `#[dtype(is = …)]` 里那个固定类型的写法。标识符（`index`）或字符串
-    /// （`"!pdl.type"` —— 方言类型不是合法的 Rust 标识符，只能这么写）。
     fixed: Option<String>,
     kind: Kind,
     variadic: bool,
     unit: bool,
 }
 
-/// The last path segment of a type, e.g. `Vec` of `alloc::vec::Vec<T>`.
 fn last_segment(ty: &Type) -> Option<String> {
     match ty {
         Type::Path(p) => p.path.segments.last().map(|s| s.ident.to_string()),
@@ -65,12 +58,10 @@ fn last_segment(ty: &Type) -> Option<String> {
     }
 }
 
-/// `T` of `Option<T>`.
 fn option_of(ty: &Type) -> Option<&Type> {
     wrapped(ty, "Option")
 }
 
-/// `T` of `W<T>`.
 fn wrapped<'t>(ty: &'t Type, w: &str) -> Option<&'t Type> {
     let Type::Path(p) = ty else { return None };
     let seg = p.path.segments.last().filter(|s| s.ident == w)?;
@@ -78,8 +69,6 @@ fn wrapped<'t>(ty: &'t Type, w: &str) -> Option<&'t Type> {
     args.args.iter().find_map(|a| if let syn::GenericArgument::Type(t) = a { Some(t) } else { None })
 }
 
-/// A field's `FieldType`: an `Attribute` property is read as it is, one of any other Rust type
-/// through that type.
 fn field_type(kind: &Kind, ty: &Type) -> Ts {
     let inner = option_of(ty);
     match kind {
@@ -108,7 +97,6 @@ impl Marked {
                     match (marker, key.as_str()) {
                         (_, "name") => name = Some(value(&m)?),
                         ("slot", _) => ty_var = m.path.get_ident().cloned(),
-                        // `is = index` 与 `is = "!pdl.type"` 都认：方言类型不是合法标识符。
                         ("dtype", "is") => {
                             let v = m.value()?;
                             fixed = Some(if v.peek(LitStr) { v.parse::<LitStr>()?.value() } else { v.parse::<Ident>()?.to_string() });
@@ -124,7 +112,6 @@ impl Marked {
                         ("attr", "default") => default = Some(value(&m)?),
                         ("attr", "dense") => dense = Some(value(&m)?),
                         ("attr", "symbol") => symbol = true,
-                        // `DefaultValuedOptionalAttr`: the default only elides it when printed.
                         ("attr", "optional") => optional = true,
                         ("attr", "bits") => bits = Some(value(&m)?),
                         _ => return Err(m.error(format!("unknown `#[{marker}(...)]` option"))),
@@ -144,8 +131,6 @@ impl Marked {
             }
         }
         f.attrs.retain(|a| !["slot", "dtype", "attr", "region", "successor"].iter().any(|m| a.path().is_ident(m)));
-        // Unmarked: the Rust type says the role. A `Type` is a type variable, a `Region` a
-        // region, anything else but a `Value` a property.
         let kind = match found {
             Some(k) => k,
             None => match last_segment(wrapped(&f.ty, "Vec").unwrap_or(&f.ty)).as_deref() {
@@ -176,7 +161,6 @@ impl OpArgs {
         let mlir_name = |id: &Ident| -> syn::Result<String> {
             marked.iter().find(|m| m.ident == *id).map(|m| m.name.clone()).ok_or_else(|| Error::new(id.span(), format!("no field `{id}`")))
         };
-        // `(key, take, put)` in order: `KEYS`, `from_fields` and `into_fields`; `fields`: `FIELDS`.
         let mut keys = Vec::new();
         let mut fields = Vec::new();
         let s = |v: &Option<String>| v.as_ref().map_or_else(|| quote!(::core::option::Option::None), |v| quote!(::core::option::Option::Some(#v)));
@@ -215,7 +199,6 @@ impl OpArgs {
             let (key, variadic, ty) = (&m.name, m.variadic, field_type(&m.kind, &f.ty));
             fields.push(quote!(::mlirformat::Field { name: #key, variadic: #variadic, role: ::mlirformat::Role::#role, ty: #ty }));
             let id = &m.ident;
-            // A region moves through `Content` as itself, never serialized.
             let (take, put) = match (&m.kind, m.variadic) {
                 (Kind::Region, false) => (quote!(#id: f.region(#key)?), quote!((#key, ::mlirformat::Content::region(self.#id)))),
                 (Kind::Region, true) => (quote!(#id: f.regions(#key)?), quote!((#key, ::mlirformat::Content::regions(self.#id)))),
@@ -231,7 +214,6 @@ impl OpArgs {
             let l = &l.lifetime;
             quote!(#l)
         });
-        // `new`: every declared field, in order; no discardable attributes, no location.
         let (args, idents): (Vec<_>, Vec<_>) = named.named.iter().map(|f| {
             let (id, t) = (&f.ident, &f.ty);
             (quote!(#id: #t), quote!(#id))
@@ -247,8 +229,6 @@ impl OpArgs {
             refs.push(r);
             k
         }).collect();
-        // ⭐ 字段一个个从 `Fields` 取，不派生 `Deserialize`：派生的 visitor 每个 op 一套，
-        // 九百个 op 的类型检查、借用检查都花在它身上。
         let extra = |name: &str, role: Ts| quote!(::mlirformat::Field { name: #name, variadic: false, role: ::mlirformat::Role::#role, ty: ::mlirformat::FieldType::Attr { required: false } });
         fields.extend([extra("{}", quote!(Attrs)), extra("@", quote!(Loc))]);
         let fields = quote! {
@@ -271,9 +251,6 @@ impl OpArgs {
         let mut de_generics = item.generics.clone();
         de_generics.params.insert(0, parse_quote!('de));
         let (de_ig, _, _) = de_generics.split_for_impl();
-        // ⭐ 一条格式串同时给出两侧：`Print` 与 `Parse` 都从 `FORMAT` 来，法则
-        // `parse(print(x)) == x` 因此自动成立。写 `custom` 的自己实现这两个 trait，
-        // 也就自己担保这条法则。
         let dual = quote! {
             impl #ig ::mlirformat::Print for #ty #tg #wc {
                 #[inline]
@@ -289,10 +266,7 @@ impl OpArgs {
                 }
             }
         };
-        // No format: the op only ever prints generic (`CUSTOM = false`).
         let op_impl = match (&self.format, self.custom) {
-            // ⛔ `custom`：只挡住 `Print` / `Parse`，`Op` 照常生成。逃生口是关于**两个方向**
-            // 的，不是关于这个 op 是谁 —— 名字和「有自定义形式」这两件事没有理由也手写。
             (_, true) => quote! {
                 impl #ig ::mlirformat::Op for #ty #tg #wc {
                     const NAME: &'static str = #name;
@@ -320,7 +294,6 @@ impl OpArgs {
 
             #op_impl
 
-            // ⭐ `Serialize` through the fields, as `Deserialize` below: no op derives its own.
             impl #ig ::mlirformat::__serde::Serialize for #ty #tg #wc {
                 #[inline]
                 fn serialize<S: ::mlirformat::__serde::Serializer>(&self, s: S) -> ::core::result::Result<S::Ok, S::Error> {
@@ -328,8 +301,6 @@ impl OpArgs {
                 }
             }
 
-            // ⭐ `Content` 中转：只有 `Fields::read` 按格式泛型，所有 op 共用；每个 op 不再有
-            // 自己的 visitor。
             impl #de_ig ::mlirformat::__serde::Deserialize<'de> for #ty #tg #wc {
                 #[inline]
                 fn deserialize<D: ::mlirformat::__serde::Deserializer<'de>>(d: D) -> ::core::result::Result<Self, D::Error> {

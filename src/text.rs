@@ -1,5 +1,3 @@
-//! [`Str`]: source text, borrowed or owned, in two words.
-
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -7,35 +5,26 @@ use core::marker::PhantomData;
 use core::ptr::NonNull;
 use core::{fmt, hash, ops};
 
-/// The top bit of [`Str`]'s length: the text is owned (a `Box<str>` to free).
 const OWNED: usize = 1 << (usize::BITS - 1);
 
-/// ⭐ Source text: borrowed after parsing, owned after building or deserializing — what
-/// `Str<'a>` is, in 16 bytes instead of 24 (a pointer, and a length whose top bit says
-/// owned), and without a spare capacity. `Str::Borrowed(s)` / `Str::Owned(s)` build one, as they
-/// did a `Cow`; [`borrowed`](Str::borrowed) and [`is_owned`](Str::is_owned) tell which it is.
 pub struct Str<'a> {
     ptr: NonNull<u8>,
     len: usize,
     _text: PhantomData<&'a str>,
 }
 
-// SAFETY: a `Str` is a `&'a str` or a `Box<str>`, both `Send` and `Sync`.
 unsafe impl Send for Str<'_> {}
-// SAFETY: as above.
+
 unsafe impl Sync for Str<'_> {}
 
 impl<'a> Str<'a> {
-    /// Text borrowed from the source.
     #[allow(non_snake_case)]
     #[inline]
     pub const fn Borrowed(s: &'a str) -> Self {
-        // SAFETY: a reference is never null.
         let ptr = unsafe { NonNull::new_unchecked(s.as_ptr().cast_mut()) };
         Self { ptr, len: s.len(), _text: PhantomData }
     }
 
-    /// Text of its own.
     #[allow(non_snake_case)]
     #[inline]
     pub fn Owned(s: String) -> Self {
@@ -45,7 +34,6 @@ impl<'a> Str<'a> {
     #[inline]
     fn boxed(b: Box<str>) -> Self {
         let len = b.len();
-        // SAFETY: `Box::into_raw` is never null; the box is rebuilt and freed in `drop`.
         let ptr = unsafe { NonNull::new_unchecked(Box::into_raw(b).cast::<u8>()) };
         Self { ptr, len: len | OWNED, _text: PhantomData }
     }
@@ -55,41 +43,32 @@ impl<'a> Str<'a> {
         self.len & OWNED != 0
     }
 
-    /// The text, when it is borrowed (for as long as the source lives).
     #[inline]
     pub fn borrowed(&self) -> Option<&'a str> {
-        // SAFETY: borrowed text is a `&'a str`.
         (!self.is_owned()).then(|| unsafe { Self::text(self.ptr, self.len) })
     }
 
     #[inline]
     pub fn as_str(&self) -> &str {
-        // SAFETY: `ptr` and the length are those of a live `str`, borrowed for `'a` or owned.
         unsafe { Self::text(self.ptr, self.len & !OWNED) }
     }
 
-    /// # Safety
-    /// `ptr` and `len` must be a valid `str` for `'t`.
     #[inline]
     unsafe fn text<'t>(ptr: NonNull<u8>, len: usize) -> &'t str {
-        // SAFETY: the caller's.
         unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(ptr.as_ptr(), len)) }
     }
 
-    /// The text as a `String`: owned text moves, borrowed text is copied.
     pub fn into_owned(self) -> String {
         match self.borrowed() {
             Some(s) => String::from(s),
             None => {
                 let me = core::mem::ManuallyDrop::new(self);
-                // SAFETY: owned text is a `Box<str>` of this pointer and length; `me` never drops it.
                 let b = unsafe { Box::from_raw(core::ptr::slice_from_raw_parts_mut(me.ptr.as_ptr(), me.len & !OWNED) as *mut str) };
                 String::from(b)
             }
         }
     }
 
-    /// The same text borrowing nothing: owned text moves, borrowed text is copied.
     pub fn into_static(self) -> Str<'static> {
         if self.is_owned() {
             let me = core::mem::ManuallyDrop::new(self);
@@ -99,7 +78,6 @@ impl<'a> Str<'a> {
         }
     }
 
-    /// This text, borrowed from `self`.
     #[inline]
     pub fn reborrow(&self) -> Str<'_> {
         Str::Borrowed(self.as_str())
@@ -110,7 +88,6 @@ impl Drop for Str<'_> {
     #[inline]
     fn drop(&mut self) {
         if self.is_owned() {
-            // SAFETY: owned text is a `Box<str>` of this pointer and length, freed once, here.
             drop(unsafe { Box::from_raw(core::ptr::slice_from_raw_parts_mut(self.ptr.as_ptr(), self.len & !OWNED) as *mut str) });
         }
     }
@@ -194,7 +171,6 @@ impl hash::Hash for Str<'_> {
     }
 }
 
-/// `Str == "text"` and back, as `Cow<str>` compares.
 macro_rules! str_eq {
     ($($t:ty),*) => {$(
         impl PartialEq<$t> for Str<'_> {

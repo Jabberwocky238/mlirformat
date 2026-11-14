@@ -1,5 +1,3 @@
-//! SPIR-V types as `mlir-opt` reads them: `SPIRVDialect::parseType` (`SPIRV/IR/SPIRVDialect.cpp`).
-
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
@@ -7,7 +5,6 @@ use super::{DialectRules, Invalid, Verifier};
 use crate::{Attribute, FloatKind, MlirOpt, Parser, R, ShapedKind, Type};
 
 keywords! {
-    /// The SPIR-V types.
     enum Kind {
         Array = "array",
         CoopMatrix = "coopmatrix",
@@ -26,29 +23,22 @@ keywords! {
 #[path = "spirv.gen.rs"]
 mod enums;
 
-/// ⭐ A SPIR-V enum attribute (`SPIRV_I32EnumAttr` / `SPIRV_BitEnumAttr` in `SPIRVBase.td`).
 pub(super) struct SpirvEnum {
-    /// `#spirv.scope<..>`'s `scope`.
     mnemonic: &'static str,
-    /// The C++ enum (`Scope`).
     name: &'static str,
-    /// A bit enum: `A|B` (`symbolizeEnum` of a `|` list).
     bits: bool,
     cases: &'static [(&'static str, u32)],
 }
 
 impl SpirvEnum {
-    /// The enum `mnemonic` names (`storage_class`).
     fn named(mnemonic: &str) -> Option<&'static SpirvEnum> {
         enums::ENUMS.binary_search_by(|e| e.mnemonic.cmp(mnemonic)).ok().map(|i| &enums::ENUMS[i])
     }
 
-    /// The enum by its C++ name (`ExecutionModel`).
     fn of(name: &str) -> Option<&'static SpirvEnum> {
         enums::ENUMS.iter().find(|e| e.name == name)
     }
 
-    /// `symbolizeEnum`: the value `text` spells (`Volatile|Aligned` for a bit enum).
     fn value(&self, text: &str) -> Option<u32> {
         let one = |w: &str| self.cases.iter().find(|(c, _)| *c == w.trim()).map(|(_, v)| *v);
         match self.bits {
@@ -57,21 +47,17 @@ impl SpirvEnum {
         }
     }
 
-    /// `, `-joined case names, as an ODS enum parser lists them.
     fn listed(&self) -> String {
         self.cases.iter().map(|(c, _)| *c).collect::<Vec<_>>().join(", ")
     }
 }
 
-/// A cursor over one SPIR-V type's body; `enclosing`: the identified structs being read
-/// (`tryStartCyclicParse`), shared with the types nested in it.
 struct SpirvText<'a, 'd, 'e> {
     p: Parser<'a, 'd>,
     enclosing: &'e mut Vec<String>,
 }
 
 impl<'a, 'd> SpirvText<'a, 'd, '_> {
-    /// A keyword that is one of `cases` (`symbolizeEnum`).
     fn keyword(&mut self, e: &str, what: &str) -> R<&'a str> {
         let w = self.p.ident().or_else(|_| self.p.err(alloc::format!("expected {what}")))?;
         match SpirvEnum::of(e).and_then(|e| e.value(w)) {
@@ -80,7 +66,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         }
     }
 
-    /// `parseDimensionList`: `N x ...` before the element type; `?` too when `dynamic`.
     fn dims(&mut self, dynamic: bool) -> R<Vec<i64>> {
         let mut out = Vec::new();
         loop {
@@ -102,7 +87,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         }
     }
 
-    /// A type, a nested SPIR-V one read by these rules too.
     fn ty(&mut self) -> R<Type<'a>> {
         let t = self.p.ty()?;
         if let Type::Extended(e) = &t
@@ -114,13 +98,10 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         Ok(t)
     }
 
-    /// `parseAndVerifyType`: a SPIR-V type, a float, a 1/8/16/32/64-bit integer, a 1-D vector
-    /// of at most 4.
     fn element(&mut self) -> R<Type<'a>> {
         let t = self.ty()?;
         match &t {
             Type::Extended(e) if e.name.starts_with("spirv.") => {}
-            // An alias (`!f32_binding`): what it names is checked where it is defined.
             Type::Extended(e) if !e.name.contains('.') && e.body.is_none() => {}
             Type::Float(_) if Self::scalar(&t) => {}
             Type::Float(_) => return self.p.err(alloc::format!("only 8/16/32/64-bit float type allowed but found '{t}'")),
@@ -138,8 +119,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         Ok(t)
     }
 
-    /// `ScalarType::classof`: an integer of 1, 8, 16, 32 or 64 bits, a float of 16, 32 or 64
-    /// bits or `f8E4M3FN` / `f8E5M2`.
     fn scalar(t: &Type<'_>) -> bool {
         match t {
             Type::Float(FloatKind::F8E4M3FN | FloatKind::F8E5M2) => true,
@@ -149,8 +128,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         }
     }
 
-    /// `SPIRVType::classof`: a SPIR-V dialect type (or an alias), a scalar, or a 1-D vector of
-    /// 2, 3, 4, 8 or 16 scalars (or pointers).
     fn spirv_type(t: &Type<'_>) -> bool {
         match t {
             Type::Extended(e) => e.name.starts_with("spirv.") || (!e.name.contains('.') && e.body.is_none()),
@@ -161,7 +138,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         }
     }
 
-    /// `, stride=N`, N > 0, before the closing `>`.
     fn stride(&mut self) -> R<()> {
         if self.p.eat(",") {
             self.p.expect("stride")?;
@@ -173,7 +149,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         Ok(())
     }
 
-    /// `Decoration` or `Decoration = attr`.
     fn decoration(&mut self) -> R<()> {
         self.keyword("Decoration", "decoration")?;
         if self.p.eat("=") {
@@ -182,7 +157,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         Ok(())
     }
 
-    /// An image's parameters after its `<`: the dim.
     fn image(&mut self) -> R<&'a str> {
         self.element()?;
         let mut dim = "";
@@ -196,14 +170,12 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         Ok(dim)
     }
 
-    /// A struct's body after its `<`.
     fn structure(&mut self) -> R<()> {
         let mut named = None;
         if !self.p.at(b'(') {
             let id = self.p.ident()?;
             let enclosing = self.enclosing.iter().any(|n| n == id);
             if self.p.eat(">") {
-                // A name alone refers to the struct being defined around it.
                 return if enclosing { Ok(()) } else { self.p.err("recursive struct reference not nested in struct definition") };
             }
             self.p.expect(",")?;
@@ -220,7 +192,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
         r
     }
 
-    /// `(T [offset, Deco], ...)` then `, Deco` and `>`: offsets for every member or none.
     fn members(&mut self) -> R<()> {
         self.p.expect("(")?;
         if self.p.eat(")") {
@@ -337,7 +308,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
                     _ => return self.p.err(alloc::format!("matrix must be composed using vector type, got '{t}'")),
                 }
             }
-            // Settled in `Spirv::why`: no body.
             Kind::Sampler | Kind::NamedBarrier => {}
             Kind::TensorArm => {
                 let dims = if self.p.eat("*") {
@@ -370,7 +340,6 @@ impl<'a, 'd> SpirvText<'a, 'd, '_> {
 }
 
 keywords! {
-    /// The SPIR-V ops with a C++ parser whose text is checked here.
     enum CxxOp {
         Load = "spirv.Load",
         Store = "spirv.Store",
@@ -392,15 +361,12 @@ keywords! {
     }
 }
 
-/// A cursor over a raw SPIR-V op's text after its name, up to its first region; the ops' C++
-/// `parse` functions (`SPIRVOps.cpp`, `MemoryOps.cpp`, `ControlFlowOps.cpp`) read over again.
 struct OpText<'a, 'd, 'v, 'x> {
     p: Parser<'a, 'd>,
     v: &'v Verifier<'x>,
 }
 
 impl<'a> OpText<'a, '_, '_, '_> {
-    /// `parseEnumStrAttr`: a string naming one of enum `e`'s cases (a bit enum: `A|B`).
     fn enum_str(&mut self, e: &str) -> R<u32> {
         let e = SpirvEnum::of(e).ok_or_else(|| crate::ParseError::unplaced(0, "unknown enum"))?;
         match self.p.bare_attr()? {
@@ -412,7 +378,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
         }
     }
 
-    /// `parseEnumKeywordAttr`: a bare keyword naming one of enum `e`'s cases.
     fn enum_keyword(&mut self, e: &str) -> R<()> {
         let e = SpirvEnum::of(e).ok_or_else(|| crate::ParseError::unplaced(0, "unknown enum"))?;
         let w = self.p.ident().or_else(|_| self.p.err("expected valid keyword"))?;
@@ -422,13 +387,11 @@ impl<'a> OpText<'a, '_, '_, '_> {
         }
     }
 
-    /// `parseMemoryAccessAttributes`: `[ "Volatile" ]`, `[ "Aligned", 4 ]`.
     fn memory_access(&mut self) -> R<()> {
         if !self.p.eat("[") {
             return Ok(());
         }
         let v = self.enum_str("MemoryAccess")?;
-        // `MemoryAccess::Aligned`.
         if v & 0x2 != 0 {
             self.p.expect(",")?;
             self.p.bare_attr()?;
@@ -436,7 +399,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
         self.p.expect("]")
     }
 
-    /// An operand: `%x` / `%x#1`.
     fn operand(&mut self) -> R<String> {
         self.p.ws();
         if !self.p.rest().starts_with('%') {
@@ -445,13 +407,11 @@ impl<'a> OpText<'a, '_, '_, '_> {
         self.p.value().map(|v| v.name.to_string())
     }
 
-    /// `: type`.
     fn colon_type(&mut self) -> R<Type<'a>> {
         self.p.expect(":")?;
         self.p.ty()
     }
 
-    /// `%x` is of type `want`, when its definition says (`resolveOperand`).
     fn resolve(&self, name: &str, want: &Type<'_>) -> R<()> {
         match self.v.visible(name).and_then(|ts| ts.first()?.as_deref()) {
             Some(t) if !super::Verifier::same(t, want) => self.p.err(alloc::format!("use of value '%{name}' expects different type than prior uses: '{want}' vs '{t}'")),
@@ -459,7 +419,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
         }
     }
 
-    /// `parseVariableDecorations`: `bind(set, binding)` or `built_in("..")`, then an attribute dict.
     fn decorations(&mut self) -> R<()> {
         if self.p.eat_kw("bind") {
             self.p.expect("(")?;
@@ -475,19 +434,15 @@ impl<'a> OpText<'a, '_, '_, '_> {
         self.p.opt_dict().map(drop)
     }
 
-    /// A `!spirv.ptr<..>` type after `:`.
     fn pointer(&mut self) -> R<()> {
         let t = self.colon_type()?;
         match &t {
             Type::Extended(e) if e.name == "spirv.ptr" => Ok(()),
-            // An alias: what it names is checked where it is defined.
             Type::Extended(e) if !e.name.contains('.') => Ok(()),
             _ => self.p.err("expected spirv.ptr type"),
         }
     }
 
-    /// `parseFunctionSignatureWithArguments` with no variadic `...`: `(%a: T {..}, ..) -> R`, or
-    /// types alone (an external function); named once named.
     fn signature(&mut self) -> R<()> {
         self.p.expect("(")?;
         if !self.p.eat(")") {
@@ -521,7 +476,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
         Ok(())
     }
 
-    /// `^bb` or `^bb(%a, %b : T, T)`.
     fn successor(&mut self) -> R<()> {
         self.p.ws();
         if !self.p.rest().starts_with('^') {
@@ -534,14 +488,12 @@ impl<'a> OpText<'a, '_, '_, '_> {
         Ok(())
     }
 
-    /// The walk down a composite type by `indices` (`getElementType`).
     fn extract(&self, ty: &Type<'_>, indices: &[i64]) -> R<()> {
         if indices.is_empty() {
             return self.p.err("expected at least one index for spirv.CompositeExtract");
         }
         let mut t: Type<'static> = ty.owned();
         for &i in indices {
-            // Element count (`None`: not known at compile time) and the element at `i`.
             let (count, elem): (Option<i64>, Option<Type<'static>>) = match &t {
                 Type::Shaped(s) if s.kind == ShapedKind::Vector => (t.element_count().map(|n| n as i64), Some(s.elem.owned())),
                 Type::Extended(_) => match crate::dialects::spirv_types::SpirvType::try_from(&t) {
@@ -552,7 +504,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
                     Ok(crate::dialects::spirv_types::SpirvType::Struct { members: Some(ms), .. }) => {
                         (Some(ms.len() as i64), usize::try_from(i).ok().and_then(|i| ms.get(i)).map(|m| m.ty.owned()))
                     }
-                    // Not a composite, or an alias: not walked further.
                     Ok(_) => (Some(-1), None),
                     Err(()) => return Ok(()),
                 },
@@ -568,7 +519,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
         Ok(())
     }
 
-    /// The op's text as its C++ `parse` reads it; `region`: a region follows the text.
     fn read(&mut self, op: CxxOp, region: bool) -> R<()> {
         match op {
             CxxOp::Load => {
@@ -642,7 +592,6 @@ impl<'a> OpText<'a, '_, '_, '_> {
                     self.p.bare_attr()?;
                 }
             }
-            // `@fn "Mode" @a, @b`: symbols only (`ExecutionModeIdOp::parse`).
             CxxOp::ExecutionModeId => {
                 self.p.attr()?;
                 self.enum_str("ExecutionMode")?;
@@ -738,14 +687,11 @@ impl<'a> OpText<'a, '_, '_, '_> {
     }
 }
 
-/// The SPIR-V dialect's rules.
 pub(super) struct Spirv;
 
 impl Spirv {
-    /// `!spirv.<mnemonic><body>`: why `mlir-opt` would not read it.
     fn why(opt: &MlirOpt, mnemonic: &str, body: Option<&str>, enclosing: &mut Vec<String>) -> Result<(), String> {
         let kind = Kind::try_from(mnemonic).map_err(|()| alloc::format!("unknown SPIR-V type: {mnemonic}"))?;
-        // A type with no parameters: nothing may follow its keyword.
         if matches!(kind, Kind::Sampler | Kind::NamedBarrier) {
             return body.map_or(Ok(()), |b| Err(alloc::format!("unexpected `{b}` after `spirv.{mnemonic}`")));
         }
@@ -771,8 +717,6 @@ impl DialectRules for Spirv {
         Self::why(v.opt, e.mnemonic(), e.body.as_deref(), &mut Vec::new()).map_err(|why| Invalid::DialectType { ty: t.to_string(), why })
     }
 
-    /// A raw op with a C++ parser: its text as that parser reads it. Its trailing attribute
-    /// dict and location are the generic reader's.
     fn op(&self, v: &Verifier<'_>, op: &crate::Operation<'_>) -> Result<(), Invalid> {
         let (Some(raw), Ok(kind)) = (&op.raw, CxxOp::try_from(&*op.name)) else { return Ok(()) };
         let mut text = String::new();
@@ -790,7 +734,6 @@ impl DialectRules for Spirv {
         o.read(kind, region).map_err(|e| Invalid::DialectOp { op: op.name.to_string(), why: e.placed(&text).to_string() })
     }
 
-    /// `spirv.Constant`'s: its value's type, or the type after `:` (`ConstantOp::parse`).
     fn raw_results<'x>(&self, v: &Verifier<'x>, op: &'x crate::Operation<'x>) -> Option<Vec<Type<'x>>> {
         if op.name != "spirv.Constant" {
             return None;
@@ -805,8 +748,6 @@ impl DialectRules for Spirv {
         Some(alloc::vec![ty])
     }
 
-    /// An enum attribute (`#spirv.scope<Device>`, an op's `<Device>`) names one of its cases
-    /// (`FieldParser<Scope>`).
     fn attr(&self, _v: &Verifier<'_>, a: &Attribute<'_>) -> Result<(), Invalid> {
         let Attribute::Extended { ext, .. } = a else { return Ok(()) };
         let Some(e) = SpirvEnum::named(ext.mnemonic()) else { return Ok(()) };

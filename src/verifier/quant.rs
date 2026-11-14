@@ -1,6 +1,3 @@
-//! `quant` types as `mlir-opt` reads them: `QuantDialect::parseType` (`Quant/IR/TypeParser.cpp`)
-//! and each type's `verifyInvariants` (`QuantTypes.cpp`).
-
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
@@ -8,7 +5,6 @@ use super::{DialectRules, Invalid, Verifier};
 use crate::{FloatKind, MlirOpt, Parser, R, Signedness, Type};
 
 keywords! {
-    /// The `quant` types.
     enum Kind {
         Uniform = "uniform",
         Any = "any",
@@ -17,10 +13,8 @@ keywords! {
     }
 }
 
-/// `QuantizedType::MaxStorageBits`.
 const MAX_STORAGE_BITS: u32 = 32;
 
-/// A storage type (`QuantStorageTypeInterface`): its width and default range.
 #[derive(Clone, Copy)]
 struct Storage {
     width: u32,
@@ -29,7 +23,6 @@ struct Storage {
 }
 
 impl Storage {
-    /// An integer of `width` bits: `getDefaultMinimum` / `getDefaultMaximum`.
     #[inline]
     fn int(width: u32, signed: bool) -> Self {
         let w = width.clamp(1, 64);
@@ -40,7 +33,6 @@ impl Storage {
         Self { width, min, max }
     }
 
-    /// The float storage types: `f8E5M2`, `f8E4M3FN`, `f4E2M1FN` (their largest finite value).
     #[inline]
     fn float(k: FloatKind) -> Option<Self> {
         let (width, max) = match k {
@@ -52,15 +44,12 @@ impl Storage {
         Some(Self { width, min: -max, max })
     }
 
-    /// `(min, max)`.
     #[inline]
     fn range(self) -> (i64, i64) {
         (self.min, self.max)
     }
 }
 
-/// The smallest and largest finite value of a float type (`APFloat::getSmallest` / `getLargest`):
-/// the range a scale must lie in. `None` for a type whose range is not checked here.
 fn scale_range(k: FloatKind) -> Option<(f64, f64)> {
     Some(match k {
         FloatKind::F16 => (5.960_464_477_539_063e-8, 65504.0),
@@ -72,24 +61,20 @@ fn scale_range(k: FloatKind) -> Option<(f64, f64)> {
     })
 }
 
-/// A cursor over one `quant` type's body.
 struct QuantText<'a, 'd> {
     p: Parser<'a, 'd>,
 }
 
 impl<'a, 'd> QuantText<'a, 'd> {
-    /// `parseInteger`: an optional `-`, then digits.
     fn integer(&mut self) -> R<i64> {
         let neg = self.p.eat("-");
         let n: i64 = self.p.number()?;
         Ok(if neg { -n } else { n })
     }
 
-    /// `parseFloat`: a decimal integer or float literal, maybe negative.
     fn float(&mut self) -> R<f64> {
         self.p.ws();
         let text = self.p.rest();
-        // `0x...`: the bits of an `f64` (`parseFloat` reads a hex literal so).
         if let Some(hex) = text.strip_prefix("0x") {
             let n = hex.bytes().take_while(u8::is_ascii_hexdigit).count();
             let bits = u64::from_str_radix(&hex[..n], 16).or_else(|_| self.p.err("hexadecimal float constant out of range for type"))?;
@@ -118,8 +103,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(v)
     }
 
-    /// `parseStorageType`: a `QuantStorageTypeInterface` type (an integer type `i8` / `ui8`,
-    /// `f8E5M2`, `f8E4M3FN`, `f4E2M1FN`, a `!quant.quantile<..>`) or `u<width>`, 1 to 32 bits.
     fn storage(&mut self) -> R<Storage> {
         self.p.ws();
         let start = self.p.pos();
@@ -150,9 +133,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(s)
     }
 
-    /// `parseQuantileType` after `quantile`, and `QuantileType::verifyInvariants`:
-    /// `<storage:quantile, {q, ..}(, <min:max>)?>`, one finite quantile per storage value. Its
-    /// storage range (`QuantileType::getDefaultMinimum` / `Maximum`) as a storage type itself.
     fn quantile(&mut self) -> R<Storage> {
         self.p.expect("<")?;
         let (width, signed) = match self.p.ty()? {
@@ -206,8 +186,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(Storage { width, min, max })
     }
 
-    /// `parseStorageRange`: `<min:max>` inside the storage type's range, `min < max`
-    /// (`QuantizedType::verifyInvariants`).
     fn storage_range(&mut self, s: Storage) -> R<()> {
         let (lo, hi) = s.range();
         let (min, max) = match self.p.eat("<") {
@@ -232,7 +210,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(())
     }
 
-    /// An expressed type: a float type.
     fn expressed(&mut self) -> R<FloatKind> {
         match self.p.ty()? {
             Type::Float(k) => Ok(k),
@@ -240,7 +217,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         }
     }
 
-    /// `parseQuantParams`: `scale[:zeroPoint]`, the scale in the expressed type's range.
     fn params(&mut self, k: FloatKind) -> R<()> {
         let scale = self.float()?;
         if let Some((lo, hi)) = scale_range(k)
@@ -254,8 +230,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(())
     }
 
-    /// `parseQuantParamListUntilRBrace` after its `{`: params or nested lists, every element of
-    /// the same shape; its shape.
     fn param_list(&mut self, k: FloatKind) -> R<Vec<usize>> {
         let mut shape: Option<Vec<usize>> = None;
         let mut size = 0;
@@ -277,14 +251,12 @@ impl<'a, 'd> QuantText<'a, 'd> {
         Ok(out)
     }
 
-    /// `parseUniformType` after `uniform`.
     fn uniform(&mut self) -> R<()> {
         self.p.expect("<")?;
         let s = self.storage()?;
         self.storage_range(s)?;
         self.p.expect(":")?;
         let k = self.expressed()?;
-        // `:dim` (per axis) or `:{dim:block, ..}` (sub-channel), then a list of params.
         let listed = match self.p.eat(":") {
             true if self.p.eat("{") => {
                 if !self.p.eat("}") {
@@ -326,7 +298,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         self.p.expect(">")
     }
 
-    /// `parseAnyType` after `any`.
     fn any(&mut self) -> R<()> {
         self.p.expect("<")?;
         let s = self.storage()?;
@@ -337,7 +308,6 @@ impl<'a, 'd> QuantText<'a, 'd> {
         self.p.expect(">")
     }
 
-    /// `parseCalibratedType` after `calibrated`: `<f32<min:max>>`, `min < max`.
     fn calibrated(&mut self) -> R<()> {
         self.p.expect("<")?;
         self.expressed()?;
@@ -353,12 +323,9 @@ impl<'a, 'd> QuantText<'a, 'd> {
     }
 }
 
-/// The `quant` dialect's rules.
 pub(super) struct Quant;
 
 impl Quant {
-    /// `text` (no whitespace) with each `!quant.uniform<..>`'s scales as the `f64` they are and
-    /// a zero point of `0` left out: `1.0:0` and `1.000000e+00` are one scale.
     pub(super) fn canonical(text: &str) -> String {
         let Some(at) = text.find("!quant.uniform<") else { return text.into() };
         let mut out = String::from(&text[..at]);
@@ -378,7 +345,6 @@ impl Quant {
             match lit.contains(['.', 'e', 'E']).then(|| lit.parse::<f64>().ok()).flatten() {
                 Some(v) => {
                     out.push_str(&alloc::format!("{v:e}"));
-                    // `:0` after a scale: the default zero point.
                     if let Some(tail) = rest.strip_prefix(":0")
                         && !tail.starts_with(|ch: char| ch.is_ascii_digit())
                     {
@@ -391,7 +357,6 @@ impl Quant {
         out
     }
 
-    /// `!quant.<mnemonic><body>`: why `mlir-opt` would not read it.
     fn why(opt: &MlirOpt, mnemonic: &str, body: Option<&str>) -> Result<(), String> {
         let kind = Kind::try_from(mnemonic).map_err(|()| alloc::format!("unknown quantized type {mnemonic}"))?;
         let body = body.ok_or_else(|| alloc::format!("`quant.{mnemonic}` needs `<...>`"))?;

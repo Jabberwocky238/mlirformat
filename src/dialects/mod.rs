@@ -1,10 +1,3 @@
-//! Upstream MLIR dialects described with `#[mlir::op]` / `#[mlir::dialect]`; the only module
-//! allowed to `pub mod`.
-//!
-//! The `*.gen.rs` files come straight out of `mlirformat tblgen` (ODS `.td` ⇒ Rust) and are not
-//! edited by hand; each comes from its entry file under `td/` (`td/mlir/Dialect/SCF/IR/scf.td`), and
-//! `scripts/regen-dialects.sh` regenerates them all.
-
 pub mod arith;
 pub mod builtin;
 pub mod cf;

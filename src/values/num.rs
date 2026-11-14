@@ -1,10 +1,3 @@
-//! `APInt` and `APFloat`, as far as folding needs them, and MLIR's way of printing a float.
-//!
-//! Integers are up to 256 bits wide. `f80` / `f128` values are held only when exactly an `f64`
-//! ([`WideFloat`]). Floats are the IEEE-like formats (`f16`, `bf16`, `tf32`,
-//! `f32`, `f64`); arithmetic on the narrow ones goes through `f32`, which is exact enough that
-//! the one final rounding is the correct one.
-
 use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -12,7 +5,6 @@ use core::cmp::Ordering;
 
 use crate::FloatKind;
 
-/// The bits of an [`ApInt`]: up to [`ApInt::MAX_WIDTH`], as a low and a high half.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 struct Wide {
     lo: u128,
@@ -22,7 +14,6 @@ struct Wide {
 impl Wide {
     const ZERO: Wide = Wide { lo: 0, hi: 0 };
     const ONE: Wide = Wide { lo: 1, hi: 0 };
-    /// The bits of one half.
     const HALF: u32 = 128;
 
     #[inline]
@@ -30,13 +21,11 @@ impl Wide {
         Wide { lo, hi: 0 }
     }
 
-    /// `lo` sign-extended to the full width.
     #[inline]
     fn of_signed(v: i128) -> Self {
         Wide { lo: v as u128, hi: if v < 0 { u128::MAX } else { 0 } }
     }
 
-    /// The low `width` bits set.
     #[inline]
     fn mask(width: u32) -> Self {
         match width {
@@ -83,7 +72,6 @@ impl Wide {
         self.add(o.not().add(Wide::ONE))
     }
 
-    /// The full product of two halves.
     fn mul_halves(a: u128, b: u128) -> Wide {
         const LIMB: u32 = 64;
         let (a0, a1) = (a as u64 as u128, a >> LIMB);
@@ -95,7 +83,6 @@ impl Wide {
         Wide { lo, hi }
     }
 
-    /// The product, wrapping at the full width.
     fn mul(self, o: Self) -> Self {
         let low = Self::mul_halves(self.lo, o.lo);
         Wide { lo: low.lo, hi: low.hi.wrapping_add(self.lo.wrapping_mul(o.hi)).wrapping_add(self.hi.wrapping_mul(o.lo)) }
@@ -136,7 +123,6 @@ impl Wide {
         self.lo.count_ones() + self.hi.count_ones()
     }
 
-    /// Quotient and remainder, `o` nonzero.
     fn divrem(self, o: Self) -> (Self, Self) {
         if self.hi == 0 && o.hi == 0 {
             return (Wide::of(self.lo / o.lo), Wide::of(self.lo % o.lo));
@@ -165,7 +151,6 @@ impl Ord for Wide {
     }
 }
 
-/// A fixed-width two's-complement integer, up to [`ApInt::MAX_WIDTH`] bits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ApInt {
     pub width: u32,
@@ -173,9 +158,7 @@ pub struct ApInt {
 }
 
 impl ApInt {
-    /// The widest integer held; a wider one keeps its low bits.
     pub const MAX_WIDTH: u32 = 256;
-    /// The widest integer the `i128` / `u128` accessors return whole.
     const NARROW: u32 = 128;
 
     #[inline]
@@ -188,7 +171,6 @@ impl ApInt {
         Self { width, bits: bits.and(Self::mask(width)) }
     }
 
-    /// `value` truncated to `width` bits.
     #[inline]
     pub fn new(width: u32, value: i128) -> Self {
         Self::of(width, Wide::of_signed(value))
@@ -209,19 +191,16 @@ impl ApInt {
         Self { width, bits: Self::mask(width) }
     }
 
-    /// The low 128 bits.
     #[inline]
     pub fn bits(self) -> u128 {
         self.bits.lo
     }
 
-    /// The value, unsigned (its low 128 bits when wider).
     #[inline]
     pub fn unsigned(self) -> u128 {
         self.bits.lo
     }
 
-    /// The value, signed (its low 128 bits when wider).
     pub fn signed(self) -> i128 {
         if self.width == 0 || self.width >= Self::NARROW {
             return self.bits.lo as i128;
@@ -230,7 +209,6 @@ impl ApInt {
         ((self.bits.lo << shift) as i128) >> shift
     }
 
-    /// The bits sign-extended to the full width.
     fn sext_wide(self) -> Wide {
         if self.is_negative() { self.bits.or(Self::mask(self.width).not()) } else { self.bits }
     }
@@ -335,12 +313,10 @@ impl ApInt {
         (!o.is_zero()).then(|| Self::of(self.width, self.bits.divrem(o.bits).1))
     }
 
-    /// The magnitude of the signed value (`MIN`'s wraps to itself).
     fn magnitude(self) -> Self {
         if self.is_negative() { self.neg() } else { self }
     }
 
-    /// Signed division, wrapping `MIN / -1`.
     pub fn sdiv(self, o: Self) -> Option<Self> {
         if o.is_zero() {
             return None;
@@ -363,7 +339,6 @@ impl ApInt {
         Some(if self.is_negative() { r.neg() } else { r })
     }
 
-    /// `sdiv_ov`: also whether it overflowed (`MIN / -1`).
     #[inline]
     pub fn sdiv_ov(self, o: Self) -> Option<(Self, bool)> {
         let q = self.sdiv(o)?;
@@ -384,12 +359,10 @@ impl ApInt {
     pub fn ashr(self, by: u32) -> Self {
         let by = by.min(self.width.saturating_sub(1));
         let shifted = self.sext_wide().shr(by);
-        // Shifted in from the top: copies of the sign.
         let fill = if self.is_negative() { Wide::mask(2 * Wide::HALF).shl(2 * Wide::HALF - by) } else { Wide::ZERO };
         Self::of(self.width, shifted.or(fill))
     }
 
-    /// Signed order: the sign bit flipped, then unsigned.
     #[inline]
     pub fn scmp(self, o: Self) -> Ordering {
         let flip = |x: Self| x.sext_wide().xor(Wide::ONE.shl(2 * Wide::HALF - 1));
@@ -401,7 +374,6 @@ impl ApInt {
         self.bits.cmp(&o.bits)
     }
 
-    /// Signed addition overflowed?
     #[inline]
     pub fn sadd_ov(self, o: Self) -> (Self, bool) {
         let r = self.add(o);
@@ -425,7 +397,6 @@ impl ApInt {
         (self.sub(o), o.bits > self.bits)
     }
 
-    /// The product of the magnitudes did not fit `bits` bits (`a * b`, checked by dividing back).
     fn product_exceeds(a: Wide, b: Wide, bits: u32) -> bool {
         if a.is_zero() || b.is_zero() {
             return false;
@@ -444,7 +415,6 @@ impl ApInt {
             return (r, ov);
         }
         let (a, b) = (self.magnitude().bits, o.magnitude().bits);
-        // A negative product may reach `-2^(w-1)`, a positive one only `2^(w-1) - 1`.
         let negative = self.is_negative() != o.is_negative();
         let limit = if negative { self.width } else { self.width - 1 };
         let ov = Self::product_exceeds(a, b, limit) && !(negative && a.mul(b) == Wide::ONE.shl(self.width - 1));
@@ -480,13 +450,11 @@ impl ApInt {
         2 * Wide::HALF - 1 - self.bits.leading_zeros()
     }
 
-    /// The value in decimal, signed or not.
     pub fn to_decimal(self, signed: bool) -> String {
         const TEN: Wide = Wide { lo: 10, hi: 0 };
         let negative = signed && self.is_negative();
         let mut v = if negative { self.neg().bits } else { self.bits };
         if negative && v == Wide::ONE.shl(self.width - 1) && self.width == 2 * Wide::HALF {
-            // `MIN` of the full width: its magnitude is itself.
             v = self.bits;
         }
         let mut digits = Vec::new();
@@ -505,7 +473,6 @@ impl ApInt {
         String::from_utf8(digits).expect("ascii digits")
     }
 
-    /// A decimal literal (optionally negative) truncated to `width` bits.
     pub fn parse_decimal(width: u32, lit: &str) -> Option<Self> {
         const TEN: Wide = Wide { lo: 10, hi: 0 };
         let (negative, digits) = match lit.strip_prefix('-') {
@@ -520,16 +487,13 @@ impl ApInt {
         Some(if negative { x.neg() } else { x })
     }
 
-    /// A hexadecimal literal (no `0x`) truncated to `width` bits.
     pub fn parse_hex(width: u32, digits: &str) -> Option<Self> {
-        /// The bits of one hex digit.
         const NIBBLE: u32 = 4;
         let v = digits.chars().try_fold(Wide::ZERO, |acc, c| Some(acc.shl(NIBBLE).or(Wide::of(u128::from(c.to_digit(16)?)))))?;
         Some(Self::of(width, v))
     }
 }
 
-/// An unbounded unsigned integer, for exact decimal conversion of floats.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct BigUint(Vec<u32>);
 
@@ -604,7 +568,6 @@ impl BigUint {
         }
     }
 
-    /// Divides in place by `d`, returning the remainder.
     fn divrem_small(&mut self, d: u32) -> u32 {
         let mut rem = 0u64;
         for x in self.0.iter_mut().rev() {
@@ -631,7 +594,6 @@ impl BigUint {
         out
     }
 
-    /// Long division by a big divisor (shift-and-subtract; numbers here are small).
     fn div(&self, d: &Self) -> Self {
         if d.0.len() == 1 {
             let mut q = self.clone();
@@ -708,8 +670,6 @@ impl BigUint {
     }
 }
 
-/// The layout of an IEEE-like format: exponent bits and stored mantissa bits, and whether it
-/// has no infinities, its one NaN all ones (`fltNonfiniteBehavior::NanOnly`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Layout {
     exp: u32,
@@ -725,8 +685,6 @@ impl Layout {
             FloatKind::TF32 => Self::ieee(8, 10),
             FloatKind::F32 => Self::ieee(8, 23),
             FloatKind::F64 => Self::ieee(11, 52),
-            // The 8-bit formats with IEEE semantics (infinities, NaNs), and f8E4M3FN (no
-            // infinities, one NaN); the `FNUZ` ones bias exponents their own way.
             FloatKind::F8E5M2 => Self::ieee(5, 2),
             FloatKind::F8E4M3 => Self::ieee(4, 3),
             FloatKind::F8E3M4 => Self::ieee(3, 4),
@@ -740,7 +698,6 @@ impl Layout {
         Self { exp, mant, nan_only: false }
     }
 
-    /// The bits of the one NaN of a `nan_only` format, without the sign.
     #[inline]
     fn all_ones(self) -> u64 {
         (1u64 << (self.exp + self.mant)) - 1
@@ -756,13 +713,11 @@ impl Layout {
         1 + self.exp + self.mant
     }
 
-    /// Precision, hidden bit included.
     #[inline]
     fn precision(self) -> u32 {
         self.mant + 1
     }
 
-    /// `f64` ⇒ this layout, rounding to nearest, ties to even.
     fn round(self, x: f64) -> u64 {
         let b = x.to_bits();
         let top = (b >> 63) << (self.exp + self.mant);
@@ -771,7 +726,6 @@ impl Layout {
             return top | self.all_ones();
         }
         if x.is_nan() {
-            // The top payload bits survive; the result is quiet.
             let payload = (b & ((1 << 52) - 1)) >> (52 - self.mant);
             return top | (emax << self.mant) | payload | (1 << (self.mant - 1));
         }
@@ -781,7 +735,6 @@ impl Layout {
         if x == 0.0 {
             return top;
         }
-        // x = m * 2^e2 with m normalized to 53 bits.
         let raw_e = ((b >> 52) & 0x7ff) as i32;
         let (mut m, mut e2) = if raw_e == 0 { (b & ((1 << 52) - 1), -1074) } else { ((b & ((1 << 52) - 1)) | (1 << 52), raw_e - 1075) };
         while m < (1 << 52) {
@@ -803,7 +756,6 @@ impl Layout {
             r += 1;
         }
         if subnormal {
-            // r may have carried into the smallest normal: the exponent field reads 1 then.
             return top | r as u64;
         }
         if r == 1 << (self.mant + 1) {
@@ -813,7 +765,6 @@ impl Layout {
         let biased = (ue + self.bias()) as u64;
         let mant = r as u64 & ((1 << self.mant) - 1);
         if self.nan_only {
-            // (the top exponent holds normals but the NaN; past them, NaN)
             if biased > emax || (biased == emax && mant == (1 << self.mant) - 1) {
                 return top | self.all_ones();
             }
@@ -843,7 +794,6 @@ impl Layout {
     }
 }
 
-/// `2^e`, exactly.
 fn libm_exp2(e: i32) -> f64 {
     if e >= -1022 {
         f64::from_bits(((e + 1023) as u64) << 52)
@@ -852,7 +802,6 @@ fn libm_exp2(e: i32) -> f64 {
     }
 }
 
-/// An IEEE-like float of one of the supported formats, as its bits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ApFloat {
     pub kind: FloatKind,
@@ -881,7 +830,6 @@ impl ApFloat {
         Layout::of(kind).map(|l| Self { kind, bits: bits & ((1u128 << l.width()) - 1) as u64 })
     }
 
-    /// A literal as MLIR spells it: decimal, or `0x...` bits.
     pub fn parse(kind: FloatKind, lit: &str) -> Option<Self> {
         if let Some(hex) = lit.strip_prefix("0x").or_else(|| lit.strip_prefix("0X")) {
             return Self::from_bits(kind, u64::from_str_radix(hex, 16).ok()?);
@@ -917,8 +865,6 @@ impl ApFloat {
         self.to_f64().is_infinite()
     }
 
-    /// The default quiet NaN `APFloat` makes for an invalid operation (positive).
-    /// `APFloat::getLargest`.
     #[inline]
     pub fn largest(kind: FloatKind, negative: bool) -> Self {
         let l = Layout::of(kind).expect("unsupported float format");
@@ -944,8 +890,6 @@ impl ApFloat {
         Self { kind: self.kind, bits: self.bits | (1 << (l.mant - 1)) }
     }
 
-    /// One arithmetic step with `APFloat`'s NaN rules: a NaN operand comes back (quieted, the
-    /// first one first); an invalid operation gives the default NaN.
     pub fn binary(self, o: Self, f32_op: fn(f32, f32) -> f32, f64_op: fn(f64, f64) -> f64) -> Self {
         if self.is_nan() {
             return self.quieted();
@@ -987,19 +931,16 @@ impl ApFloat {
         Self { kind: self.kind, bits: self.bits ^ (1 << (self.layout().width() - 1)) }
     }
 
-    /// Converts to another format (round to nearest even).
     #[inline]
     pub fn convert(self, kind: FloatKind) -> Option<Self> {
         Self::from_f64(kind, self.to_f64())
     }
 
-    /// `APFloat::compare`: `None` when unordered.
     #[inline]
     pub fn compare(self, o: Self) -> Option<Ordering> {
         self.to_f64().partial_cmp(&o.to_f64())
     }
 
-    /// Significand (hidden bit included) and exponent: the value is `sig * 2^exp`.
     fn decompose(self) -> (u128, i32) {
         let l = self.layout();
         let e = ((self.bits >> l.mant) & ((1 << l.exp) - 1)) as i32;
@@ -1007,7 +948,6 @@ impl ApFloat {
         if e == 0 { (m, 1 - l.bias() - l.mant as i32) } else { (m | (1 << l.mant), e - l.bias() - l.mant as i32) }
     }
 
-    /// `APFloat::toString`.
     pub fn to_string_with(self, precision: u32, max_padding: u32, truncate_zero: bool) -> String {
         let mut out = String::new();
         if self.is_inf() {
@@ -1060,7 +1000,6 @@ impl ApFloat {
         } else if exp < 0 {
             s = s.mul(&BigUint::pow(5, (-exp) as u32));
         }
-        // AdjustToPrecision, on the integer.
         let bits = s.bits();
         let required = (precision * 196 + 58) / 59;
         if bits > required {
@@ -1070,7 +1009,6 @@ impl ApFloat {
                 s = s.div(&BigUint::pow(10, removable));
             }
         }
-        // Digits, least significant first; trailing zeros counted into the exponent.
         let mut buf: Vec<u8> = Vec::new();
         let mut trail = true;
         while !s.is_zero() {
@@ -1082,7 +1020,6 @@ impl ApFloat {
                 trail = false;
             }
         }
-        // AdjustToPrecision, on the digits.
         let n = buf.len();
         if n > precision as usize {
             let mut first = n - precision as usize;
@@ -1167,8 +1104,6 @@ impl ApFloat {
         }
     }
 
-    /// ⭐ How MLIR prints this float (`printFloatValue`): `%e`-like with 6 digits when that
-    /// reads back exactly, else the shortest natural form, else the bits in hex.
     pub fn print(self) -> String {
         if !self.is_inf() && !self.is_nan() {
             let s = self.to_string_with(6, 0, false);
@@ -1184,9 +1119,6 @@ impl ApFloat {
     }
 }
 
-/// An `f80` (x87 extended) or `f128` (IEEE quad) value that is exactly an `f64`: what folding
-/// holds of these formats. Only what stays exact is done with them (conversions, comparison,
-/// printing); there is no arithmetic.
 #[derive(Debug, Clone, Copy)]
 pub struct WideFloat {
     pub kind: FloatKind,
@@ -1202,32 +1134,24 @@ impl PartialEq for WideFloat {
 impl Eq for WideFloat {}
 
 impl WideFloat {
-    /// The exponent bits of both formats and their bias.
     const EXP: u32 = 15;
     const BIAS: i32 = (1 << (Self::EXP - 1)) - 1;
-    /// The stored fraction bits (`f80` stores its integer bit too).
     const F80_FRACTION: u32 = 63;
     const F128_FRACTION: u32 = 112;
-    /// `f64`'s.
     const F64_FRACTION: u32 = 52;
     const F64_BIAS: i32 = 1023;
-    /// The significand precision, `printFloatValue`'s full precision.
     const F80_PRECISION: u32 = 64;
     const F128_PRECISION: u32 = 113;
 
-    /// Whether `kind` is one of these formats.
     #[inline]
     pub fn wide(kind: FloatKind) -> bool {
         matches!(kind, FloatKind::F80 | FloatKind::F128)
     }
 
-    /// `x` in `kind` (`None` for NaN, which is not held).
     pub fn of(kind: FloatKind, x: f64) -> Option<Self> {
         (Self::wide(kind) && !x.is_nan()).then_some(Self { kind, value: x })
     }
 
-    /// The format's bits: sign, 15 exponent bits, then the fraction (`f80` with its explicit
-    /// integer bit).
     pub fn bits(self) -> u128 {
         let b = self.value.to_bits();
         let sign = u128::from(b >> 63);
@@ -1240,12 +1164,10 @@ impl WideFloat {
         let top = sign << (Self::EXP + fraction + u32::from(f80));
         let emax = (1u128 << Self::EXP) - 1;
         let (e, m) = if raw_e == 0x7ff {
-            // Infinity (NaN is not held).
             (emax, if f80 { 1u128 << Self::F80_FRACTION } else { 0 })
         } else if raw_e == 0 && frac == 0 {
             (0, 0)
         } else {
-            // Normalize (an f64 subnormal is a normal here).
             let (mut m, mut e) = if raw_e == 0 { (frac, 1 - Self::F64_BIAS) } else { (frac | (1 << Self::F64_FRACTION), raw_e - Self::F64_BIAS) };
             while m >> Self::F64_FRACTION == 0 {
                 m <<= 1;
@@ -1255,11 +1177,9 @@ impl WideFloat {
             let m = if f80 { m } else { m & ((1u128 << fraction) - 1) };
             ((e + Self::BIAS) as u128, m)
         };
-        // The exponent sits above the stored fraction (with `f80`'s integer bit).
         top | (e << (fraction + u32::from(f80))) | m
     }
 
-    /// The value of the format's bits, when it is exactly an `f64`.
     fn from_bits(kind: FloatKind, bits: u128) -> Option<Self> {
         let f80 = kind == FloatKind::F80;
         let fraction = if f80 { Self::F80_FRACTION } else { Self::F128_FRACTION };
@@ -1277,7 +1197,6 @@ impl WideFloat {
         } else if e == 0 && m == 0 {
             0.0
         } else {
-            // significand · 2^(e - bias - fraction), the significand with its integer bit.
             let (sig, e) = if f80 { (m, if e == 0 { 1 } else { e }) } else if e == 0 { (m, 1) } else { (m | (1u128 << fraction), e) };
             let exp = e - Self::BIAS - fraction as i32;
             let tz = sig.trailing_zeros();
@@ -1286,7 +1205,6 @@ impl WideFloat {
                 return None;
             }
             let x = sig as f64 * libm_exp2_wide(exp)?;
-            // Exact only when the scaling did not round (subnormals past f64).
             if (x / libm_exp2_wide(exp)?) as u128 != sig {
                 return None;
             }
@@ -1295,8 +1213,6 @@ impl WideFloat {
         Self::of(kind, if sign == 1 { -mag } else { mag })
     }
 
-    /// The exact decimal digits of `x` (no leading or trailing zeros) and the power of ten of
-    /// the last one.
     fn exact_decimal(x: f64) -> (String, i32) {
         let b = x.abs().to_bits();
         let raw_e = ((b >> Self::F64_FRACTION) & 0x7ff) as i32;
@@ -1323,7 +1239,6 @@ impl WideFloat {
         (String::from_utf8(digits).expect("ascii digits"), exp10 + tz as i32)
     }
 
-    /// A decimal literal's digits and power of ten, as [`Self::exact_decimal`] normalizes them.
     fn literal_decimal(lit: &str) -> Option<(bool, String, i32)> {
         let (neg, lit) = match lit.strip_prefix('-') {
             Some(r) => (true, r),
@@ -1345,7 +1260,6 @@ impl WideFloat {
         Some((neg, String::from(trimmed), exp10))
     }
 
-    /// A literal as MLIR spells it: decimal (exactly an `f64`), or `0x...` bits.
     pub fn parse(kind: FloatKind, lit: &str) -> Option<Self> {
         if !Self::wide(kind) {
             return None;
@@ -1361,8 +1275,6 @@ impl WideFloat {
         Self::of(kind, x)
     }
 
-    /// As `printFloatValue` prints it: six digits when they are exact, else every digit the
-    /// format has, else its bits.
     pub fn print(self) -> String {
         let f = ApFloat { kind: FloatKind::F64, bits: self.value.to_bits() };
         if self.value.is_finite() {
@@ -1379,23 +1291,19 @@ impl WideFloat {
         alloc::format!("0x{:X}", self.bits())
     }
 
-    /// In another format, when nothing is lost.
     pub fn to_float(self, kind: FloatKind) -> Option<ApFloat> {
         let f = ApFloat::from_f64(kind, self.value)?;
         (f.to_f64().to_bits() == self.value.to_bits()).then_some(f)
     }
 }
 
-/// `2^e` as an `f64`, when it is one.
 fn libm_exp2_wide(e: i32) -> Option<f64> {
-    /// `f64`'s smallest subnormal exponent and largest exponent.
     const MIN: i32 = -1074;
     const MAX: i32 = 1023;
     (MIN..=MAX).contains(&e).then(|| libm_exp2(e))
 }
 
 impl ApFloat {
-    /// `toString(0, 3, true)` with the significand precision of another format.
     fn to_string_full(self, sem_precision: u32) -> String {
         let mut out = String::new();
         if self.is_zero() {

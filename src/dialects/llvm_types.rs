@@ -1,10 +1,3 @@
-//! LLVM dialect types (`!llvm.ptr`, `!llvm.struct<(...)>`, `!llvm.array<N x T>`,
-//! `!llvm.func<R (A...)>`) as values.
-//!
-//! A dialect type's body stays text in [`Extended`]; [`LlvmType`] reads and writes that text
-//! exactly as `mlir-opt` prints it: nested LLVM types without their `!llvm.` prefix, builtin
-//! types as themselves.
-
 use crate::Str;
 use alloc::boxed::Box;
 use alloc::format;
@@ -15,20 +8,15 @@ use crate::common::{Content, Extended, FloatKind, ShapedKind, Signedness, Type};
 use crate::mliropt::MlirOpt;
 use crate::parser::Parser;
 
-/// One LLVM dialect type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LlvmType<'a> {
     Ptr(u32),
     Void,
     Label,
     Metadata,
-    /// `x86_amx`: an AMX tile.
     X86Amx,
-    /// `ppc_fp128`.
     PpcFp128,
     Array(u64, Box<Type<'a>>),
-    /// `body: None` is `opaque` when `opaque`, else a name-only reference to an enclosing
-    /// identified struct.
     Struct { name: Option<String>, packed: bool, body: Option<Vec<Type<'a>>>, opaque: bool },
     Func { ret: Box<Type<'a>>, params: Vec<Type<'a>>, vararg: bool },
 }
@@ -54,8 +42,6 @@ impl<'a> LlvmType<'a> {
         LlvmType::Void.into()
     }
 
-    /// The mnemonic (`ptr`, `struct`, ...) and body text. `ctx`: the identified structs being
-    /// printed around this one, with whether each is LLVM-compatible.
     fn parts(&self, ctx: &mut Vec<(String, bool)>) -> (&'static str, Option<String>) {
         let list = |ts: &[Type<'a>], ctx: &mut Vec<(String, bool)>| ts.iter().map(|t| Self::nested(t, ctx)).collect::<Vec<_>>().join(", ");
         match self {
@@ -107,8 +93,6 @@ impl<'a> LlvmType<'a> {
         }
     }
 
-    /// A type as it appears inside an LLVM type (`dispatchPrint`): an LLVM-compatible LLVM
-    /// type without its prefix, anything else as itself.
     fn nested(t: &Type<'a>, ctx: &mut Vec<(String, bool)>) -> String {
         match LlvmType::try_from(t) {
             Ok(l) if Self::compatible_in(t, ctx) => {
@@ -123,7 +107,6 @@ impl<'a> LlvmType<'a> {
         }
     }
 
-    /// Parses an LLVM type at the start of `s` (mnemonic first, no prefix); the rest.
     fn parse_nested(s: &str) -> Option<(Type<'static>, &str)> {
         let s = s.trim_start();
         let word_end = s.find(|c: char| !c.is_ascii_alphanumeric() && c != '_').unwrap_or(s.len());
@@ -137,7 +120,6 @@ impl<'a> LlvmType<'a> {
             let ty = LlvmType::from_parts(word, (body_len > 0).then(|| &rest[..body_len]))?;
             return Some((ty.into(), &rest[body_len..]));
         }
-        // A builtin type: let mlirformat read it.
         let opt = MlirOpt::new();
         let mut p = Parser::new(s, &opt);
         let ty = p.ty().ok().and_then(|t| Content::convert(&t).ok())?;
@@ -145,7 +127,6 @@ impl<'a> LlvmType<'a> {
         Some((ty, &s[used..]))
     }
 
-    /// The length of the `<...>` group at the start of `s`.
     fn group_len(s: &str) -> Option<usize> {
         let mut depth = 0i32;
         let mut quote = false;
@@ -221,13 +202,11 @@ impl<'a> LlvmType<'a> {
         })
     }
 
-    /// `LLVM::isCompatibleType`.
     #[inline]
     pub fn compatible(t: &Type<'_>) -> bool {
         Self::compatible_in(t, &mut Vec::new())
     }
 
-    /// The same, a name-only struct reference taking the compatibility `ctx` gives it.
     fn compatible_in(t: &Type<'_>, ctx: &mut Vec<(String, bool)>) -> bool {
         match t {
             Type::Integer { signedness, .. } => *signedness == Signedness::Signless,
@@ -262,7 +241,6 @@ impl<'a> From<LlvmType<'a>> for Type<'a> {
 impl TryFrom<&Type<'_>> for LlvmType<'static> {
     type Error = ();
 
-    /// Reads the body text into a type that owns everything.
     #[inline]
     fn try_from(t: &Type<'_>) -> Result<Self, ()> {
         let Type::Extended(e) = t else { return Err(()) };

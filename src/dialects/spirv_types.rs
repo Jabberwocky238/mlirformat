@@ -1,12 +1,3 @@
-//! SPIR-V dialect types (`!spirv.ptr<T, StorageClass>`, `!spirv.array<N x T>`,
-//! `!spirv.struct<(...)>`, `!spirv.image<...>`, ...) as values (`SPIRVTypes.cpp`,
-//! `SPIRVDialect.cpp`).
-//!
-//! A dialect type's body stays text in [`Extended`]; [`SpirvType`] reads and writes that text
-//! exactly as `mlir-opt` prints it. Nested types print as themselves (`!spirv.` prefix
-//! included); enum operands (storage classes, decorations, image dims, ...) keep their
-//! `stringify*` names.
-
 use crate::Str;
 use alloc::boxed::Box;
 use alloc::format;
@@ -17,46 +8,34 @@ use crate::common::{Content, Extended, Type};
 use crate::mliropt::MlirOpt;
 use crate::parser::Parser;
 
-/// A decoration with its value, if any: `NonWritable`, `Offset=4`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SpirvDecoration {
     pub name: String,
-    /// The value as printed (`printAttributeWithoutType`).
     pub value: Option<String>,
 }
 
-/// One member of a `!spirv.struct`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpirvMember<'a> {
     pub ty: Type<'a>,
     pub offset: Option<u32>,
-    /// Sorted by decoration value, as `StructType` stores them.
     pub decorations: Vec<SpirvDecoration>,
 }
 
-/// One SPIR-V dialect type.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SpirvType<'a> {
     Array { len: u32, elem: Box<Type<'a>>, stride: u32 },
     RuntimeArray { elem: Box<Type<'a>>, stride: u32 },
     Ptr { pointee: Box<Type<'a>>, storage: String },
-    /// The sampled type, then `Dim`, `ImageDepthInfo`, `ImageArrayedInfo`, `ImageSamplingInfo`,
-    /// `ImageSamplerUseInfo`, `ImageFormat`.
     Image { elem: Box<Type<'a>>, params: [String; 6] },
     SampledImage(Box<Type<'a>>),
-    /// `members: None` is a name-only reference to an enclosing identified struct.
     Struct { name: Option<String>, members: Option<Vec<SpirvMember<'a>>>, decorations: Vec<SpirvDecoration> },
     CoopMatrix { rows: u32, cols: u32, elem: Box<Type<'a>>, scope: String, usage: String },
     Matrix { cols: u32, column: Box<Type<'a>> },
-    /// `shape: None` is unranked; `-1` a dynamic dim.
     TensorArm { shape: Option<Vec<i64>>, elem: Box<Type<'a>> },
-    /// `!spirv.sampler`: no body.
     Sampler,
-    /// `!spirv.named_barrier`: no body.
     NamedBarrier,
 }
 
-/// A cursor over a type body.
 struct Cursor<'s> {
     s: &'s str,
 }
@@ -83,7 +62,6 @@ impl<'s> Cursor<'s> {
         self.eat(tok).then_some(())
     }
 
-    /// A bare identifier (`StorageBuffer`, `Dim2D`, `struct_name`).
     fn word(&mut self) -> Option<&'s str> {
         self.ws();
         let end = self.s.find(|c: char| !c.is_ascii_alphanumeric() && c != '_' && c != '.' && c != '$' && c != '-').unwrap_or(self.s.len());
@@ -103,7 +81,6 @@ impl<'s> Cursor<'s> {
         Some(v)
     }
 
-    /// A type, read by mlirformat's own parser.
     fn ty(&mut self) -> Option<Type<'static>> {
         self.ws();
         let opt = MlirOpt::new();
@@ -113,7 +90,6 @@ impl<'s> Cursor<'s> {
         Some(ty)
     }
 
-    /// An attribute value's text, up to the next `,` / `]` / `>` at depth 0.
     fn value(&mut self) -> Option<&'s str> {
         self.ws();
         let mut depth = 0i32;
@@ -135,7 +111,6 @@ impl<'s> Cursor<'s> {
         None
     }
 
-    /// `Name` or `Name=value`.
     #[inline]
     fn decoration(&mut self) -> Option<SpirvDecoration> {
         let name = String::from(self.word()?);
@@ -143,7 +118,6 @@ impl<'s> Cursor<'s> {
         Some(SpirvDecoration { name, value })
     }
 
-    /// `[offset]`, `[offset, Deco, ...]` or `[Deco, ...]` after a struct member.
     fn member_decorations(&mut self, m: &mut SpirvMember<'static>) -> Option<()> {
         if !self.eat("[") {
             return Some(());
@@ -165,7 +139,6 @@ impl<'s> Cursor<'s> {
         }
     }
 
-    /// `, stride=N` before the closing `>`.
     fn stride(&mut self) -> Option<u32> {
         if !self.eat(",") {
             return Some(0);
@@ -287,7 +260,6 @@ impl<'a> SpirvType<'a> {
         SpirvType::RuntimeArray { elem: elem.into(), stride }.into()
     }
 
-    /// The mnemonic (`ptr`, `struct`, ...) and the body between `<` and `>`.
     fn parts(&self) -> (&'static str, String) {
         let decos = |ds: &[SpirvDecoration]| -> Vec<String> {
             ds.iter()
@@ -343,8 +315,6 @@ impl<'a> SpirvType<'a> {
         }
     }
 
-    /// The element type of a composite (`CompositeType::getElementType(0)`): an array's or a
-    /// matrix's element, a struct's first member.
     pub fn element(&self) -> Option<&Type<'a>> {
         match self {
             SpirvType::Array { elem, .. } | SpirvType::RuntimeArray { elem, .. } | SpirvType::CoopMatrix { elem, .. } | SpirvType::TensorArm { elem, .. } => Some(elem),
@@ -369,7 +339,6 @@ impl<'a> From<SpirvType<'a>> for Type<'a> {
 impl TryFrom<&Type<'_>> for SpirvType<'static> {
     type Error = ();
 
-    /// Reads the body text into a type that owns everything.
     fn try_from(t: &Type<'_>) -> Result<Self, ()> {
         let Type::Extended(e) = t else { return Err(()) };
         let m = e.name.strip_prefix("spirv.").ok_or(())?;

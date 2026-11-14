@@ -1,8 +1,5 @@
-//! `math` (formats from `MathOps.td`, checked against `mlir-opt` 23.1.5 output).
-
 use crate::{Attribute, Type, Value, mlir};
 
-/// `operand [fastmath<…>] : T` float ops.
 macro_rules! unary_f {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
@@ -16,7 +13,6 @@ macro_rules! unary_f {
     )*};
 }
 
-/// `lhs, rhs [fastmath<…>] : T` float ops.
 macro_rules! binary_f {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
@@ -32,7 +28,6 @@ macro_rules! binary_f {
     )*};
 }
 
-/// `operand : T` integer ops.
 macro_rules! unary_i {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$operand attr-dict `:` type($result)", results(result))]
@@ -44,7 +39,6 @@ macro_rules! unary_i {
     )*};
 }
 
-/// `operand [fastmath<…>] : T` ⇒ `i1` (shaped like `T`) classification ops.
 macro_rules! classify {
     ($($ty:ident = $name:literal),* $(,)?) => {$(
         #[mlir::op($name, format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($operand)", results(result))]
@@ -84,7 +78,6 @@ pub struct IPowIOp<'a> {
     pub result: Type<'a>,
 }
 
-/// `lhs, rhs : F, I`: float to an integer power.
 #[mlir::op("math.fpowi", format = "$lhs `,` $rhs (`fastmath` `` $fastmath^)? attr-dict `:` type($lhs) `,` type($rhs)", results(result))]
 pub struct FPowIOp<'a> {
     #[slot(result)]
@@ -112,7 +105,6 @@ pub struct FmaOp<'a> {
     pub result: Type<'a>,
 }
 
-/// `%sin, %cos = math.sincos %x : T`.
 #[mlir::op("math.sincos", format = "$operand (`fastmath` `` $fastmath^)? attr-dict `:` type($operand)", results(sin, cos))]
 pub struct SincosOp<'a> {
     #[slot(sin)]
@@ -124,7 +116,6 @@ pub struct SincosOp<'a> {
     pub cos: Type<'a>,
 }
 
-/// `math.clampf %x to [%lo, %hi] : T`.
 #[mlir::op("math.clampf", format = "$operand `to` ` ` `[` $min `,` $max `]` (`fastmath` `` $fastmath^)? attr-dict `:` type($result)", results(result))]
 pub struct ClampFOp<'a> {
     #[slot(result)]
@@ -138,7 +129,6 @@ pub struct ClampFOp<'a> {
     pub result: Type<'a>,
 }
 
-/// The `math` dialect.
 #[mlir::dialect(
     "math",
     ops = [AbsF, AcosOp, AcoshOp, AsinOp, AsinhOp, AtanOp, AtanhOp, CbrtOp, CeilOp, CosOp, CoshOp, ErfOp, ErfcOp, ExpOp, Exp2Op, ExpM1Op, FloorOp, LogOp, Log10Op, Log1pOp, Log2Op, RoundOp, RoundEvenOp, RsqrtOp, SinOp, SinhOp, SqrtOp, TanOp, TanhOp, TruncOp, Atan2Op, CopySignOp, PowFOp, AbsIOp, CountLeadingZerosOp, CountTrailingZerosOp, CtPopOp, IsFiniteOp, IsInfOp, IsNaNOp, IsNormalOp, IPowIOp, FPowIOp, FmaOp, SincosOp, ClampFOp],

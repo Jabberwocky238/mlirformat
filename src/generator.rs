@@ -1,6 +1,3 @@
-//! ⭐ IR → text: the printer, the serde `Serializer` that flattens typed ops into a [`Content`],
-//! typed op → [`Operation`], and the runtime assembly-format writer.
-
 use crate::Str;
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
@@ -17,7 +14,6 @@ use crate::common::*;
 use crate::mliropt::MlirOpt;
 use crate::parser::{Bound, SEGMENTS, Shape, View};
 
-/// `items` joined by `sep`.
 pub struct Sep<'x, T>(pub &'x [T], pub &'x str);
 
 impl<T: Display> Display for Sep<'_, T> {
@@ -32,31 +28,19 @@ impl<T: Display> Display for Sep<'_, T> {
     }
 }
 
-/// Indentation-aware MLIR writer; typed ops print through it.
 pub struct Printer<'p, 'd> {
     out: Sink<'p>,
     indent: usize,
     opt: &'d MlirOpt,
-    /// Dialect whose op names print without their prefix (`return` in `func.func`).
     default_ns: Option<&'static str>,
-    /// The enclosing module's attribute aliases; empty when printing an op on its own.
     aliases: Vec<(String, String)>,
-    /// The regions of the op a hand-written print is printing: its typed op holds them hollow
-    /// ([`Region::hollow`]), and a hollow region prints as the one it stands for.
     lent: &'p [Region<'p>],
-    /// Where the regions handed over by reference ([`Region::sourced`]) are read.
     source: Option<&'d dyn Source>,
-    /// Prints the ops of the next block read from a source in parallel, once
-    /// ([`MlirOpt::print_in`](crate::MlirOpt::print_in)): the executor, and the source as threads
-    /// share it.
     par: Option<(&'d dyn Fork, &'d (dyn Source + Sync))>,
 }
 
-/// One run of a block's ops, printed apart ([`Printer::blocks_from`]).
 type Run<'t> = Box<dyn FnOnce() -> Result<String, fmt::Error> + Send + 't>;
 
-/// An [`Executor`](moremath::Executor) as a printer holds it: without its generic method, so
-/// it fits behind a reference.
 trait Fork: Sync {
     fn threads(&self) -> usize;
 
@@ -75,39 +59,26 @@ impl<X: moremath::Executor + Sync> Fork for X {
     }
 }
 
-/// Where a printer's text goes: any writer, or a string it can take text back out of (a custom
-/// form that turns out not to fit is undone in place instead of printed aside and copied).
 enum Sink<'p> {
     Write(&'p mut dyn Write),
     Text(&'p mut String),
 }
 
-/// ⭐ An IR the printer reads as it goes, instead of a whole [`Module`] built for it: the ops it
-/// hands over hold their regions by reference ([`Region::sourced`]), and the printer asks for
-/// each one when it gets to it. Only the path being printed exists as mlirformat's IR.
 pub trait Source {
-    /// Region `id`, one level deep: its blocks and their ops, whose own regions are references
-    /// again.
     fn region(&self, id: u64) -> Region<'_>;
 
-    /// Region `id`'s blocks, labels and arguments only (their ops are left out).
     fn blocks(&self, id: u64) -> Vec<Block<'_>> {
         self.region(id).blocks.into_iter().map(|b| Block { ops: Vec::new(), ..b }).collect()
     }
 
-    /// How many ops block `b` of region `id` holds.
     fn len(&self, id: u64, b: usize) -> usize {
         self.region(id).blocks[b].ops.len()
     }
 
-    /// Op `k` of block `b` of region `id`, its regions by reference: the printer reads a region
-    /// it only prints one op at a time.
     fn op(&self, id: u64, b: usize, k: usize) -> Operation<'_> {
         self.region(id).blocks.swap_remove(b).ops.swap_remove(k)
     }
 
-    /// Ops `range` of block `b` of region `id`, in order, as [`op`](Self::op) gives each: what
-    /// the printer reads a block by. A source whose blocks are lists walks them once here.
     fn ops_iter<'s>(&'s self, id: u64, b: usize, range: core::ops::Range<usize>) -> Box<dyn Iterator<Item = Operation<'s>> + 's> {
         Box::new(range.map(move |k| self.op(id, b, k)))
     }
@@ -127,7 +98,6 @@ impl Write for Printer<'_, '_> {
 }
 
 impl<'p, 'd> Printer<'p, 'd> {
-    /// The converter it prints with.
     #[inline]
     pub(crate) fn opt(&self) -> &'d MlirOpt {
         self.opt
@@ -138,7 +108,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         Self::into(Sink::Write(out), opt)
     }
 
-    /// A printer into string `out`.
     #[inline]
     pub fn text(out: &'p mut String, opt: &'d MlirOpt) -> Self {
         Self::into(Sink::Text(out), opt)
@@ -149,13 +118,11 @@ impl<'p, 'd> Printer<'p, 'd> {
         Self { out, indent: 0, opt, default_ns: Some("builtin"), aliases: Vec::new(), lent: &[], source: None, par: None }
     }
 
-    /// A printer into `out` in the same state (indentation, default dialect, dialects).
     #[inline]
     pub fn fork<'q>(&self, out: &'q mut dyn Write) -> Printer<'q, 'd> {
         self.lend(out, &[])
     }
 
-    /// [`fork`](Self::fork), lending it the regions that the hollow regions it meets stand for.
     #[inline]
     pub(crate) fn lend<'q>(&self, out: &'q mut dyn Write, lent: &'q [Region<'q>]) -> Printer<'q, 'd> {
         self.with(Sink::Write(out), lent)
@@ -165,9 +132,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         Printer { out, indent: self.indent, opt: self.opt, default_ns: self.default_ns, aliases: self.aliases.clone(), lent, source: self.source, par: self.par }
     }
 
-    /// ⭐ Prints with `f` on a printer in the same state, lent `lent`, writing in place; when
-    /// `f` gives `None` or an error, what it wrote is taken back and the answer is `None`. Into a
-    /// writer (which cannot take text back) it prints aside and copies.
     pub(crate) fn attempt(&mut self, lent: &[Region<'_>], f: impl FnOnce(&mut Printer<'_, 'd>) -> Option<fmt::Result>) -> Option<fmt::Result> {
         let mut aside = String::new();
         let (text, at) = match &mut self.out {
@@ -192,20 +156,17 @@ impl<'p, 'd> Printer<'p, 'd> {
         }
     }
 
-    /// Prints with `f` into `out`, no dialects registered.
     #[inline]
     pub fn write(out: &mut dyn Write, f: impl FnOnce(&mut Printer<'_, '_>) -> fmt::Result) -> fmt::Result {
         f(&mut Printer::new(out, &MlirOpt::new()))
     }
 
-    /// An op name in custom form: without its prefix in its own dialect's regions.
     #[inline]
     pub fn op_name(&mut self, name: &str) -> fmt::Result {
         let short = name.split_once('.').filter(|(ns, _)| Some(*ns) == self.default_ns).map_or(name, |(_, n)| n);
         self.write_str(short)
     }
 
-    /// Runs `f` one indentation level deeper (multi-line custom syntax: `cf.switch`'s cases).
     pub fn nested(&mut self, f: impl FnOnce(&mut Self) -> fmt::Result) -> fmt::Result {
         self.indent += 2;
         let done = f(self);
@@ -213,20 +174,17 @@ impl<'p, 'd> Printer<'p, 'd> {
         done
     }
 
-    /// Newline followed by the current indentation.
     #[inline]
     pub fn nl(&mut self) -> fmt::Result {
         let indent = self.indent;
         write!(self, "\n{:1$}", "", indent)
     }
 
-    /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
     #[inline]
     pub fn alias(&self, name: &str) -> Option<&str> {
         self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
     }
 
-    /// Prints with the module's aliases already in scope, for one op out of a module.
     #[inline]
     pub fn write_in(out: &mut dyn Write, opt: &MlirOpt, aliases: &[(String, String)], f: impl FnOnce(&mut Printer<'_, '_>) -> fmt::Result) -> fmt::Result {
         let mut p = Printer::new(out, opt);
@@ -265,7 +223,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         }
     }
 
-    /// The generic form (after `%results = `).
     pub fn generic(&mut self, g: &Operation<'_>) -> fmt::Result {
         write!(self, "\"{}\"({})", g.name, Sep(&g.operands, ", "))?;
         if !g.successors.is_empty() {
@@ -293,7 +250,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         self.loc(&g.loc)
     }
 
-    /// `@name`, quoted unless it is a bare identifier.
     #[inline]
     pub fn sym_name(&mut self, name: &str) -> fmt::Result {
         let bare = name.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_') && name.bytes().all(|c| c.is_ascii_alphanumeric() || b"_$.-".contains(&c));
@@ -307,7 +263,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         }
     }
 
-    /// ` {prefix}{a = 1, b}` with `elide`d names skipped; nothing if no attribute remains.
     pub fn attr_dict(&mut self, prefix: &str, attrs: &[NamedAttr<'_>], elide: &[&str]) -> fmt::Result {
         let mut kept = attrs.iter().filter(|a| !elide.contains(&&*a.name)).peekable();
         if kept.peek().is_none() {
@@ -320,14 +275,11 @@ impl<'p, 'd> Printer<'p, 'd> {
         self.write_char('}')
     }
 
-    /// `{ blocks }` of an op that sets no default dialect; the entry block label is omitted
-    /// unless `entry_label`.
     #[inline]
     pub fn region(&mut self, r: &Region<'_>, entry_label: bool) -> fmt::Result {
         self.region_in(None, r, entry_label)
     }
 
-    /// `{ blocks }` whose op names of dialect `ns` print without their prefix.
     pub fn region_in(&mut self, ns: Option<&'static str>, r: &Region<'_>, entry_label: bool) -> fmt::Result {
         let saved = core::mem::replace(&mut self.default_ns, ns);
         let done = self.blocks(r, entry_label);
@@ -335,13 +287,7 @@ impl<'p, 'd> Printer<'p, 'd> {
         done
     }
 
-    /// `{ blocks }` the way an op that spells its body's shape in its own header writes it: no
-    /// entry block label, because the header already names its arguments, and no trailing
-    /// terminator when that terminator carries nothing (`affine.for %i = 0 to 10 { ... }` writes
-    /// neither `^bb0(%i: index)` nor `affine.yield`). A terminator with operands is still written.
     pub fn region_body(&mut self, r: &Region<'_>, terminator: &str) -> fmt::Result {
-        // Like `region`, the body sets no default dialect: an op inside it that happens to be of
-        // the enclosing dialect must still print its full name, or it will not read back.
         let saved = self.default_ns.take();
         let done = self.blocks_eliding(r, false, Some(terminator));
         self.default_ns = saved;
@@ -353,7 +299,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         self.blocks_eliding(r, entry_label, None)
     }
 
-    /// A block's `^label(args):` line, unless it is an entry block printed without one.
     fn block_head(&mut self, b: &Block<'_>, i: usize, entry_label: bool) -> fmt::Result {
         if let Some(label) = b.label.as_ref().filter(|_| i > 0 || entry_label) {
             self.nl()?;
@@ -366,9 +311,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         Ok(())
     }
 
-    /// [`blocks_eliding`](Self::blocks_eliding) of region `id` of `src`, read one op at a time.
-    /// The first block that has an executor to print on ([`MlirOpt::print_in`](crate::MlirOpt::print_in))
-    /// prints in parallel ([`Printer::ops_apart`]).
     fn blocks_from(&mut self, src: &dyn Source, id: u64, entry_label: bool, elide: Option<&str>) -> fmt::Result {
         self.write_char('{')?;
         for (i, b) in src.blocks(id).iter().enumerate() {
@@ -388,8 +330,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         self.write_char('}')
     }
 
-    /// Ops `range` of block `b` of region `id` of `src`, each on a line of its own (the last
-    /// one of the `n` elided when it is the bare terminator `elide`).
     fn ops_from(&mut self, src: &dyn Source, id: u64, b: usize, range: core::ops::Range<usize>, n: usize, elide: Option<&str>) -> fmt::Result {
         let start = range.start;
         for (k, op) in (start..).zip(src.ops_iter(id, b, range)) {
@@ -402,10 +342,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         Ok(())
     }
 
-    /// ⭐ The `n` ops of block `b` of region `id` printed in parallel: cut into runs (about four
-    /// per thread), each printed into a string of its own — its slot — by a printer in this
-    /// one's state; the slots then written out in order: the text a serial print gives. The
-    /// runs print serially inside (no executor); the executor is spent once.
     fn ops_apart(&mut self, (x, src): (&'d dyn Fork, &'d (dyn Source + Sync)), id: u64, b: usize, n: usize, elide: Option<&str>) -> fmt::Result {
         let step = n.div_ceil(x.threads() * 4).max(1);
         let (indent, opt, default_ns, aliases) = (self.indent, self.opt, self.default_ns, &self.aliases);
@@ -426,7 +362,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         Ok(())
     }
 
-    /// `op` with its regions by reference read one level deep, for whatever looks into them.
     pub(crate) fn expanded<'o>(&self, op: &'o Operation<'_>) -> Option<Operation<'o>>
     where
         'd: 'o,
@@ -437,7 +372,6 @@ impl<'p, 'd> Printer<'p, 'd> {
         Some(Operation { regions, ..op.shallow() })
     }
 
-    /// Does `op` say nothing beyond being there? Such a terminator is implied by its region.
     #[inline]
     fn bare_terminator(op: &Operation<'_>, name: &str) -> bool {
         op.name == name && op.operands.is_empty() && op.results.is_empty() && op.attributes.is_empty() && op.regions.is_empty()
@@ -469,15 +403,11 @@ impl<'p, 'd> Printer<'p, 'd> {
     }
 }
 
-/// The first block label of a hollow region: a NUL, which no parsed label holds, and the index.
 const HOLLOW: char = '\0';
-/// The only block label of a region by reference ([`Region::sourced`]), before its id.
+
 const SOURCED: char = '\u{1}';
 
 impl<'a> Region<'a> {
-    /// What a hand-written print reads of region `i` of its op, without copying the IR below:
-    /// the blocks with their arguments and ops, the ops without their regions. It prints as the
-    /// region the printer was lent ([`Printer::lend`]); an empty region is just empty.
     pub(crate) fn hollow(&self, i: usize) -> Self {
         let mut blocks: Vec<Block<'a>> = self.blocks.iter().map(|b| Block { label: b.label.clone(), args: b.args.clone(), ops: b.ops.iter().map(Operation::without_regions).collect() }).collect();
         if let Some(b) = blocks.first_mut() {
@@ -486,18 +416,14 @@ impl<'a> Region<'a> {
         Region { blocks }
     }
 
-    /// Which lent region this hollow region stands for.
     fn lent(&self) -> Option<usize> {
         self.blocks.first()?.label.as_deref()?.strip_prefix(HOLLOW)?.parse().ok()
     }
 
-    /// Region `id` of a [`Source`], by reference: what an op handed to the printer holds instead
-    /// of its region (a region with no blocks is just empty, not a reference).
     pub fn sourced(id: u64) -> Self {
         Region { blocks: alloc::vec![Block { label: Some(Str::Owned(format!("{SOURCED}{id}"))), args: Vec::new(), ops: Vec::new() }] }
     }
 
-    /// The id of a region by reference.
     fn source_id(&self) -> Option<u64> {
         match &self.blocks[..] {
             [b] => b.label.as_deref()?.strip_prefix(SOURCED)?.parse().ok(),
@@ -507,7 +433,6 @@ impl<'a> Region<'a> {
 }
 
 impl<'a> Operation<'a> {
-    /// Everything but the regions, borrowed.
     fn shallow(&self) -> Operation<'_> {
         Operation {
             results: self.results.reborrow(),
@@ -523,7 +448,6 @@ impl<'a> Operation<'a> {
         }
     }
 
-    /// A copy of everything but the regions.
     fn without_regions(&self) -> Self {
         Operation {
             results: self.results.clone(),
@@ -539,23 +463,18 @@ impl<'a> Operation<'a> {
         }
     }
 
-    /// The op with its regions hollow ([`Region::hollow`]), for its typed op to print.
     pub(crate) fn hollow(&self) -> Self {
         Operation { regions: self.regions.iter().enumerate().map(|(i, r)| r.hollow(i)).collect(), ..self.without_regions() }
     }
 }
 
-/// IR nodes a [`Printer`] writes whole.
 pub trait Emit {
     fn emit(&self, p: &mut Printer<'_, '_>) -> fmt::Result;
 }
 
-/// `x` printed with an [`MlirOpt`]'s dialects (`opt.show(&module)`).
 pub struct Shown<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x T);
 
 impl<T: Emit + ?Sized> Display for Shown<'_, T> {
-    /// Printed into a string first, so that a custom form that does not fit is taken back in
-    /// place rather than printed aside.
     #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut out = String::new();
@@ -564,12 +483,9 @@ impl<T: Emit + ?Sized> Display for Shown<'_, T> {
     }
 }
 
-/// Like [`Shown`], the regions handed over by reference read from a [`Source`]
-/// (`opt.show_from(&module, &source)`).
 pub struct ShownFrom<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x T, pub &'x dyn Source);
 
 impl<T: Emit + ?Sized> ShownFrom<'_, T> {
-    /// The text, printed straight into the string it returns.
     pub fn text(&self) -> Result<String, fmt::Error> {
         let mut out = String::new();
         let mut p = Printer::text(&mut out, self.0);
@@ -580,8 +496,6 @@ impl<T: Emit + ?Sized> ShownFrom<'_, T> {
 }
 
 impl<T: Emit + ?Sized> ShownFrom<'_, T> {
-    /// [`text`](Self::text), the ops of the first block read from the source printed in
-    /// parallel on `x` ([`MlirOpt::print_in`](crate::MlirOpt::print_in)).
     pub(crate) fn text_in<X: moremath::Executor + Sync>(&self, source: &(dyn Source + Sync), x: &X) -> Result<String, fmt::Error> {
         let mut out = String::new();
         let mut p = Printer::text(&mut out, self.0);
@@ -599,8 +513,6 @@ impl<T: Emit + ?Sized> Display for ShownFrom<'_, T> {
     }
 }
 
-/// Like [`Shown`], but with a module's attribute aliases in scope, so an op printed on its own
-/// can still read one (`opt.show_in(&m.aliases(), &op)`).
 pub struct ShownIn<'x, T: ?Sized>(pub &'x MlirOpt, pub &'x [(String, String)], pub &'x T);
 
 impl<T: Emit + ?Sized> Display for ShownIn<'_, T> {
@@ -662,7 +574,6 @@ impl Display for NamedAttr<'_> {
     }
 }
 
-/// `(inputs) -> results` out of two borrowed lists: a function type, printed without building one.
 pub struct Signature<'s, 'a>(pub &'s [Type<'a>], pub &'s [Type<'a>]);
 
 impl Display for Signature<'_, '_> {
@@ -700,7 +611,6 @@ impl Display for Shaped<'_> {
             Some(dims) => dims.iter().try_for_each(|d| write!(f, "{d}x"))?,
         }
         self.elem.fmt(f)?;
-        // MLIR leaves an identity map layout out, as it does the default one.
         let elided = |a: &Attribute<'_>| self.kind == ShapedKind::MemRef && a.is_identity_map();
         self.extras.iter().filter(|a| !elided(a)).try_for_each(|a| write!(f, ", {a}"))?;
         f.write_char('>')
@@ -735,7 +645,6 @@ impl Display for Type<'_> {
     }
 }
 
-/// ` : type` suffix.
 struct TySuffix<'x, 'a>(&'x Option<Type<'a>>);
 
 impl Display for TySuffix<'_, '_> {
@@ -769,7 +678,6 @@ impl Display for Attribute<'_> {
     }
 }
 
-/// An attribute without its `: type` suffix, printed in place ([`Attribute::untyped`] borrowed).
 pub struct Untyped<'s, 'a>(pub &'s Attribute<'a>);
 
 impl Display for Untyped<'_, '_> {
@@ -784,42 +692,31 @@ impl Display for Untyped<'_, '_> {
     }
 }
 
-// ---- serializing into Content --------------------------------------------------------------
-
-/// The `Serializer` producing a [`Content`].
 struct Serializer;
 
-/// Collects a sequence / tuple (variant).
 struct SeqBuilder(Vec<Content>, Option<(&'static str, u32, &'static str)>);
 
-/// Collects a map.
 struct MapBuilder(Vec<(Content, Content)>, Option<Content>);
 
-/// Collects a struct (variant).
 struct StructBuilder(&'static str, Vec<(&'static str, Content)>, Option<(u32, &'static str)>);
 
 impl Content {
-    /// ⭐ Serializes any value into a `Content`.
     #[inline]
     pub fn of<T: Serialize + ?Sized>(value: &T) -> Result<Self, Error> {
         value.serialize(Serializer)
     }
 
-    /// A region as itself, by move ([`Content::Region`]).
     #[inline]
     pub fn region(r: Region<'_>) -> Self {
         Self::Region(Box::new(r.into_static()))
     }
 
-    /// Regions, one [`Content::Region`] each.
     #[inline]
     pub fn regions(rs: Vec<Region<'_>>) -> Self {
         Self::Seq(rs.into_iter().map(Self::region).collect())
     }
 }
 
-/// ⭐ A `Content` serialized back the way it was made: what a typed op's `Serialize` goes
-/// through ([`Op::serialize_fields`]), so no op derives its own.
 impl Serialize for Content {
     fn serialize<S: ser::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         use ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTupleVariant};
@@ -1022,17 +919,10 @@ macro_rules! struct_impls {
 
 struct_impls!(SerializeStruct, SerializeStructVariant);
 
-// ---- Rust values as attributes -------------------------------------------------------------
-
-/// `Cow::Borrowed` text made owned.
 fn own(s: &Str<'_>) -> Str<'static> {
     Str::Owned(String::from(&**s))
 }
 
-/// ⭐ The same value borrowing nothing, by move: owned text moves, only borrowed text is copied.
-/// A region that crosses [`Content`] goes through it, not through serde — an op's regions
-/// hold every op nested in them, and copying them through the data model at every level of
-/// nesting made printing and parsing quadratic in the depth.
 pub trait IntoStatic {
     type Static;
     fn into_static(self) -> Self::Static;
@@ -1078,7 +968,6 @@ impl<T: IntoStatic> IntoStatic for Box<T> {
     }
 }
 
-/// Plain data: itself.
 macro_rules! static_as_is {
     ($($t:ty),*) => {$(
         impl IntoStatic for $t {
@@ -1093,7 +982,6 @@ macro_rules! static_as_is {
 
 static_as_is!(u32, bool, Signedness, FloatKind, ShapedKind, Dim);
 
-/// A struct field by field, or an enum variant by variant (`Variant { fields }` / `Variant(x)` / `Variant`).
 macro_rules! static_fields {
     ($($name:ident { $($f:ident),* })*) => {$(
         impl IntoStatic for $name<'_> {
@@ -1140,9 +1028,6 @@ static_fields! {
     }
 }
 
-/// ⭐ The same value borrowing everything it can from `self`: text is never copied, only the
-/// lists that hold it. What an IR that keeps its own text hands to the printer
-/// (`mlirpass`'s export), instead of a deep copy.
 pub trait Reborrow {
     type Of<'s>
     where
@@ -1190,7 +1075,6 @@ impl<T: Reborrow> Reborrow for Box<T> {
     }
 }
 
-/// Plain data: a copy.
 macro_rules! reborrow_as_is {
     ($($t:ty),*) => {$(
         impl Reborrow for $t {
@@ -1205,7 +1089,6 @@ macro_rules! reborrow_as_is {
 
 reborrow_as_is!(u32, bool, Signedness, FloatKind, ShapedKind, Dim);
 
-/// A struct field by field, or an enum variant by variant, as [`static_fields`].
 macro_rules! reborrow_fields {
     ($($name:ident { $($f:ident),* })*) => {$(
         impl Reborrow for $name<'_> {
@@ -1253,7 +1136,6 @@ reborrow_fields! {
 }
 
 impl Extended<'_> {
-    /// A deep copy that borrows nothing.
     #[inline]
     pub fn owned(&self) -> Extended<'static> {
         Extended { name: own(&self.name), body: self.body.as_ref().map(own), params: self.params.iter().map(Attribute::owned).collect() }
@@ -1261,7 +1143,6 @@ impl Extended<'_> {
 }
 
 impl Type<'_> {
-    /// A deep copy that borrows nothing.
     pub fn owned(&self) -> Type<'static> {
         match self {
             Type::Integer { signedness, width } => Type::Integer { signedness: *signedness, width: *width },
@@ -1279,7 +1160,6 @@ impl Type<'_> {
 }
 
 impl Attribute<'_> {
-    /// A deep copy that borrows nothing.
     pub fn owned(&self) -> Attribute<'static> {
         let ty = |t: &Option<Type<'_>>| t.as_ref().map(Type::owned);
         match self {
@@ -1298,26 +1178,22 @@ impl Attribute<'_> {
         }
     }
 
-    /// `#name<body>` (`#name` when `body` is empty): an enum or other dialect attribute.
     #[inline]
     pub fn dialect(name: &str, body: &str) -> Attribute<'static> {
         let body = (!body.is_empty()).then(|| Str::Owned(String::from(body)));
         Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Owned(name.into()), body, params: Vec::new() }), ty: None }
     }
 
-    /// `v : i64`, how ODS stores an integer enum.
     #[inline]
     pub fn i64(v: i64) -> Attribute<'static> {
         Attribute::of_int(v.into(), Type::int(64))
     }
 
-    /// `n : ty`.
     #[inline]
     pub fn of_int(value: i128, ty: Type<'static>) -> Attribute<'static> {
         Attribute::Int { lit: Str::Owned(value.to_string()), ty: Some(ty) }
     }
 
-    /// A string attribute, escaped as MLIR does (`llvm::printEscapedString`).
     pub fn str(s: &str) -> Attribute<'static> {
         let mut lit = String::with_capacity(s.len());
         for b in s.bytes() {
@@ -1332,7 +1208,6 @@ impl Attribute<'_> {
 }
 
 impl<'a> Attribute<'a> {
-    /// Without its `: type` suffix.
     pub fn untyped(self) -> Self {
         match self {
             Self::Int { lit, .. } => Self::Int { lit, ty: None },
@@ -1348,9 +1223,6 @@ impl<'a> Attribute<'a> {
 impl TryFrom<Content> for Option<Attribute<'static>> {
     type Error = Error;
 
-    /// The MLIR attribute a property field's value stands for (`None`: absent): `bool` is a unit
-    /// attribute's presence, numbers / strings the attribute of that kind, a user enum its case
-    /// value, `Attribute` / `Type` themselves.
     fn try_from(c: Content) -> Result<Self, Error> {
         let float = |kind, bits| {
             let lit = crate::ApFloat::from_bits(kind, bits).map_or_else(|| format!("0x{bits:X}"), crate::ApFloat::print);
@@ -1369,13 +1241,10 @@ impl TryFrom<Content> for Option<Attribute<'static>> {
             Content::U16(v) => int(v.into(), Type::int(16)),
             Content::U32(v) => int(v.into(), Type::int(32)),
             Content::U64(v) => int(v.into(), Type::int(64)),
-            // as MLIR prints a float (`3.000000e+00`, the bits in hex for an inf or a NaN): Rust's `{:e}` writes
-            // `3e0`, which is no float literal
             Content::F32(v) => float(FloatKind::F32, v.to_bits().into()),
             Content::F64(v) => float(FloatKind::F64, v.to_bits()),
             Content::Str(s) => Attribute::str(&s),
             Content::Attr(a) => a,
-            // A sequence of one kind of number is a dense array (`Vec<i32>` ⇄ `array<i32: 1, 2>`).
             Content::Seq(xs) if !xs.is_empty() && xs.iter().all(|x| x.dense_type() == xs[0].dense_type() && x.dense_type().is_some()) => {
                 let ty = xs[0].dense_type().unwrap_or(Type::I1);
                 let values = xs.into_iter().map(|x| Self::try_from(x).map(|a| Str::Owned(a.map_or(String::new(), |a| a.untyped().to_string())))).collect::<Result<_, _>>()?;
@@ -1394,7 +1263,6 @@ impl TryFrom<Content> for Option<Attribute<'static>> {
 }
 
 impl Content {
-    /// The element type of a dense array this number belongs in.
     fn dense_type(&self) -> Option<Type<'static>> {
         Some(match self {
             Self::I8(_) | Self::U8(_) => Type::int(8),
@@ -1409,13 +1277,11 @@ impl Content {
 }
 
 impl Field {
-    /// A property field's value as an attribute (`None`: absent), enum case values typed `:iN`.
     #[inline]
     pub fn attr(&self, c: Content) -> Result<Option<Attribute<'static>>, Error> {
         self.retype(Option::<Attribute>::try_from(c)?)
     }
 
-    /// [`Field::attr`] of an attribute already read: borrowing what it borrowed.
     pub fn retype<'a>(&self, a: Option<Attribute<'a>>) -> Result<Option<Attribute<'a>>, Error> {
         Ok(match (a, self.role) {
             (Some(Attribute::Int { lit, .. }), Role::Prop { int: Some(ty), .. }) => {
@@ -1430,34 +1296,25 @@ impl Field {
 }
 
 impl<'a> NamedAttr<'a> {
-    /// `name = value`; a unit attribute is the bare `name`. The name is borrowed (a field name,
-    /// a literal), not copied.
     #[inline]
     pub fn of(name: &'a str, value: Attribute<'a>) -> NamedAttr<'a> {
         NamedAttr { name: Str::Borrowed(name), value: (value != Attribute::Unit).then_some(value) }
     }
 }
 
-// ---- typed op → Operation ------------------------------------------------------------------
-
 impl Operation<'_> {
-    /// ⭐ A typed op as an op.
     #[inline]
     pub fn of_op<O: Op>(op: &O) -> Result<Operation<'static>, Error> {
         Self::of_content(&Schema::of::<O>(), Content::Struct(O::NAME, op.fields()?))
     }
 
-    /// [`of_op`](Self::of_op) by move: the typed op's regions become the op's without a copy.
     #[inline]
     pub fn of_owned_op<O: Op>(op: O) -> Result<Operation<'static>, Error> {
         Self::of_content(&Schema::of::<O>(), op.into_content()?)
     }
 
-    /// [`of_op`](Self::of_op) from the op's [`Content`]: everything that does not depend on `O`,
-    /// built once rather than once per op.
     fn of_content(schema: &Schema, content: Content) -> Result<Operation<'static>, Error> {
         let Content::Struct(name, mut values) = content else { return Err("an op must serialize as a struct".into()) };
-        // Regions first, by move: the rest is small and read by clone (a type variable may be read twice).
         let mut regions = Vec::new();
         for f in schema.of_role(|r| *r == Role::Region) {
             let at = values.iter().position(|(k, _)| *k == f.name).ok_or_else(|| Error(format!("missing field `{}`", f.name)))?;
@@ -1522,9 +1379,6 @@ impl Operation<'_> {
     }
 }
 
-// ---- writing the custom form ---------------------------------------------------------------
-
-/// ODS spacing rules between assembly-format elements (`OpFormatGen.cpp`).
 pub struct Spacer {
     space: bool,
     punct: bool,
@@ -1538,13 +1392,11 @@ impl Default for Spacer {
 }
 
 impl Spacer {
-    /// `` `lit` ``; the empty literal suppresses the next space, `` ` ` `` writes one.
     pub fn lit(&mut self, p: &mut Printer<'_, '_>, s: &str) -> fmt::Result {
         let Some(&c) = s.as_bytes().first() else {
             (self.space, self.punct) = (false, true);
             return Ok(());
         };
-        // `` ` ` ``: an explicit space, and none of its own after it.
         if s == " " {
             (self.space, self.punct) = (false, true);
             return p.write_char(' ');
@@ -1563,7 +1415,6 @@ impl Spacer {
         Ok(())
     }
 
-    /// Before a variable / directive.
     pub fn elem(&mut self, p: &mut Printer<'_, '_>) -> fmt::Result {
         if self.space || !self.punct {
             p.write_char(' ')?;
@@ -1572,7 +1423,6 @@ impl Spacer {
         Ok(())
     }
 
-    /// After `attr-dict` (which writes its own leading space).
     #[inline]
     pub fn dict(&mut self) {
         self.punct = false;
@@ -1580,14 +1430,11 @@ impl Spacer {
 }
 
 impl Format<'_> {
-    /// ⭐ Prints a typed op in custom form: the op name, then the format.
     #[inline]
     pub fn print<O: Op>(&self, op: &O, p: &mut Printer<'_, '_>) -> fmt::Result {
         self.print_op(&Operation::of_op(op).map_err(|_| fmt::Error)?, p)
     }
 
-    /// ⭐ Prints `op` in this custom form, reading every field in place (no typed op built);
-    /// an error if `op` does not fit the form's schema.
     pub fn print_op(&self, op: &Operation<'_>, p: &mut Printer<'_, '_>) -> fmt::Result {
         let v = op.view(&self.schema).map_err(|_| fmt::Error)?;
         p.op_name(self.schema.name)?;
@@ -1601,7 +1448,6 @@ impl Format<'_> {
     fn present(&self, f: &Field, v: &View<'_, '_>) -> Result<bool, Error> {
         Ok(match f.role {
             Role::Prop { .. } => v.prop(f)?.is_some(),
-            // An optional region is there when it has blocks.
             Role::Region if f.variadic => return Err(format!("`{}`: a region list as an anchor", f.name).into()),
             Role::Region => v.regions(f)?.iter().any(|r| !r.blocks.is_empty()),
             Role::Operand { .. } => !v.values(f)?.is_empty(),
@@ -1612,7 +1458,6 @@ impl Format<'_> {
         })
     }
 
-    /// A type variable's types as `type($x)` prints them: one for a single variable.
     #[inline]
     fn shown_types<'v, 'a>(f: &Field, v: &'v View<'_, 'a>) -> Result<&'v [Type<'a>], Error> {
         let ts = v.types(f)?;
@@ -1629,7 +1474,6 @@ impl Format<'_> {
                         self.write(elems, v, s, p)?;
                     }
                 }
-                // Its clauses in their declared order, each when present.
                 Elem::OiList(clauses) => self.write(clauses, v, s, p)?,
                 Elem::Var(n) | Elem::QVar(n) => {
                     let qualified = matches!(e, Elem::QVar(_));
@@ -1656,17 +1500,12 @@ impl Format<'_> {
                             None => {}
                         },
                         Role::Prop { dialect, int, .. } => {
-                            // Spelled by the format, a default prints too (`nvgpu.rcp`'s
-                            // `{rounding = approx}`): an optional group decides on its own.
                             let (shown, shape) = v.shown(f)?;
                             match (shape, shown.as_deref()) {
-                                // A user enum prints its case name.
                                 (Shape::Case(case), _) => p.write_str(case).map_err(io)?,
-                                // A Rust number: its type is the field's, so the custom form leaves it out (`index.constant 1`).
                                 (Shape::Number, Some(a)) => write!(p, "{}", Untyped(a)).map_err(io)?,
                                 (_, Some(a @ Attribute::Extended { .. })) if qualified => write!(p, "{a}").map_err(io)?,
                                 (_, Some(Attribute::Extended { ext, .. })) if dialect == Some(&*ext.name) => p.write_str(ext.body.as_deref().unwrap_or("")).map_err(io)?,
-                                // `#gpu<dim x>` ⇒ `x` (`gpu.thread_id x`).
                                 (_, Some(Attribute::Extended { ext, .. }))
                                     if let Some((ns, m)) = f.keyword_dialect()
                                         && ext.name == ns
@@ -1674,9 +1513,7 @@ impl Format<'_> {
                                 {
                                     p.write_str(case).map_err(io)?
                                 }
-                                // A dense array prints as a list: `[30, 70]`.
                                 (_, Some(Attribute::DenseArray { values, .. })) => write!(p, "[{}]", Sep(values, ", ")).map_err(io)?,
-                                // Before a `:`, or of a buildable type (`I64Attr`): ODS leaves the type out.
                                 (_, Some(a)) if self.before_colon(n) || int.is_some() => write!(p, "{}", Untyped(a)).map_err(io)?,
                                 (_, Some(a)) => write!(p, "{a}").map_err(io)?,
                                 (_, None) => {}
@@ -1687,10 +1524,6 @@ impl Format<'_> {
                             let ss = v.successors(f)?;
                             write!(p, "^{}", ss.first().ok_or_else(|| Error(format!("no successor `{}`", f.name)))?).map_err(io)?
                         }
-                        // ODS prints a region variable with its entry block's arguments
-                        // (`OpFormatGen.cpp`: `printEntryBlockArgs=true`); an op that binds
-                        // those arguments in its header writes its own form by hand instead.
-                        // A variadic region: `{..}, {..}`, as the generated printer interleaves them.
                         Role::Region if f.variadic => {
                             for (i, r) in v.regions(f)?.iter().enumerate() {
                                 if i > 0 {
@@ -1705,13 +1538,10 @@ impl Format<'_> {
                         }
                     }
                 }
-                // ODS spaces a whole directive as one element; inside, the parts are tight.
                 Elem::Custom { parts, .. } => {
                     s.elem(p).map_err(io)?;
                     self.write(parts, v, &mut Spacer::default(), p)?;
                 }
-                // The integer list drives: each item is its own static value, except where the
-                // sentinel says the item is the next operand instead.
                 Elem::Zip { integers, values } => {
                     s.elem(p).map_err(io)?;
                     let list = v.prop(self.field(integers)?)?;
@@ -1770,9 +1600,6 @@ impl Format<'_> {
                     for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })).filter(|f| !spelled.contains(&f.name)) {
                         shown.extend(v.prop(f)?.map(|a| (f.name, a)));
                     }
-                    // One dictionary, sorted by name, the discardable ones among the properties:
-                    // what `Operation::getAttrDictionary` hands the generated printer. A unit
-                    // attribute is its name alone.
                     let mut attrs: Vec<(&str, Option<&Attribute<'_>>)> = shown.iter().map(|(n, a)| (*n, Some(&**a).filter(|a| **a != Attribute::Unit))).collect();
                     attrs.extend(v.attrs().iter().map(|a| (&*a.name, a.value.as_ref())));
                     attrs.sort_by(|a, b| a.0.cmp(b.0));

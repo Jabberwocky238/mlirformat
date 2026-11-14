@@ -1,7 +1,3 @@
-//! The `test` dialect's types and attributes that `mlir-opt` (which registers it) reads by
-//! their own parsers: `test/lib/Dialect/Test/{TestAttrDefs,TestTypeDefs,TestOps}.td`,
-//! `TestAttributes.cpp`, `TestTypes.cpp`.
-
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
@@ -9,7 +5,6 @@ use super::{DialectRules, Invalid, Verifier};
 use crate::{Attribute, MlirOpt, Parser, R, Signedness, Type};
 
 keywords! {
-    /// The `test` attributes checked here.
     enum AttrKind {
         CustomStruct = "custom_struct",
         CustomFloat = "custom_float",
@@ -21,7 +16,6 @@ keywords! {
 }
 
 keywords! {
-    /// The `test` types checked here.
     enum TypeKind {
         TypeVerification = "type_verification",
         Struct = "struct",
@@ -34,7 +28,6 @@ keywords! {
 }
 
 keywords! {
-    /// `#test.custom_struct`'s parameters (`struct(params)`).
     enum StructParam {
         TypeStr = "type_str",
         Value = "value",
@@ -43,7 +36,6 @@ keywords! {
 }
 
 keywords! {
-    /// `TestBitEnum`'s cases.
     enum BitCase {
         Read = "read",
         Write = "write",
@@ -52,7 +44,6 @@ keywords! {
 }
 
 keywords! {
-    /// `parseCustomFloatAttr`'s float types, by their bit width.
     enum FloatName {
         Float = "float",
         Double = "double",
@@ -61,7 +52,6 @@ keywords! {
 }
 
 impl FloatName {
-    /// `APFloat::semanticsSizeInBits`.
     #[inline]
     fn bits(self) -> u32 {
         match self {
@@ -72,21 +62,17 @@ impl FloatName {
     }
 }
 
-/// A cursor over one `test` attribute or type body.
 struct TestText<'a, 'd> {
     p: Parser<'a, 'd>,
 }
 
 impl TestText<'_, '_> {
-    /// The rest is `>` and nothing more.
     fn close(&mut self) -> R<()> {
         self.p.expect(">")?;
         self.p.ws();
         if self.p.rest().is_empty() { Ok(()) } else { self.p.err("expected end of the attribute") }
     }
 
-    /// `struct($type_str, custom<CustomStructAttr>($value), custom<CustomOptStructFieldAttr>($opt_value))`:
-    /// `name = value` in any order, each once, the two required ones present.
     fn custom_struct(&mut self) -> R<()> {
         self.p.expect("<")?;
         let mut seen: Vec<StructParam> = Vec::new();
@@ -99,13 +85,11 @@ impl TestText<'_, '_> {
             self.p.expect("=").or_else(|_| self.p.err("expected '='"))?;
             match param {
                 StructParam::TypeStr => drop(self.p.string()?),
-                // `?` or an integer.
                 StructParam::Value if self.p.eat("?") => {}
                 StructParam::Value => {
                     self.p.eat("-");
                     self.p.number::<u64>()?;
                 }
-                // An integer, or an array.
                 StructParam::OptValue => drop(self.p.bare_attr()?),
             }
             seen.push(param);
@@ -119,7 +103,6 @@ impl TestText<'_, '_> {
         self.close()
     }
 
-    /// `<"float" : literal>`: `AsmParser::parseFloat` of that type (`parseFloatFromIntegerLiteral`).
     fn custom_float(&mut self) -> R<()> {
         self.p.expect("<")?;
         let name = self.p.string()?;
@@ -147,7 +130,6 @@ impl TestText<'_, '_> {
         self.close()
     }
 
-    /// `<read, write>`: `TestBitEnum` cases, `, `-separated.
     fn bit_enum(&mut self) -> R<()> {
         self.p.expect("<")?;
         loop {
@@ -162,7 +144,6 @@ impl TestText<'_, '_> {
         self.close()
     }
 
-    /// `<1x2x3>`: decimal integers (`parseOptionalDecimalInteger`), `x`-separated (`1x0xb` is not).
     fn decimal_shape(&mut self) -> R<()> {
         self.p.expect("<")?;
         self.p.ws();
@@ -170,7 +151,6 @@ impl TestText<'_, '_> {
             return Ok(());
         }
         loop {
-            // `0x3` is `0`, then the next dim (`parseOptionalDecimalInteger` splits a hex token).
             let digits = self.p.rest().bytes().take_while(u8::is_ascii_digit).count();
             if digits == 0 {
                 return self.p.err("expected an integer");
@@ -185,7 +165,6 @@ impl TestText<'_, '_> {
         self.close()
     }
 
-    /// `<{name, type}, ..>`.
     fn structure(&mut self) -> R<()> {
         self.p.expect("<")?;
         while self.p.eat("{") {
@@ -201,7 +180,6 @@ impl TestText<'_, '_> {
     }
 }
 
-/// How many comma-separated parameters a body `<a, b<c, d>>` has.
 fn param_count(body: Option<&str>) -> usize {
     let Some(inner) = body.and_then(|b| b.trim().strip_prefix('<')?.strip_suffix('>')) else { return 0 };
     if inner.trim().is_empty() {
@@ -221,12 +199,9 @@ fn param_count(body: Option<&str>) -> usize {
         .count()
 }
 
-/// The `test` dialect's rules.
 pub(super) struct Test;
 
 impl Test {
-    /// A dynamic type or attribute (`TestAttributes.cpp` / `TestTypes.cpp`'s `DynamicTypeDefinition`):
-    /// as many parameters as it was registered with.
     fn dynamic(body: Option<&str>, want: usize, what: &str) -> Result<(), String> {
         match param_count(body) {
             n if n == want => Ok(()),
@@ -234,9 +209,6 @@ impl Test {
         }
     }
 
-    /// Reads `body` with `f`.
-    /// The `PredTypeTrait` types: `<value>` positive; `<value, min>` with `value >= min`;
-    /// `<count, [elements], i16 | i32>` with as many elements as `count`.
     fn pred_trait(kind: TypeKind, body: &str) -> Result<(), String> {
         let r = Parser::read(body.trim(), |p| {
             p.expect("<")?;
@@ -300,7 +272,6 @@ impl DialectRules for Test {
             Ok(TypeKind::DynamicPair) => Self::dynamic(body, 2, "type"),
             Ok(TypeKind::Struct) => Self::read(v.opt, body.unwrap_or(""), TestText::structure),
             Ok(k @ (TypeKind::PredTrait | TypeKind::PredTraitMulti | TypeKind::PredTraitCombined)) => Self::pred_trait(k, body.unwrap_or("")),
-            // `AnyTypeOf<[I16, I32]>:$param`.
             Ok(TypeKind::TypeVerification) => match body.and_then(|b| Parser::read(b.trim().strip_prefix('<')?.strip_suffix('>')?, |p| p.ty()).ok()) {
                 Some(Type::Integer { signedness: Signedness::Signless, width: 16 | 32 }) | None => Ok(()),
                 Some(_) => Err("failed to verify 'param': 16-bit signless integer or 32-bit signless integer".into()),
@@ -310,8 +281,6 @@ impl DialectRules for Test {
         r.map_err(|why| Invalid::DialectType { ty: t.to_string(), why })
     }
 
-    /// `test.token.consume %t`: `Token:$token` fixes its operand's type to `token`, so a value of
-    /// another type is a use of another type (`resolveOperand`).
     fn op(&self, v: &Verifier<'_>, op: &crate::Operation<'_>) -> Result<(), Invalid> {
         let (Some(raw), "test.token.consume") = (&op.raw, &*op.name) else { return Ok(()) };
         let Some(crate::Piece::Text(text)) = raw.first() else { return Ok(()) };

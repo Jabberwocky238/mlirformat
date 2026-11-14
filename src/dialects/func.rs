@@ -1,5 +1,3 @@
-//! `func`.
-
 use alloc::string::String;
 use alloc::vec;
 use alloc::format;
@@ -22,33 +20,25 @@ pub struct Call<'a> {
     pub operands: Vec<Value<'a>>,
     pub arg_attrs: Option<Attribute<'a>>,
     pub res_attrs: Option<Attribute<'a>>,
-    /// Shown in the attribute dictionary (`func.call @f() {no_inline}`).
     pub no_inline: bool,
     pub arg_types: Vec<Type<'a>>,
     pub results: Vec<Type<'a>>,
 }
 
-/// `func.func [visibility] @name(%arg: T {attrs}, ...) -> (R {attrs}, ...) attributes {...} { body }`:
-/// hand-written syntax. The entry block's arguments are the signature's named arguments.
 #[mlir::op("func.func", custom)]
 pub struct FuncOp<'a> {
     pub sym_name: String,
     #[attr]
     pub function_type: Type<'a>,
     pub sym_visibility: Option<String>,
-    /// One dictionary per argument.
     pub arg_attrs: Option<Attribute<'a>>,
-    /// One dictionary per result.
     pub res_attrs: Option<Attribute<'a>>,
-    /// A property, though the custom form lists it among the discardable attributes
-    /// (`func.func @f() attributes {no_inline}`).
     #[attr]
     pub no_inline: bool,
     pub body: Region<'a>,
 }
 
 impl<'a> FuncOp<'a> {
-    /// The `i`th non-empty dictionary of `arg_attrs` / `res_attrs`.
     fn nth<'x>(attrs: &'x Option<Attribute<'a>>, i: usize) -> Option<&'x Attribute<'a>> {
         match attrs {
             Some(Attribute::Array(ds)) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
@@ -56,13 +46,11 @@ impl<'a> FuncOp<'a> {
         }
     }
 
-    /// `Some([dicts])` unless every dictionary is empty.
     #[inline]
     fn dicts(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
         ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
     }
 }
-
 
 impl Print for FuncOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -102,7 +90,6 @@ impl Print for FuncOp<'_> {
                 p.write_char(')')?;
             }
         }
-        // `attributes {..}`: the discardable attributes and `no_inline`, sorted by name.
         if self.no_inline {
             let mut attrs = self.attrs.reborrow();
             attrs.push(NamedAttr { name: Str::Borrowed("no_inline"), value: None });
@@ -147,13 +134,10 @@ impl Parse for FuncOp<'_> {
             vec![(p.ty()?, Vec::new())]
         };
         let mut attrs = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
-        // `function_interface_impl::parseFunctionOp`: what the syntax itself says is not also
-        // given as an attribute.
         if let Some(a) = attrs.iter().find(|a| ["sym_name", "sym_visibility", "function_type"].contains(&&*a.name)) {
             return p.err(format!("'{}' is an inferred attribute and should not be specified in the explicit attribute dictionary", a.name));
         }
         let no_inline = attrs.iter().position(|a| a.name == "no_inline" && a.value.is_none()).map(|i| attrs.remove(i)).is_some();
-        // Arguments are all named or none is.
         if entries.iter().any(|(a, ..)| a.is_some()) && entries.iter().any(|(a, ..)| a.is_none()) {
             return p.err("func.func: arguments are either all named or all unnamed");
         }
@@ -165,8 +149,6 @@ impl Parse for FuncOp<'_> {
             inputs.push(ty);
             arg_dicts.push(d);
         }
-        // Named arguments are the entry block's; unnamed ones leave it as the body wrote it
-        // (`func.func @f(f32) { ^bb0(%a: f32): .. }`).
         if let Some(b) = body.blocks.first_mut()
             && (!args.is_empty() || inputs.is_empty())
         {
@@ -189,14 +171,12 @@ impl Parse for FuncOp<'_> {
     }
 }
 
-/// `%f = constant @symbol : (T) -> U`.
 #[mlir::op("func.constant", format = "$value attr-dict `:` type($result)", results(result))]
 pub struct Constant<'a> {
     pub value: Attribute<'a>,
     pub result: Type<'a>,
 }
 
-/// `call_indirect %f(%args) : (T) -> U`: the callee's function type gives every other type.
 #[mlir::op("func.call_indirect", custom, results(results))]
 pub struct CallIndirect<'a> {
     #[slot(callee_ty)]
@@ -207,7 +187,6 @@ pub struct CallIndirect<'a> {
     pub arg_types: Vec<Type<'a>>,
     pub results: Vec<Type<'a>>,
 }
-
 
 impl Print for CallIndirect<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -237,7 +216,6 @@ impl Parse for CallIndirect<'_> {
     }
 }
 
-/// The `func` dialect.
 #[mlir::dialect(
     "func",
     ops = [FuncOp, Return, Call, Constant, CallIndirect],

@@ -1,5 +1,3 @@
-//! `mlirformat tblgen`: ODS (`.td`) ⇒ `<dialect>.gen.rs`.
-
 mod records;
 mod td;
 
@@ -9,34 +7,23 @@ use records::Records;
 
 #[derive(clap::Args)]
 pub struct Args {
-    /// The dialects' ops files, e.g. `mlir/include/mlir/Dialect/Arith/IR/ArithOps.td` (several run in
-    /// parallel; with `--dialect`, they are one run: the dialect's ops over several upstream files).
     #[arg(required = true)]
     td: Vec<PathBuf>,
-    /// Include directories for TableGen (usually `mlir/include`).
     #[arg(short = 'I', long = "include")]
     includes: Vec<PathBuf>,
-    /// Output directory.
     #[arg(short, long, default_value = ".")]
     out: PathBuf,
-    /// Read records already dumped with `llvm-tblgen --dump-json` instead of parsing the `.td` (one `.td` only).
     #[arg(long)]
     json: Option<PathBuf>,
-    /// Print the resolved records as `llvm-tblgen --dump-json` would (byte for byte) instead of generating (one `.td` only).
     #[arg(long)]
     dump_json: bool,
-    /// Only this dialect (namespace, e.g. `arith`), with its ops from every file read: the `.td`
-    /// files given (`LinalgOps.td LinalgStructuredOps.td LinalgRelayoutOps.td`) and what they include
     #[arg(long)]
     dialect: Option<String>,
-    /// A dialect's type / attribute parameter hook, `<namespace>=<path>`
-    /// (`dope=crate::Dope::params` ⇒ `#[mlir::dialect("dope", params = crate::Dope::params)]`). Repeatable.
     #[arg(long = "params", value_name = "NS=PATH")]
     params: Vec<String>,
 }
 
 impl Args {
-    /// ⭐ Each `.td` file on its own thread (nearly all the time is TableGen); reports in input order.
     pub fn run(self) -> Result<(), String> {
         if let Some(bad) = self.params.iter().find(|p| !p.contains('=')) {
             return Err(format!("--params `{bad}`: expected `<namespace>=<path>`"));
@@ -66,7 +53,6 @@ impl Args {
         if failed.is_empty() { Ok(()) } else { Err(failed.join("\n")) }
     }
 
-    /// Writes one `<dialect>.gen.rs` per dialect with ops defined in `tds` (one run); the summary lines.
     fn one(&self, tds: &[PathBuf]) -> Result<Vec<String>, String> {
         let records = match &self.json {
             Some(path) => Records::from_json(&std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?, &tds[0]),

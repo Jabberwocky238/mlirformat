@@ -1,20 +1,15 @@
-//! LLVM dialect ops and attributes as `mlir-opt` reads them: `LLVMFuncOp::parse`,
-//! `GlobalOp::parse` (`LLVMIR/IR/LLVMDialect.cpp`), `#llvm.cconv` / `#llvm.linkage` cases.
-
 use alloc::string::{String, ToString};
 
 use super::{DialectRules, Invalid, Verifier};
 use crate::{Attribute, MlirOpt, Operation, Parser, Piece, R, ShapedKind, Type};
 
 keywords! {
-    /// The ops whose custom form is checked.
     enum OpKind {
         Func = "func",
         Global = "mlir.global",
     }
 }
 
-/// `CConv`'s cases (`LLVMEnums.td`).
 const CCONVS: &[&str] = &[
     "ccc", "fastcc", "coldcc", "cc_10", "cc_11", "anyregcc", "preserve_mostcc", "preserve_allcc",
     "swiftcc", "cxx_fast_tlscc", "tailcc", "cfguard_checkcc", "swifttailcc", "x86_stdcallcc", "x86_fastcallcc", "arm_apcscc",
@@ -25,35 +20,28 @@ const CCONVS: &[&str] = &[
     "m68k_intrcc",
 ];
 
-/// `Linkage`'s cases (`LLVMEnums.td`).
 const LINKAGES: &[&str] = &[
     "external", "available_externally", "linkonce", "linkonce_odr", "weak", "weak_odr", "appending", "internal",
     "private", "extern_weak", "common",
 ];
 
-/// `Visibility`'s cases (`LLVMEnums.td`).
 const VISIBILITIES: &[&str] = &[
     "hidden", "protected",
 ];
 
-/// `UnnamedAddr`'s cases (`LLVMEnums.td`).
 const UNNAMED_ADDRS: &[&str] = &[
     "local_unnamed_addr", "unnamed_addr",
 ];
 
-/// A cursor over a raw custom form.
 struct LlvmText<'a, 'd> {
     p: Parser<'a, 'd>,
 }
 
 impl<'a> LlvmText<'a, '_> {
-    /// One optional keyword out of `cases`.
     fn optional(&mut self, cases: &[&str]) -> bool {
         cases.iter().any(|k| self.p.eat_kw(k))
     }
 
-    /// `LLVM::isCompatibleType`, as far as builtin types go: integers, floats, vectors of them;
-    /// a dialect type is left to its dialect.
     fn compatible(&mut self, t: &Type<'_>) -> R<()> {
         let ok = match t {
             Type::Integer { .. } | Type::Float(_) | Type::Extended(_) => true,
@@ -63,8 +51,6 @@ impl<'a> LlvmText<'a, '_> {
         if ok { Ok(()) } else { self.p.err(alloc::format!("expected LLVM type, got '{t}'")) }
     }
 
-    /// `[linkage] [visibility] [unnamed_addr] [cconv] @name(args) [-> results]`, up to the
-    /// optional clauses after the signature.
     fn func(&mut self) -> R<()> {
         self.optional(LINKAGES);
         self.optional(VISIBILITIES);
@@ -125,8 +111,6 @@ impl<'a> LlvmText<'a, '_> {
         Ok(())
     }
 
-    /// `[linkage] [visibility] [thread_local] [unnamed_addr] [constant] @name([value])
-    /// [comdat(..)] [{..}] [: type]`: one type at most, none only for a string value.
     fn global(&mut self) -> R<()> {
         self.optional(LINKAGES);
         self.optional(VISIBILITIES);
@@ -168,11 +152,9 @@ impl<'a> LlvmText<'a, '_> {
     }
 }
 
-/// The LLVM dialect's rules.
 pub(super) struct Llvm;
 
 impl Llvm {
-    /// A raw custom form's header: the text before its first region.
     fn header<'o>(op: &'o Operation<'_>) -> Option<&'o str> {
         match op.raw.as_deref()?.first()? {
             Piece::Text(t) => Some(t),
@@ -202,7 +184,6 @@ impl DialectRules for Llvm {
         Self::why(v.opt, kind, text).map_err(|why| Invalid::DialectOp { op: op.name.to_string(), why })
     }
 
-    /// `#llvm.cconv<..>` / `#llvm.linkage<..>`: one of the enum's cases.
     fn attr(&self, _v: &Verifier<'_>, a: &Attribute<'_>) -> Result<(), Invalid> {
         let Attribute::Extended { ext, .. } = a else { return Ok(()) };
         let cases = match ext.mnemonic() {

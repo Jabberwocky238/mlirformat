@@ -1,12 +1,3 @@
-//! The `affine` ops whose syntax ODS does not describe, written by hand and injected over the
-//! generated templates (`MlirOpt::upstream`), so `affine.gen.rs` stays as `mlirformat tblgen`
-//! wrote it.
-//!
-//! Upstream prints these from C++ for a reason: an op's operands are one flat list, and only its
-//! map says where the dimensions end and the symbols begin. The map usually arrives as an alias
-//! (`map = #map`), so printing needs the module's alias table — see [`Printer::alias`].
-//! Without it, or with a map we cannot read, the op prints generic, which is still valid MLIR.
-
 use crate::affine_expr::{Map, Set};
 use crate::values::AffineMap;
 use crate::mlir;
@@ -18,7 +9,6 @@ use alloc::format;
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-/// The body of the `kind<...>` an attribute stands for, written inline or behind an alias.
 fn body_of(attr: &Attribute<'_>, kind: &str, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
     let text = match attr {
         Attribute::Builtin { name, body, .. } if name == kind => String::from(&**body),
@@ -28,13 +18,11 @@ fn body_of(attr: &Attribute<'_>, kind: &str, alias: &dyn Fn(&str) -> Option<Stri
     Some(String::from(text.strip_prefix('<')?.strip_suffix('>')?))
 }
 
-/// The body of the `affine_map<...>` an attribute stands for.
 #[inline]
 pub(crate) fn map_body(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
     body_of(attr, "affine_map", alias)
 }
 
-/// How many of the op's operands the map takes as dimensions; the rest are its symbols.
 fn dims_of(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>, operands: usize) -> Option<usize> {
     let body = map_body(attr, alias)?;
     let map = Map::try_from(body.as_str()).ok()?;
@@ -42,7 +30,6 @@ fn dims_of(attr: &Attribute<'_>, alias: &dyn Fn(&str) -> Option<String>, operand
     (map.dims.len() + syms == operands).then_some(map.dims.len())
 }
 
-/// `#map(%a, %b)[%s]`: the map, its dimension operands, and its symbols when it has any.
 fn write_call(p: &mut Printer<'_, '_>, map: &Attribute<'_>, operands: &[Value<'_>], dims: usize) -> fmt::Result {
     write!(p, " {map}(")?;
     for (i, v) in operands[..dims].iter().enumerate() {
@@ -60,7 +47,6 @@ fn write_call(p: &mut Printer<'_, '_>, map: &Attribute<'_>, operands: &[Value<'_
     p.write_char(']')
 }
 
-/// The operands of `(%a, %b)[%s]`, dimensions then symbols, as one list.
 fn read_call<'a>(p: &mut Parser<'a, '_>) -> R<Vec<Value<'a>>> {
     let mut out = Vec::new();
     p.expect("(")?;
@@ -77,7 +63,6 @@ fn read_call<'a>(p: &mut Parser<'a, '_>) -> R<Vec<Value<'a>>> {
     Ok(out)
 }
 
-/// Declares one `#map(dims)[syms]` op: they differ only in their name and result.
 macro_rules! call_ops {
     ($($ty:ident = $name:literal, $doc:literal;)*) => {$(
         #[doc = $doc]
@@ -92,7 +77,6 @@ macro_rules! call_ops {
             pub result: Type<'a>,
         }
 
-
         impl Print for $ty<'_> {
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
                 let alias = |n: &str| p.alias(n).map(String::from);
@@ -100,10 +84,8 @@ macro_rules! call_ops {
                     Some(dims) => {
                         p.op_name(Self::NAME)?;
                         write_call(p, &self.map, &self.map_operands, dims)?;
-                        // The op's own discardable attributes still have to be written.
                         p.attr_dict("", &self.attrs, &[])
                     }
-                    // No readable map: the generic form says the same thing and always works.
                     None => self.print_generic(p),
                 }
             }
@@ -121,7 +103,6 @@ macro_rules! call_ops {
                     attrs: p.opt_dict()?,
                     loc: p.opt_loc()?,
                 };
-                // The struct borrows the parser's text; hand back one that owns it.
                 Self::owned(op, p)
             }
         }
@@ -134,15 +115,11 @@ call_ops! {
     Max = "affine.max", "`affine.max #map(%i)[%n]`: the greatest of the map's results.";
 }
 
-/// The index list of an `affine` memory op: the map's results written against the operands,
-/// `%A[%i + 1, 0]`. Read back, each `%value` becomes a dimension in the order it first appears.
 mod indices {
     use super::{Attribute, Extended, Map, Str, Value, format};
     use alloc::string::String;
     use alloc::vec::Vec;
 
-    /// `%i + symbol(%n), 0` ⇒ the map it stands for and the values it names: dimensions (bare
-    /// `%x`) then symbols (`symbol(%x)`, as MLIR prints and parses them), each in first-seen order.
     pub fn read(text: &str) -> Option<(String, Vec<String>)> {
         let (mut dims, mut syms, mut out) = (Vec::<String>::new(), Vec::<String>::new(), String::new());
         let b = text.as_bytes();
@@ -189,7 +166,6 @@ mod indices {
         Some((body, dims))
     }
 
-    /// The attribute for a map body: the alias that already spells it, else the map written out.
     pub fn attr<'a>(body: &str, named: Option<String>) -> Attribute<'a> {
         match named {
             Some(name) => Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Owned(name), body: None, params: Vec::new() }), ty: None },
@@ -197,8 +173,6 @@ mod indices {
         }
     }
 
-    /// `d0` ⇒ the operand it stands for, as [`Map`] substitution wants it; a symbol operand is
-    /// written `symbol(%x)`.
     #[inline]
     pub fn args(map: &Map<'_>, values: &[String]) -> Vec<(String, String)> {
         let dims = map.dims.iter().map(|d| (String::from(*d), false));
@@ -206,7 +180,6 @@ mod indices {
         dims.chain(syms).zip(values).map(|((name, symbol), v)| (name, if symbol { format!("symbol({v})") } else { v.clone() })).collect()
     }
 
-    /// The index list as it is printed: the map's results against the operands.
     #[inline]
     pub fn write(map: &Map<'_>, values: &[String]) -> String {
         let args = args(map, values);
@@ -214,14 +187,12 @@ mod indices {
         map.results.iter().map(|e| format!("{}", e.show(&args))).collect::<Vec<_>>().join(", ")
     }
 
-    /// Every operand's text, for [`args`].
     #[inline]
     pub fn texts(values: &[Value<'_>]) -> Vec<String> {
         values.iter().map(|v| format!("{v}")).collect()
     }
 }
 
-/// `%name` / `%name#k` as written back into an operand.
 fn value_of(text: &str) -> Option<Value<'static>> {
     let bare = text.strip_prefix('%')?;
     Some(match bare.split_once('#') {
@@ -230,10 +201,6 @@ fn value_of(text: &str) -> Option<Value<'static>> {
     })
 }
 
-/// Declares one `%memref[<map results>] : <memref type>` op. `affine.store` writes the stored
-/// value first; the two cannot share one struct, because an operand group that an op does not
-/// have leaves its flat operand list with no way to split. Both have the element type `result`
-/// (the store types its value by it), but only `affine.load` has it as a result.
 macro_rules! memory_ops {
     ($($ty:ident = $name:literal, $doc:literal, ($($res:ident)?), $($value:ident)?;)*) => {$(
         #[doc = $doc]
@@ -253,15 +220,12 @@ macro_rules! memory_ops {
             pub result: Type<'a>,
         }
 
-
         impl Print for $ty<'_> {
             fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
                 let body = {
                     let alias = |n: &str| p.alias(n).map(String::from);
                     map_body(&self.map, &alias)
                 };
-                // Which operands are symbols is not in the printed text, so a map that has any
-                // could not be read back: leave those on the generic form.
                 let shown = body
                     .as_deref()
                     .and_then(|b| Map::try_from(b).ok())
@@ -271,12 +235,6 @@ macro_rules! memory_ops {
                 };
                 let texts = indices::texts(&self.indices);
                 let list = indices::write(&map, &texts);
-                // The index list alone does not say how the map and the operands were paired:
-                // `(d0, d1) -> (d1, d0)` over `[%i, %j]` prints exactly as `(d0, d1) -> (d0, d1)`
-                // over `[%j, %i]` does. Print the custom form only where reading it back gives
-                // this op again, and leave the rest on the generic form. The comparison is
-                // against the map's text as the op holds it, not its tidied form: a body written
-                // `(d0-1)` has to come back spelled that way or the attribute is not the same.
                 if indices::read(&list) != Some((body.clone().unwrap_or_default(), texts)) {
                     return self.print_generic(p);
                 }
@@ -326,8 +284,6 @@ memory_ops! {
     Store = "affine.store", "`affine.store %v, %A[%i + 1]`: the value stored where the map says.", (), value;
 }
 
-/// A loop bound: a constant, a single operand, or the map applied to its operands, which
-/// `max` / `min` prefixes when the map has more than one result to choose between.
 mod bound {
     use super::{indices, map_body, Attribute, Map, Printer, Value};
     use crate::affine_expr::Expr;
@@ -336,7 +292,6 @@ mod bound {
     use alloc::vec::Vec;
     use core::fmt::Write;
 
-    /// `0`, `%n`, `#map(%i)` or `min #map(%i)[%n]` — `None` when the map cannot be read.
     pub fn write(map: &Attribute<'_>, operands: &[Value<'_>], pick: &str, alias: &dyn Fn(&str) -> Option<String>) -> Option<String> {
         let body = map_body(map, alias)?;
         let m = Map::try_from(body.as_str()).ok()?;
@@ -367,20 +322,17 @@ mod bound {
         vs.iter().map(|v| format!("{v}")).collect::<Vec<_>>().join(", ")
     }
 
-    /// Writes what [`write`] produced.
     #[inline]
     pub fn put(p: &mut Printer<'_, '_>, text: &str) -> core::fmt::Result {
         p.write_str(text)
     }
 
-    /// The attribute and operands a bound stands for, given what was read.
     #[inline]
     pub fn of_constant<'a>(c: i64, named: &dyn Fn(&str) -> Option<String>) -> Attribute<'a> {
         let body = format!("() -> ({c})");
         indices::attr(&body, named(&format!("affine_map<{body}>")))
     }
 
-    /// `(d0) -> (d0)`, the map a bare operand stands for.
     #[inline]
     pub fn of_operand<'a>(named: &dyn Fn(&str) -> Option<String>) -> Attribute<'a> {
         let body = String::from("(d0) -> (d0)");
@@ -388,11 +340,6 @@ mod bound {
     }
 }
 
-/// `affine.for %i = 0 to 100 step 2 iter_args(%a = %init) -> (index) { ... }`.
-///
-/// The induction variable and the iteration arguments are the body's entry block arguments,
-/// spelled in the header instead of as `^bb0(...)`; the `affine.yield` that closes the body is
-/// left out when it carries nothing. Both are put back when reading.
 #[mlir::op("affine.for", custom, results(results))]
 pub struct For<'a> {
     #[slot(lower_bound_operands_ty, name = "lowerBoundOperands")]
@@ -415,7 +362,6 @@ pub struct For<'a> {
 }
 
 impl For<'_> {
-    /// The loop's step, which the custom form leaves out when it is 1.
     fn step_of(&self) -> Option<i64> {
         match &self.step {
             Attribute::Int { lit, .. } => lit.parse().ok(),
@@ -423,7 +369,6 @@ impl For<'_> {
         }
     }
 }
-
 
 impl Print for For<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -456,8 +401,6 @@ impl Print for For<'_> {
             write!(p, ") -> ({})", Sep(&self.results, ", "))?;
         }
         p.write_char(' ')?;
-        // The body comes before the attributes: `{` right after the header would be read as an
-        // empty attribute dictionary, not as the region (this is the order MLIR prints in).
         p.region_body(&self.region, "affine.yield")?;
         p.attr_dict("", &self.attrs, &[])
     }
@@ -471,7 +414,6 @@ impl Parse for For<'_> {
         let (lower_bound_map, lower_bound_operands) = read_bound(p, "max")?;
         p.expect_lit("to")?;
         let (upper_bound_map, upper_bound_operands) = read_bound(p, "min")?;
-        // The step is written bare, but the op holds it as `N : index`.
         let step = match p.eat_kw("step") {
             true => {
                 let n = p.attr()?.int().or_else(|e| p.err(e.0))?;
@@ -498,10 +440,6 @@ impl Parse for For<'_> {
         };
         let mut region = p.region()?;
         let attrs = p.opt_dict()?;
-        // The header named the body's entry block arguments and may have left its terminator
-        // out; the op itself holds both.
-        // A body holding nothing but the elided terminator prints as `{ }`, which reads back
-        // as no block at all.
         if region.blocks.is_empty() {
             region.blocks.push(Block { label: None, args: Vec::new(), ops: Vec::new() });
         }
@@ -534,9 +472,6 @@ impl Parse for For<'_> {
     }
 }
 
-/// One loop bound: `0`, `%n`, `#map(%i)[%s]`, or either of the last two behind `max` / `min`.
-/// A map of several results needs its `max` (lower) / `min` (upper) prefix, as `AffineForOp::parse`
-/// requires.
 fn read_bound<'a>(p: &mut Parser<'a, '_>, prefix: &str) -> R<(Attribute<'static>, Vec<Value<'a>>)> {
     let prefixed = p.eat_kw(prefix);
     if p.at(b'%') {
@@ -546,7 +481,6 @@ fn read_bound<'a>(p: &mut Parser<'a, '_>, prefix: &str) -> R<(Attribute<'static>
     }
     if p.at(b'#') || p.rest().starts_with("affine_map") {
         let map = p.attr()?;
-        // The map's results: through its alias when it is one.
         let text = match &map {
             Attribute::Extended { ext, .. } if ext.body.is_none() => p.alias(&ext.name).map(String::from),
             a => Some(format!("{a}")),
@@ -564,12 +498,6 @@ fn read_bound<'a>(p: &mut Parser<'a, '_>, prefix: &str) -> R<(Attribute<'static>
     Ok((bound::of_constant(i64::try_from(c).unwrap_or_default(), &named), Vec::new()))
 }
 
-
-/// `affine.if #set(%i)[%n] -> types { then } else { else }`.
-///
-/// The condition is an integer set, applied to the operands exactly as a map is in
-/// `affine.apply`; both regions leave out their `affine.yield` when it carries nothing, and an
-/// absent `else` is a region with no block at all.
 #[mlir::op("affine.if", custom, results(results))]
 pub struct If<'a> {
     #[slot(args_ty)]
@@ -584,8 +512,6 @@ pub struct If<'a> {
     pub results: Vec<Type<'a>>,
 }
 
-/// Puts back what a region's custom form leaves out: the block itself when the body held nothing
-/// but the terminator, and the terminator when it carried nothing.
 fn close_region(r: &mut Region<'_>) {
     if r.blocks.is_empty() {
         r.blocks.push(Block { label: None, args: Vec::new(), ops: Vec::new() });
@@ -597,7 +523,6 @@ fn close_region(r: &mut Region<'_>) {
         b.ops.push(Operation { name: Str::Borrowed("affine.yield"), ..Operation::default() });
     }
 }
-
 
 impl Print for If<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
@@ -616,7 +541,6 @@ impl Print for If<'_> {
         write_call(p, &self.condition, &self.args, set.dims.len())?;
         match &*self.results {
             [] => {}
-            // One result is written bare, several in parentheses.
             [t] => write!(p, " -> {t}")?,
             ts => write!(p, " -> ({})", Sep(ts, ", "))?,
         }
@@ -662,10 +586,6 @@ impl Parse for If<'_> {
     }
 }
 
-/// `affine.parallel (%i, %j) = (0, 0) to (10, 5) step (3, 2) { ... }`.
-///
-/// With reductions: `reduce ("minimumf", "maximumf") -> (f32, f32)`, each a case of `AtomicRMWKind`
-/// held by its value (`reductions = [8, 4]`).
 #[mlir::op("affine.parallel", custom, results(results))]
 pub struct Parallel<'a> {
     #[slot(map_operands_ty, name = "mapOperands")]
@@ -686,15 +606,10 @@ pub struct Parallel<'a> {
     pub results: Vec<Type<'a>>,
 }
 
-/// `AtomicRMWKind`'s cases by value (`ArithBase.td`): how `affine.parallel` spells a reduction.
 const ATOMIC_RMW_KINDS: [&str; 16] = [
     "addf", "addi", "andi", "assign", "maximumf", "maxnumf", "maxs", "maxu", "minimumf", "minnumf", "mins", "minu", "mulf", "muli", "ori", "xori",
 ];
 
-/// `dense<1> : tensor<Nxi32>`: one map result per induction variable, which is the only grouping
-/// this op writes out.
-/// `dense<1> : tensor<2xi32>` / `dense<[1, 2]> : tensor<2xi32>` ⇒ how many expressions each of the
-/// `n` bounds has.
 fn groups_of(attr: &Attribute<'_>, n: usize) -> Option<Vec<usize>> {
     let Attribute::Builtin { name, body, ty: Some(t) } = attr else { return None };
     let Some(Shaped { shape: Some(dims), .. }) = t.shaped() else { return None };
@@ -709,7 +624,6 @@ fn groups_of(attr: &Attribute<'_>, n: usize) -> Option<Vec<usize>> {
     (groups.len() == n && groups.iter().all(|&g| g > 0)).then_some(groups)
 }
 
-/// The grouping attribute, written as MLIR prints it (a splat when every bound has as many).
 fn groups_attr<'a>(groups: &[usize]) -> Attribute<'a> {
     let shape = alloc::vec![Dim::Static(i64::try_from(groups.len()).unwrap_or_default())];
     let elem = Type::Integer { signedness: Signedness::Signless, width: 32 };
@@ -721,12 +635,10 @@ fn groups_attr<'a>(groups: &[usize]) -> Attribute<'a> {
     Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(*alloc::boxed::Box::new(ty)) }
 }
 
-/// `[1, 2]` as the op holds it.
 fn ints_attr<'a>(xs: &[i64]) -> Attribute<'a> {
     Attribute::Array(xs.iter().map(|v| Attribute::Int { lit: Str::Owned(format!("{v}")), ty: None }).collect())
 }
 
-/// The integers of an `[...]` attribute, or `None` when it is not one.
 fn ints_of(attr: &Attribute<'_>) -> Option<Vec<i64>> {
     match attr {
         Attribute::Array(xs) => xs.iter().map(|x| x.clone().int().ok().and_then(|v| i64::try_from(v).ok())).collect(),
@@ -734,14 +646,12 @@ fn ints_of(attr: &Attribute<'_>) -> Option<Vec<i64>> {
     }
 }
 
-
 impl Print for Parallel<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let (lo, hi) = {
             let alias = |n: &str| p.alias(n).map(String::from);
             (map_body(&self.lower_bounds_map, &alias), map_body(&self.upper_bounds_map, &alias))
         };
-        // A `Map` borrows the body it was read from, so the texts have to outlive it.
         let (Some(lo_text), Some(hi_text), Some(steps), Some(entry)) = (lo, hi, ints_of(&self.steps), self.region.blocks.first()) else {
             return self.print_generic(p);
         };
@@ -758,7 +668,6 @@ impl Print for Parallel<'_> {
             && hm.results.len() == ug.iter().sum::<usize>()
             && steps.len() == ivs
             && split + inputs(&hm) == self.map_operands.len();
-        // The reductions by name, one per result.
         let kinds: Option<Vec<&str>> = match &self.reductions {
             Attribute::Array(xs) => xs.iter().map(|x| ATOMIC_RMW_KINDS.get(usize::try_from(x.int().ok()?).ok()?).copied()).collect(),
             _ => None,
@@ -770,12 +679,9 @@ impl Print for Parallel<'_> {
             return self.print_generic(p);
         }
         let (lt, ht) = (indices::texts(&self.map_operands[..split]), indices::texts(&self.map_operands[split..]));
-        // As for the memory ops, the printed bounds alone do not say how map and operands were
-        // paired; print the custom form only where reading them back gives this op again.
         if indices::read(&indices::write(&lm, &lt)) != Some((lo_text.clone(), lt.clone())) || indices::read(&indices::write(&hm, &ht)) != Some((hi_text.clone(), ht.clone())) {
             return self.print_generic(p);
         }
-        // A bound with several expressions is their `max` (lower) / `min` (upper).
         let (lows, highs) = (grouped(&lm, &lt, &lg, "max"), grouped(&hm, &ht, &ug, "min"));
         p.op_name(Self::NAME)?;
         let names = entry.args.iter().map(|x| format!("%{}", x.name)).collect::<Vec<_>>().join(", ");
@@ -818,7 +724,6 @@ impl Parse for Parallel<'_> {
         let mut region = p.region()?;
         close_region(&mut region);
         if let Some(b) = region.blocks.first_mut() {
-            // The header named these, so the generic form gives the block a label as well.
             b.label.get_or_insert(Str::Borrowed("bb0"));
             b.args = ivs.iter().map(|n| BlockArg { name: Str::Owned(n.clone()), ty: Type::Index, loc: None }).collect();
         }
@@ -842,7 +747,6 @@ impl Parse for Parallel<'_> {
     }
 }
 
-/// `(%i, %j)` or `(3, 2)`: the comma-separated words inside parentheses, sigils stripped.
 fn read_names(p: &mut Parser<'_, '_>) -> R<Vec<String>> {
     p.expect("(")?;
     let mut out = Vec::new();
@@ -857,10 +761,7 @@ fn read_names(p: &mut Parser<'_, '_>) -> R<Vec<String>> {
     Ok(out)
 }
 
-/// `(0, %i + 1)`: one bound per induction variable, as a map and the values it names.
-/// `(%i, min(%j + 32, 35))` ⇒ the bounds map, its operands, and how many expressions each bound has.
 fn read_bounds<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'a>>, Vec<usize>)> {
-    // `group` starts where the cursor is, so the space before `(` has to go first.
     p.ws();
     let group = p.group()?;
     let inner = group.get(1..group.len() - 1).unwrap_or_default();
@@ -891,7 +792,6 @@ fn read_bounds<'a>(p: &mut Parser<'a, '_>) -> R<(Attribute<'static>, Vec<Value<'
     Ok((indices::attr(&body, named), values, groups))
 }
 
-/// `text` split at its top-level commas.
 fn top_level(text: &str) -> Vec<&str> {
     let (mut parts, mut depth, mut start) = (Vec::new(), 0usize, 0);
     for (i, c) in text.char_indices() {
@@ -909,7 +809,6 @@ fn top_level(text: &str) -> Vec<&str> {
     parts
 }
 
-/// The bounds as printed: one expression as is, several as `word(e1, e2)`.
 fn grouped(map: &Map<'_>, values: &[String], groups: &[usize], word: &str) -> String {
     let args = indices::args(map, values);
     let args: Vec<(&str, &str)> = args.iter().map(|(n, v)| (n.as_str(), v.as_str())).collect();

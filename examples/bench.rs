@@ -1,12 +1,3 @@
-//! Parse / print timings against `mlir-opt` (BENCHMARK.md).
-//!
-//! `cargo run --release --example bench -- [--reps N] FILE...`; `$MLIR_OPT` is the `mlir-opt` to
-//! compare with (22.1.8). A file is cut at `// -----` as `--split-input-file` does. mlirformat
-//! runs in process on one thread: parse with [`MlirOpt::upstream`], print custom (upstream) and
-//! generic ([`MlirOpt::new`]); and parses again on all CPUs ([`MlirOpt::parse_in`] on a
-//! `ThreadMulti`). `mlir-opt` runs as a process (startup included, measured on an
-//! empty input), threading off, unregistered ops allowed, printing to /dev/null: as is, and with the parse-time verifier off.
-
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 

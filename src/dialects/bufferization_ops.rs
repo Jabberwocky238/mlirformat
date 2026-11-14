@@ -1,4 +1,3 @@
-//! `bufferization` 里格式引擎写不出的 op，手写后注入（`MlirOpt::upstream`），`bufferization.gen.rs` 不动。
 use crate::common::{Op, Parse, Print, Type, Value};
 use crate::generator::{Printer, Sep};
 use crate::mlir;
@@ -6,11 +5,6 @@ use crate::parser::{Parser, R};
 use alloc::vec::Vec;
 use core::fmt::{self, Write};
 
-/// `bufferization.materialize_in_destination %src in restrict writable %dest : (T, U) -> R`。
-///
-/// ODS 的格式是 `$source `in` (`restrict` $restrict^)? (`writable` $writable^)? $dest attr-dict `:`
-/// functional-type(operands, results)`；格式引擎不认 `functional-type(operands, results)`，手写。dest 是张量时有一个结果
-/// （`-> tensor<…>`），是 memref 时没有（`-> ()`）。
 #[mlir::op("bufferization.materialize_in_destination", custom, results(result))]
 pub struct MaterializeInDestination<'a> {
     #[slot(source_ty)]

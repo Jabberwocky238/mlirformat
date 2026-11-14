@@ -1,13 +1,9 @@
-//! `rocdl` attributes as `mlir-opt` reads them: the buffer out-of-bounds modes
-//! (`#rocdl.buffer_oob_mode<..>` and its module flags, `ROCDLAttrs.td`).
-
 use alloc::string::ToString;
 
 use super::{DialectRules, Invalid, Verifier};
 use crate::Attribute;
 
 keywords! {
-    /// The attributes holding a `BufferOOBMode`.
     enum OobAttr {
         Mode = "buffer_oob_mode",
         Flag = "buffer_oob_mode_flag",
@@ -16,7 +12,6 @@ keywords! {
 }
 
 keywords! {
-    /// `ROCDL_BufferOOBMode`'s cases.
     enum OobMode {
         Any = "any",
         Relaxed = "relaxed",
@@ -24,7 +19,6 @@ keywords! {
     }
 }
 
-/// The `rocdl` dialect's rules.
 pub(super) struct Rocdl;
 
 impl DialectRules for Rocdl {

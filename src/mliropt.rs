@@ -1,17 +1,3 @@
-//! ⭐ The central converter and the crate's whole public surface: an [`MlirOpt`] holds the
-//! registered dialects and the op table, and converts between MLIR text, [`Module`] /
-//! [`Operation`], and typed ops.
-//!
-//! ```ignore
-//! let mut opt = MlirOpt::upstream();               // arith, builtin, cf, complex, func, index, math, ub
-//! opt.load(MyDialect);                            // a whole dialect (`#[mlir::dialect]` struct)
-//! opt.inject(MyOp::template());                    // one op (`#[mlir::op]`)
-//! let m = opt.parse(src)?;                         // text → Module (known ops structured)
-//! let text = opt.show(&m).to_string();             // Module → text (known ops in custom form)
-//! let op: MyOp = (&m_op).try_into()?;              // Operation → typed op
-//! opt.unregister("my");
-//! ```
-
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::sync::Arc;
@@ -23,73 +9,56 @@ pub use crate::dialects::{affine, affine_ops, arith, bufferization, bufferizatio
 pub use crate::generator::{Emit, IntoStatic, Printer, Reborrow, Sep, Shown, ShownFrom, ShownIn, Source, Signature, Spacer, Untyped};
 pub use crate::parser::{Fields, Parser, R, Read};
 
-/// A loaded dialect, and the ops it brought.
 #[derive(Clone)]
 struct Loaded {
     dialect: Arc<dyn Dialect>,
     ops: Vec<&'static str>,
 }
 
-/// ⭐ Dialect registry + op table + conversions.
 #[derive(Clone, Default)]
 pub struct MlirOpt {
     dialects: BTreeMap<&'static str, Loaded>,
     ops: BTreeMap<&'static str, Template>,
-    /// The ops' tokenized ODS formats ([`Template::format`]), by op name.
     formats: BTreeMap<&'static str, Arc<Format<'static>>>,
-    /// What ODS says about each op, for whoever works on the IR.
     infos: crate::OpInfos,
 }
 
 impl MlirOpt {
-    // ---- what the context knows ---------------------------------------------------------
-
-    /// Loaded dialect `ns`.
     #[inline]
     pub fn dialect(&self, ns: &str) -> Option<&dyn Dialect> {
         self.dialects.get(ns).map(|d| &*d.dialect)
     }
 
-    /// Op `name`'s ODS facts (traits, effects, inherent attributes).
     #[inline]
     pub fn op_info(&self, name: &str) -> Option<&crate::OpInfo> {
         self.infos.op_info(name)
     }
 
-    /// Whether namespace `ns` is known (loaded, or among the upstream facts).
     #[inline]
     pub fn knows_dialect(&self, ns: &str) -> bool {
         self.infos.knows_dialect(ns)
     }
 
-    /// Whether op `op`'s dialect is known (its ops may still be unregistered).
     #[inline]
     pub fn knows_dialect_of(&self, op: &str) -> bool {
         op.split_once('.').is_some_and(|(ns, _)| self.knows_dialect(ns))
     }
 
-    /// The default-valued properties of op `op`, with their defaults (what its ODS builders set).
     #[inline]
     pub fn defaults(&self, op: &str) -> Vec<NamedAttr<'static>> {
         self.template(op).map_or_else(Vec::new, |t| (t.defaults)())
     }
 
-    /// The op facts this context knows, to register more.
     #[inline]
     pub fn infos_mut(&mut self) -> &mut crate::OpInfos {
         &mut self.infos
     }
 
-    /// No dialects: every op stays generic or raw.
     #[inline]
     pub const fn new() -> Self {
         Self { dialects: BTreeMap::new(), ops: BTreeMap::new(), formats: BTreeMap::new(), infos: crate::OpInfos::new() }
     }
 
-    /// The upstream dialects this crate describes: `affine`, `arith`, `async`, `builtin`, `cf`,
-    /// `complex`, `func`, `gpu`, `index`, `math`, `memref`, `pdl`, `scf`, `tensor`, `ub`,
-    /// `vector`, the CPU's `x86` (AVX-512, AVX10, AMX), `arm_neon`, `arm_sve` and `arm_sme`, and the GPU
-    /// vendors' `nvgpu`, `nvvm`, `amdgpu`, `rocdl`, `xegpu` and `xevm`.
     pub fn upstream() -> Self {
         let mut opt = Self::new();
         opt.infos = crate::OpInfos::upstream();
@@ -126,8 +95,6 @@ impl MlirOpt {
             .load(rocdl::RocdlDialect)
             .load(xegpu::XegpuDialect)
             .load(xevm::XevmDialect);
-        // Hand-written forms for ops ODS describes in C++; injected by name over the generated
-        // templates, so the generated files stay exactly as `mlirformat tblgen` wrote them.
         opt.inject(affine_ops::Apply::template())
             .inject(affine_ops::Min::template())
             .inject(affine_ops::Max::template())
@@ -154,9 +121,6 @@ impl MlirOpt {
         opt
     }
 
-    // ---- registry ----------------------------------------------------------------------
-
-    /// ⭐ Loads `dialect`: its op table and its ops' ODS facts (replacing an earlier load).
     pub fn load(&mut self, dialect: impl Dialect + 'static) -> &mut Self {
         let ns = dialect.namespace();
         self.unregister(ns);
@@ -173,7 +137,6 @@ impl MlirOpt {
         self
     }
 
-    /// Unloads dialect `ns` and ejects the ops it brought; whether it was loaded.
     #[inline]
     pub fn unregister(&mut self, ns: &str) -> bool {
         let Some(loaded) = self.dialects.remove(ns) else { return false };
@@ -182,7 +145,6 @@ impl MlirOpt {
         true
     }
 
-    /// Injects one op's template into the op table.
     #[inline]
     pub fn inject(&mut self, t: Template) -> &mut Self {
         match (t.format)() {
@@ -193,14 +155,12 @@ impl MlirOpt {
         self
     }
 
-    /// Removes an op from the op table.
     #[inline]
     pub fn eject(&mut self, name: &str) -> Option<Template> {
         self.formats.remove(name);
         self.ops.remove(name)
     }
 
-    /// Op `name`'s tokenized ODS format, if the table holds one.
     #[inline]
     pub fn format(&self, name: &str) -> Option<&Format<'static>> {
         self.formats.get(name).map(|f| &**f)
@@ -211,83 +171,63 @@ impl MlirOpt {
         self.ops.get(name)
     }
 
-    /// Registered namespaces.
     #[inline]
     pub fn namespaces(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.dialects.keys().copied()
     }
 
-    /// Op names in the table.
     #[inline]
     pub fn op_names(&self) -> impl Iterator<Item = &'static str> + '_ {
         self.ops.keys().copied()
     }
 
-    // ---- conversions -------------------------------------------------------------------
-
-    /// Text → module; ops in the table are structured from their custom form.
     #[inline]
     pub fn parse<'a>(&self, src: &'a str) -> R<Module<'a>> {
         Parser::new(src, self).all(Parser::module)
     }
 
-    /// Like [`parse`](Self::parse), the text read from file `name`: an op or block argument written
-    /// without `loc(...)` is at `loc("name":line:col)` of where it starts, as `mlir-opt` reads a file.
     #[inline]
     pub fn parse_file<'a>(&self, src: &'a str, name: &str) -> R<Module<'a>> {
         Parser::new(src, self).with_file(name).all(Parser::module)
     }
 
-    /// [`parse_file`](Self::parse_file) on `x`'s threads, as [`parse_in`](Self::parse_in).
     #[inline]
     pub fn parse_file_in<'a, X: moremath::Executor + Sync>(&self, src: &'a str, name: &str, x: &X) -> R<Module<'a>> {
         Parser::new(src, self).with_file(name).with_fork(x).all(Parser::module)
     }
 
-    /// A block smaller than this is read on one thread, even by [`parse_in`](Self::parse_in).
     pub const PARALLEL_BYTES: usize = 1 << 16;
 
-    /// ⭐ Like [`parse`](Self::parse), the ops of the module's body read in parallel on `x`
-    /// (`ThreadMulti`): the same module, the same errors.
     #[inline]
     pub fn parse_in<'a, X: moremath::Executor + Sync>(&self, src: &'a str, x: &X) -> R<Module<'a>> {
         Parser::new(src, self).with_fork(x).all(Parser::module)
     }
 
-    /// Text → one op.
     #[inline]
     pub fn parse_op<'a>(&self, src: &'a str) -> R<Operation<'a>> {
         Parser::new(src, self).all(Parser::op)
     }
 
-    /// Like [`parse_op`](Self::parse_op), with a module's attribute aliases in scope.
     #[inline]
     pub fn parse_op_in<'a>(&self, aliases: &[(String, String)], src: &'a str) -> R<Operation<'a>> {
         Parser::new(src, self).with_aliases(aliases).all(Parser::op)
     }
 
-    /// Like [`show`](Self::show), with a module's attribute aliases in scope.
     #[inline]
     pub fn show_in<'x, T: Emit + ?Sized>(&'x self, aliases: &'x [(String, String)], x: &'x T) -> ShownIn<'x, T> {
         ShownIn(self, aliases, x)
     }
 
-    /// Like [`show`](Self::show), the regions `x` holds by reference ([`Region::sourced`]) read
-    /// from `source` as the printer reaches them.
     #[inline]
     pub fn show_from<'x, T: Emit + ?Sized>(&'x self, x: &'x T, source: &'x dyn Source) -> ShownFrom<'x, T> {
         ShownFrom(self, x, source)
     }
 
-    /// ⭐ [`show_from`](Self::show_from) as text, the ops of the first block read from `source`
-    /// (a module's body) printed in parallel on `x` (`ThreadMulti`), each run into a string of
-    /// its own, the strings joined in order: the same text.
     #[inline]
     pub fn print_in<T: Emit + ?Sized, X: moremath::Executor + Sync>(&self, x: &T, source: &(dyn Source + Sync), exec: &X) -> Result<String, fmt::Error> {
         ShownFrom(self, x, source).text_in(source, exec)
     }
 
-    /// Module / op → text, ops in the table in custom form: `opt.show(&m).to_string()`.
     #[inline]
     pub fn show<'x, T: Emit + ?Sized>(&'x self, x: &'x T) -> Shown<'x, T> {
         Shown(self, x)
@@ -295,7 +235,6 @@ impl MlirOpt {
 }
 
 impl Template {
-    /// ⭐ The blueprint of typed op `O` (what `O::template()` returns).
     #[inline]
     pub fn of<O: Op + 'static>() -> Self {
         Self { name: O::NAME, custom: O::CUSTOM, parse: Self::parse_as::<O>, print: Self::print_as::<O>, defaults: Self::defaults_of::<O>, format: Self::format_of::<O> }
@@ -313,8 +252,6 @@ impl Template {
 
     #[inline]
     fn parse_as<'a, O: Op>(p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
-        // An op of an ODS format is read straight into an `Operation`; a hand-written one through
-        // the typed op. Either way its regions are lent, not copied (`Parser::lend`).
         if O::CUSTOM && !O::FORMAT.is_empty() {
             let opt = p.opt();
             return p.lending(
@@ -328,13 +265,8 @@ impl Template {
         p.lending(O::parse, |op| Operation::of_owned_op(op).map(|o| -> Operation<'a> { o }))
     }
 
-    /// The custom form, or `None` (the op then prints generic) when it does not fit `O` or `O`
-    /// cannot print it.
     fn print_as<O: Op>(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
         O::CUSTOM.then_some(())?;
-        // A format prints the op's fields in place, its regions read as it reaches them. Only a
-        // hand-written print needs the typed op, which may look into its regions: they are read
-        // one level deep, and the typed op holds them hollow, lent to the printer, not copied.
         match O::FORMAT {
             "" => {
                 let expanded = p.expanded(op);

@@ -1,6 +1,3 @@
-//! ⭐ Text → IR: the recursive-descent parser, the serde `Deserializer` that builds typed ops out
-//! of a [`Content`], and the runtime assembly-format reader.
-
 use crate::Str;
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
@@ -20,44 +17,26 @@ use crate::mliropt::MlirOpt;
 
 pub type R<T> = Result<T, ParseError>;
 
-/// Recursive-descent, scannerless parser over borrowed source text. Its public methods are the
-/// combinators hand-written ops and dialect parameter parsers build on.
 pub struct Parser<'a, 'd> {
     src: &'a str,
     pos: usize,
     opt: &'d MlirOpt,
-    /// Dialect bare op names resolve against (`return` in `func.func`).
     default_ns: Option<&'static str>,
-    /// The next attribute is parsed without its `: type` suffix.
     bare: bool,
-    /// Attribute aliases seen so far, so an op's custom form can look inside one.
     aliases: Vec<(String, String)>,
-    /// Type aliases seen so far (`!t = memref<?xf32>`): a use reads as the type it names, as
-    /// `mlir-opt` reads it, so a custom form can infer from it.
     type_aliases: Vec<(&'a str, Type<'a>)>,
-    /// How many values the op being read defines (`%0:2 = ` ⇒ 2): a variadic result whose
-    /// types the custom form leaves out (`vector.to_elements`) has that many.
     results: usize,
-    /// Regions a typed op read is lent (see [`Parser::lend`]), and whether lending is on.
     lent: Vec<Region<'a>>,
     lending: bool,
-    /// Reads the ops of the first block in parallel, once ([`MlirOpt::parse_in`]).
     fork: Option<&'d dyn for<'x> Fork<'x>>,
-    /// The source's file name ([`MlirOpt::parse_file`]): an op or block argument written without
-    /// `loc(...)` is at `"file":line:col` of where it starts, as `mlir-opt` locates it.
     file: Option<&'d str>,
 }
 
-/// Reads one run of a block's ops ([`Parser::forked`]).
 pub(crate) type Chunk<'a, 't> = Box<dyn FnOnce() -> R<Vec<Operation<'a>>> + Send + 't>;
 
-/// An [`Executor`](moremath::Executor) as the parser holds it: without its generic method, so
-/// it fits behind a reference.
 pub(crate) trait Fork<'a>: Sync {
     fn threads(&self) -> usize;
 
-    /// The runs live for `'t` (they borrow the parser), the ops they read for `'a` (the source),
-    /// which outlives them.
     fn fork<'t>(&self, chunks: Vec<Chunk<'a, 't>>) -> Vec<R<Vec<Operation<'a>>>>
     where
         'a: 't;
@@ -78,13 +57,10 @@ impl<'a, X: moremath::Executor + Sync> Fork<'a> for X {
     }
 }
 
-/// IR nodes a [`Parser`] reads whole — the dual of [`Emit`](crate::Emit), which writes them.
-/// Together they say what a node is: something the text has a shape for in both directions.
 pub trait Read<'a>: Sized {
     fn read(p: &mut Parser<'a, '_>) -> R<Self>;
 }
 
-/// [`Read`] and the `TryFrom<&str>` entry point (no dialects: the whole input is one node).
 macro_rules! entry {
     ($($ty:ident => $m:ident),* $(,)?) => {$(
         impl<'a> Read<'a> for $ty<'a> {
@@ -114,7 +90,6 @@ const fn is_suffix(c: u8) -> bool {
     is_id(c) || c == b'-'
 }
 
-/// Clause keywords that may start a continuation line of a custom op.
 const CLAUSES: &[&str] = &[
     "attributes", "ins", "outs", "to", "step", "iter_args", "else", "do", "into", "from", "by",
     "at", "inits", "shared_outs", "init", "with", "then", "in", "on", "dimensions", "permutation",
@@ -130,7 +105,6 @@ const fn closer(c: u8) -> u8 {
 }
 
 impl<'a, 'd> Parser<'a, 'd> {
-    /// The context this parser reads against (an op's custom form may need its ODS facts).
     #[inline]
     pub fn opt(&self) -> &'d MlirOpt {
         self.opt
@@ -141,11 +115,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Self { src, pos: 0, opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None, file: None }
     }
 
-    /// ⭐ A region handed to a typed op without copying it. The op holds `Region<'static>`, so
-    /// a borrowed region would be copied whole — and again at every op around it. While a
-    /// [`Template`](crate::Template) reads an op, the region waits here and the op gets an empty
-    /// stand-in, swapped back by [`Parser::reclaim`] once the op is an [`Operation`]. Read any
-    /// other way (`O::parse` called directly), the region is copied as before.
     pub fn lend(&mut self, r: Region<'a>) -> Region<'static> {
         if !self.lending {
             return r.into_static();
@@ -154,7 +123,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Region { blocks: alloc::vec![Block { label: Some(Str::Owned(alloc::format!("{LENT}{}", self.lent.len() - 1))), args: Vec::new(), ops: Vec::new() }] }
     }
 
-    /// The index a stand-in from [`Parser::lend`] stands for.
     fn lent_index(r: &Region<'_>) -> Option<usize> {
         match r.blocks.as_slice() {
             [Block { label: Some(l), args, ops }] if args.is_empty() && ops.is_empty() => l.strip_prefix(LENT)?.parse().ok(),
@@ -162,7 +130,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// Reads one op with lending on: its stand-in regions (those lent since `from`) swapped back.
     pub(crate) fn lending<T>(&mut self, read: impl FnOnce(&mut Self) -> R<T>, into: impl FnOnce(T) -> Result<Operation<'a>, Error>) -> R<Operation<'a>> {
         let (from, was) = (self.lent.len(), core::mem::replace(&mut self.lending, true));
         let read = read(self);
@@ -179,13 +146,11 @@ impl<'a, 'd> Parser<'a, 'd> {
         r
     }
 
-    /// Parses all of `src` with `f`, no dialects registered.
     #[inline]
     pub fn read<T>(src: &'a str, f: impl FnOnce(&mut Parser<'a, '_>) -> R<T>) -> R<T> {
         Parser::new(src, &MlirOpt::new()).all(f)
     }
 
-    /// Ops and block arguments written without `loc(...)` are located in `file` (see [`MlirOpt::parse_file`]).
     #[must_use]
     #[inline]
     pub fn with_file(mut self, file: &'d str) -> Self {
@@ -193,20 +158,17 @@ impl<'a, 'd> Parser<'a, 'd> {
         self
     }
 
-    /// Where the next token starts (whitespace skipped): an entity's position for [`Self::loc_or_file`].
     #[inline]
     pub fn here(&mut self) -> usize {
         self.ws();
         self.pos
     }
 
-    /// `loc` as read, or else (with a file name) `"file":line:col` of byte `at` ([`Self::here`]).
     #[inline]
     pub fn loc_or_file(&self, loc: Option<Str<'a>>, at: usize) -> Option<Str<'a>> {
         loc.or_else(|| self.file_loc(at))
     }
 
-    /// `"file":line:col` of byte `at` (1-based, columns in bytes), if the source has a file name.
     fn file_loc(&self, at: usize) -> Option<Str<'a>> {
         let file = self.file?;
         let before = &self.src.as_bytes()[..at];
@@ -225,28 +187,22 @@ impl<'a, 'd> Parser<'a, 'd> {
         Some(Str::Owned(out))
     }
 
-    /// Reads the ops of the first block on `fork`'s threads (see [`Parser::forked`]).
     #[inline]
     pub(crate) fn with_fork(mut self, fork: &'d dyn for<'x> Fork<'x>) -> Self {
         self.fork = (fork.threads() > 1).then_some(fork);
         self
     }
 
-    /// What attribute alias `name` stands for, as text (`map` ⇒ `affine_map<(d0) -> (d0)>`).
     #[inline]
     pub fn alias(&self, name: &str) -> Option<&str> {
         self.aliases.iter().find(|(n, _)| n == name).map(|(_, v)| &**v)
     }
 
-    /// Which alias spells `text`, if one does — the way back from an attribute an op rebuilt
-    /// out of its custom form to the `#map` the module already names it by.
     #[inline]
     pub fn alias_named(&self, text: &str) -> Option<&str> {
         self.aliases.iter().find(|(_, v)| v == text).map(|(n, _)| &**n)
     }
 
-    /// The same parser with a module's attribute aliases already in scope, for an op read on
-    /// its own out of a module.
     #[must_use]
     #[inline]
     pub fn with_aliases(mut self, aliases: &[(String, String)]) -> Self {
@@ -254,14 +210,12 @@ impl<'a, 'd> Parser<'a, 'd> {
         self
     }
 
-    /// The op name of a typed op's custom form: `name` itself or its short form.
     #[inline]
     pub fn op_name(&mut self, name: &str) -> R<()> {
         let id = self.ident()?;
         if id == name || name.split_once('.').is_some_and(|(_, short)| short == id) { Ok(()) } else { self.err(format!("expected `{name}`")) }
     }
 
-    /// Runs `f` and requires it to consume the whole input.
     #[inline]
     pub fn all<T>(mut self, f: impl FnOnce(&mut Self) -> R<T>) -> R<T> {
         let v = f(&mut self).map_err(|e| e.placed(self.src))?;
@@ -269,14 +223,11 @@ impl<'a, 'd> Parser<'a, 'd> {
         if self.pos == self.src.len() { Ok(v) } else { self.err::<T>("unexpected trailing input").map_err(|e| e.placed(self.src)) }
     }
 
-    // ---- low level -------------------------------------------------------
-
     #[inline]
     pub fn pos(&self) -> usize {
         self.pos
     }
 
-    /// Rewinds (or advances) to a byte offset previously returned by [`Self::pos`].
     #[inline]
     pub fn seek(&mut self, pos: usize) {
         self.pos = pos;
@@ -292,29 +243,24 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.src.as_bytes().get(self.pos + k).copied()
     }
 
-    /// Unconsumed input.
     #[inline]
     pub fn rest(&self) -> &'a str {
         &self.src[self.pos..]
     }
 
-    /// Source text between `start` and the current position.
     #[inline]
     pub fn since(&self, start: usize) -> &'a str {
         &self.src[start..self.pos]
     }
 
-    /// An error here; its line is filled in only if it is the one the parse returns ([`all`](Self::all)).
     #[inline]
     pub fn err<T>(&self, msg: impl Into<String>) -> R<T> {
         Err(ParseError::unplaced(self.pos, msg))
     }
 
-    /// Skips whitespace (including newlines) and `//` comments.
     pub fn ws(&mut self) {
         loop {
             match self.peek() {
-                // MLIR's lexer skips a NUL byte as whitespace (`IR/zero_whitespace.mlir`).
                 Some(c) if c.is_ascii_whitespace() || c == 0 => self.pos += 1,
                 Some(b'/') if self.peek_at(1) == Some(b'/') => self.skip_line(),
                 _ => break,
@@ -327,13 +273,11 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.pos = self.rest().find('\n').map_or(self.src.len(), |i| self.pos + i);
     }
 
-    /// Moves `n` bytes on (a token the caller measured in [`Parser::rest`]).
     #[inline]
     pub(crate) fn skip(&mut self, n: usize) {
         self.pos = (self.pos + n).min(self.src.len());
     }
 
-    /// Consumes punctuation `s` after whitespace.
     pub fn eat(&mut self, s: &str) -> bool {
         self.ws();
         let hit = self.rest().starts_with(s);
@@ -343,7 +287,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         hit
     }
 
-    /// Consumes keyword `kw` (not followed by an identifier character).
     pub fn eat_kw(&mut self, kw: &str) -> bool {
         self.ws();
         let hit = self.rest().starts_with(kw) && !self.rest().as_bytes().get(kw.len()).is_some_and(|&c| is_suffix(c));
@@ -358,7 +301,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         if self.eat(s) { Ok(()) } else { self.err(format!("expected `{s}`")) }
     }
 
-    /// Assembly-format literal: keyword if it starts with a letter or `_`, else punctuation.
     #[inline]
     pub fn eat_lit(&mut self, s: &str) -> bool {
         if s.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_') { self.eat_kw(s) } else { self.eat(s) }
@@ -369,7 +311,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         if self.eat_lit(s) { Ok(()) } else { self.err(format!("expected `{s}`")) }
     }
 
-    /// Is the next non-blank byte `c`?
     #[inline]
     pub fn at(&mut self, c: u8) -> bool {
         self.ws();
@@ -398,7 +339,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         s.parse().or_else(|_| self.err("integer out of range"))
     }
 
-    /// Bare identifier: `(letter|_)(letter|digit|[_$.])*`.
     pub fn ident(&mut self) -> R<&'a str> {
         self.ws();
         match self.peek() {
@@ -407,14 +347,12 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// Name after a sigil: `%x`, `^bb0`, `@sym`, `#map`, `!t` → `x`, `bb0`, ...
     #[inline]
     pub fn sigil(&mut self, c: char) -> R<&'a str> {
         self.expect(c.encode_utf8(&mut [0; 4]))?;
         self.nonempty("name", is_suffix)
     }
 
-    /// Skips a string literal starting at `"`, returning the raw text including quotes.
     fn skip_string(&mut self) -> R<&'a str> {
         let start = self.pos;
         self.pos += 1;
@@ -429,7 +367,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(self.since(start))
     }
 
-    /// String literal, returning the raw (still escaped) contents between the quotes.
     pub fn string(&mut self) -> R<&'a str> {
         if !self.at(b'"') {
             return self.err("expected string");
@@ -437,14 +374,12 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.skip_string().map(|s| &s[1..s.len() - 1])
     }
 
-    /// `@name` or `@"name"`; quoted names keep their quotes.
     #[inline]
     pub fn symbol(&mut self) -> R<&'a str> {
         self.expect("@")?;
         if self.peek() == Some(b'"') { self.skip_string() } else { self.nonempty("symbol", is_suffix) }
     }
 
-    /// A symbol name `@name` / `@"name"`, unescaped.
     pub fn sym_name(&mut self) -> R<String> {
         let s = self.symbol()?;
         match s.strip_prefix('"') {
@@ -453,7 +388,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// Raw balanced group starting at `<`, `(`, `[` or `{`, including delimiters.
     pub fn group(&mut self) -> R<&'a str> {
         let start = self.pos;
         let mut stack = Vec::new();
@@ -481,14 +415,12 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// Is a balanced group next (after whitespace)?
     #[inline]
     fn at_group(&mut self) -> bool {
         self.ws();
         matches!(self.peek(), Some(b'<' | b'(' | b'['))
     }
 
-    /// Consecutive balanced groups (`distinct[0]<...>`), or `None` if none follow.
     fn groups(&mut self) -> R<Option<&'a str>> {
         let start = self.pos;
         while matches!(self.peek(), Some(b'<' | b'(' | b'[' | b'{')) {
@@ -497,9 +429,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok((self.pos > start).then(|| self.since(start)))
     }
 
-    /// `elem (, elem)* close`, assuming the opener was consumed. Read on the stack, up to four,
-    /// then allocated once at its length: a `Vec` grown by pushing starts at four and doubles,
-    /// and giving the rest back afterwards (`shrink_to_fit`) costs a reallocation per list.
     pub fn list<T>(&mut self, close: &str, mut f: impl FnMut(&mut Self) -> R<T>) -> R<Vec<T>> {
         if self.eat(close) {
             return Ok(Vec::new());
@@ -514,7 +443,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// `xs` in a `Vec` of exactly its length: one allocation when it is still inline.
     fn exact<T, const N: usize>(xs: smallvec::SmallVec<[T; N]>) -> Vec<T> {
         match xs.spilled() {
             true => {
@@ -530,13 +458,11 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// `open elem (, elem)* close` if `open` follows, else empty.
     #[inline]
     pub fn opt_list<T>(&mut self, open: &str, close: &str, f: impl FnMut(&mut Self) -> R<T>) -> R<Vec<T>> {
         if self.eat(open) { self.list(close, f) } else { Ok(Vec::new()) }
     }
 
-    /// Optional `loc(...)`, returning its raw contents.
     pub fn opt_loc(&mut self) -> R<Option<Str<'a>>> {
         let save = self.pos;
         if self.eat_kw("loc") && self.peek() == Some(b'(') {
@@ -547,7 +473,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(None)
     }
 
-    /// Optional `: type` (not `::`).
     pub fn opt_ty(&mut self) -> R<Option<Type<'a>>> {
         let save = self.pos;
         if self.eat(":") && self.peek() != Some(b':') {
@@ -557,10 +482,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(None)
     }
 
-    // ---- dialect plumbing ------------------------------------------------
-
-    /// Parses a region whose bare op names resolve against dialect `ns` (`func.func`'s body).
-    /// Every op sets this for its own regions: plain [`Self::region`] means none.
     pub fn region_in(&mut self, ns: Option<&'static str>) -> R<Region<'a>> {
         let saved = core::mem::replace(&mut self.default_ns, ns);
         let r = self.region_body();
@@ -568,31 +489,23 @@ impl<'a, 'd> Parser<'a, 'd> {
         r
     }
 
-    /// Lets the owning dialect structure an extended type/attribute body.
     #[inline]
     fn extended(&mut self, kind: SymKind) -> R<Extended<'a>> {
         let name = self.sigil(kind.sigil())?;
         self.extended_body(kind, name)
     }
 
-    /// A dialect type printed stripped (`<f32>` for `!emitc.lvalue<f32>`): ODS's `type($x)` of
-    /// one dialect type.
     #[inline]
     pub fn stripped_ty(&mut self, name: &'a str) -> R<Type<'a>> {
         self.ws();
-        // `parseCustomTypeWithFallback`: the full `!ns.name<...>` is read as any type too
         if self.peek() == Some(b'!') {
             return self.ty();
         }
         self.extended_body(SymKind::Type, name).map(|e| Type::Extended(e.into()))
     }
 
-    /// What follows the name `name` of a dialect type / attribute.
     fn extended_body(&mut self, kind: SymKind, name: &'a str) -> R<Extended<'a>> {
         let start = self.pos;
-        // A dialect type / attribute body is angle bracketed (`#ns.name<...>`) and an alias has
-        // none at all. Whatever follows belongs to the reader: `affine.apply #map(%i)` puts the
-        // op's operand list right after the alias, and it is not part of the attribute.
         let body = (self.peek() == Some(b'<')).then(|| self.group()).transpose()?;
         let mut params = Vec::new();
         let opt = self.opt;
@@ -612,8 +525,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(Extended { name: name.into(), body: body.map(Str::Borrowed), params })
     }
 
-    // ---- types -----------------------------------------------------------
-
     pub fn ty(&mut self) -> R<Type<'a>> {
         self.ws();
         match self.peek() {
@@ -626,9 +537,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// Does `id` name a scalar builtin type (`i32`, `ui8`, `f16`, `bf16`, `index`)? A bare word in
-    /// an attribute position is then a type attribute (`pdl.type : i32`), not an enum case;
-    /// `none` stays a word: enums use it as a case.
     #[inline]
     fn scalar_type_word(id: &str) -> bool {
         let split = id.find(|c: char| c.is_ascii_digit()).unwrap_or(id.len());
@@ -688,7 +596,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(Shaped { kind, shape, elem, extras })
     }
 
-    /// Dimension list `4x?x[8]x` (each dim must be followed by `x`).
     pub fn dims(&mut self) -> R<Vec<Dim>> {
         let mut dims = Vec::new();
         loop {
@@ -708,7 +615,6 @@ impl<'a, 'd> Parser<'a, 'd> {
                 Some(c) if c.is_ascii_digit() => Dim::Static(self.number()?),
                 _ => return Ok(dims),
             };
-            // `x` before the element type, e.g. `4xf32` or `4 x f32`.
             if !self.eat("x") {
                 self.pos = save;
                 return Ok(dims);
@@ -724,13 +630,10 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(FunctionType { inputs, results: self.results_ty()? })
     }
 
-    /// `type` or `(type, ...)` — the right-hand side of `->`.
     #[inline]
     pub fn results_ty(&mut self) -> R<Vec<Type<'a>>> {
         if self.eat("(") { self.list(")", Self::ty) } else { Ok(vec![self.ty()?]) }
     }
-
-    // ---- attributes ------------------------------------------------------
 
     pub fn attr(&mut self) -> R<Attribute<'a>> {
         let bare = core::mem::take(&mut self.bare);
@@ -751,7 +654,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         })
     }
 
-    /// An attribute without its `: type` suffix: an assembly-format variable followed by `:`.
     pub fn bare_attr(&mut self) -> R<Attribute<'a>> {
         self.bare = true;
         let a = self.attr();
@@ -759,7 +661,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         a
     }
 
-    /// An attribute's optional `: type`, unless parsing a bare one.
     #[inline]
     fn suffix(&mut self, bare: bool) -> R<Option<Type<'a>>> {
         if bare { Ok(None) } else { self.opt_ty() }
@@ -789,8 +690,6 @@ impl<'a, 'd> Parser<'a, 'd> {
             | "strided" | "distinct" | "loc")
                 if self.at_group() =>
             {
-                // `affine_map<...>` / `affine_set<...>` are one group each: an `affine.apply`
-                // writes its operand list right after the map, and that is not part of it.
                 let body = match name {
                     "affine_map" | "affine_set" => self.group()?.into(),
                     _ => self.groups()?.unwrap_or_default().into(),
@@ -845,7 +744,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(out)
     }
 
-    /// `{name = attr, name, ...}`
     pub fn dict(&mut self) -> R<Vec<NamedAttr<'a>>> {
         self.expect("{")?;
         self.list("}", |p| {
@@ -856,9 +754,7 @@ impl<'a, 'd> Parser<'a, 'd> {
         })
     }
 
-    /// Optional attribute dictionary.
     #[inline]
-    /// `{...}`, or an attribute alias standing for one (`linalg.generic #trait ins(..)`).
     pub fn dict_or_alias(&mut self) -> R<Vec<NamedAttr<'a>>> {
         self.ws();
         if !self.at(b'#') {
@@ -876,8 +772,6 @@ impl<'a, 'd> Parser<'a, 'd> {
     pub fn opt_dict(&mut self) -> R<Vec<NamedAttr<'a>>> {
         if self.at(b'{') { self.dict() } else { Ok(Vec::new()) }
     }
-
-    // ---- operations ------------------------------------------------------
 
     pub fn module(&mut self) -> R<Module<'a>> {
         let mut items = Vec::new();
@@ -943,7 +837,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(op)
     }
 
-    /// `%name` or `%name#index`.
     pub fn value(&mut self) -> R<Value<'a>> {
         let name = self.sigil('%')?.into();
         let index = if self.peek() == Some(b'#') {
@@ -975,13 +868,10 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(Operation { name, operands, successors, properties, regions, attributes, ty, loc, ..Operation::default() })
     }
 
-    /// A custom op: the op table's template for its name (explicit, default dialect, builtin),
-    /// else raw text. A template that fails to read the text leaves it raw too.
     fn custom(&mut self) -> R<Operation<'a>> {
         let name = self.ident()?;
         let start = self.pos;
         let opt = self.opt;
-        // The name as written first; the prefixed ones are spelled only when it is not an op.
         let qualified = || [self.default_ns, Some("builtin")].into_iter().flatten().filter_map(move |ns| opt.template(&format!("{ns}.{name}")));
         let written = name.contains('.').then(|| opt.template(name)).flatten();
         let templates: Vec<&Template> = match written {
@@ -997,8 +887,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         self.raw_custom(name)
     }
 
-    /// Unknown custom op: raw text up to the end of the line (at bracket depth 0) or an
-    /// unmatched closer; a `{` that ends its line opens a structurally parsed region.
     fn raw_custom(&mut self, name: &'a str) -> R<Operation<'a>> {
         let mut pieces = Vec::new();
         let mut stack = Vec::new();
@@ -1023,7 +911,6 @@ impl<'a, 'd> Parser<'a, 'd> {
                 }
                 b'-' if self.peek_at(1) == Some(b'>') => self.pos += 2,
                 b'<' if self.peek_at(1) == Some(b'=') => self.pos += 2,
-                // A left arrow (`omp.tile (%a, %b) <- (%loop)`), not a bracket: `<-` and a space.
                 b'<' if self.peek_at(1) == Some(b'-') && self.peek_at(2).is_some_and(|c| c.is_ascii_whitespace()) => self.pos += 2,
                 b'<' | b'(' | b'[' | b'{' => {
                     stack.push(closer(c));
@@ -1043,7 +930,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(Operation { name: name.into(), raw: Some(pieces), ..Operation::default() })
     }
 
-    /// At a depth-0 line end inside a custom op: does the op continue on the next line?
     fn continues(&self, start: usize) -> bool {
         let mut prev = self.src[start..self.pos].trim_end();
         while let Some((head, last)) = prev.rsplit_once('\n')
@@ -1064,7 +950,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
         let Some(&c) = next.as_bytes().first() else { return false };
         if c.is_ascii_alphabetic() || c == b'_' {
-            // A bare word continues the op when it is a clause keyword (`ins(`, `attributes {`).
             let word = &next[..next.bytes().position(|c| !is_id(c)).unwrap_or(next.len())];
             let after = &next[word.len()..];
             let assign = after.trim_start().strip_prefix('=').is_some_and(|r| !r.starts_with('='));
@@ -1072,8 +957,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
         match c {
             b'%' => !self.results_ahead(self.src.len() - next.len()),
-            // A string starts a generic op only as its name, `"ns.op"(`; else it is an operand of
-            // this one (`llvm.inline_asm asm_dialect = intel` and, on the next line, `"vaddps $0"`).
             b'"' => {
                 let b = next.as_bytes();
                 let mut i = 1;
@@ -1082,8 +965,6 @@ impl<'a, 'd> Parser<'a, 'd> {
                 }
                 !next.get(i + 1..).is_some_and(|r| r.starts_with('('))
             }
-            // `#a = ...` / `!t = ...` define an alias; any other attribute or type continues the
-            // op (`spirv.module Logical Vulkan requires` and, next, `#spirv.vce<...>`).
             b'#' | b'!' => {
                 let name = next[1..].bytes().position(|c| !is_id(c)).map_or(&next[1..], |n| &next[1..1 + n]);
                 !next[1 + name.len()..].trim_start().strip_prefix('=').is_some_and(|r| !r.starts_with('='))
@@ -1092,7 +973,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// Does `%a, %b:2 =` (an op's result list) start at `pos`?
     fn results_ahead(&self, pos: usize) -> bool {
         let mut p = Parser { src: self.src, pos, opt: self.opt, default_ns: None, bare: false, aliases: Vec::new(), type_aliases: Vec::new(), results: 0, lent: Vec::new(), lending: false, fork: None, file: None };
         loop {
@@ -1116,8 +996,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// At `{` inside a custom op: does a region (rather than an attribute dict) start here?
-    /// The brace must end its line, and the next token must be able to start an op/block.
     fn region_ahead(&self) -> bool {
         let rest = &self.rest()[1..];
         let line_end = rest.find('\n').unwrap_or(rest.len());
@@ -1134,7 +1012,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         }
     }
 
-    /// A region of an op that sets no default dialect.
     #[inline]
     pub fn region(&mut self) -> R<Region<'a>> {
         self.region_in(None)
@@ -1153,7 +1030,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Ok(Region { blocks })
     }
 
-    /// `%name : type loc(...)?` — a block argument or function-signature entry.
     #[inline]
     pub fn block_arg(&mut self) -> R<BlockArg<'a>> {
         let start = self.here();
@@ -1172,8 +1048,6 @@ impl<'a, 'd> Parser<'a, 'd> {
             args = self.opt_list("(", ")", Self::block_arg)?;
             self.expect(":")?;
         }
-        // The block's ops are read with `fork` off: only `forked`'s runs split further, so a
-        // nested block is never scanned twice.
         let fork = self.fork.take();
         let mut ops = fork.and_then(|f| self.forked(f)).unwrap_or_default();
         let read = loop {
@@ -1191,12 +1065,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         read
     }
 
-    /// ⭐ The ops of the block starting here, read in runs on `fork`'s threads: the runs are cut
-    /// where [`Parser::op_starts`] finds an op, each read by a parser of its own with this one's
-    /// aliases. An op as big as a run is a run alone, and its parser keeps `fork`: its own
-    /// blocks split again, as tasks of their own, down to blocks too small to be worth it.
-    /// `None` (nothing consumed) when the block is small or a run does not read as exactly its
-    /// ops; the block is then read serially, with the serial reading's errors.
     fn forked(&mut self, fork: &'d dyn for<'x> Fork<'x>) -> Option<Vec<Operation<'a>>> {
         self.ws();
         let starts = self.op_starts()?;
@@ -1204,7 +1072,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         if end - first < MlirOpt::PARALLEL_BYTES {
             return None;
         }
-        // About four runs per thread, cut at op starts; an op of a run's size or more alone.
         let step = (end - first) / (fork.threads() * 4) + 1;
         let mut runs: Vec<(usize, usize, bool)> = Vec::new();
         let mut from = first;
@@ -1245,10 +1112,6 @@ impl<'a, 'd> Parser<'a, 'd> {
         Some(ops)
     }
 
-    /// Where each op of the block starting here begins, then where the block ends (its `}` or
-    /// the next block's `^`): a scan that follows only `()[]{}`, strings and `//` comments. An
-    /// op starts a line of the block's own depth with `%`, `"` or a dotted name (`func.func`);
-    /// a guess the runs check ([`Parser::forked`]). `None` if the brackets do not close.
     fn op_starts(&self) -> Option<Vec<usize>> {
         let b = self.src.as_bytes();
         let starts_op = |j: usize| match b.get(j) {
@@ -1304,10 +1167,7 @@ impl<'a, 'd> Parser<'a, 'd> {
     }
 }
 
-// ---- attribute values ----------------------------------------------------------------------
-
 impl Attribute<'_> {
-    /// An integer literal's value (decimal or `0x` hex, optional sign).
     pub fn int(&self) -> Result<i128, Error> {
         let Attribute::Int { lit, .. } = self else { return Err(format!("expected an integer, found `{self}`").into()) };
         let (neg, digits) = lit.strip_prefix('-').map_or((false, lit.trim_start_matches('+')), |d| (true, d));
@@ -1319,7 +1179,6 @@ impl Attribute<'_> {
         Ok(if neg { -v } else { v })
     }
 
-    /// A string literal's unescaped text.
     pub fn text(&self) -> Result<String, Error> {
         let Attribute::Str { lit, .. } = self else { return Err(format!("expected a string, found `{self}`").into()) };
         let (mut out, mut bytes) = (Vec::with_capacity(lit.len()), lit.bytes());
@@ -1345,11 +1204,9 @@ impl Attribute<'_> {
         String::from_utf8(out).map_err(|_| Error(format!("not UTF-8: `{lit}`")))
     }
 
-    /// The type a typed attribute carries (`arith.constant`'s result).
     pub fn type_of(&self) -> Option<Type<'static>> {
         let ty = match self {
             Attribute::Bool(_) => return Some(Type::I1),
-            // Type-first (`dense<tensor<2x!t> : [..]>`): the type is the body's.
             Attribute::Builtin { name, body, ty: None } if name == "dense" => {
                 let opt = MlirOpt::new();
                 let mut p = Parser::new(body, &opt);
@@ -1364,7 +1221,6 @@ impl Attribute<'_> {
 }
 
 impl<'a> Type<'a> {
-    /// `i1`, or a shaped `i1` like `self` (`arith.cmpi`'s result).
     pub fn i1_like(&self) -> Type<'a> {
         match self {
             Type::Shaped(s) => Type::Shaped(alloc::boxed::Box::new(Shaped { kind: s.kind, shape: s.shape.clone(), elem: Box::new(Type::I1), extras: s.extras.clone() })),
@@ -1373,16 +1229,12 @@ impl<'a> Type<'a> {
     }
 }
 
-// ---- deserializing out of Content ----------------------------------------------------------
-
 impl Content {
-    /// Deserializes a `T` out of it.
     #[inline]
     pub fn to<T: DeserializeOwned>(self) -> Result<T, Error> {
         T::deserialize(self)
     }
 
-    /// A region: moved out of [`Content::Region`], else deserialized.
     pub fn into_region(self) -> Result<Region<'static>, Error> {
         match self {
             Content::Region(r) => Ok(*r),
@@ -1390,7 +1242,6 @@ impl Content {
         }
     }
 
-    /// Any serializable value as another type of the same shape (borrowed AST → owned AST).
     #[inline]
     pub fn convert<T: Serialize + ?Sized, U: DeserializeOwned>(value: &T) -> Result<U, Error> {
         Content::of(value)?.to()
@@ -1405,7 +1256,6 @@ macro_rules! forward {
     )*};
 }
 
-/// Integer requests of an attribute read its literal; everything else as usual.
 macro_rules! ints {
     ($($m:ident => $visit:ident($t:ty)),* $(,)?) => {$(
         fn $m<V: Visitor<'de>>(self, v: V) -> Result<V::Value, Error> {
@@ -1444,15 +1294,12 @@ impl<'de> de::Deserializer<'de> for Content {
             Self::Map(xs) => v.visit_map(Pairs(xs.into_iter(), None)),
             Self::Struct(_, xs) => v.visit_map(Pairs(xs.into_iter(), None)),
             Self::Variant(..) => v.visit_enum(self),
-            // Asked for generically, a region is its serialized form after all.
             Self::Region(r) => Self::of(&*r)?.deserialize_any(v),
             Self::Attr(a) => match a {
                 Attribute::Unit => v.visit_bool(true),
                 Attribute::Bool(b) => v.visit_bool(b),
-                // a float's bits (`0x7FF0000000000000 : f64`: an inf or a NaN, as MLIR prints one)
                 Attribute::Int { ref lit, ty: Some(Type::Float(kind)) } => v.visit_f64(crate::ApFloat::parse(kind, lit).ok_or_else(|| Error(format!("not a float: `{a}`")))?.to_f64()),
                 Attribute::Int { .. } => v.visit_i64(i64::try_from(a.int()?).map_err(|_| Error(format!("`{a}` is out of range")))?),
-                // MLIR's spellings of a float (its type's: an f32 reads as one), not only Rust's
                 Attribute::Float { ref lit, ref ty } => {
                     let kind = match ty {
                         Some(Type::Float(k)) => *k,
@@ -1479,7 +1326,6 @@ impl<'de> de::Deserializer<'de> for Content {
 
     fn deserialize_option<V: Visitor<'de>>(self, v: V) -> Result<V::Value, Error> {
         match self {
-            // `Unit`: what a self-describing format's `null` reads back as.
             Self::None | Self::Unit => v.visit_none(),
             Self::Some(x) => v.visit_some(*x),
             other => v.visit_some(other),
@@ -1497,14 +1343,10 @@ impl<'de> de::Deserializer<'de> for Content {
         match (self, name) {
             (Self::Attr(Attribute::Type(t)), "Type") => Self::of(&t)?.deserialize_enum(name, cases, v),
             (Self::Attr(a), "Attribute" | "Type") => Self::of(&a)?.deserialize_enum(name, cases, v),
-            // A user enum: an MLIR integer case value (= variant index) or the case name.
             (Self::Attr(a @ Attribute::Int { .. }), _) => v.visit_enum(Named(Self::U64(u64::try_from(a.int()?).map_err(|_| Error("negative enum case".into()))?))),
             (Self::Attr(a @ Attribute::Str { .. }), _) => v.visit_enum(Named(Self::Str(a.text()?))),
             (Self::Attr(Attribute::Bool(b)), _) => v.visit_enum(Named(Self::Str(if b { "true" } else { "false" }.into()))),
-            // A bare name (or index) picks a unit variant: how custom syntax spells an enum keyword.
             (this @ (Self::Str(_) | Self::U32(_) | Self::U64(_)), _) => v.visit_enum(Named(this)),
-            // `{variant: payload}`: an enum as a self-describing format writes it, and as
-            // [`Content`]'s own `Deserialize` reads one back.
             (Self::Map(mut xs), _) if xs.len() == 1 => {
                 let (k, x) = xs.remove(0);
                 v.visit_enum(Tagged(k, x))
@@ -1531,9 +1373,6 @@ impl<'de> de::Deserializer<'de> for Content {
     fn deserialize_tuple_struct<V: Visitor<'de>>(self, _: &'static str, _: usize, v: V) -> Result<V::Value, Error> {
         self.deserialize_any(v)
     }
-    // ⭐ 标识符与结构体只派发它们真会收到的形状，别经 `deserialize_any`：那样每个 op 的
-    // 字段 visitor 与结构体 visitor 都会把全部 `visit_*` 单态化一遍（九百个 op 乘下来）。
-    // 其余形状派生的 visitor 本来也只会报 invalid type。
     fn deserialize_identifier<V: Visitor<'de>>(self, v: V) -> Result<V::Value, Error> {
         match self {
             Self::Str(x) => v.visit_string(x),
@@ -1558,7 +1397,6 @@ impl<'de> de::Deserializer<'de> for Content {
 }
 
 impl Content {
-    /// What [`de::Error::invalid_type`] names.
     fn unexpected(&self) -> de::Unexpected<'_> {
         use de::Unexpected as U;
         match self {
@@ -1598,7 +1436,6 @@ impl<'de> SeqAccess<'de> for Items {
     }
 }
 
-/// Map entries; `K` is the key type (`Content` for maps, field names for structs).
 struct Pairs<K>(alloc::vec::IntoIter<(K, Content)>, Option<Content>);
 
 impl<'de, K: IntoDeserializer<'de, Error>> MapAccess<'de> for Pairs<K> {
@@ -1636,7 +1473,6 @@ impl<'de> VariantAccess<'de> for Payload {
     fn newtype_variant_seed<T: DeserializeSeed<'de>>(self, seed: T) -> Result<T::Value, Error> {
         match self {
             Self::Newtype(x) => seed.deserialize(x),
-            // Read as newtypes by [`Content`]'s `Deserialize`, which cannot know the kind.
             Self::Unit => seed.deserialize(Content::Unit),
             Self::Tuple(xs) => seed.deserialize(Content::Seq(xs)),
             Self::Struct(xs) => seed.deserialize(Content::Struct("", xs)),
@@ -1657,7 +1493,6 @@ impl<'de> VariantAccess<'de> for Payload {
     }
 }
 
-/// `{variant: payload}`.
 struct Tagged(Content, Content);
 
 impl<'de> EnumAccess<'de> for Tagged {
@@ -1669,7 +1504,6 @@ impl<'de> EnumAccess<'de> for Tagged {
     }
 }
 
-/// A unit variant picked by name or index.
 struct Named(Content);
 
 impl<'de> EnumAccess<'de> for Named {
@@ -1681,9 +1515,6 @@ impl<'de> EnumAccess<'de> for Named {
     }
 }
 
-// ---- any self-describing format into Content -----------------------------------------------
-
-/// Reads whatever the format holds, as it holds it.
 struct Capture;
 
 macro_rules! capture {
@@ -1739,7 +1570,6 @@ impl<'de> Visitor<'de> for Capture {
         }
         Ok(Content::Map(xs))
     }
-    /// `{variant: payload}`; the payload read as a newtype, the kind being unknown here.
     #[inline]
     fn visit_enum<A: EnumAccess<'de>>(self, a: A) -> Result<Content, A::Error> {
         let (k, v): (Content, _) = a.variant()?;
@@ -1747,8 +1577,6 @@ impl<'de> Visitor<'de> for Capture {
     }
 }
 
-/// ⭐ Any self-describing format (JSON, …) into the data model: how a typed op deserializes
-/// ([`Fields::read`]) without a visitor of its own.
 impl<'de> Deserialize<'de> for Content {
     #[inline]
     fn deserialize<D: de::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -1756,7 +1584,6 @@ impl<'de> Deserialize<'de> for Content {
     }
 }
 
-/// An op's fields as keyed by `keys`; other keys are skipped.
 struct Keyed(&'static [&'static str]);
 
 impl<'de> Visitor<'de> for Keyed {
@@ -1779,7 +1606,6 @@ impl<'de> Visitor<'de> for Keyed {
     }
 }
 
-/// ⭐ An op's serialized fields, taken one by one into the struct ([`Op::from_fields`]).
 pub struct Fields(Vec<(&'static str, Content)>);
 
 impl TryFrom<Content> for Fields {
@@ -1799,7 +1625,6 @@ impl Fields {
         self.0.iter().position(|(k, _)| *k == key).map(|i| self.0.swap_remove(i).1)
     }
 
-    /// Field `key`; a missing one is an `Option`'s `None`, else an error.
     pub fn take<T: DeserializeOwned>(&mut self, key: &str) -> Result<T, Error> {
         match self.pop(key) {
             Some(c) => c.to(),
@@ -1807,20 +1632,16 @@ impl Fields {
         }
     }
 
-    /// ⭐ An op's fields out of any deserializer: what `#[mlir::op]`'s `Deserialize` reads
-    /// before [`Op::from_fields`] — generic in the format only, shared by every op.
     #[inline]
     pub fn read<'de, D: de::Deserializer<'de>>(d: D, name: &'static str, keys: &'static [&'static str]) -> Result<Self, D::Error> {
         d.deserialize_struct(name, keys, Keyed(keys))
     }
 
-    /// Region field `key`, moved out when it was carried as itself.
     #[inline]
     pub fn region(&mut self, key: &str) -> Result<Region<'static>, Error> {
         self.pop(key).ok_or_else(|| Error(format!("missing field `{key}`")))?.into_region()
     }
 
-    /// Variadic region field `key`.
     pub fn regions(&mut self, key: &str) -> Result<Vec<Region<'static>>, Error> {
         match self.pop(key) {
             Some(Content::Seq(xs)) => xs.into_iter().map(Content::into_region).collect(),
@@ -1829,45 +1650,31 @@ impl Fields {
         }
     }
 
-    /// Field `key`, its default when missing.
     #[inline]
     pub fn or_default<T: DeserializeOwned + Default>(&mut self, key: &str) -> Result<T, Error> {
         self.pop(key).map_or_else(|| Ok(T::default()), Content::to)
     }
 }
 
-// ---- schemas -------------------------------------------------------------------------------
-
 impl Schema {
-    /// ⭐ `O`'s op name and fields, as `#[mlir::op]` writes them.
     #[inline]
     pub fn of<O: Op>() -> Self {
         Self { name: O::NAME, fields: O::FIELDS }
     }
 }
 
-// ---- Operation → typed op ------------------------------------------------------------------
-
 pub(crate) const SEGMENTS: &str = "operandSegmentSizes";
 
-/// A type variable's value: one type, or one per operand / result.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Bound<'a> {
     One(Type<'a>),
     Many(Vec<Type<'a>>),
 }
 
-/// ⭐ What one field of an op holds, borrowed from the op (`'o`) whose text lives for `'a`: the
-/// op read through a typed op's schema without building the typed op.
 #[derive(Debug)]
 pub(crate) enum Slot<'o, 'a> {
-    /// An operand group.
     Values(&'o [Value<'a>]),
-    /// A type variable's types: one per value, or the one type of a single variable. Owned only
-    /// for a fixed type the op does not spell (`index` of an empty group).
     Types(Cow<'o, [Type<'a>]>),
-    /// A property as the op holds it: `Unit` for a valueless one, owned only for a default
-    /// filled in.
     Prop(Cow<'o, Attribute<'a>>),
     Regions(&'o [Region<'a>]),
     Successors(&'o [Str<'a>]),
@@ -1875,8 +1682,6 @@ pub(crate) enum Slot<'o, 'a> {
     Loc(Option<&'o Str<'a>>),
 }
 
-/// How a property's typed field shows its value: the custom form spells a user enum by its case
-/// and a Rust number without its type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Shape {
     Case(&'static str),
@@ -1884,10 +1689,7 @@ pub(crate) enum Shape {
     Attr,
 }
 
-/// ⭐ An op through a schema: every field a [`Slot`] borrowed from the op, checked the way the
-/// typed op would check it — an op that does not fit has no view (and stays generic).
 pub(crate) struct View<'o, 'a> {
-    /// `(field, its Rust type, what it holds)`; an absent property has no entry.
     pub(crate) slots: Vec<(&'static Field, Slot<'o, 'a>)>,
 }
 
@@ -1935,9 +1737,6 @@ impl<'o, 'a> View<'o, 'a> {
         self.slots.iter().find_map(|(_, s)| if let Slot::Loc(l) = s { *l } else { None })
     }
 
-    /// ⭐ A property as the custom form shows it — `None`: absent — with what its typed field
-    /// made of it. An `Attribute` field is borrowed as it is (an integer of a declared type
-    /// retyped); a field of another Rust type goes through that type, and only this field does.
     pub(crate) fn shown(&self, f: &Field) -> Result<(Option<Cow<'_, Attribute<'a>>>, Shape), Error> {
         let Some((g, Slot::Prop(a))) = self.slots.iter().find(|(g, _)| g.name == f.name) else { return Ok((None, Shape::Attr)) };
         match g.ty {
@@ -1958,15 +1757,12 @@ impl<'o, 'a> View<'o, 'a> {
         }
     }
 
-    /// The property as the custom form shows it, `None` when absent or its default.
     #[inline]
     pub(crate) fn prop(&self, f: &Field) -> Result<Option<Cow<'_, Attribute<'a>>>, Error> {
         let (a, _) = self.shown(f)?;
         Ok(a.filter(|a| Some(&**a) != f.default_attr().as_ref()))
     }
 
-    /// The struct's [`Content`]: what the typed op deserializes. Text is copied here, regions
-    /// cloned — the price of a typed op, which owns its fields.
     pub(crate) fn content(&self, name: &'static str) -> Result<Content, Error> {
         let mut fields = Vec::with_capacity(self.slots.len());
         for (f, s) in &self.slots {
@@ -1990,7 +1786,6 @@ impl<'o, 'a> View<'o, 'a> {
 }
 
 impl Content {
-    /// An `Option`'s `Some` (or a newtype) looked through.
     pub(crate) fn looked_through(&self) -> &Content {
         match self {
             Self::Some(x) | Self::Newtype(_, x) => x.looked_through(),
@@ -2000,15 +1795,12 @@ impl Content {
 }
 
 impl<'a> Operation<'a> {
-    /// ⭐ This op as the typed op `O`; an error if it does not fit (it then stays generic).
     #[inline]
     pub fn to_op<O: Op>(&self) -> Result<O, Error> {
         let schema = Schema::of::<O>();
         O::from_content(self.view(&schema)?.content(schema.name)?)
     }
 
-    /// ⭐ This op through `schema`, every field borrowed: an error if it does not fit, the way
-    /// the typed op would not.
     pub(crate) fn view<'o>(&'o self, schema: &Schema) -> Result<View<'o, 'a>, Error> {
         if self.name != schema.name || self.raw.is_some() {
             return Err(format!("`{}` is not `{}`", self.name, schema.name).into());
@@ -2038,7 +1830,6 @@ impl<'a> Operation<'a> {
             return Err("operands do not match the op's operand groups".into());
         }
         let mut slots: Vec<(&'static Field, Slot<'o, 'a>)> = Vec::with_capacity(schema.fields.len());
-        // Each type variable's types, borrowed from the operands' and results' types.
         let mut bound: Vec<(&'static str, &'o [Type<'a>])> = Vec::new();
         let mut bind = |name: &'static str, ts: &'o [Type<'a>]| -> Result<(), Error> {
             match bound.iter().find(|(n, _)| *n == name) {
@@ -2081,9 +1872,7 @@ impl<'a> Operation<'a> {
         for f in schema.of_role(|r| matches!(r, Role::Type { .. })) {
             let ts = match bound.iter().find(|(n, _)| *n == f.name) {
                 Some((_, ts)) => Cow::Borrowed(*ts),
-                // A variadic variable of an empty variadic group: no types.
                 None if f.variadic => Cow::Borrowed(&[][..]),
-                // A fixed type whose only operand groups are empty.
                 None if let Role::Type { infer: Some(Infer::Is(ty)), .. } = f.role => Cow::Owned(vec![Type::try_from(ty).map_err(|e| Error(e.msg))?.owned()]),
                 _ => return Err(format!("type variable `{}` is not determined", f.name).into()),
             };
@@ -2098,8 +1887,6 @@ impl<'a> Operation<'a> {
             };
             match (a, ty) {
                 (Some(a), _) => slots.push((f, Slot::Prop(a))),
-                // Absent: fine for an `Option` (and a unit attribute's `bool`), not for a
-                // required field.
                 (None, FieldType::Attr { required: true }) => return Err(format!("`{}` needs `{}`", schema.name, f.name).into()),
                 (None, FieldType::Typed(through)) if !matches!(f.role, Role::Prop { unit: true, .. }) => {
                     through(Content::None).map_err(|_| Error(format!("`{}` needs `{}`", schema.name, f.name)))?;
@@ -2144,16 +1931,9 @@ impl<'a> Operation<'a> {
     }
 }
 
-// ---- reading the custom form ---------------------------------------------------------------
-
-/// A field read off the text. What [`Format::to_operation`] puts straight into the op stays as
-/// read, borrowing the text; only a typed op ([`Format::finish`]) or a typed property makes it
-/// a [`Content`], and only then is it copied.
 enum Got<'a> {
     Attr(Attribute<'a>),
-    /// A successor label without its `^`.
     Str(Str<'a>),
-    /// The discardable attributes.
     Attrs(Vec<NamedAttr<'a>>),
     Other(Content),
 }
@@ -2188,13 +1968,10 @@ impl TryFrom<Got<'_>> for Content {
     }
 }
 
-/// Fields read so far.
 #[derive(Default)]
 struct Slots<'a> {
     fields: Vec<(&'static str, Got<'a>)>,
-    /// Operand groups read: (name, values), as written.
     values: Vec<(&'static str, Vec<Value<'a>>)>,
-    /// Type variables bound by the text: (name, types).
     types: Vec<(&'static str, Vec<Type<'a>>)>,
 }
 
@@ -2235,19 +2012,14 @@ impl<'a> Slots<'a> {
     }
 }
 
-/// `ShapedType::kDynamic`: the item is in the value list, not the integer list.
 pub(crate) const SENTINEL: &str = "-9223372036854775808";
 
-/// The label of a lent region's stand-in ([`Parser::lend`]): a NUL, which no source label holds.
 const LENT: &str = "\0lent";
 
-/// Words that start an attribute, not a user enum case.
 const ATTR_WORDS: &[&str] = &["true", "false", "unit", "dense", "dense_resource", "array", "affine_map", "affine_set", "sparse", "strided", "distinct", "opaque", "loc"];
 
 impl Format<'_> {
-    /// ⭐ Parses the custom form after the op name into `O`.
     pub fn parse<O: Op>(&self, p: &mut Parser<'_, '_>) -> R<O> {
-        // Taken before the body: an op inside a region resets it.
         let results = p.results;
         let mut r = Slots::default();
         self.read(&self.elems, None, &mut r, p)?;
@@ -2255,8 +2027,6 @@ impl Format<'_> {
         self.finish(r, loc, results).and_then(O::from_content).or_else(|e| p.err(e.0))
     }
 
-    /// ⭐ Parses the custom form after the op name straight into an [`Operation`]
-    /// ([`Format::to_operation`]): what [`Format::parse`] then `Operation::of_owned_op` give.
     pub fn parse_op<'a>(&self, p: &mut Parser<'a, '_>) -> R<Operation<'a>> {
         let results = p.results;
         let mut r = Slots::default();
@@ -2265,7 +2035,6 @@ impl Format<'_> {
         self.to_operation(r, loc, results).or_else(|e| p.err(e.0))
     }
 
-    /// `after`: what follows `elems` where they are spelled (the element after a group, in the group's parent).
     fn read<'a>(&self, elems: &[Elem<'_>], after: Option<&Elem<'_>>, r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
         let outer = elems;
         let field = |p: &Parser<'a, '_>, n: &str| self.field(n).copied().or_else(|e| p.err(e.0));
@@ -2281,7 +2050,6 @@ impl Format<'_> {
                         self.absent(anchor, elems, r, p)?;
                     }
                 }
-                // Clauses in any order, each at most once; the ones not written are absent.
                 Elem::OiList(clauses) => {
                     let mut read = alloc::vec![false; clauses.len()];
                     loop {
@@ -2309,10 +2077,6 @@ impl Format<'_> {
                     let f = field(p, n)?;
                     let c = match f.role {
                         Role::Operand { .. } if f.variadic => {
-                            // Followed by a `,` literal, the group is an ODS `Optional`: one operand
-                            // at most (`arm_sme.tile_load`'s `$padding `,` $mask`). A variadic list
-                            // there could not be read upstream either: its parser is greedy.
-                            // The group's last element looks past the group: `(`scale` $a_scale^)? `,``.
                             let next = if i + 1 < outer.len() { outer.get(i + 1) } else { after };
                             let one = matches!(next, Some(Elem::Lit(",")));
                             let mut vs = Vec::new();
@@ -2365,14 +2129,11 @@ impl Format<'_> {
                             p.ws();
                             Got::Attr(Attribute::str(&p.sym_name()?))
                         }
-                        // An alias (`#di_label`) stands for the whole attribute.
                         Role::Prop { dialect: Some(_), .. } if { p.ws(); p.at(b'#') } => {
                             Got::Attr(p.attr()?)
                         }
                         Role::Prop { dialect: Some(_), .. } if let Some((ns, m)) = f.keyword_dialect() => {
                             p.ws();
-                            // A bit enum's cases joined by `|` (`valu|all_vmem`), or `kw = case`
-                            // (`src_etype = f16`).
                             let mut case = String::from(p.ident()?);
                             if p.eat("=") {
                                 case.push_str(" = ");
@@ -2391,17 +2152,14 @@ impl Format<'_> {
                             Got::Attr(Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Borrowed(d), body, params: Vec::new() }), ty: None })
                         }
                         Role::Prop { .. } => {
-                            // A bare keyword is a user enum case; anything else is an attribute.
                             let save = p.pos();
                             match p.ident() {
                                 Ok(word) if !ATTR_WORDS.contains(&word) && !p.rest().starts_with(['<', '(', '[']) && !Parser::scalar_type_word(word) => Got::Other(Content::Str(word.into())),
                                 _ => {
                                     p.seek(save);
                                     let a = if self.before_colon(n) || matches!(f.role, Role::Prop { int: Some(_), .. }) { p.bare_attr()? } else { p.attr()? };
-                                    // A dense array printed as a bare list: put its type back.
                                     let a = match (f.dense_ty(), a) {
                                         (Some(ty), Attribute::Array(xs)) => Attribute::DenseArray { ty, values: xs.into_iter().map(|x| Str::Owned(format!("{}", x.untyped()))).collect() },
-                                        // An integer of a declared width: so is its type.
                                         (_, Attribute::Int { lit, ty: None }) if let Role::Prop { int: Some(t), .. } = f.role => Attribute::Int { lit, ty: Type::try_from(t).ok() },
                                         (_, Attribute::Float { lit, ty: None }) if let Role::Prop { int: Some(t), .. } = f.role => Attribute::Float { lit, ty: Type::try_from(t).ok() },
                                         (_, a) => a,
@@ -2411,7 +2169,6 @@ impl Format<'_> {
                             }
                         }
                         Role::Successor => Got::Str(Str::Borrowed(p.sigil('^')?)),
-                        // `$regions` of a variadic region: `{..}, {..}`, maybe none (`scf.reduce`).
                         Role::Region if f.variadic => {
                             let mut rs = Vec::new();
                             while { p.ws(); p.at(b'{') } {
@@ -2432,8 +2189,6 @@ impl Format<'_> {
                     r.set(&f, c);
                 }
                 Elem::Custom { parts, .. } => self.read(parts, outer.get(i + 1).or(after), r, p)?,
-                // One list, two fields: a static item goes to `integers`, a `%value` goes to
-                // `values` and leaves the sentinel behind in its place.
                 Elem::Zip { integers, values } => {
                     let (ints, vals) = (field(p, integers)?, field(p, values)?);
                     let (mut statics, mut ops, mut types) = (Vec::new(), Vec::new(), Vec::new());
@@ -2467,8 +2222,6 @@ impl Format<'_> {
                         _ => self.types(&var, p),
                     };
                     let ts = one(p)?;
-                    // `type($indices)` of a variadic group sharing one type variable: a type per
-                    // operand (`i32, i32`), all of them the one type.
                     for _ in 1..self.shared_count(n, &var, |f| r.values(f.name).map_or(0, <[_]>::len)) {
                         p.expect(",")?;
                         if one(p)? != ts {
@@ -2507,9 +2260,6 @@ impl Format<'_> {
         Ok(())
     }
 
-    /// One side of a `functional-type(..)`: `ts` dealt to `names` in order, one type each, the
-    /// rest to the one of variable length (a variadic type variable, or a variadic operand
-    /// group sharing one type).
     fn bind_side<'a>(&self, names: &[&str], ts: Vec<Type<'a>>, r: &mut Slots<'a>, p: &Parser<'a, '_>) -> R<()> {
         let vars = names.iter().map(|n| self.type_var(n).copied().or_else(|e| p.err(e.0))).collect::<R<Vec<Field>>>()?;
         let open = |(n, v): (&&str, &Field)| v.variadic || self.schema.field(n).is_some_and(|f| f.variadic && matches!(f.role, Role::Operand { .. }));
@@ -2522,7 +2272,6 @@ impl Format<'_> {
         for (n, v) in names.iter().zip(&vars) {
             let take = if open((n, v)) { rest } else { 1 };
             let mine: Vec<Type<'a>> = ts.by_ref().take(take).collect();
-            // A variadic group sharing one type: the first of them stands for all.
             let mine = if !v.variadic && mine.len() > 1 {
                 if mine.iter().any(|t| *t != mine[0]) {
                     return p.err(format!("`${n}`: the types differ"));
@@ -2536,7 +2285,6 @@ impl Format<'_> {
         Ok(())
     }
 
-    /// Types for a type variable: one, or a comma-separated list (maybe empty) for a variadic one.
     fn types<'a>(&self, f: &Field, p: &mut Parser<'a, '_>) -> R<Vec<Type<'a>>> {
         let save = p.pos();
         let mut ts = match p.ty() {
@@ -2553,12 +2301,7 @@ impl Format<'_> {
         Ok(ts)
     }
 
-    /// An absent group: its anchor, and the anchors of the groups nested in it, are left empty —
-    /// once, since an operand and its type may sit in two groups
-    /// (`(`,` $v^)? … (`,` type($v)^)?`), both absent; an anchored region is an empty region.
     fn absent<'a>(&self, anchor: &str, elems: &[Elem<'_>], r: &mut Slots<'a>, p: &mut Parser<'a, '_>) -> R<()> {
-        // Every variadic operand the group spells is empty, not only its anchor
-        // (`arm_sme.tile_load`'s `(`,` $padding `,` $mask^)?`: `padding` too).
         let vars = elems.iter().filter_map(|e| if let Elem::Var(n) | Elem::QVar(n) = e { Some(*n) } else { None });
         for name in core::iter::once(anchor).chain(vars) {
             if let Ok(f) = self.field(name)
@@ -2592,10 +2335,8 @@ impl Format<'_> {
         Ok(())
     }
 
-    /// Does an optional group start here? Decided by its first element.
     fn group_ahead(&self, elems: &[Elem<'_>], p: &mut Parser<'_, '_>) -> Result<bool, Error> {
         let save = p.pos();
-        // An empty literal only suppresses a space; it is not syntax, so it cannot decide a group.
         let hit = match elems.iter().find(|e| !matches!(e, Elem::Lit(l) if l.trim().is_empty())) {
             Some(Elem::Lit(l)) => p.eat_lit(l),
             Some(Elem::Var(n) | Elem::QVar(n)) => match self.field(n)?.role {
@@ -2609,8 +2350,6 @@ impl Format<'_> {
                 Role::Prop { symbol: true, .. } => p.at(b'@'),
                 Role::Prop { dialect: Some(d), .. } if d.contains('<') => p.at(b'#') || p.ident().is_ok_and(|w| !self.literal(w)),
                 Role::Prop { dialect: Some(_), .. } => p.at(b'<') || p.at(b'#'),
-                // An enum keyword: any word the format does not spell as a literal; or an array
-                // attribute (`($targets^)?` ⇒ `[#nvvm.target]`).
                 Role::Prop { int: None, .. } if p.at(b'[') => true,
                 Role::Prop { .. } => p.ident().is_ok_and(|w| !self.literal(w) && !(w == "attributes" && self.keyword_dict())),
                 _ => false,
@@ -2621,8 +2360,6 @@ impl Format<'_> {
         Ok(hit)
     }
 
-    /// How many values variadic type variable `f` types: its results (those the other result
-    /// variables leave), or its operand group as read.
     fn arity(&self, f: &Field, r: &Slots<'_>, results: usize) -> usize {
         if let Role::Type { result: Some(_), .. } = f.role {
             let fixed = self.schema.of_role(|x| matches!(x, Role::Type { result: Some(_), .. })).filter(|g| !g.variadic).count();
@@ -2632,8 +2369,6 @@ impl Format<'_> {
         group.and_then(|g| r.values(g.name)).map_or(1, <[_]>::len)
     }
 
-    /// Fills property defaults; every type variable's types, as the text bound them or as
-    /// inferred.
     fn complete<'a>(&self, r: &mut Slots<'a>, results: usize) -> Result<Vec<(&'static str, Vec<Type<'a>>)>, Error> {
         let mut types = Vec::new();
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { optional: false, .. })) {
@@ -2646,13 +2381,11 @@ impl Format<'_> {
         for f in self.schema.of_role(|r| matches!(r, Role::Type { .. })) {
             let undetermined = || Error(format!("type variable `{}` is not determined", f.name));
             let ts: Vec<Type<'a>> = match (r.bound(f.name), f.role) {
-                // Moved out below, once no other variable can still read it.
                 (Some(_), _) => {
                     types.push((f, None));
                     continue;
                 }
                 (None, Role::Type { infer: Some(Infer::I1), .. }) => vec![Type::I1],
-                // One per operand of a variadic group (none for an absent optional one: `arm_sme.tile_load`'s mask).
                 (None, Role::Type { infer: Some(Infer::I1Like(var)), .. }) => vec![r.bound(var).and_then(|t| t.first()).ok_or_else(undetermined)?.i1_like(); if f.variadic { self.arity(f, &r, results) } else { 1 }],
                 (None, Role::Type { infer: Some(Infer::ElemOf(var)), .. }) => {
                     let elem: Type<'a> = match r.bound(var).and_then(|t| t.first()) {
@@ -2661,8 +2394,6 @@ impl Format<'_> {
                         Some(Type::Extended(ext)) => ext.shaped_elem().ok_or_else(undetermined)?,
                         _ => return Err(undetermined()),
                     };
-                    // A variadic variable has one type per value (`tensor.from_elements`'s
-                    // operands, `vector.to_elements`'s results).
                     vec![elem; if f.variadic { self.arity(f, &r, results) } else { 1 }]
                 }
                 (None, Role::Type { infer: Some(Infer::Width(var)), .. }) => match r.bound(var).and_then(|t| t.first()).and_then(Type::shaped) {
@@ -2712,8 +2443,6 @@ impl Format<'_> {
                 (None, Role::Type { infer: Some(Infer::Is(ty)), .. }) => vec![Type::try_from(ty).map_err(|e| Error(e.msg))?],
                 (None, Role::Type { infer: Some(Infer::Same(var)), .. }) => r.bound(var).ok_or_else(undetermined)?.to_vec(),
                 (None, Role::Type { infer: Some(Infer::TypeOf(attr)), .. }) => {
-                    // A number written without its type is MLIR's default: `i64`, `f64`
-                    // (`arith.constant 10`); the attribute takes it too, as `mlir-opt` builds it.
                     match self.schema.field(attr).and_then(|af| r.get_mut(af)) {
                         Some(Got::Attr(Attribute::Int { ty: t @ None, .. })) => *t = Some(Type::Integer { signedness: Signedness::Signless, width: 64 }),
                         Some(Got::Attr(Attribute::Float { ty: t @ None, .. })) => *t = Some(Type::Float(FloatKind::F64)),
@@ -2730,7 +2459,6 @@ impl Format<'_> {
             }
             types.push((f, Some(ts)));
         }
-        // What the text bound, taken over: the last binding of each name, as `Slots::bound` reads.
         types
             .into_iter()
             .map(|(f, ts)| {
@@ -2746,7 +2474,6 @@ impl Format<'_> {
             .collect()
     }
 
-    /// Fills defaults and inferred types, then builds the struct's [`Content`].
     fn finish(&self, mut r: Slots<'_>, loc: Option<Str<'_>>, results: usize) -> Result<Content, Error> {
         for (name, vs) in core::mem::take(&mut r.values) {
             let Some(f) = self.schema.field(name) else { continue };
@@ -2770,9 +2497,6 @@ impl Format<'_> {
         Ok(Content::Struct(self.schema.name, fields))
     }
 
-    /// ⭐ The op read straight into an [`Operation`], no typed op in between: what
-    /// `O::from_content` then `Operation::of_owned_op` make of the same fields (`of_content`),
-    /// its types and regions kept as read.
     fn to_operation<'a>(&self, mut r: Slots<'a>, loc: Option<Str<'a>>, results: usize) -> Result<Operation<'a>, Error> {
         let types = self.complete(&mut r, results)?;
         let missing = |name: &str| Error(format!("missing field `{name}`"));
@@ -2811,15 +2535,9 @@ impl Format<'_> {
         for (_, name) in result_vars {
             result_tys.extend(ty_of(name)?.iter().cloned());
         }
-        // On the stack, then one allocation of its length: one property pushed into a `Vec`
-        // takes room for four (4 × 184 B), held for the life of the op.
         let mut props = smallvec::SmallVec::<[NamedAttr<'a>; 4]>::new();
         for f in self.schema.of_role(|r| matches!(r, Role::Prop { .. })) {
-            // As `Fields::take` reads a field the text left out: an `Option`'s `None`, else none.
-            // An attribute field keeps what was read, borrowing the text; only a typed one goes
-            // through its Rust type (and so through a `Content`).
             let a: Option<Attribute<'a>> = match (take(f.name), f.ty) {
-                // A unit attribute left out is `false` (`Fields::or_default`): not there.
                 (None, _) if matches!(f.role, Role::Prop { unit: true, .. }) => continue,
                 (Some(g), FieldType::Typed(through)) => through(Content::try_from(g)?)?.try_into()?,
                 (Some(Got::Attr(a)), FieldType::Attr { .. }) => Some(a),

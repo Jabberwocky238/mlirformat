@@ -1,15 +1,10 @@
-//! Locations as text: what `loc(...)` holds (an op's `loc`, a block argument's), read and built as
-//! MLIR's `Location` does.
-
 use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::Str;
 
-/// `loc(unknown)`'s contents.
 pub const UNKNOWN_LOC: &str = "unknown";
 
-/// A location's text (the contents of `loc(...)`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Loc<'s>(pub &'s str);
 
@@ -24,8 +19,6 @@ impl<'s> Loc<'s> {
         self.0 == UNKNOWN_LOC
     }
 
-    /// The locations a `fused[...]` without metadata holds, in order; `None` for any other location
-    /// (`fused<#meta>[...]` included).
     pub fn fused_parts(self) -> Option<Vec<Loc<'s>>> {
         let inner = self.0.strip_prefix("fused")?.trim_start().strip_prefix('[')?.strip_suffix(']')?;
         let b = inner.as_bytes();
@@ -54,9 +47,6 @@ impl<'s> Loc<'s> {
         Some(parts)
     }
 
-    /// ⭐ `FusedLoc::get(locs)` without metadata (`Builder::getFusedLoc`): fused locations spread
-    /// into theirs, `unknown` dropped, each kept once in order; none left is `unknown`, one is
-    /// itself.
     pub fn fuse<'a>(locs: impl IntoIterator<Item = Loc<'s>>) -> Str<'a> {
         let mut kept: Vec<Loc<'s>> = Vec::new();
         let mut keep = |l: Loc<'s>| {
