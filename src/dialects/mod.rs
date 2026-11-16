@@ -14,6 +14,7 @@ pub mod emitc_types;
 pub mod linalg_ops;
 pub mod llvm_types;
 pub mod scf_ops;
+pub mod vector_ops;
 pub mod bufferization_ops;
 pub mod spirv_types;
 #[path = "affine.gen.rs"]

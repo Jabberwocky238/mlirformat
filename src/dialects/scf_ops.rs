@@ -1,5 +1,5 @@
-use crate::common::{Block, BlockArg, Op, Operation, Parse, Print, Region, Str, Type, Value};
-use crate::generator::{Printer, Sep};
+use crate::common::{Block, BlockArg, FunctionType, Op, Operation, Parse, Print, Region, Str, Type, Value};
+use crate::generator::{Printer, Sep, Signature};
 use crate::mlir;
 use crate::parser::{Parser, R};
 use alloc::string::String;
@@ -162,6 +162,70 @@ impl Parse for If<'_> {
         };
         let (then_region, else_region) = (p.lend(then_region), p.lend(else_region));
         let op = If { condition, then_region, else_region, condition_ty: Type::I1, results, attrs: p.opt_dict()?, loc: p.opt_loc()? };
+        Self::owned(op, p)
+    }
+}
+
+#[mlir::op("scf.while", custom, results(results))]
+pub struct While<'a> {
+    #[slot(inits_ty)]
+    pub inits: Vec<Value<'a>>,
+    pub before: Region<'a>,
+    pub after: Region<'a>,
+    pub inits_ty: Vec<Type<'a>>,
+    pub results: Vec<Type<'a>>,
+}
+
+impl Print for While<'_> {
+    fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
+        let Some(entry) = self.before.blocks.first().filter(|b| b.args.len() == self.inits.len()) else {
+            return self.print_generic(p);
+        };
+        p.op_name(Self::NAME)?;
+        if !self.inits.is_empty() {
+            p.write_str(" (")?;
+            for (i, (a, v)) in entry.args.iter().zip(&self.inits).enumerate() {
+                write!(p, "{}%{} = {v}", if i > 0 { ", " } else { "" }, a.name)?;
+            }
+            p.write_char(')')?;
+        }
+        write!(p, " : {} ", Signature(&self.inits_ty, &self.results))?;
+        p.region(&self.before, false)?;
+        p.write_str(" do ")?;
+        let after_args = self.after.blocks.first().is_some_and(|b| !b.args.is_empty());
+        p.region(&self.after, after_args)?;
+        p.attr_dict("attributes ", &self.attrs, &[])
+    }
+}
+
+impl Parse for While<'_> {
+    fn parse(p: &mut Parser<'_, '_>) -> R<Self> {
+        let (mut names, mut inits) = (Vec::new(), Vec::new());
+        if p.eat("(") {
+            while !p.eat(")") {
+                names.push(String::from(p.sigil('%')?));
+                p.expect("=")?;
+                inits.push(p.value()?);
+                p.eat(",");
+            }
+        }
+        p.expect(":")?;
+        let FunctionType { inputs: inits_ty, results } = p.fn_ty()?;
+        if inits_ty.len() != inits.len() {
+            return p.err(alloc::format!("expected as many input types as operands (expected {} got {})", inits.len(), inits_ty.len()));
+        }
+        let mut before = p.region()?;
+        if let Some(b) = before.blocks.first_mut()
+            && !names.is_empty()
+        {
+            b.label.get_or_insert(Str::Borrowed("bb0"));
+            b.args = names.into_iter().zip(&inits_ty).map(|(name, ty)| BlockArg { name: Str::Owned(name), ty: ty.clone(), loc: None }).collect();
+        }
+        p.expect_lit("do")?;
+        let after = p.region()?;
+        let attrs = if p.eat_kw("attributes") { p.dict()? } else { Vec::new() };
+        let (before, after) = (p.lend(before), p.lend(after));
+        let op = While { inits, before, after, inits_ty, results, attrs, loc: p.opt_loc()? };
         Self::owned(op, p)
     }
 }

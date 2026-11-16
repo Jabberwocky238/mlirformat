@@ -4,7 +4,8 @@ use common::Fixtures;
 use mlirformat::affine_ops::{Apply, For, If, Load, Max, Min, Parallel, Store};
 use mlirformat::gpu_hand::{Func as GpuFunc, LaunchFunc};
 use mlirformat::linalg_hand::{Generic as LinalgGeneric, Yield as LinalgYield};
-use mlirformat::scf_hand::{For as ScfFor, If as ScfIf};
+use mlirformat::scf_hand::{For as ScfFor, If as ScfIf, While as ScfWhile};
+use mlirformat::vector_hand::Shuffle as VectorShuffle;
 use mlirformat::{MlirOpt, Op};
 
 macro_rules! dialects {
@@ -13,7 +14,7 @@ macro_rules! dialects {
         fn $test() {
             let mut opt = MlirOpt::new();
             opt.load($dialect);
-            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template()).inject(ScfIf::template()).inject(GpuFunc::template()).inject(LaunchFunc::template());
+            opt.inject(Apply::template()).inject(Min::template()).inject(Max::template()).inject(Load::template()).inject(Store::template()).inject(For::template()).inject(If::template()).inject(Parallel::template()).inject(ScfFor::template()).inject(ScfIf::template()).inject(ScfWhile::template()).inject(VectorShuffle::template()).inject(GpuFunc::template()).inject(LaunchFunc::template());
             if $ns == "llvm" {
                 for t in mlirformat::llvm_hand::LlvmHand::templates() {
                     opt.inject(t);
