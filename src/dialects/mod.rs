@@ -57,6 +57,8 @@ pub mod arm_neon;
 pub mod arm_sme;
 #[path = "arm_sve.gen.rs"]
 pub mod arm_sve;
+#[path = "nir.gen.rs"]
+pub mod nir;
 #[path = "nvgpu.gen.rs"]
 pub mod nvgpu;
 #[path = "nvvm.gen.rs"]
