@@ -55,7 +55,7 @@ impl EmitcType {
         if e.name != "emitc.array" {
             return None;
         }
-        let mut rest = e.body.as_deref()?.strip_prefix('<')?.strip_suffix('>')?;
+        let mut rest = e.inner()?;
         let mut rank = 0;
         while let Some((_, tail)) = rest.split_once('x').filter(|(d, _)| !d.is_empty() && d.bytes().all(|c| c.is_ascii_digit())) {
             rank += 1;

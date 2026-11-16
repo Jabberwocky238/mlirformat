@@ -142,6 +142,11 @@ ast! {
 }
 
 impl Extended<'_> {
+    #[inline]
+    pub fn inner(&self) -> Option<&str> {
+        self.body.as_deref()?.strip_prefix('<')?.strip_suffix('>')
+    }
+
     pub fn shaped_elem(&self) -> Option<Type<'static>> {
         let body = self.body.as_deref()?.strip_prefix('<')?;
         let mut depth = 0usize;

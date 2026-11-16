@@ -38,20 +38,6 @@ pub struct FuncOp<'a> {
     pub body: Region<'a>,
 }
 
-impl<'a> FuncOp<'a> {
-    fn nth<'x>(attrs: &'x Option<Attribute<'a>>, i: usize) -> Option<&'x Attribute<'a>> {
-        match attrs {
-            Some(Attribute::Array(ds)) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    fn dicts(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
-        ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
-    }
-}
-
 impl Print for FuncOp<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let Type::Function(ty) = &self.function_type else { return Err(fmt::Error) };
@@ -61,35 +47,8 @@ impl Print for FuncOp<'_> {
         }
         p.write_char(' ')?;
         p.sym_name(&self.sym_name)?;
-        p.write_char('(')?;
-        let entry = self.body.blocks.first();
-        for (i, t) in ty.inputs.iter().enumerate() {
-            p.write_str(if i > 0 { ", " } else { "" })?;
-            let arg = entry.and_then(|b| b.args.get(i));
-            match arg {
-                Some(a) => write!(p, "%{}: {t}", a.name)?,
-                None => write!(p, "{t}")?,
-            }
-            if let Some(d) = Self::nth(&self.arg_attrs, i) {
-                write!(p, " {d}")?;
-            }
-            p.loc(&arg.and_then(|a| a.loc.clone()))?;
-        }
-        p.write_char(')')?;
-        match ty.results.as_slice() {
-            [] => {}
-            [t] if Self::nth(&self.res_attrs, 0).is_none() && !matches!(t, Type::Function(_)) => write!(p, " -> {t}")?,
-            ts => {
-                p.write_str(" -> (")?;
-                for (i, t) in ts.iter().enumerate() {
-                    write!(p, "{}{t}", if i > 0 { ", " } else { "" })?;
-                    if let Some(d) = Self::nth(&self.res_attrs, i) {
-                        write!(p, " {d}")?;
-                    }
-                }
-                p.write_char(')')?;
-            }
-        }
+        let args = self.body.blocks.first().map_or(&[][..], |b| b.args.as_slice());
+        p.func_signature(ty, args, self.arg_attrs.as_ref(), self.res_attrs.as_ref())?;
         if self.no_inline {
             let mut attrs = self.attrs.reborrow();
             attrs.push(NamedAttr { name: Str::Borrowed("no_inline"), value: None });
@@ -160,8 +119,8 @@ impl Parse for FuncOp<'_> {
             sym_name,
             function_type: Type::Function(alloc::boxed::Box::new(FunctionType { inputs, results })),
             sym_visibility,
-            arg_attrs: FuncOp::dicts(arg_dicts),
-            res_attrs: FuncOp::dicts(res_dicts),
+            arg_attrs: Attribute::dicts(arg_dicts),
+            res_attrs: Attribute::dicts(res_dicts),
             no_inline,
             body: p.lend(body),
             attrs,

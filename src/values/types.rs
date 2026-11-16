@@ -181,6 +181,33 @@ impl<'a> Attribute<'a> {
         }
     }
 
+    #[inline]
+    pub fn inner(&self) -> Option<&str> {
+        match self {
+            Attribute::Extended { ext, .. } => ext.inner(),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn case_of(&self, name: &str) -> Option<&str> {
+        match self {
+            Attribute::Extended { ext, .. } if ext.name == name => ext.inner(),
+            _ => None,
+        }
+    }
+
+    pub fn dicts(ds: Vec<Vec<crate::NamedAttr<'a>>>) -> Option<Attribute<'a>> {
+        ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
+    }
+
+    pub fn dict_at(&self, i: usize) -> Option<&Attribute<'a>> {
+        match self {
+            Attribute::Array(ds) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
+            _ => None,
+        }
+    }
+
     pub fn dense_values(&self) -> Option<Vec<i64>> {
         match self {
             Attribute::DenseArray { values, .. } => Some(values.iter().map(|v| v.parse().unwrap_or(0)).collect()),

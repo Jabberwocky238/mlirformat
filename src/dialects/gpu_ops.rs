@@ -42,18 +42,6 @@ impl<'a> Func<'a> {
         }
     }
 
-    fn nth<'x>(attrs: &'x Option<Attribute<'a>>, i: usize) -> Option<&'x Attribute<'a>> {
-        match attrs {
-            Some(Attribute::Array(ds)) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    fn dicts(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
-        ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
-    }
-
     fn attributions(p: &mut Printer<'_, '_>, keyword: &str, args: &[BlockArg<'_>], dicts: &Option<Attribute<'a>>) -> fmt::Result {
         if args.is_empty() {
             return Ok(());
@@ -61,7 +49,7 @@ impl<'a> Func<'a> {
         write!(p, " {keyword}(")?;
         for (i, a) in args.iter().enumerate() {
             write!(p, "{}%{} : {}", if i > 0 { ", " } else { "" }, a.name, a.ty)?;
-            if let Some(d) = Self::nth(dicts, i) {
+            if let Some(d) = dicts.as_ref().and_then(|a| a.dict_at(i)) {
                 write!(p, " {d}")?;
             }
         }
@@ -99,33 +87,7 @@ impl Print for Func<'_> {
         p.op_name(Self::NAME)?;
         p.write_char(' ')?;
         p.sym_name(name)?;
-        p.write_char('(')?;
-        for (i, t) in ty.inputs.iter().enumerate() {
-            p.write_str(if i > 0 { ", " } else { "" })?;
-            match args.get(i) {
-                Some(a) => write!(p, "%{}: {t}", a.name)?,
-                None => write!(p, "{t}")?,
-            }
-            if let Some(d) = Self::nth(&self.arg_attrs, i) {
-                write!(p, " {d}")?;
-            }
-            p.loc(&args.get(i).and_then(|a| a.loc.clone()))?;
-        }
-        p.write_char(')')?;
-        match ty.results.as_slice() {
-            [] => {}
-            [t] if Self::nth(&self.res_attrs, 0).is_none() && !matches!(t, Type::Function(_)) => write!(p, " -> {t}")?,
-            ts => {
-                p.write_str(" -> (")?;
-                for (i, t) in ts.iter().enumerate() {
-                    write!(p, "{}{t}", if i > 0 { ", " } else { "" })?;
-                    if let Some(d) = Self::nth(&self.res_attrs, i) {
-                        write!(p, " {d}")?;
-                    }
-                }
-                p.write_char(')')?;
-            }
-        }
+        p.func_signature(ty, &args[..ty.inputs.len()], self.arg_attrs.as_ref(), self.res_attrs.as_ref())?;
         let extra = &args[ty.inputs.len()..];
         let (workgroup, private) = extra.split_at(workgroups);
         Self::attributions(p, "workgroup", workgroup, &self.workgroup_attrib_attrs)?;
@@ -193,10 +155,10 @@ impl Parse for Func<'_> {
         let (results, res_dicts): (Vec<_>, Vec<_>) = results.into_iter().unzip();
         let op = Func {
             function_type: Type::Function(alloc::boxed::Box::new(FunctionType { inputs, results })),
-            arg_attrs: Func::dicts(arg_dicts),
-            res_attrs: Func::dicts(res_dicts),
-            workgroup_attrib_attrs: Func::dicts(workgroup_dicts),
-            private_attrib_attrs: Func::dicts(private_dicts),
+            arg_attrs: Attribute::dicts(arg_dicts),
+            res_attrs: Attribute::dicts(res_dicts),
+            workgroup_attrib_attrs: Attribute::dicts(workgroup_dicts),
+            private_attrib_attrs: Attribute::dicts(private_dicts),
             known_block_size,
             known_grid_size,
             known_cluster_size,

@@ -256,6 +256,37 @@ impl<'p, 'd> Printer<'p, 'd> {
         if bare { write!(self, "@{name}") } else { write!(self, "@{}", Attribute::str(name)) }
     }
 
+    pub fn func_signature(&mut self, ty: &FunctionType<'_>, args: &[BlockArg<'_>], arg_attrs: Option<&Attribute<'_>>, res_attrs: Option<&Attribute<'_>>) -> fmt::Result {
+        self.write_char('(')?;
+        for (i, t) in ty.inputs.iter().enumerate() {
+            self.write_str(if i > 0 { ", " } else { "" })?;
+            match args.get(i) {
+                Some(a) => write!(self, "%{}: {t}", a.name)?,
+                None => write!(self, "{t}")?,
+            }
+            if let Some(d) = arg_attrs.and_then(|a| a.dict_at(i)) {
+                write!(self, " {d}")?;
+            }
+            self.loc(&args.get(i).and_then(|a| a.loc.clone()))?;
+        }
+        self.write_char(')')?;
+        let res = |i: usize| res_attrs.and_then(|a| a.dict_at(i));
+        match ty.results.as_slice() {
+            [] => Ok(()),
+            [t] if res(0).is_none() && !matches!(t, Type::Function(_)) => write!(self, " -> {t}"),
+            ts => {
+                self.write_str(" -> (")?;
+                for (i, t) in ts.iter().enumerate() {
+                    write!(self, "{}{t}", if i > 0 { ", " } else { "" })?;
+                    if let Some(d) = res(i) {
+                        write!(self, " {d}")?;
+                    }
+                }
+                self.write_char(')')
+            }
+        }
+    }
+
     pub fn loc(&mut self, loc: &Option<Str<'_>>) -> fmt::Result {
         match loc {
             Some(l) => write!(self, " loc({l})"),
@@ -1182,6 +1213,11 @@ impl Attribute<'_> {
     pub fn dialect(name: &str, body: &str) -> Attribute<'static> {
         let body = (!body.is_empty()).then(|| Str::Owned(String::from(body)));
         Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Owned(name.into()), body, params: Vec::new() }), ty: None }
+    }
+
+    #[inline]
+    pub fn dialect_with(name: &str, inner: impl Display) -> Attribute<'static> {
+        Attribute::Extended { ext: alloc::boxed::Box::new(Extended { name: Str::Owned(name.into()), body: Some(Str::Owned(format!("<{inner}>"))), params: Vec::new() }), ty: None }
     }
 
     #[inline]

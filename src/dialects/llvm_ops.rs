@@ -1,4 +1,4 @@
-use crate::common::{Attribute, BlockArg, Extended, FunctionType, NamedAttr, Operation, Region, ShapedKind, Str, Template, Type};
+use crate::common::{Attribute, BlockArg, FunctionType, NamedAttr, Operation, Region, ShapedKind, Str, Template, Type};
 use crate::generator::Printer;
 use crate::llvm::{AllocaOp, CallOp, FCmpOp, GEPOp, ICmpOp, LLVMFuncOp};
 use crate::llvm_types::LlvmType;
@@ -59,17 +59,6 @@ impl LlvmHand {
         a?.int().ok()?.try_into().ok()
     }
 
-    fn enum_body<'o>(a: Option<&'o Attribute<'_>>, name: &str) -> Option<&'o str> {
-        match a {
-            Some(Attribute::Extended { ext, .. }) if ext.name == name => ext.body.as_deref()?.strip_prefix('<')?.strip_suffix('>'),
-            _ => None,
-        }
-    }
-
-    fn enum_attr<'a>(name: &str, body: &str) -> Attribute<'a> {
-        Attribute::Extended { ext: Box::new(Extended { name: Str::Owned(name.into()), body: Some(Str::Owned(format!("<{body}>"))), params: Vec::new() }), ty: None }
-    }
-
     fn visible<'a>(op: &Operation<'a>, elide: &[&str]) -> Vec<NamedAttr<'a>> {
         let props = match &op.properties {
             Some(Attribute::Dict(d)) => d.as_slice(),
@@ -81,7 +70,7 @@ impl LlvmHand {
     }
 
     fn fastmath_elided(op: &Operation<'_>) -> bool {
-        Self::enum_body(Self::prop(op, "fastmathFlags"), "llvm.fastmath") == Some("none")
+        Self::prop(op, "fastmathFlags").and_then(|a| a.case_of("llvm.fastmath")) == Some("none")
     }
 
     fn split<'a>(p: &Parser<'a, '_>, name: &str, mut props: Vec<NamedAttr<'a>>, dict: Vec<NamedAttr<'a>>) -> (Option<Attribute<'a>>, Vec<NamedAttr<'a>>) {
@@ -98,22 +87,11 @@ impl LlvmHand {
         NamedAttr { name: Str::Owned(name.into()), value: Some(value) }
     }
 
-    fn nth<'o, 'a>(attrs: Option<&'o Attribute<'a>>, i: usize) -> Option<&'o Attribute<'a>> {
-        match attrs {
-            Some(Attribute::Array(ds)) => ds.get(i).filter(|d| !matches!(d, Attribute::Dict(xs) if xs.is_empty())),
-            _ => None,
-        }
-    }
-
-    fn dicts<'a>(ds: Vec<Vec<NamedAttr<'a>>>) -> Option<Attribute<'a>> {
-        ds.iter().any(|d| !d.is_empty()).then(|| Attribute::Array(ds.into_iter().map(Attribute::Dict).collect()))
-    }
-
     fn types_with_attrs(p: &mut Printer<'_, '_>, types: &[Type<'_>], attrs: Option<&Attribute<'_>>) -> fmt::Result {
         p.write_char('(')?;
         for (i, t) in types.iter().enumerate() {
             write!(p, "{}{t}", if i > 0 { ", " } else { "" })?;
-            if let Some(d) = Self::nth(attrs, i) {
+            if let Some(d) = attrs.and_then(|a| a.dict_at(i)) {
                 write!(p, " {d}")?;
             }
         }
@@ -174,7 +152,7 @@ impl LlvmHand {
         };
         let mut props = vec![Self::named("predicate", Attribute::i64(i64::try_from(index).unwrap_or(0)))];
         if name == "llvm.fcmp" && !dict.iter().any(|a| a.name == "fastmathFlags") {
-            props.push(Self::named("fastmathFlags", Self::enum_attr("llvm.fastmath", "none")));
+            props.push(Self::named("fastmathFlags", Attribute::dialect_with("llvm.fastmath", "none")));
         }
         let (properties, attributes) = Self::split(p, name, props, dict);
         let loc = p.opt_loc()?;
@@ -350,8 +328,8 @@ impl LlvmHand {
         };
         let arg_types = op.ty.inputs.get(callee_n - args.len()..callee_n)?;
         let (bundle_values, bundle_types) = (&op.operands[callee_n..], &op.ty.inputs[callee_n..]);
-        let cconv = Self::enum_body(Self::prop(op, "CConv"), "llvm.cconv").filter(|c| *c != "ccc");
-        let tail = Self::enum_body(Self::prop(op, "TailCallKind"), "llvm.tailcallkind").filter(|t| *t != "none");
+        let cconv = Self::prop(op, "CConv").and_then(|a| a.case_of("llvm.cconv")).filter(|c| *c != "ccc");
+        let tail = Self::prop(op, "TailCallKind").and_then(|a| a.case_of("llvm.tailcallkind")).filter(|t| *t != "none");
         let mut elide = vec!["callee", "TailCallKind", "var_callee_type", "CConv", "operandSegmentSizes", "op_bundle_sizes", "op_bundle_tags", "arg_attrs", "res_attrs"];
         if Self::fastmath_elided(op) {
             elide.push("fastmathFlags");
@@ -408,7 +386,7 @@ impl LlvmHand {
             p.write_str(" -> ")?;
             let res_attrs = Self::prop(op, "res_attrs");
             match op.ty.results.as_slice() {
-                [t] if Self::nth(res_attrs, 0).is_none() && !matches!(t, Type::Function(_)) => write!(p, "{t}")?,
+                [t] if res_attrs.and_then(|a| a.dict_at(0)).is_none() && !matches!(t, Type::Function(_)) => write!(p, "{t}")?,
                 ts => Self::types_with_attrs(p, ts, res_attrs)?,
             }
             p.loc(&op.loc)
@@ -493,18 +471,18 @@ impl LlvmHand {
         if let Some(c) = callee {
             props.push(Self::named("callee", Attribute::SymbolRef(vec![c.into()])));
         }
-        props.push(Self::named("CConv", Self::enum_attr("llvm.cconv", cconv.unwrap_or("ccc"))));
-        props.push(Self::named("TailCallKind", Self::enum_attr("llvm.tailcallkind", tail.unwrap_or("none"))));
+        props.push(Self::named("CConv", Attribute::dialect_with("llvm.cconv", cconv.unwrap_or("ccc"))));
+        props.push(Self::named("TailCallKind", Attribute::dialect_with("llvm.tailcallkind", tail.unwrap_or("none"))));
         if !dict.iter().any(|a| a.name == "fastmathFlags") {
-            props.push(Self::named("fastmathFlags", Self::enum_attr("llvm.fastmath", "none")));
+            props.push(Self::named("fastmathFlags", Attribute::dialect_with("llvm.fastmath", "none")));
         }
         if let Some(t) = var_callee_type {
             props.push(Self::named("var_callee_type", Attribute::Type(t)));
         }
-        if let Some(a) = Self::dicts(arg_dicts) {
+        if let Some(a) = Attribute::dicts(arg_dicts) {
             props.push(Self::named("arg_attrs", a));
         }
-        if let Some(a) = Self::dicts(res_dicts) {
+        if let Some(a) = Attribute::dicts(res_dicts) {
             props.push(Self::named("res_attrs", a));
         }
         let (properties, attributes) = Self::split(p, "llvm.call", props, dict);
@@ -528,10 +506,10 @@ impl LlvmHand {
         if Self::prop(op, "vscale_range").is_some() || rebuilt != *fty || Self::prop(op, "unnamed_addr").is_none() {
             return None;
         }
-        let linkage = Self::enum_body(Self::prop(op, "linkage"), "llvm.linkage").filter(|l| *l != "external");
+        let linkage = Self::prop(op, "linkage").and_then(|a| a.case_of("llvm.linkage")).filter(|l| *l != "external");
         let visibility = VISIBILITIES.get(usize::try_from(Self::int(Self::prop(op, "visibility_")).unwrap_or(0)).ok()?)?;
         let unnamed = UNNAMED_ADDRS.get(usize::try_from(Self::int(Self::prop(op, "unnamed_addr")).unwrap_or(0)).ok()?)?;
-        let cconv = Self::enum_body(Self::prop(op, "CConv"), "llvm.cconv").filter(|c| *c != "ccc");
+        let cconv = Self::prop(op, "CConv").and_then(|a| a.case_of("llvm.cconv")).filter(|c| *c != "ccc");
         let body = op.regions.first().filter(|r| !r.blocks.is_empty());
         let args = body.and_then(|r| r.blocks.first()).map_or(&[][..], |b| b.args.as_slice());
         if body.is_some() && args.len() != params.len() {
@@ -554,7 +532,7 @@ impl LlvmHand {
                     Some(a) => write!(p, "%{}: {t}", a.name)?,
                     None => write!(p, "{t}")?,
                 }
-                if let Some(d) = Self::nth(arg_attrs, i) {
+                if let Some(d) = arg_attrs.and_then(|a| a.dict_at(i)) {
                     write!(p, " {d}")?;
                 }
                 if let Some(a) = args.get(i) {
@@ -566,7 +544,7 @@ impl LlvmHand {
             }
             p.write_char(')')?;
             if !void {
-                match Self::nth(res_attrs, 0) {
+                match res_attrs.and_then(|a| a.dict_at(0)) {
                     None if !matches!(&*ret, Type::Function(_)) => write!(p, " -> {ret}")?,
                     _ => {
                         p.write_str(" -> ")?;
@@ -667,16 +645,16 @@ impl LlvmHand {
             Self::named("function_type", Attribute::Type(function_type)),
             Self::named("unnamed_addr", Attribute::i64(unnamed)),
         ];
-        props.push(Self::named("linkage", Self::enum_attr("llvm.linkage", linkage.unwrap_or("external"))));
+        props.push(Self::named("linkage", Attribute::dialect_with("llvm.linkage", linkage.unwrap_or("external"))));
         props.push(Self::named("visibility_", Attribute::i64(visibility)));
-        props.push(Self::named("CConv", Self::enum_attr("llvm.cconv", cconv.unwrap_or("ccc"))));
+        props.push(Self::named("CConv", Attribute::dialect_with("llvm.cconv", cconv.unwrap_or("ccc"))));
         if let Some(c) = comdat {
             props.push(Self::named("comdat", c));
         }
-        if let Some(a) = Self::dicts(arg_dicts) {
+        if let Some(a) = Attribute::dicts(arg_dicts) {
             props.push(Self::named("arg_attrs", a));
         }
-        if let Some(a) = Self::dicts(res_dicts) {
+        if let Some(a) = Attribute::dicts(res_dicts) {
             props.push(Self::named("res_attrs", a));
         }
         let (properties, attributes) = Self::split(p, "llvm.func", props, dict);
