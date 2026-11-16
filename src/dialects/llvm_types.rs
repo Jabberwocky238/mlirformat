@@ -19,6 +19,7 @@ pub enum LlvmType<'a> {
     Array(u64, Box<Type<'a>>),
     Struct { name: Option<String>, packed: bool, body: Option<Vec<Type<'a>>>, opaque: bool },
     Func { ret: Box<Type<'a>>, params: Vec<Type<'a>>, vararg: bool },
+    Target { name: String, types: Vec<Type<'a>>, ints: Vec<u32> },
 }
 
 impl<'a> LlvmType<'a> {
@@ -90,6 +91,17 @@ impl<'a> LlvmType<'a> {
                 }
                 ("func", Some(format!("<{} ({ps})>", Self::nested(ret, ctx))))
             }
+            LlvmType::Target { name, types, ints } => {
+                let mut s = format!("<\"{name}\"");
+                for t in types {
+                    s.push_str(&format!(", {}", Self::nested(t, ctx)));
+                }
+                for n in ints {
+                    s.push_str(&format!(", {n}"));
+                }
+                s.push('>');
+                ("target", Some(s))
+            }
         }
     }
 
@@ -112,7 +124,7 @@ impl<'a> LlvmType<'a> {
         let word_end = s.find(|c: char| !c.is_ascii_alphanumeric() && c != '_').unwrap_or(s.len());
         let (word, rest) = s.split_at(word_end);
         let llvm = match word {
-            "ptr" | "void" | "label" | "metadata" | "x86_amx" | "ppc_fp128" | "array" | "struct" | "func" => true,
+            "ptr" | "void" | "label" | "metadata" | "x86_amx" | "ppc_fp128" | "array" | "struct" | "func" | "target" => true,
             _ => false,
         };
         if llvm {
@@ -197,6 +209,32 @@ impl<'a> LlvmType<'a> {
                     None => (params, false),
                 };
                 LlvmType::Func { ret: ret.into(), params: Self::list(params)?, vararg }
+            }
+            "target" => {
+                let after = inner?.trim().strip_prefix('"')?;
+                let end = after.find('"')?;
+                let name = String::from(&after[..end]);
+                let mut rest = after[end + 1..].trim_start();
+                let (mut types, mut ints) = (Vec::new(), Vec::new());
+                while let Some(r) = rest.strip_prefix(',') {
+                    let r = r.trim_start();
+                    if r.starts_with(|c: char| c.is_ascii_digit()) {
+                        let n = r.find(|c: char| !c.is_ascii_digit()).unwrap_or(r.len());
+                        ints.push(r[..n].parse().ok()?);
+                        rest = r[n..].trim_start();
+                    } else {
+                        if !ints.is_empty() {
+                            return None;
+                        }
+                        let (t, r) = Self::parse_nested(r)?;
+                        types.push(t);
+                        rest = r.trim_start();
+                    }
+                }
+                if !rest.is_empty() {
+                    return None;
+                }
+                LlvmType::Target { name, types, ints }
             }
             _ => return None,
         })
