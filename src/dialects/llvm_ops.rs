@@ -56,10 +56,7 @@ impl LlvmHand {
     }
 
     fn int(a: Option<&Attribute<'_>>) -> Option<i64> {
-        match a {
-            Some(Attribute::Int { lit, .. }) => lit.parse().ok(),
-            _ => None,
-        }
+        a?.int().ok()?.try_into().ok()
     }
 
     fn enum_body<'o>(a: Option<&'o Attribute<'_>>, name: &str) -> Option<&'o str> {
@@ -71,21 +68,6 @@ impl LlvmHand {
 
     fn enum_attr<'a>(name: &str, body: &str) -> Attribute<'a> {
         Attribute::Extended { ext: Box::new(Extended { name: Str::Owned(name.into()), body: Some(Str::Owned(format!("<{body}>"))), params: Vec::new() }), ty: None }
-    }
-
-    fn i64_attr<'a>(v: i64) -> Attribute<'a> {
-        Attribute::Int { lit: Str::Owned(format!("{v}")), ty: Some(Type::int(64)) }
-    }
-
-    fn i32_array<'a>(v: &[i64]) -> Attribute<'a> {
-        Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
-    }
-
-    fn i32s(a: Option<&Attribute<'_>>) -> Option<Vec<i64>> {
-        match a {
-            Some(Attribute::DenseArray { values, .. }) => values.iter().map(|v| v.parse().ok()).collect(),
-            _ => None,
-        }
     }
 
     fn visible<'a>(op: &Operation<'a>, elide: &[&str]) -> Vec<NamedAttr<'a>> {
@@ -190,7 +172,7 @@ impl LlvmHand {
             Type::Shaped(s) if s.kind == ShapedKind::Vector => Type::Shaped(Box::new(crate::common::Shaped { elem: Box::new(Type::I1), ..(**s).clone() })),
             _ => Type::I1,
         };
-        let mut props = vec![Self::named("predicate", Self::i64_attr(i64::try_from(index).unwrap_or(0)))];
+        let mut props = vec![Self::named("predicate", Attribute::i64(i64::try_from(index).unwrap_or(0)))];
         if name == "llvm.fcmp" && !dict.iter().any(|a| a.name == "fastmathFlags") {
             props.push(Self::named("fastmathFlags", Self::enum_attr("llvm.fastmath", "none")));
         }
@@ -214,7 +196,7 @@ impl LlvmHand {
     }
 
     fn print_gep(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
-        let raw = Self::i32s(Self::prop(op, "rawConstantIndices"))?;
+        let raw = Self::prop(op, "rawConstantIndices")?.dense_values()?;
         let Some(Attribute::Type(elem)) = Self::prop(op, "elem_type") else { return None };
         let flags = Self::gep_flags(Self::int(Self::prop(op, "noWrapFlags")).unwrap_or(0));
         let (base, dynamic) = op.operands.split_first()?;
@@ -290,7 +272,7 @@ impl LlvmHand {
                 }
             }
         }
-        let mut props = vec![Self::named("elem_type", Attribute::Type(elem)), Self::named("rawConstantIndices", Self::i32_array(&raw))];
+        let mut props = vec![Self::named("elem_type", Attribute::Type(elem)), Self::named("rawConstantIndices", Attribute::dense_i32(&raw))];
         props.push(Self::named("noWrapFlags", Attribute::Int { lit: Str::Owned(format!("{flags}")), ty: Some(Type::int(32)) }));
         let (properties, attributes) = Self::split(p, "llvm.getelementptr", props, dict);
         let loc = p.opt_loc()?;
@@ -345,10 +327,10 @@ impl LlvmHand {
     }
 
     fn print_call(op: &Operation<'_>, p: &mut Printer<'_, '_>) -> Option<fmt::Result> {
-        let sizes = Self::i32s(Self::prop(op, "operandSegmentSizes"))?;
+        let sizes = Self::prop(op, "operandSegmentSizes")?.dense_values()?;
         let [callee_n, bundle_n] = sizes[..] else { return None };
         let (callee_n, bundle_n) = (usize::try_from(callee_n).ok()?, usize::try_from(bundle_n).ok()?);
-        let bundle_sizes = Self::i32s(Self::prop(op, "op_bundle_sizes"))?;
+        let bundle_sizes = Self::prop(op, "op_bundle_sizes")?.dense_values()?;
         let tags: Vec<&str> = match Self::prop(op, "op_bundle_tags") {
             Some(Attribute::Array(ts)) => ts.iter().map(|t| if let Attribute::Str { lit, .. } = t { Some(&**lit) } else { None }).collect::<Option<_>>()?,
             None => Vec::new(),
@@ -504,7 +486,7 @@ impl LlvmHand {
         let bundle_n = i64::try_from(bundle_values.len()).unwrap_or(0);
         operands.extend(bundle_values);
         inputs.extend(bundle_types);
-        let mut props = vec![Self::named("op_bundle_sizes", Self::i32_array(&bundle_sizes)), Self::named("operandSegmentSizes", Self::i32_array(&[n, bundle_n]))];
+        let mut props = vec![Self::named("op_bundle_sizes", Attribute::dense_i32(&bundle_sizes)), Self::named("operandSegmentSizes", Attribute::dense_i32(&[n, bundle_n]))];
         if bundled && !tags.is_empty() {
             props.push(Self::named("op_bundle_tags", Attribute::Array(tags)));
         }
@@ -683,10 +665,10 @@ impl LlvmHand {
         let mut props = vec![
             Self::named("sym_name", Attribute::Str { lit: Str::Owned(sym_name), ty: None }),
             Self::named("function_type", Attribute::Type(function_type)),
-            Self::named("unnamed_addr", Self::i64_attr(unnamed)),
+            Self::named("unnamed_addr", Attribute::i64(unnamed)),
         ];
         props.push(Self::named("linkage", Self::enum_attr("llvm.linkage", linkage.unwrap_or("external"))));
-        props.push(Self::named("visibility_", Self::i64_attr(visibility)));
+        props.push(Self::named("visibility_", Attribute::i64(visibility)));
         props.push(Self::named("CConv", Self::enum_attr("llvm.cconv", cconv.unwrap_or("ccc"))));
         if let Some(c) = comdat {
             props.push(Self::named("comdat", c));

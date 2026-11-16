@@ -166,7 +166,7 @@ as values, in both directions, for whoever computes with the IR (folds, rewrites
 Builtin types and attributes are read and built through methods named as MLIR names them:
 `Type::element_type`, `element_count`, `shape`, `dims`, `with_element`, `bit_width`,
 `Type::tensor(dims, elem)`, `Type::vector(shape, scalable, elem)`; `Attribute::integer`,
-`index`, `dense_i64`, `dense_i32`, `dense_values`, `is_poison`, `is_layout`. A `?` dim is
+`index`, `i32`, `i64`, `dense_array` (`dense_i64`, `dense_i32`), `dense_values`, `int_array`, `int_array_of`, `int_values`, `is_poison`, `is_layout`. A `?` dim is
 `Dim::DYNAMIC` (`ShapedType::kDynamic`), and `Dim` ⇄ `i64` through `From`.
 
 Affine text has one parser, `affine_expr`, which keeps an expression as written (`Map`, `Set`)

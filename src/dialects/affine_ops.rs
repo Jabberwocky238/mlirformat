@@ -635,24 +635,13 @@ fn groups_attr<'a>(groups: &[usize]) -> Attribute<'a> {
     Attribute::Builtin { name: Str::Borrowed("dense"), body: Str::Owned(body), ty: Some(*alloc::boxed::Box::new(ty)) }
 }
 
-fn ints_attr<'a>(xs: &[i64]) -> Attribute<'a> {
-    Attribute::Array(xs.iter().map(|v| Attribute::Int { lit: Str::Owned(format!("{v}")), ty: None }).collect())
-}
-
-fn ints_of(attr: &Attribute<'_>) -> Option<Vec<i64>> {
-    match attr {
-        Attribute::Array(xs) => xs.iter().map(|x| x.clone().int().ok().and_then(|v| i64::try_from(v).ok())).collect(),
-        _ => None,
-    }
-}
-
 impl Print for Parallel<'_> {
     fn print(&self, p: &mut Printer<'_, '_>) -> fmt::Result {
         let (lo, hi) = {
             let alias = |n: &str| p.alias(n).map(String::from);
             (map_body(&self.lower_bounds_map, &alias), map_body(&self.upper_bounds_map, &alias))
         };
-        let (Some(lo_text), Some(hi_text), Some(steps), Some(entry)) = (lo, hi, ints_of(&self.steps), self.region.blocks.first()) else {
+        let (Some(lo_text), Some(hi_text), Some(steps), Some(entry)) = (lo, hi, self.steps.int_values(), self.region.blocks.first()) else {
             return self.print_generic(p);
         };
         let (Ok(lm), Ok(hm)) = (Map::try_from(lo_text.as_str()), Map::try_from(hi_text.as_str())) else {
@@ -736,7 +725,7 @@ impl Parse for Parallel<'_> {
             lower_bounds_groups: groups_attr(&lower_groups),
             upper_bounds_map,
             upper_bounds_groups: groups_attr(&upper_groups),
-            steps: ints_attr(&steps),
+            steps: Attribute::int_array(&steps),
             region: p.lend(region),
             map_operands_ty: Type::Index,
             results,

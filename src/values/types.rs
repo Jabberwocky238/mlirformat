@@ -150,13 +150,35 @@ impl<'a> Attribute<'a> {
     }
 
     #[inline]
+    pub fn dense_array<T: core::fmt::Display>(width: u32, v: &[T]) -> Attribute<'a> {
+        Attribute::DenseArray { ty: Type::int(width), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
+    }
+
+    #[inline]
     pub fn dense_i64(v: &[i64]) -> Attribute<'a> {
-        Attribute::DenseArray { ty: Type::int(64), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
+        Attribute::dense_array(64, v)
     }
 
     #[inline]
     pub fn dense_i32<T: core::fmt::Display>(v: &[T]) -> Attribute<'a> {
-        Attribute::DenseArray { ty: Type::int(32), values: v.iter().map(|x| Str::Owned(format!("{x}"))).collect() }
+        Attribute::dense_array(32, v)
+    }
+
+    #[inline]
+    pub fn int_array(v: &[i64]) -> Attribute<'a> {
+        Attribute::Array(v.iter().map(|x| Attribute::Int { lit: Str::Owned(format!("{x}")), ty: None }).collect())
+    }
+
+    #[inline]
+    pub fn int_array_of(width: u32, v: &[i64]) -> Attribute<'a> {
+        Attribute::Array(v.iter().map(|&x| Attribute::of_int(x.into(), Type::int(width))).collect())
+    }
+
+    pub fn int_values(&self) -> Option<Vec<i64>> {
+        match self {
+            Attribute::Array(xs) => xs.iter().map(|x| i64::try_from(x.int().ok()?).ok()).collect(),
+            _ => None,
+        }
     }
 
     pub fn dense_values(&self) -> Option<Vec<i64>> {

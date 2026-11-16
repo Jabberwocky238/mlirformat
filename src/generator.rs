@@ -1190,7 +1190,12 @@ impl Attribute<'_> {
     }
 
     #[inline]
-    pub fn of_int(value: i128, ty: Type<'static>) -> Attribute<'static> {
+    pub fn i32(v: i64) -> Attribute<'static> {
+        Attribute::of_int(v.into(), Type::int(32))
+    }
+
+    #[inline]
+    pub fn of_int<'t>(value: i128, ty: Type<'t>) -> Attribute<'t> {
         Attribute::Int { lit: Str::Owned(value.to_string()), ty: Some(ty) }
     }
 
