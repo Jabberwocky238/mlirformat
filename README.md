@@ -124,6 +124,21 @@ sampling, `discard`; the rest of a shader is `func` / `arith` / `math` / `vector
 samplers `!spirv.*` types. GLSL source itself is read and written by
 [mlirbinary](https://github.com/Jabberwocky238/mlirbinary).
 
+GPU instruction sets and command streams, not in `MlirOpt::upstream()` either (load each dialect):
+
+- `apple9` — Apple G13 instructions, fields as attributes; `apple9.kernel`.
+- `agx` — Apple AGX: the USC instructions with each one's encoding table (Mesa's AGX2 model,
+  `tools/agxgen` from `data/apple/agx2-isa.json`), the command-buffer structs and their layouts (Mesa's
+  asahi genxml, `data/apple/cmdbuf.xml`); `agx.kernel`.
+- `rdna2` — AMD RDNA2 (gfx1036): the GFX10 instructions (`rdna2.isa.salu` / `valu` / `smem` / `flat` /
+  `ds`, opcodes from Mesa ACO by `scripts/rdna2_opcodes.py`), every gfx103 register and PM4 packet with
+  its layout (Mesa's register database, `tools/rdna2gen` from `data/amd`); `rdna2.kernel`.
+- `image` — a GPU image: memories (`image.memory`) holding command streams, data, words and records,
+  their addresses once laid out; `image::Layouts` are the tables records pack by.
+- `isa` — what these share: register types (`!agx.r<i32>`), the shader stage, `attr_ops!`.
+
+Their machine code, records and images are encoded by mlirbinary; the lowering to them is mlirpass's.
+
 ### Custom directives
 
 ODS keeps a `custom<X>(...)` directive's syntax out of the `.td` and leaves it to a hand-written
