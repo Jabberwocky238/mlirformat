@@ -1,0 +1,15 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "full_example"}> ({
+    %0 = "arith.constant"() <{value = -1.375000e+00 : f8E4M3FN}> : () -> f8E4M3FN loc("<stdin>":3:10)
+    %1 = "math.absf"(%0) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> f8E4M3FN loc("<stdin>":4:10)
+    %2 = "arith.constant"() <{value = 2.000000e+00 : f8E8M0FNU}> : () -> f8E8M0FNU loc("<stdin>":5:10)
+    %3 = "arith.constant"() <{value = 4.000000e+00 : f8E8M0FNU}> : () -> f8E8M0FNU loc("<stdin>":6:10)
+    %4 = "arith.constant"() <{value = 8.000000e+00 : f8E8M0FNU}> : () -> f8E8M0FNU loc("<stdin>":7:10)
+    %5 = "math.fma"(%3, %2, %4) <{fastmath = #arith.fastmath<none>}> : (f8E8M0FNU, f8E8M0FNU, f8E8M0FNU) -> f8E8M0FNU loc("<stdin>":8:10)
+    %6 = "math.isinf"(%0) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> i1 loc("<stdin>":9:10)
+    %7 = "math.isnan"(%0) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> i1 loc("<stdin>":10:10)
+    %8 = "math.isnormal"(%0) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> i1 loc("<stdin>":11:10)
+    %9 = "math.isfinite"(%0) <{fastmath = #arith.fastmath<none>}> : (f8E4M3FN) -> i1 loc("<stdin>":12:10)
+    "func.return"() : () -> () loc("<stdin>":13:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

@@ -1,0 +1,36 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "entry"}> ({
+    %9 = "arith.constant"() <{value = 0 : i16}> : () -> i16 loc("<stdin>":3:10)
+    "func.call"(%9) <{callee = @emulate_constant}> : (i16) -> () loc("<stdin>":4:5)
+    "func.call"(%9) <{callee = @foo}> : (i16) -> () loc("<stdin>":5:5)
+    "func.return"() : () -> () loc("<stdin>":6:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = (i16) -> (), sym_name = "emulate_constant"}> ({
+  ^bb0(%arg1: i16 loc("<stdin>":9:8)):
+    "vector.print"(%arg1) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":10:5)
+    %1 = "arith.constant"() <{value = 0 : i16}> : () -> i16 loc("<stdin>":11:10)
+    %2 = "arith.constant"() <{value = 1 : i16}> : () -> i16 loc("<stdin>":12:10)
+    %3 = "arith.constant"() <{value = -1 : i16}> : () -> i16 loc("<stdin>":13:10)
+    %4 = "arith.constant"() <{value = -3 : i16}> : () -> i16 loc("<stdin>":14:10)
+    %5 = "arith.constant"() <{value = 13 : i16}> : () -> i16 loc("<stdin>":15:10)
+    %6 = "arith.constant"() <{value = 256 : i16}> : () -> i16 loc("<stdin>":16:10)
+    %7 = "arith.constant"() <{value = 32767 : i16}> : () -> i16 loc("<stdin>":17:10)
+    %8 = "arith.constant"() <{value = -32768 : i16}> : () -> i16 loc("<stdin>":18:10)
+    "vector.print"(%1) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":19:5)
+    "vector.print"(%2) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":20:5)
+    "vector.print"(%3) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":21:5)
+    "vector.print"(%4) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":22:5)
+    "vector.print"(%5) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":23:5)
+    "vector.print"(%6) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":24:5)
+    "vector.print"(%7) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":25:5)
+    "vector.print"(%8) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":26:5)
+    "func.return"() : () -> () loc("<stdin>":27:5)
+  }) : () -> () loc("<stdin>":8:3)
+  "func.func"() <{function_type = (i16) -> (), sym_name = "foo"}> ({
+  ^bb0(%arg0: i16 loc("<stdin>":30:8)):
+    "vector.print"(%arg0) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":31:5)
+    %0 = "arith.constant"() <{value = 1 : i16}> : () -> i16 loc("<stdin>":32:10)
+    "vector.print"(%0) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":33:5)
+    "func.return"() : () -> () loc("<stdin>":34:5)
+  }) : () -> () loc("<stdin>":29:3)
+}) : () -> () loc("<stdin>":1:1)

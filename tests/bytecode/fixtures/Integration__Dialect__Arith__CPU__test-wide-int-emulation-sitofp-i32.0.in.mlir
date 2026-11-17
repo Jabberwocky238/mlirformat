@@ -1,0 +1,37 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (i32) -> f32, sym_name = "emulate_sitofp"}> ({
+  ^bb0(%arg1: i32 loc("<stdin>":3:8)):
+    %12 = "arith.sitofp"(%arg1) : (i32) -> f32 loc("<stdin>":4:11)
+    "func.return"(%12) : (f32) -> () loc("<stdin>":5:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = (i32) -> (), sym_name = "check_sitofp"}> ({
+  ^bb0(%arg0: i32 loc("<stdin>":8:8)):
+    %11 = "func.call"(%arg0) <{callee = @emulate_sitofp}> : (i32) -> f32 loc("<stdin>":9:11)
+    "vector.print"(%11) <{punctuation = #vector.punctuation<newline>}> : (f32) -> () loc("<stdin>":10:5)
+    "func.return"() : () -> () loc("<stdin>":11:5)
+  }) : () -> () loc("<stdin>":7:3)
+  "func.func"() <{function_type = () -> (), sym_name = "entry"}> ({
+    %0 = "arith.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":14:10)
+    %1 = "arith.constant"() <{value = 1 : i32}> : () -> i32 loc("<stdin>":15:10)
+    %2 = "arith.constant"() <{value = 2 : i32}> : () -> i32 loc("<stdin>":16:10)
+    %3 = "arith.constant"() <{value = 7 : i32}> : () -> i32 loc("<stdin>":17:10)
+    %4 = "arith.constant"() <{value = 1337 : i32}> : () -> i32 loc("<stdin>":18:10)
+    %5 = "arith.constant"() <{value = -1 : i32}> : () -> i32 loc("<stdin>":19:10)
+    %6 = "arith.constant"() <{value = -13 : i32}> : () -> i32 loc("<stdin>":20:10)
+    %7 = "arith.constant"() <{value = -1337 : i32}> : () -> i32 loc("<stdin>":21:10)
+    %8 = "arith.constant"() <{value = -32768 : i32}> : () -> i32 loc("<stdin>":22:10)
+    %9 = "arith.constant"() <{value = 16777217 : i32}> : () -> i32 loc("<stdin>":23:10)
+    %10 = "arith.constant"() <{value = -16777217 : i32}> : () -> i32 loc("<stdin>":24:11)
+    "func.call"(%0) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":25:5)
+    "func.call"(%1) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":26:5)
+    "func.call"(%2) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":27:5)
+    "func.call"(%3) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":28:5)
+    "func.call"(%4) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":29:5)
+    "func.call"(%5) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":30:5)
+    "func.call"(%7) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":31:5)
+    "func.call"(%8) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":32:5)
+    "func.call"(%9) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":33:5)
+    "func.call"(%10) <{callee = @check_sitofp}> : (i32) -> () loc("<stdin>":34:5)
+    "func.return"() : () -> () loc("<stdin>":35:5)
+  }) : () -> () loc("<stdin>":13:3)
+}) : () -> () loc("<stdin>":1:1)

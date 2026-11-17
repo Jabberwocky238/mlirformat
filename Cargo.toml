@@ -1,6 +1,6 @@
 [package]
 name = "mlirformat"
-version = "0.8.9"
+version = "0.9.0"
 edition = "2024"
 description = "MLIR text <-> IR <-> typed Rust ops: parser, printer, serde-based #[mlir::op] and dialect plugins"
 license = "MIT"
@@ -9,15 +9,15 @@ readme = "README.md"
 keywords = ["mlir", "parser", "serde", "compiler", "ir"]
 categories = ["parser-implementations", "compilers", "no-std"]
 # The mlir-opt fixtures stay in the repository.
-exclude = ["tests", "examples", "tools", "data"]
+exclude = ["tests", "examples"]
 
 [workspace]
-members = ["macros", "tools/*"]
+members = ["macros"]
 # An out-of-tree dialect: its own crate, depending on mlirformat by path.
 exclude = ["sampleplugin", "tests/nostd"]
 
 [dependencies]
-mlirformat-macros = { path = "macros", version = "0.8.9" }
+mlirformat-macros = { path = "macros", version = "0.9.0" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
 thiserror = { version = "2", default-features = false }
 # A list being read: a few inline, then one allocation of the exact length (`Parser::list`).

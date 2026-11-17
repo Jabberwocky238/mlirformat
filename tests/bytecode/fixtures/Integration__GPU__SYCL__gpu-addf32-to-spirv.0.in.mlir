@@ -1,0 +1,48 @@
+"builtin.module"() <{sym_name = "add"}> ({
+  "memref.global"() <{constant, initial_value = dense<[[[1.100000e+00, 2.200000e+00], [3.300000e+00, 4.400000e+00]], [[5.500000e+00, 6.600000e+00], [7.6999998, 8.800000e+00]]]> : tensor<2x2x2xf32>, sym_name = "__constant_2x2x2xf32_0", sym_visibility = "private", type = memref<2x2x2xf32>}> : () -> () loc("<stdin>":2:3)
+  "memref.global"() <{constant, initial_value = dense<[[[1.200000e+00, 2.300000e+00], [4.500000e+00, 5.800000e+00]], [[7.1999998, 8.300000e+00], [1.050000e+01, 1.180000e+01]]]> : tensor<2x2x2xf32>, sym_name = "__constant_2x2x2xf32", sym_visibility = "private", type = memref<2x2x2xf32>}> : () -> () loc("<stdin>":3:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %18 = "memref.get_global"() <{name = @__constant_2x2x2xf32}> : () -> memref<2x2x2xf32> loc("<stdin>":5:11)
+    %19 = "memref.get_global"() <{name = @__constant_2x2x2xf32_0}> : () -> memref<2x2x2xf32> loc("<stdin>":6:11)
+    %20 = "func.call"(%18, %19) <{callee = @test}> : (memref<2x2x2xf32>, memref<2x2x2xf32>) -> memref<2x2x2xf32> loc("<stdin>":7:11)
+    %21 = "memref.cast"(%20) : (memref<2x2x2xf32>) -> memref<*xf32> loc("<stdin>":8:11)
+    "func.call"(%21) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":9:5)
+    "func.return"() : () -> () loc("<stdin>":10:5)
+  }) : () -> () loc("<stdin>":4:3)
+  "func.func"() <{function_type = (memref<*xf32>) -> (), sym_name = "printMemrefF32", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":12:3)
+  "func.func"() <{function_type = (memref<2x2x2xf32>, memref<2x2x2xf32>) -> memref<2x2x2xf32>, sym_name = "test"}> ({
+  ^bb0(%arg3: memref<2x2x2xf32> loc("<stdin>":15:8), %arg4: memref<2x2x2xf32> loc("<stdin>":15:34)):
+    %6 = "arith.constant"() <{value = 2 : index}> : () -> index loc("<stdin>":16:10)
+    %7 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":17:10)
+    %8 = "gpu.alloc"() <{hostShared, operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> memref<2x2x2xf32> loc("<stdin>":18:10)
+    "memref.copy"(%arg4, %8) : (memref<2x2x2xf32>, memref<2x2x2xf32>) -> () loc("<stdin>":19:5)
+    %9 = "gpu.alloc"() <{hostShared, operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> memref<2x2x2xf32> loc("<stdin>":20:10)
+    "memref.copy"(%arg3, %9) : (memref<2x2x2xf32>, memref<2x2x2xf32>) -> () loc("<stdin>":21:5)
+    %10 = "gpu.alloc"() <{hostShared, operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> memref<2x2x2xf32> loc("<stdin>":22:11)
+    %11 = "gpu.wait"() : () -> !gpu.async.token loc("<stdin>":23:11)
+    %12 = "gpu.launch_func"(%11, %6, %6, %6, %7, %7, %7, %9, %8, %10) <{kernel = @test_kernel::@test_kernel, operandSegmentSizes = array<i32: 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 3, 0>}> : (!gpu.async.token, index, index, index, index, index, index, memref<2x2x2xf32>, memref<2x2x2xf32>, memref<2x2x2xf32>) -> !gpu.async.token loc("<stdin>":24:11)
+    "gpu.wait"(%12) : (!gpu.async.token) -> () loc("<stdin>":25:5)
+    %13 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2x2x2xf32> loc("<stdin>":26:11)
+    "memref.copy"(%10, %13) : (memref<2x2x2xf32>, memref<2x2x2xf32>) -> () loc("<stdin>":27:5)
+    %14 = "gpu.wait"() : () -> !gpu.async.token loc("<stdin>":28:11)
+    %15 = "gpu.dealloc"(%14, %10) : (!gpu.async.token, memref<2x2x2xf32>) -> !gpu.async.token loc("<stdin>":29:11)
+    %16 = "gpu.dealloc"(%15, %9) : (!gpu.async.token, memref<2x2x2xf32>) -> !gpu.async.token loc("<stdin>":30:11)
+    %17 = "gpu.dealloc"(%16, %8) : (!gpu.async.token, memref<2x2x2xf32>) -> !gpu.async.token loc("<stdin>":31:11)
+    "gpu.wait"(%17) : (!gpu.async.token) -> () loc("<stdin>":32:5)
+    "func.return"(%13) : (memref<2x2x2xf32>) -> () loc("<stdin>":33:5)
+  }) : () -> () loc("<stdin>":14:3)
+  "gpu.module"() <{sym_name = "test_kernel"}> ({
+    "gpu.func"() <{function_type = (memref<2x2x2xf32>, memref<2x2x2xf32>, memref<2x2x2xf32>) -> (), kernel}> ({
+    ^bb0(%arg0: memref<2x2x2xf32> loc("<stdin>":37:10), %arg1: memref<2x2x2xf32> loc("<stdin>":37:36), %arg2: memref<2x2x2xf32> loc("<stdin>":37:62)):
+      %0 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":38:12)
+      %1 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index loc("<stdin>":39:12)
+      %2 = "gpu.block_id"() <{dimension = #gpu<dim z>}> : () -> index loc("<stdin>":40:12)
+      %3 = "memref.load"(%arg0, %0, %1, %2) : (memref<2x2x2xf32>, index, index, index) -> f32 loc("<stdin>":41:12)
+      %4 = "memref.load"(%arg1, %0, %1, %2) : (memref<2x2x2xf32>, index, index, index) -> f32 loc("<stdin>":42:12)
+      %5 = "arith.addf"(%3, %4) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32 loc("<stdin>":43:12)
+      "memref.store"(%5, %arg2, %0, %1, %2) : (f32, memref<2x2x2xf32>, index, index, index) -> () loc("<stdin>":44:7)
+      "gpu.return"() : () -> () loc("<stdin>":45:7)
+    }) {gpu.known_block_size = array<i32: 1, 1, 1>, gpu.known_grid_size = array<i32: 2, 2, 2>, spirv.entry_point_abi = #spirv.entry_point_abi<>, sym_name = "test_kernel"} : () -> () loc("<stdin>":36:5)
+  }) {spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Addresses, Int64, Kernel], []>, api=OpenCL, #spirv.resource_limits<>>} : () -> () loc("<stdin>":35:3)
+}) {gpu.container_module} : () -> () loc("<stdin>":1:1)

@@ -1,0 +1,27 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "parallel_many_dims"}> ({
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":3:10)
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":4:10)
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index loc("<stdin>":5:10)
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index loc("<stdin>":6:10)
+    %4 = "arith.constant"() <{value = 4 : index}> : () -> index loc("<stdin>":7:10)
+    %5 = "arith.constant"() <{value = 5 : index}> : () -> index loc("<stdin>":8:10)
+    %6 = "arith.constant"() <{value = 6 : index}> : () -> index loc("<stdin>":9:10)
+    %7 = "arith.constant"() <{value = 7 : index}> : () -> index loc("<stdin>":10:10)
+    %8 = "arith.constant"() <{value = 8 : index}> : () -> index loc("<stdin>":11:10)
+    %9 = "arith.constant"() <{value = 9 : index}> : () -> index loc("<stdin>":12:10)
+    %10 = "arith.constant"() <{value = 10 : index}> : () -> index loc("<stdin>":13:11)
+    %11 = "arith.constant"() <{value = 11 : index}> : () -> index loc("<stdin>":14:11)
+    %12 = "arith.constant"() <{value = 12 : index}> : () -> index loc("<stdin>":15:11)
+    %13 = "arith.constant"() <{value = 13 : index}> : () -> index loc("<stdin>":16:11)
+    %14 = "arith.constant"() <{value = 14 : index}> : () -> index loc("<stdin>":17:11)
+    %15 = "arith.constant"() <{value = 15 : index}> : () -> index loc("<stdin>":18:11)
+    %16 = "arith.constant"() <{value = 26 : index}> : () -> index loc("<stdin>":19:11)
+    "scf.parallel"(%0, %3, %6, %9, %12, %2, %5, %8, %16, %14, %1, %4, %7, %10, %13) <{operandSegmentSizes = array<i32: 5, 5, 5, 0>}> ({
+    ^bb0(%arg0: index loc("<stdin>":21:10), %arg1: index loc("<stdin>":21:24), %arg2: index loc("<stdin>":21:38), %arg3: index loc("<stdin>":21:52), %arg4: index loc("<stdin>":21:66)):
+      %17 = "magic.op"(%arg0, %arg1, %arg2, %arg3, %arg4) : (index, index, index, index, index) -> index loc("<stdin>":22:13)
+      "scf.reduce"() : () -> () loc("<stdin>":23:7)
+    }) : (index, index, index, index, index, index, index, index, index, index, index, index, index, index, index) -> () loc("<stdin>":20:5)
+    "func.return"() : () -> () loc("<stdin>":25:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

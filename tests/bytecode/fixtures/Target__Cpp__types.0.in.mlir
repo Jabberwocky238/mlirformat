@@ -1,0 +1,28 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "opaque_types"}> ({
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.opaque<"int">]}> : () -> () loc("<stdin>":3:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.opaque<"byte">]}> : () -> () loc("<stdin>":4:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.opaque<"unsigned">]}> : () -> () loc("<stdin>":5:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.opaque<"status_t">]}> : () -> () loc("<stdin>":6:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.opaque<"std::vector<std::string>">]}> : () -> () loc("<stdin>":7:5)
+    "func.return"() : () -> () loc("<stdin>":8:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = () -> (), sym_name = "ptr_types"}> ({
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<i32>]}> : () -> () loc("<stdin>":11:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<i64>]}> : () -> () loc("<stdin>":12:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<f16>]}> : () -> () loc("<stdin>":13:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<bf16>]}> : () -> () loc("<stdin>":14:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<f32>]}> : () -> () loc("<stdin>":15:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<f64>]}> : () -> () loc("<stdin>":16:5)
+    %0 = "emitc.call_opaque"() <{callee = "f"}> : () -> !emitc.ptr<i32> loc("<stdin>":17:10)
+    %1 = "emitc.call_opaque"(%0) <{callee = "f"}> : (!emitc.ptr<i32>) -> !emitc.ptr<!emitc.ptr<i32>> loc("<stdin>":18:10)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptr<!emitc.opaque<"int">>]}> : () -> () loc("<stdin>":19:5)
+    "func.return"() : () -> () loc("<stdin>":20:5)
+  }) : () -> () loc("<stdin>":10:3)
+  "func.func"() <{function_type = () -> (), sym_name = "size_types"}> ({
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ssize_t]}> : () -> () loc("<stdin>":23:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.size_t]}> : () -> () loc("<stdin>":24:5)
+    "emitc.call_opaque"() <{callee = "f", template_args = [!emitc.ptrdiff_t]}> : () -> () loc("<stdin>":25:5)
+    "func.return"() : () -> () loc("<stdin>":26:5)
+  }) : () -> () loc("<stdin>":22:3)
+}) : () -> () loc("<stdin>":1:1)

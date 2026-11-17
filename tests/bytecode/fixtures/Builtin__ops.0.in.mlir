@@ -1,0 +1,12 @@
+"builtin.module"() ({
+  %0 = "foo.op"() : () -> !foo.type loc("<stdin>":2:8)
+  %1 = "foo.op"() : () -> !foo.tuple_type<!foo.type, !foo.type> loc("<stdin>":3:8)
+  %2 = "builtin.unrealized_conversion_cast"() : () -> !bar.tuple_type<> loc("<stdin>":4:8)
+  %3 = "builtin.unrealized_conversion_cast"(%0) : (!foo.type) -> !bar.lowered_type loc("<stdin>":5:8)
+  %4:2 = "builtin.unrealized_conversion_cast"(%1) : (!foo.tuple_type<!foo.type, !foo.type>) -> (!foo.type, !foo.type) loc("<stdin>":6:10)
+  %5 = "builtin.unrealized_conversion_cast"(%0, %0) : (!foo.type, !foo.type) -> !bar.tuple_type<!foo.type, !foo.type> loc("<stdin>":7:8)
+  %6 = "foo.op"() : () -> vector<[4]xi32> loc("<stdin>":8:8)
+  %7 = "foo.op"() : () -> vector<[2]x[2]xf64> loc("<stdin>":9:8)
+  %8 = "foo.op"() : () -> vector<2x[4]xbf16> loc("<stdin>":10:8)
+  %9 = "foo.op"() : () -> vector<2x2x[4]x[4]xi8> loc("<stdin>":11:8)
+}) : () -> () loc("<stdin>":1:1)

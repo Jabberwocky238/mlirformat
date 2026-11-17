@@ -1,0 +1,52 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<*xf32>) -> (), sym_name = "printMemrefF32", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":5:3)
+  "func.func"() <{function_type = (index, index) -> memref<?x?xf32>, sym_name = "alloc_2d_filled_f32"}> ({
+  ^bb0(%arg0: index loc("<stdin>":8:8), %arg1: index loc("<stdin>":8:22)):
+    %14 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":9:11)
+    %15 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":10:11)
+    %16 = "arith.constant"() <{value = 10 : index}> : () -> index loc("<stdin>":11:11)
+    %17 = "arith.constant"() <{value = 100 : index}> : () -> index loc("<stdin>":12:11)
+    %18 = "memref.alloc"(%arg0, %arg1) <{operandSegmentSizes = array<i32: 2, 0>}> : (index, index) -> memref<?x?xf32> loc("<stdin>":13:11)
+    "scf.for"(%14, %arg0, %15) ({
+    ^bb0(%arg2: index loc("<stdin>":15:10)):
+      "scf.for"(%14, %arg1, %15) ({
+      ^bb0(%arg3: index loc("<stdin>":17:12)):
+        %19 = "arith.muli"(%arg3, %17) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index loc("<stdin>":18:15)
+        %20 = "arith.addi"(%arg2, %19) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index loc("<stdin>":19:15)
+        %21 = "arith.index_cast"(%20) : (index) -> i32 loc("<stdin>":20:15)
+        %22 = "arith.sitofp"(%21) : (i32) -> f32 loc("<stdin>":21:15)
+        "memref.store"(%22, %18, %arg2, %arg3) : (f32, memref<?x?xf32>, index, index) -> () loc("<stdin>":22:9)
+        "scf.yield"() : () -> () loc("<stdin>":23:9)
+      }) : (index, index, index) -> () loc("<stdin>":16:7)
+      "scf.yield"() : () -> () loc("<stdin>":25:7)
+    }) : (index, index, index) -> () loc("<stdin>":14:5)
+    "func.return"(%18) : (memref<?x?xf32>) -> () loc("<stdin>":27:5)
+  }) : () -> () loc("<stdin>":7:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":30:10)
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":31:10)
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index loc("<stdin>":32:10)
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index loc("<stdin>":33:10)
+    %4 = "arith.constant"() <{value = 6 : index}> : () -> index loc("<stdin>":34:10)
+    %5 = "arith.constant"() <{value = -4.200000e+01 : f32}> : () -> f32 loc("<stdin>":35:10)
+    %6 = "func.call"(%4, %4) <{callee = @alloc_2d_filled_f32}> : (index, index) -> memref<?x?xf32> loc("<stdin>":36:10)
+    %7 = "memref.cast"(%6) : (memref<?x?xf32>) -> memref<*xf32> loc("<stdin>":37:10)
+    "func.call"(%7) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":38:5)
+    %8 = "vector.transfer_read"(%6, %1, %1, %5) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<?x?xf32>, index, index, f32) -> vector<5x5xf32> loc("<stdin>":39:10)
+    "vector.print"(%8) <{punctuation = #vector.punctuation<newline>}> : (vector<5x5xf32>) -> () loc("<stdin>":40:5)
+    %9 = "vector.transfer_read"(%6, %1, %1, %5) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d1, d0)>}> : (memref<?x?xf32>, index, index, f32) -> vector<5x5xf32> loc("<stdin>":41:10)
+    "vector.print"(%9) <{punctuation = #vector.punctuation<newline>}> : (vector<5x5xf32>) -> () loc("<stdin>":42:5)
+    "vector.transfer_write"(%9, %6, %0, %0) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = affine_map<(d0, d1) -> (d1, d0)>}> : (vector<5x5xf32>, memref<?x?xf32>, index, index) -> () loc("<stdin>":43:5)
+    %10 = "vector.transfer_read"(%6, %1, %1, %5) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<?x?xf32>, index, index, f32) -> vector<5x5xf32> loc("<stdin>":44:11)
+    "vector.print"(%10) <{punctuation = #vector.punctuation<newline>}> : (vector<5x5xf32>) -> () loc("<stdin>":45:5)
+    %11 = "vector.transfer_read"(%6, %2, %3, %5) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<?x?xf32>, index, index, f32) -> vector<5x5xf32> loc("<stdin>":46:11)
+    "vector.print"(%11) <{punctuation = #vector.punctuation<newline>}> : (vector<5x5xf32>) -> () loc("<stdin>":47:5)
+    %12 = "vector.transfer_read"(%6, %2, %3, %5) <{in_bounds = [false, false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d1, d0)>}> : (memref<?x?xf32>, index, index, f32) -> vector<5x5xf32> loc("<stdin>":48:11)
+    "vector.print"(%12) <{punctuation = #vector.punctuation<newline>}> : (vector<5x5xf32>) -> () loc("<stdin>":49:5)
+    %13 = "vector.transfer_read"(%6, %2, %3, %5) <{in_bounds = [false], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d1)>}> : (memref<?x?xf32>, index, index, f32) -> vector<5xf32> loc("<stdin>":50:11)
+    "vector.print"(%13) <{punctuation = #vector.punctuation<newline>}> : (vector<5xf32>) -> () loc("<stdin>":51:5)
+    "memref.dealloc"(%6) : (memref<?x?xf32>) -> () loc("<stdin>":52:5)
+    "func.return"() : () -> () loc("<stdin>":53:5)
+  }) : () -> () loc("<stdin>":29:3)
+}) : () -> () loc("<stdin>":4:1)

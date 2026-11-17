@@ -1,3 +1,4 @@
+mod bc;
 mod tblgen;
 
 use std::process::ExitCode;
@@ -14,11 +15,14 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     Tblgen(tblgen::Args),
+    /// MLIR text ⇄ bytecode (`.mlirbc`)
+    Bc(bc::Args),
 }
 
 fn main() -> ExitCode {
     let done = match Cli::parse().command {
         Command::Tblgen(args) => args.run(),
+        Command::Bc(args) => args.run(),
     };
     match done {
         Ok(()) => ExitCode::SUCCESS,

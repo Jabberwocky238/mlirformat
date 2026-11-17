@@ -1,0 +1,20 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (index) -> (f32, f32, f32, f32), sym_name = "view"}> ({
+  ^bb0(%arg0: index loc("<stdin>":4:8)):
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<2048xi8> loc("<stdin>":5:10)
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":6:10)
+    %2 = "arith.constant"() <{value = 7 : index}> : () -> index loc("<stdin>":7:10)
+    %3 = "arith.constant"() <{value = 11 : index}> : () -> index loc("<stdin>":8:10)
+    %4 = "arith.constant"() <{value = 15 : index}> : () -> index loc("<stdin>":9:10)
+    %5 = "memref.view"(%0, %4, %2, %3) : (memref<2048xi8>, index, index, index) -> memref<?x?xf32> loc("<stdin>":10:10)
+    %6 = "memref.load"(%5, %1, %1) : (memref<?x?xf32>, index, index) -> f32 loc("<stdin>":11:10)
+    %7 = "memref.view"(%0, %4, %arg0, %arg0, %2) : (memref<2048xi8>, index, index, index, index) -> memref<?x?x?xf32> loc("<stdin>":12:10)
+    %8 = "memref.load"(%7, %1, %1, %1) : (memref<?x?x?xf32>, index, index, index) -> f32 loc("<stdin>":13:10)
+    %9 = "memref.view"(%0, %4, %2) : (memref<2048xi8>, index, index) -> memref<?x4xf32> loc("<stdin>":14:10)
+    %10 = "memref.load"(%9, %1, %1) : (memref<?x4xf32>, index, index) -> f32 loc("<stdin>":15:11)
+    %11 = "memref.cast"(%0) : (memref<2048xi8>) -> memref<?xi8> loc("<stdin>":16:11)
+    %12 = "memref.view"(%11, %4, %4, %2) : (memref<?xi8>, index, index, index) -> memref<?x?xf32> loc("<stdin>":17:11)
+    %13 = "memref.load"(%12, %1, %1) : (memref<?x?xf32>, index, index) -> f32 loc("<stdin>":18:11)
+    "func.return"(%6, %8, %10, %13) : (f32, f32, f32, f32) -> () loc("<stdin>":19:5)
+  }) : () -> () loc("<stdin>":3:3)
+}) : () -> () loc("<stdin>":2:1)

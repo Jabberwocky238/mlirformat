@@ -1,0 +1,22 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (tensor<*xf32>) -> tensor<*xf32>, sym_name = "unranked_tensor_lowering"}> ({
+  ^bb0(%arg0: tensor<*xf32> loc("<stdin>":3:8)):
+    %0 = "shape.shape_of"(%arg0) : (tensor<*xf32>) -> tensor<?xindex> loc("<stdin>":4:10)
+    %1 = "shape.num_elements"(%0) : (tensor<?xindex>) -> index loc("<stdin>":5:10)
+    %2 = "tensor.from_elements"(%1) : (index) -> tensor<1xindex> loc("<stdin>":6:10)
+    %3 = "tensor.reshape"(%arg0, %2) : (tensor<*xf32>, tensor<1xindex>) -> tensor<?xf32> loc("<stdin>":7:10)
+    %4 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32 loc("<stdin>":8:10)
+    %5 = "tensor.splat"(%4, %1) : (f32, index) -> tensor<?xf32> loc("<stdin>":9:10)
+    %6 = "arith.addf"(%3, %5) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>, tensor<?xf32>) -> tensor<?xf32> loc("<stdin>":10:10)
+    %7 = "tensor.reshape"(%6, %0) : (tensor<?xf32>, tensor<?xindex>) -> tensor<*xf32> loc("<stdin>":11:10)
+    %8 = "shape.shape_of"(%7) : (tensor<*xf32>) -> tensor<?xindex> loc("<stdin>":12:10)
+    %9 = "shape.num_elements"(%8) : (tensor<?xindex>) -> index loc("<stdin>":13:10)
+    %10 = "tensor.from_elements"(%9) : (index) -> tensor<1xindex> loc("<stdin>":14:11)
+    %11 = "tensor.reshape"(%7, %10) : (tensor<*xf32>, tensor<1xindex>) -> tensor<?xf32> loc("<stdin>":15:11)
+    %12 = "arith.constant"() <{value = 2.000000e+00 : f32}> : () -> f32 loc("<stdin>":16:11)
+    %13 = "tensor.splat"(%12, %9) : (f32, index) -> tensor<?xf32> loc("<stdin>":17:11)
+    %14 = "arith.mulf"(%11, %13) <{fastmath = #arith.fastmath<none>}> : (tensor<?xf32>, tensor<?xf32>) -> tensor<?xf32> loc("<stdin>":18:11)
+    %15 = "tensor.reshape"(%14, %8) : (tensor<?xf32>, tensor<?xindex>) -> tensor<*xf32> loc("<stdin>":19:11)
+    "func.return"(%15) : (tensor<*xf32>) -> () loc("<stdin>":20:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

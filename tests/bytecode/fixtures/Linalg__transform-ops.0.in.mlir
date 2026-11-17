@@ -1,0 +1,59 @@
+"builtin.module"() ({
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg11: !transform.any_op loc("<stdin>":3:8)):
+    %16:3 = "transform.structured.tile_using_for"(%arg11) <{scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 2, 0, 3>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op) loc("<stdin>":4:13)
+    "transform.yield"() : () -> () loc("<stdin>":5:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg10: !transform.any_op loc("<stdin>":8:8)):
+    %14:3 = "transform.structured.tile_using_for"(%arg10) <{interchange = array<i64: 2, 1>, scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 2, 0, 3>}> {test_attr1 = 1 : i64, test_attr2} : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op) loc("<stdin>":9:13)
+    %15:3 = "transform.structured.tile_using_for"(%14#0) <{scalable_sizes = array<i1: false, false, false>, static_sizes = array<i64: 0, 5, 3>}> {test_attr3 = 1 : i64, test_attr4} : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op) loc("<stdin>":10:13)
+    "transform.yield"() : () -> () loc("<stdin>":11:5)
+  }) : () -> () loc("<stdin>":7:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg9: !transform.any_op loc("<stdin>":14:8)):
+    %13:3 = "transform.structured.tile_using_for"(%arg9) <{inner_tile_alignments = array<i64: 2, 1>, scalable_sizes = array<i1: false, false>, static_sizes = array<i64: 8, 4>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op) loc("<stdin>":15:13)
+    "transform.yield"() : () -> () loc("<stdin>":16:5)
+  }) : () -> () loc("<stdin>":13:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg8: !transform.any_op loc("<stdin>":19:8)):
+    %12:2 = "transform.structured.fuse"(%arg8) <{inner_tile_alignments = array<i64: 1, 0>, operandSegmentSizes = array<i32: 1, 0, 0, 0>, static_tile_sizes = array<i64: 8>}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op) loc("<stdin>":20:13)
+    "transform.yield"() : () -> () loc("<stdin>":21:5)
+  }) : () -> () loc("<stdin>":18:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg7: !transform.any_op loc("<stdin>":24:8)):
+    %9 = "transform.structured.match"(%arg7) <{ops = ["linalg.generic"]}> : (!transform.any_op) -> !transform.any_op loc("<stdin>":25:10)
+    %10 = "transform.structured.match"(%arg7) <{ops = ["tensor.empty"]}> : (!transform.any_op) -> !transform.any_op loc("<stdin>":26:11)
+    %11:2 = "transform.structured.fuse_into_containing_op"(%9, %10) <{inner_tile_alignments = array<i64: 2, 2>}> : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op) loc("<stdin>":27:13)
+    "transform.yield"() : () -> () loc("<stdin>":28:5)
+  }) : () -> () loc("<stdin>":23:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg6: !transform.any_op loc("<stdin>":31:8)):
+    %6 = "transform.structured.split"(%arg6) <{dimension = 0 : i64, static_chunk_sizes = 42 : i64}> : (!transform.any_op) -> !transform.any_op loc("<stdin>":32:10)
+    %7:2 = "transform.split_handle"(%6) <{fail_on_payload_too_small = true, pass_through_empty_handle = true}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op) loc("<stdin>":33:12)
+    %8 = "transform.structured.split"(%7#0, %7#1) <{dimension = 1 : i64, static_chunk_sizes = -9223372036854775808 : i64}> : (!transform.any_op, !transform.any_op) -> !transform.any_op loc("<stdin>":34:10)
+    "transform.yield"() : () -> () loc("<stdin>":35:5)
+  }) : () -> () loc("<stdin>":30:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg5: !transform.any_op loc("<stdin>":38:8)):
+    %5:3 = "transform.structured.pad"(%arg5) <{copy_back_op = "bufferization.materialize_in_destination", nofold_flags = [], padding_dimensions = [], padding_values = [], transpose_paddings = []}> : (!transform.any_op) -> (!transform.any_op, !transform.any_op, !transform.any_op) loc("<stdin>":39:12)
+    "transform.yield"() : () -> () loc("<stdin>":40:5)
+  }) : () -> () loc("<stdin>":37:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg4: !transform.any_op loc("<stdin>":43:8)):
+    %4 = "transform.structured.interchange"(%arg4) : (!transform.any_op) -> !transform.any_op loc("<stdin>":44:10)
+    "transform.yield"() : () -> () loc("<stdin>":45:5)
+  }) : () -> () loc("<stdin>":42:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg3: !transform.any_op loc("<stdin>":48:8)):
+    %3 = "transform.structured.scalarize"(%arg3) : (!transform.any_op) -> !transform.any_op loc("<stdin>":49:10)
+    "transform.yield"() : () -> () loc("<stdin>":50:5)
+  }) : () -> () loc("<stdin>":47:3)
+  "transform.sequence"() <{failure_propagation_mode = 1 : i32, operandSegmentSizes = array<i32: 0, 0>}> ({
+  ^bb0(%arg0: !transform.any_op loc("<stdin>":53:8), %arg1: !transform.any_op loc("<stdin>":53:34), %arg2: !transform.any_op loc("<stdin>":53:60)):
+    %0 = "transform.structured.match"(%arg0) <{ops = ["scf.forall"]}> : (!transform.any_op) -> !transform.any_op loc("<stdin>":54:10)
+    %1:2 = "transform.structured.fuse_into_containing_op"(%arg1, %0) : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op) loc("<stdin>":55:12)
+    %2:2 = "transform.structured.fuse_into_containing_op"(%arg2, %0) : (!transform.any_op, !transform.any_op) -> (!transform.any_op, !transform.any_op) loc("<stdin>":56:12)
+    "transform.yield"() : () -> () loc("<stdin>":57:5)
+  }) : () -> () loc("<stdin>":52:3)
+}) : () -> () loc("<stdin>":1:1)

@@ -1,0 +1,26 @@
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<struct<(i32, i32)> ()>, linkage = #llvm.linkage<external>, sym_name = "nvvm_special_regs_clock", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %10 = "llvm.mlir.zero"() : () -> !llvm.struct<(i32, i32)> loc("<stdin>":3:11)
+    %11 = "nvvm.read.ptx.sreg.clock"() : () -> i32 loc("<stdin>":4:11)
+    %12 = "nvvm.read.ptx.sreg.clock"() : () -> i32 loc("<stdin>":5:11)
+    %13 = "llvm.insertvalue"(%10, %11) <{position = array<i64: 0>}> : (!llvm.struct<(i32, i32)>, i32) -> !llvm.struct<(i32, i32)> loc("<stdin>":6:11)
+    %14 = "llvm.insertvalue"(%13, %12) <{position = array<i64: 1>}> : (!llvm.struct<(i32, i32)>, i32) -> !llvm.struct<(i32, i32)> loc("<stdin>":7:11)
+    "llvm.return"(%14) : (!llvm.struct<(i32, i32)>) -> () loc("<stdin>":8:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<struct<(i64, i64)> ()>, linkage = #llvm.linkage<external>, sym_name = "nvvm_special_regs_clock64", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %5 = "llvm.mlir.zero"() : () -> !llvm.struct<(i64, i64)> loc("<stdin>":11:10)
+    %6 = "nvvm.read.ptx.sreg.clock64"() : () -> i64 loc("<stdin>":12:10)
+    %7 = "nvvm.read.ptx.sreg.clock64"() : () -> i64 loc("<stdin>":13:10)
+    %8 = "llvm.insertvalue"(%5, %6) <{position = array<i64: 0>}> : (!llvm.struct<(i64, i64)>, i64) -> !llvm.struct<(i64, i64)> loc("<stdin>":14:10)
+    %9 = "llvm.insertvalue"(%8, %7) <{position = array<i64: 1>}> : (!llvm.struct<(i64, i64)>, i64) -> !llvm.struct<(i64, i64)> loc("<stdin>":15:10)
+    "llvm.return"(%9) : (!llvm.struct<(i64, i64)>) -> () loc("<stdin>":16:5)
+  }) : () -> () loc("<stdin>":10:3)
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<struct<(i64, i64)> ()>, linkage = #llvm.linkage<external>, sym_name = "nvvm_special_regs_globaltimer", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+    %0 = "llvm.mlir.zero"() : () -> !llvm.struct<(i64, i64)> loc("<stdin>":19:10)
+    %1 = "nvvm.read.ptx.sreg.globaltimer"() : () -> i64 loc("<stdin>":20:10)
+    %2 = "nvvm.read.ptx.sreg.globaltimer"() : () -> i64 loc("<stdin>":21:10)
+    %3 = "llvm.insertvalue"(%0, %1) <{position = array<i64: 0>}> : (!llvm.struct<(i64, i64)>, i64) -> !llvm.struct<(i64, i64)> loc("<stdin>":22:10)
+    %4 = "llvm.insertvalue"(%3, %2) <{position = array<i64: 1>}> : (!llvm.struct<(i64, i64)>, i64) -> !llvm.struct<(i64, i64)> loc("<stdin>":23:10)
+    "llvm.return"(%4) : (!llvm.struct<(i64, i64)>) -> () loc("<stdin>":24:5)
+  }) : () -> () loc("<stdin>":18:3)
+}) : () -> () loc("<stdin>":1:1)

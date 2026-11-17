@@ -57,12 +57,7 @@ pub mod arm_neon;
 pub mod arm_sme;
 #[path = "arm_sve.gen.rs"]
 pub mod arm_sve;
-pub mod agx;
-pub mod apple9;
 pub mod glsl;
-pub mod image;
-pub mod isa;
-pub mod rdna2;
 #[path = "nir.gen.rs"]
 pub mod nir;
 #[path = "nvgpu.gen.rs"]

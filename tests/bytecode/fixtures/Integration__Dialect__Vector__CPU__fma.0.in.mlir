@@ -1,0 +1,16 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "entry"}> ({
+    %0 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32 loc("<stdin>":3:10)
+    %1 = "arith.constant"() <{value = 3.000000e+00 : f32}> : () -> f32 loc("<stdin>":4:10)
+    %2 = "arith.constant"() <{value = 7.000000e+00 : f32}> : () -> f32 loc("<stdin>":5:10)
+    %3 = "vector.broadcast"(%0) : (f32) -> vector<8xf32> loc("<stdin>":6:10)
+    %4 = "vector.broadcast"(%1) : (f32) -> vector<8xf32> loc("<stdin>":7:10)
+    %5 = "vector.broadcast"(%2) : (f32) -> vector<8xf32> loc("<stdin>":8:10)
+    "vector.print"(%3) <{punctuation = #vector.punctuation<newline>}> : (vector<8xf32>) -> () loc("<stdin>":9:5)
+    "vector.print"(%4) <{punctuation = #vector.punctuation<newline>}> : (vector<8xf32>) -> () loc("<stdin>":10:5)
+    "vector.print"(%5) <{punctuation = #vector.punctuation<newline>}> : (vector<8xf32>) -> () loc("<stdin>":11:5)
+    %6 = "vector.fma"(%4, %5, %3) : (vector<8xf32>, vector<8xf32>, vector<8xf32>) -> vector<8xf32> loc("<stdin>":12:10)
+    "vector.print"(%6) <{punctuation = #vector.punctuation<newline>}> : (vector<8xf32>) -> () loc("<stdin>":13:5)
+    "func.return"() : () -> () loc("<stdin>":14:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

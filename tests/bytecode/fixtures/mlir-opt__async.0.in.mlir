@@ -1,0 +1,52 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":3:10)
+    %1 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":4:10)
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index loc("<stdin>":5:10)
+    %3 = "arith.constant"() <{value = 3 : index}> : () -> index loc("<stdin>":6:10)
+    %4 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32 loc("<stdin>":7:10)
+    %5 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32 loc("<stdin>":8:10)
+    %6 = "arith.constant"() <{value = 2.000000e+00 : f32}> : () -> f32 loc("<stdin>":9:10)
+    %7 = "arith.constant"() <{value = 3.000000e+00 : f32}> : () -> f32 loc("<stdin>":10:10)
+    %8 = "arith.constant"() <{value = 4.000000e+00 : f32}> : () -> f32 loc("<stdin>":11:10)
+    %9 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4xf32> loc("<stdin>":12:10)
+    "linalg.fill"(%4, %9) <{operandSegmentSizes = array<i32: 1, 1>}> ({
+    ^bb0(%arg0: f32 loc("<stdin>":14:10), %arg1: f32 loc("<stdin>":14:22)):
+      "linalg.yield"(%arg0) : (f32) -> () loc("<stdin>":15:7)
+    }) : (f32, memref<4xf32>) -> () loc("<stdin>":13:5)
+    %10 = "memref.cast"(%9) : (memref<4xf32>) -> memref<*xf32> loc("<stdin>":17:11)
+    "func.call"(%10) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":18:5)
+    "memref.store"(%5, %9, %0) : (f32, memref<4xf32>, index) -> () loc("<stdin>":19:5)
+    "func.call"() <{callee = @mlirAsyncRuntimePrintCurrentThreadId}> : () -> () loc("<stdin>":20:5)
+    "func.call"(%10) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":21:5)
+    %11 = "async.execute"() <{operandSegmentSizes = array<i32: 0, 0>}> ({
+      "memref.store"(%6, %9, %1) : (f32, memref<4xf32>, index) -> () loc("<stdin>":23:7)
+      "func.call"() <{callee = @mlirAsyncRuntimePrintCurrentThreadId}> : () -> () loc("<stdin>":24:7)
+      "func.call"(%10) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":25:7)
+      %12 = "async.execute"() <{operandSegmentSizes = array<i32: 0, 0>}> ({
+        "func.call"() <{callee = @mlirAsyncRuntimePrintCurrentThreadId}> : () -> () loc("<stdin>":27:9)
+        "async.yield"() : () -> () loc("<stdin>":28:9)
+      }) : () -> !async.token loc("<stdin>":26:13)
+      %13 = "async.execute"(%12) <{operandSegmentSizes = array<i32: 1, 0>}> ({
+        "memref.store"(%7, %9, %2) : (f32, memref<4xf32>, index) -> () loc("<stdin>":31:9)
+        "func.call"() <{callee = @mlirAsyncRuntimePrintCurrentThreadId}> : () -> () loc("<stdin>":32:9)
+        "func.call"(%10) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":33:9)
+        "async.yield"() : () -> () loc("<stdin>":34:9)
+      }) : (!async.token) -> !async.token loc("<stdin>":30:13)
+      "async.await"(%13) : (!async.token) -> () loc("<stdin>":36:7)
+      "memref.store"(%8, %9, %3) : (f32, memref<4xf32>, index) -> () loc("<stdin>":37:7)
+      "func.call"() <{callee = @mlirAsyncRuntimePrintCurrentThreadId}> : () -> () loc("<stdin>":38:7)
+      "func.call"(%10) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":39:7)
+      "async.yield"() : () -> () loc("<stdin>":40:7)
+    }) : () -> !async.token loc("<stdin>":22:11)
+    "async.await"(%11) : (!async.token) -> () loc("<stdin>":42:5)
+    "func.call"() <{callee = @mlirAsyncRuntimePrintCurrentThreadId}> : () -> () loc("<stdin>":43:5)
+    "func.call"(%10) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":44:5)
+    "memref.dealloc"(%9) : (memref<4xf32>) -> () loc("<stdin>":45:5)
+    "func.return"() : () -> () loc("<stdin>":46:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = () -> (), sym_name = "mlirAsyncRuntimePrintCurrentThreadId", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":48:3)
+  "func.func"() <{function_type = (memref<*xf32>) -> (), sym_name = "printMemrefF32", sym_visibility = "private"}> ({
+  }) {llvm.emit_c_interface} : () -> () loc("<stdin>":50:3)
+}) : () -> () loc("<stdin>":1:1)

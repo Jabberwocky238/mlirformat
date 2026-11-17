@@ -1,0 +1,18 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "integer_operations"}> ({
+    %0 = "smt.int.constant"() <{value = 3973 : ui12}> {smt.some_attr} : () -> !smt.int loc("<stdin>":3:10)
+    %1 = "smt.int.constant"() <{value = 184467440737095516152 : ui84}> {smt.some_attr} : () -> !smt.int loc("<stdin>":4:10)
+    %2 = "smt.int.add"(%0, %0, %0) {smt.some_attr} : (!smt.int, !smt.int, !smt.int) -> !smt.int loc("<stdin>":5:10)
+    %3 = "smt.int.mul"(%0, %0, %0) {smt.some_attr} : (!smt.int, !smt.int, !smt.int) -> !smt.int loc("<stdin>":6:10)
+    %4 = "smt.int.sub"(%0, %0) {smt.some_attr} : (!smt.int, !smt.int) -> !smt.int loc("<stdin>":7:10)
+    %5 = "smt.int.div"(%0, %0) {smt.some_attr} : (!smt.int, !smt.int) -> !smt.int loc("<stdin>":8:10)
+    %6 = "smt.int.mod"(%0, %0) {smt.some_attr} : (!smt.int, !smt.int) -> !smt.int loc("<stdin>":9:10)
+    %7 = "smt.int.abs"(%0) {smt.some_attr} : (!smt.int) -> !smt.int loc("<stdin>":10:10)
+    %8 = "smt.int.cmp"(%0, %0) <{pred = 1 : i64}> {smt.some_attr} : (!smt.int, !smt.int) -> !smt.bool loc("<stdin>":11:10)
+    %9 = "smt.int.cmp"(%0, %0) <{pred = 0 : i64}> {smt.some_attr} : (!smt.int, !smt.int) -> !smt.bool loc("<stdin>":12:10)
+    %10 = "smt.int.cmp"(%0, %0) <{pred = 3 : i64}> {smt.some_attr} : (!smt.int, !smt.int) -> !smt.bool loc("<stdin>":13:11)
+    %11 = "smt.int.cmp"(%0, %0) <{pred = 2 : i64}> {smt.some_attr} : (!smt.int, !smt.int) -> !smt.bool loc("<stdin>":14:11)
+    %12 = "smt.int2bv"(%0) {smt.some_attr} : (!smt.int) -> !smt.bv<4> loc("<stdin>":15:11)
+    "func.return"() : () -> () loc("<stdin>":16:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

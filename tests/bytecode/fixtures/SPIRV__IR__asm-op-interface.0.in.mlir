@@ -1,0 +1,15 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "const"}> ({
+    %0 = "spirv.Constant"() <{value = true}> : () -> i1 loc("<stdin>":3:10)
+    %1 = "spirv.Constant"() <{value = false}> : () -> i1 loc("<stdin>":4:10)
+    %2 = "spirv.Constant"() <{value = 42 : i32}> : () -> i32 loc("<stdin>":5:10)
+    %3 = "spirv.Constant"() <{value = -42 : i32}> : () -> i32 loc("<stdin>":6:10)
+    %4 = "spirv.Constant"() <{value = 43 : i64}> : () -> i64 loc("<stdin>":7:10)
+    %5 = "spirv.Constant"() <{value = 6 : ui8}> : () -> ui8 loc("<stdin>":8:10)
+    %6 = "spirv.Constant"() <{value = 5.000000e-01 : f32}> : () -> f32 loc("<stdin>":9:10)
+    %7 = "spirv.Constant"() <{value = 5.000000e-01 : f64}> : () -> f64 loc("<stdin>":10:10)
+    %8 = "spirv.Constant"() <{value = dense<[1, 2, 3]> : vector<3xi32>}> : () -> vector<3xi32> loc("<stdin>":11:10)
+    %9 = "spirv.Constant"() <{value = [dense<3.000000e+00> : vector<2xf32>]}> : () -> !spirv.array<1 x vector<2xf32>> loc("<stdin>":12:10)
+    "func.return"() : () -> () loc("<stdin>":13:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

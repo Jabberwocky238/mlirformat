@@ -1,0 +1,21 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (index) -> !llvm.ptr, sym_name = "getTensorFilename", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":6:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":9:10)
+    %1 = "func.call"(%0) <{callee = @getTensorFilename}> : (index) -> !llvm.ptr loc("<stdin>":10:10)
+    %2 = "sparse_tensor.new"(%1) : (!llvm.ptr) -> tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : compressed) }>> loc("<stdin>":11:10)
+    %3 = "sparse_tensor.new"(%1) : (!llvm.ptr) -> tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : loose_compressed) }>> loc("<stdin>":12:10)
+    %4 = "sparse_tensor.new"(%1) : (!llvm.ptr) -> tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 floordiv 4 : dense, d1 mod 4 : structured[2, 4]), crdWidth = 8 }>> loc("<stdin>":13:10)
+    %5 = "sparse_tensor.new"(%1) : (!llvm.ptr) -> tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 floordiv 8 : dense, d1 mod 8 : structured[5, 8]), crdWidth = 8 }>> loc("<stdin>":14:10)
+    "sparse_tensor.print"(%2) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : compressed) }>>) -> () loc("<stdin>":15:5)
+    "sparse_tensor.print"(%3) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : loose_compressed) }>>) -> () loc("<stdin>":16:5)
+    "sparse_tensor.print"(%4) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 floordiv 4 : dense, d1 mod 4 : structured[2, 4]), crdWidth = 8 }>>) -> () loc("<stdin>":17:5)
+    "sparse_tensor.print"(%5) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 floordiv 8 : dense, d1 mod 8 : structured[5, 8]), crdWidth = 8 }>>) -> () loc("<stdin>":18:5)
+    "bufferization.dealloc_tensor"(%2) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : compressed) }>>) -> () loc("<stdin>":19:5)
+    "bufferization.dealloc_tensor"(%3) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 : loose_compressed) }>>) -> () loc("<stdin>":20:5)
+    "bufferization.dealloc_tensor"(%4) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 floordiv 4 : dense, d1 mod 4 : structured[2, 4]), crdWidth = 8 }>>) -> () loc("<stdin>":21:5)
+    "bufferization.dealloc_tensor"(%5) : (tensor<?x?xf64, #sparse_tensor.encoding<{ map = (d0, d1) -> (d0 : dense, d1 floordiv 8 : dense, d1 mod 8 : structured[5, 8]), crdWidth = 8 }>>) -> () loc("<stdin>":22:5)
+    "func.return"() : () -> () loc("<stdin>":23:5)
+  }) : () -> () loc("<stdin>":8:3)
+}) : () -> () loc("<stdin>":5:1)

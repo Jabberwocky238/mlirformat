@@ -1,0 +1,21 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<128x128xi8, #gpu.address_space<workgroup>>, memref<128x128xi8, #gpu.address_space<workgroup>>, memref<128x128xi32>) -> (), sym_name = "m16n8k32_int8_row_row_row"}> ({
+  ^bb0(%arg0: memref<128x128xi8, #gpu.address_space<workgroup>> loc("<stdin>":8:8), %arg1: memref<128x128xi8, #gpu.address_space<workgroup>> loc("<stdin>":8:66), %arg2: memref<128x128xi32> loc("<stdin>":8:124)):
+    %0 = "arith.constant"() <{value = dense<0> : vector<32x8xi8>}> : () -> vector<32x8xi8> loc("<stdin>":9:10)
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":10:10)
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":11:10)
+    %3 = "arith.constant"() <{value = 17 : index}> : () -> index loc("<stdin>":12:10)
+    %4 = "arith.constant"() <{value = 39 : index}> : () -> index loc("<stdin>":13:10)
+    %5 = "arith.constant"() <{value = 40 : index}> : () -> index loc("<stdin>":14:10)
+    %6 = "arith.constant"() <{value = 49 : index}> : () -> index loc("<stdin>":15:10)
+    %7 = "arith.constant"() <{value = 50 : index}> : () -> index loc("<stdin>":16:10)
+    %8 = "arith.constant"() <{value = 0 : i8}> : () -> i8 loc("<stdin>":17:10)
+    %9 = "arith.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":18:10)
+    %10 = "vector.transfer_read"(%arg0, %1, %1, %8) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<128x128xi8, #gpu.address_space<workgroup>>, index, index, i8) -> vector<16x32xi8> loc("<stdin>":19:11)
+    %11 = "vector.transfer_read"(%arg1, %4, %5, %8) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d1, d0)>}> : (memref<128x128xi8, #gpu.address_space<workgroup>>, index, index, i8) -> vector<8x32xi8> loc("<stdin>":20:11)
+    %12 = "vector.transfer_read"(%arg2, %6, %5, %9) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<128x128xi32>, index, index, i32) -> vector<16x8xi32> loc("<stdin>":21:11)
+    %13 = "vector.contract"(%10, %11, %12) <{fastmath = #arith.fastmath<none>, indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>, affine_map<(d0, d1, d2) -> (d1, d2)>, affine_map<(d0, d1, d2) -> (d0, d1)>], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<16x32xi8>, vector<8x32xi8>, vector<16x8xi32>) -> vector<16x8xi32> loc("<stdin>":22:11)
+    "vector.transfer_write"(%13, %arg2, %6, %5) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (vector<16x8xi32>, memref<128x128xi32>, index, index) -> () loc("<stdin>":23:5)
+    "func.return"() : () -> () loc("<stdin>":24:5)
+  }) : () -> () loc("<stdin>":7:3)
+}) : () -> () loc("<stdin>":6:1)

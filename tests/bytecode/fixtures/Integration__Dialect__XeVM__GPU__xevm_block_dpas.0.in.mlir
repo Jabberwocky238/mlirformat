@@ -1,0 +1,111 @@
+"builtin.module"() <{sym_name = "gemm"}> ({
+  "gpu.module"() <{sym_name = "kernel"}> ({
+    "gpu.func"() <{function_type = (!llvm.ptr<1>, !llvm.ptr<1>, !llvm.ptr<1>) -> (), kernel}> ({
+    ^bb0(%arg9: !llvm.ptr<1> loc("<stdin>":4:10), %arg10: !llvm.ptr<1> loc("<stdin>":4:31), %arg11: !llvm.ptr<1> loc("<stdin>":4:53)):
+      %33 = "arith.constant"() <{value = 32 : i32}> : () -> i32 loc("<stdin>":5:13)
+      %34 = "arith.constant"() <{value = 8 : i32}> : () -> i32 loc("<stdin>":6:13)
+      %35 = "arith.constant"() <{value = 32 : i32}> : () -> i32 loc("<stdin>":7:13)
+      %36 = "arith.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":8:13)
+      %37 = "arith.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":9:13)
+      %38 = "xevm.blockload2d"(%arg9, %33, %34, %35, %36, %37) <{elem_size_in_bits = 16 : i32, pack_register = false, tile_height = 8 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi16> loc("<stdin>":10:13)
+      %39 = "arith.constant"() <{value = 32 : i32}> : () -> i32 loc("<stdin>":11:13)
+      %40 = "arith.constant"() <{value = 16 : i32}> : () -> i32 loc("<stdin>":12:13)
+      %41 = "arith.constant"() <{value = 32 : i32}> : () -> i32 loc("<stdin>":13:13)
+      %42 = "xevm.blockload2d"(%arg10, %39, %40, %41, %36, %37) <{elem_size_in_bits = 16 : i32, pack_register = false, tile_height = 16 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<16xi16> loc("<stdin>":14:13)
+      %43 = "vector.bitcast"(%42) : (vector<16xi16>) -> vector<8xi32> loc("<stdin>":15:13)
+      %44 = "arith.constant"() <{value = 64 : i32}> : () -> i32 loc("<stdin>":16:13)
+      %45 = "arith.constant"() <{value = 8 : i32}> : () -> i32 loc("<stdin>":17:13)
+      %46 = "arith.constant"() <{value = 64 : i32}> : () -> i32 loc("<stdin>":18:13)
+      %47 = "xevm.blockload2d"(%arg11, %44, %45, %46, %36, %37) <{elem_size_in_bits = 32 : i32, pack_register = false, tile_height = 8 : i32, tile_width = 16 : i32, transpose = false, v_blocks = 1 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32) -> vector<8xi32> loc("<stdin>":19:13)
+      %48 = "vector.bitcast"(%47) : (vector<8xi32>) -> vector<8xf32> loc("<stdin>":20:13)
+      %49 = "xevm.mma"(%38, %43, %48) <{shape = #xevm.mma_shape<m = 8, n = 16, k = 16>, types = #xevm.mma_types<d = f32, a = f16, b = f16, c = f32>}> : (vector<8xi16>, vector<8xi32>, vector<8xf32>) -> vector<8xf32> loc("<stdin>":21:13)
+      %50 = "vector.bitcast"(%49) : (vector<8xf32>) -> vector<8xi32> loc("<stdin>":22:13)
+      "xevm.blockstore2d"(%arg11, %44, %45, %46, %36, %37, %50) <{elem_size_in_bits = 32 : i32, tile_height = 8 : i32, tile_width = 16 : i32}> : (!llvm.ptr<1>, i32, i32, i32, i32, i32, vector<8xi32>) -> () loc("<stdin>":23:7)
+      "gpu.return"() : () -> () loc("<stdin>":24:7)
+    }) {sym_name = "block_dpas"} : () -> () loc("<stdin>":3:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = (memref<8x16xf16>, memref<16x16xf16>, memref<8x16xf32>) -> memref<8x16xf32>, sym_name = "test"}> ({
+  ^bb0(%arg6: memref<8x16xf16> loc("<stdin>":28:8), %arg7: memref<16x16xf16> loc("<stdin>":28:33), %arg8: memref<8x16xf32> loc("<stdin>":28:59)):
+    %15 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":29:11)
+    %16 = "arith.constant"() <{value = 16 : index}> : () -> index loc("<stdin>":30:11)
+    %17 = "gpu.alloc"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> memref<8x16xf16> loc("<stdin>":31:11)
+    "gpu.memcpy"(%17, %arg6) : (memref<8x16xf16>, memref<8x16xf16>) -> () loc("<stdin>":32:5)
+    %18 = "memref.extract_aligned_pointer_as_index"(%17) : (memref<8x16xf16>) -> index loc("<stdin>":33:11)
+    %19 = "arith.index_cast"(%18) : (index) -> i64 loc("<stdin>":34:11)
+    %20 = "llvm.inttoptr"(%19) : (i64) -> !llvm.ptr loc("<stdin>":35:11)
+    %21 = "llvm.addrspacecast"(%20) : (!llvm.ptr) -> !llvm.ptr<1> loc("<stdin>":36:11)
+    %22 = "gpu.alloc"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> memref<16x16xf16> loc("<stdin>":37:11)
+    "gpu.memcpy"(%22, %arg7) : (memref<16x16xf16>, memref<16x16xf16>) -> () loc("<stdin>":38:5)
+    %23 = "memref.extract_aligned_pointer_as_index"(%22) : (memref<16x16xf16>) -> index loc("<stdin>":39:11)
+    %24 = "arith.index_cast"(%23) : (index) -> i64 loc("<stdin>":40:11)
+    %25 = "llvm.inttoptr"(%24) : (i64) -> !llvm.ptr loc("<stdin>":41:11)
+    %26 = "llvm.addrspacecast"(%25) : (!llvm.ptr) -> !llvm.ptr<1> loc("<stdin>":42:11)
+    %27 = "gpu.alloc"() <{operandSegmentSizes = array<i32: 0, 0, 0>}> : () -> memref<8x16xf32> loc("<stdin>":43:11)
+    "gpu.memcpy"(%27, %arg8) : (memref<8x16xf32>, memref<8x16xf32>) -> () loc("<stdin>":44:5)
+    %28 = "memref.extract_aligned_pointer_as_index"(%27) : (memref<8x16xf32>) -> index loc("<stdin>":45:11)
+    %29 = "arith.index_cast"(%28) : (index) -> i64 loc("<stdin>":46:11)
+    %30 = "llvm.inttoptr"(%29) : (i64) -> !llvm.ptr loc("<stdin>":47:11)
+    %31 = "llvm.addrspacecast"(%30) : (!llvm.ptr) -> !llvm.ptr<1> loc("<stdin>":48:11)
+    "gpu.launch_func"(%15, %15, %15, %16, %15, %15, %21, %26, %31) <{kernel = @kernel::@block_dpas, operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 3, 0>}> : (index, index, index, index, index, index, !llvm.ptr<1>, !llvm.ptr<1>, !llvm.ptr<1>) -> () loc("<stdin>":49:5)
+    "gpu.dealloc"(%17) : (memref<8x16xf16>) -> () loc("<stdin>":50:5)
+    "gpu.dealloc"(%22) : (memref<16x16xf16>) -> () loc("<stdin>":51:5)
+    %32 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x16xf32> loc("<stdin>":52:11)
+    "gpu.memcpy"(%32, %27) : (memref<8x16xf32>, memref<8x16xf32>) -> () loc("<stdin>":53:5)
+    "gpu.dealloc"(%27) : (memref<8x16xf32>) -> () loc("<stdin>":54:5)
+    "func.return"(%32) : (memref<8x16xf32>) -> () loc("<stdin>":55:5)
+  }) {llvm.emit_c_interface} : () -> () loc("<stdin>":27:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x16xf16> loc("<stdin>":58:10)
+    %1 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":59:10)
+    %2 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":60:10)
+    %3 = "arith.constant"() <{value = 8 : index}> : () -> index loc("<stdin>":61:10)
+    %4 = "arith.constant"() <{value = 16 : index}> : () -> index loc("<stdin>":62:10)
+    "scf.for"(%1, %3, %2) ({
+    ^bb0(%arg4: index loc("<stdin>":64:10)):
+      "scf.for"(%1, %4, %2) ({
+      ^bb0(%arg5: index loc("<stdin>":66:12)):
+        %13 = "arith.index_cast"(%arg4) : (index) -> i32 loc("<stdin>":67:15)
+        %14 = "arith.sitofp"(%13) : (i32) -> f16 loc("<stdin>":68:15)
+        "memref.store"(%14, %0, %arg4, %arg5) : (f16, memref<8x16xf16>, index, index) -> () loc("<stdin>":69:9)
+        "scf.yield"() : () -> () loc("<stdin>":70:9)
+      }) : (index, index, index) -> () loc("<stdin>":65:7)
+      "scf.yield"() : () -> () loc("<stdin>":72:7)
+    }) : (index, index, index) -> () loc("<stdin>":63:5)
+    %5 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<16x16xf16> loc("<stdin>":74:10)
+    "scf.for"(%1, %4, %2) ({
+    ^bb0(%arg2: index loc("<stdin>":76:10)):
+      "scf.for"(%1, %4, %2) ({
+      ^bb0(%arg3: index loc("<stdin>":78:12)):
+        %11 = "arith.index_cast"(%arg3) : (index) -> i32 loc("<stdin>":79:15)
+        %12 = "arith.sitofp"(%11) : (i32) -> f16 loc("<stdin>":80:15)
+        "memref.store"(%12, %5, %arg2, %arg3) : (f16, memref<16x16xf16>, index, index) -> () loc("<stdin>":81:9)
+        "scf.yield"() : () -> () loc("<stdin>":82:9)
+      }) : (index, index, index) -> () loc("<stdin>":77:7)
+      "scf.yield"() : () -> () loc("<stdin>":84:7)
+    }) : (index, index, index) -> () loc("<stdin>":75:5)
+    %6 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x16xf32> loc("<stdin>":86:10)
+    %7 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32 loc("<stdin>":87:10)
+    "scf.for"(%1, %3, %2) ({
+    ^bb0(%arg0: index loc("<stdin>":89:10)):
+      "scf.for"(%1, %4, %2) ({
+      ^bb0(%arg1: index loc("<stdin>":91:12)):
+        "memref.store"(%7, %6, %arg0, %arg1) : (f32, memref<8x16xf32>, index, index) -> () loc("<stdin>":92:9)
+        "scf.yield"() : () -> () loc("<stdin>":93:9)
+      }) : (index, index, index) -> () loc("<stdin>":90:7)
+      "scf.yield"() : () -> () loc("<stdin>":95:7)
+    }) : (index, index, index) -> () loc("<stdin>":88:5)
+    %8 = "func.call"(%0, %5, %6) <{callee = @test}> : (memref<8x16xf16>, memref<16x16xf16>, memref<8x16xf32>) -> memref<8x16xf32> loc("<stdin>":97:10)
+    %9 = "memref.cast"(%8) : (memref<8x16xf32>) -> memref<*xf32> loc("<stdin>":98:10)
+    %10 = "memref.cast"(%0) : (memref<8x16xf16>) -> memref<*xf16> loc("<stdin>":99:11)
+    "func.call"(%9) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":100:5)
+    "memref.dealloc"(%0) : (memref<8x16xf16>) -> () loc("<stdin>":101:5)
+    "memref.dealloc"(%5) : (memref<16x16xf16>) -> () loc("<stdin>":102:5)
+    "memref.dealloc"(%6) : (memref<8x16xf32>) -> () loc("<stdin>":103:5)
+    "memref.dealloc"(%8) : (memref<8x16xf32>) -> () loc("<stdin>":104:5)
+    "func.return"() : () -> () loc("<stdin>":105:5)
+  }) {llvm.emit_c_interface} : () -> () loc("<stdin>":57:3)
+  "func.func"() <{function_type = (memref<*xf16>) -> (), sym_name = "printMemrefF16", sym_visibility = "private"}> ({
+  }) {llvm.emit_c_interface} : () -> () loc("<stdin>":107:3)
+  "func.func"() <{function_type = (memref<*xf32>) -> (), sym_name = "printMemrefF32", sym_visibility = "private"}> ({
+  }) {llvm.emit_c_interface} : () -> () loc("<stdin>":109:3)
+}) {gpu.container_module} : () -> () loc("<stdin>":1:1)

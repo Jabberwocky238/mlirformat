@@ -1,0 +1,28 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?xf32>, index) -> (), sym_name = "store_dynamic"}> ({
+  ^bb0(%arg0: memref<?xf32> loc("<stdin>":3:8), %arg1: index loc("<stdin>":3:30)):
+    %16 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32 loc("<stdin>":4:11)
+    "memref.store"(%16, %arg0, %arg1) : (f32, memref<?xf32>, index) -> () loc("<stdin>":5:5)
+    "func.return"() : () -> () loc("<stdin>":6:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "memref.alloca"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<10xf32> loc("<stdin>":9:10)
+    %1 = "memref.extract_aligned_pointer_as_index"(%0) : (memref<10xf32>) -> index loc("<stdin>":10:10)
+    %2 = "arith.index_cast"(%1) : (index) -> i64 loc("<stdin>":11:10)
+    %3 = "llvm.inttoptr"(%2) : (i64) -> !llvm.ptr loc("<stdin>":12:10)
+    %4 = "llvm.mlir.constant"() <{value = 0 : index}> : () -> i64 loc("<stdin>":13:10)
+    %5 = "llvm.mlir.constant"() <{value = 1 : index}> : () -> i64 loc("<stdin>":14:10)
+    %6 = "llvm.mlir.constant"() <{value = 5 : index}> : () -> i64 loc("<stdin>":15:10)
+    %7 = "llvm.mlir.poison"() : () -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> loc("<stdin>":16:10)
+    %8 = "llvm.insertvalue"(%7, %3) <{position = array<i64: 0>}> : (!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>, !llvm.ptr) -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> loc("<stdin>":17:10)
+    %9 = "llvm.insertvalue"(%8, %3) <{position = array<i64: 1>}> : (!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>, !llvm.ptr) -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> loc("<stdin>":18:10)
+    %10 = "llvm.insertvalue"(%9, %4) <{position = array<i64: 2>}> : (!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>, i64) -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> loc("<stdin>":19:11)
+    %11 = "llvm.insertvalue"(%10, %6) <{position = array<i64: 3, 0>}> : (!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>, i64) -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> loc("<stdin>":20:11)
+    %12 = "llvm.insertvalue"(%11, %5) <{position = array<i64: 4, 0>}> : (!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>, i64) -> !llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)> loc("<stdin>":21:11)
+    %13 = "builtin.unrealized_conversion_cast"(%12) : (!llvm.struct<(ptr, ptr, i64, array<1 x i64>, array<1 x i64>)>) -> memref<5xf32> loc("<stdin>":22:11)
+    %14 = "memref.cast"(%13) : (memref<5xf32>) -> memref<?xf32> loc("<stdin>":23:11)
+    %15 = "arith.constant"() <{value = 9 : index}> : () -> index loc("<stdin>":24:11)
+    "func.call"(%14, %15) <{callee = @store_dynamic}> : (memref<?xf32>, index) -> () loc("<stdin>":25:5)
+    "func.return"() : () -> () loc("<stdin>":26:5)
+  }) : () -> () loc("<stdin>":8:3)
+}) : () -> () loc("<stdin>":1:1)

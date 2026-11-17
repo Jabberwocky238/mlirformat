@@ -1,0 +1,22 @@
+"builtin.module"() ({
+  "gpu.module"() <{sym_name = "test_module"}> ({
+    "func.func"() <{function_type = () -> (index, index, index, index, index, index, index, index, index, index, index, index, index, index, index), sym_name = "gpu_index_ops"}> ({
+      %0 = "gpu.thread_id"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":4:12)
+      %1 = "gpu.thread_id"() <{dimension = #gpu<dim y>}> : () -> index loc("<stdin>":5:12)
+      %2 = "gpu.thread_id"() <{dimension = #gpu<dim z>}> : () -> index loc("<stdin>":6:12)
+      %3 = "gpu.block_dim"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":7:12)
+      %4 = "gpu.block_dim"() <{dimension = #gpu<dim y>}> : () -> index loc("<stdin>":8:12)
+      %5 = "gpu.block_dim"() <{dimension = #gpu<dim z>}> : () -> index loc("<stdin>":9:12)
+      %6 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":10:12)
+      %7 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index loc("<stdin>":11:12)
+      %8 = "gpu.block_id"() <{dimension = #gpu<dim z>}> : () -> index loc("<stdin>":12:12)
+      %9 = "gpu.grid_dim"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":13:12)
+      %10 = "gpu.grid_dim"() <{dimension = #gpu<dim y>}> : () -> index loc("<stdin>":14:13)
+      %11 = "gpu.grid_dim"() <{dimension = #gpu<dim z>}> : () -> index loc("<stdin>":15:13)
+      %12 = "gpu.lane_id"() : () -> index loc("<stdin>":16:13)
+      %13 = "gpu.subgroup_size"() : () -> index loc("<stdin>":17:13)
+      %14 = "gpu.subgroup_size"() <{upper_bound = 64 : index}> : () -> index loc("<stdin>":18:13)
+      "func.return"(%0, %1, %2, %3, %4, %5, %6, %7, %8, %9, %10, %11, %12, %13, %14) : (index, index, index, index, index, index, index, index, index, index, index, index, index, index, index) -> () loc("<stdin>":19:7)
+    }) : () -> () loc("<stdin>":3:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

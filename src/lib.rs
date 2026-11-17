@@ -42,9 +42,11 @@ macro_rules! keywords {
 }
 
 pub mod affine_expr;
+mod bytecode;
 mod common;
 mod dialects;
 mod generator;
+mod ir;
 mod mliropt;
 mod parser;
 mod text;
@@ -58,6 +60,8 @@ mod values;
 mod verifier;
 
 pub use mlirformat_macros as mlir;
+pub use bytecode::{Bytecode, Prop, PropKind};
+pub use ir::{BlockId, BlockNode, Ir, OpId, OpNode, RegionId, RegionNode, ValueId, ValueNode};
 pub use mliropt::*;
 
 pub use moremath::{Execute, Executor, ThreadSingle};

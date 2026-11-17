@@ -1,0 +1,15 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "slicing_test"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<1xi32> loc("<stdin>":3:10)
+    %1 = "slicing-test-op"() : () -> i1 loc("<stdin>":4:10)
+    %2 = "slicing-test-op"() : () -> i2 loc("<stdin>":5:10)
+    %3 = "slicing-test-op"() : () -> i3 loc("<stdin>":6:10)
+    %4 = "slicing-test-op"() : () -> i4 loc("<stdin>":7:10)
+    %5 = "slicing-test-op"(%1, %2) : (i1, i2) -> i5 loc("<stdin>":8:10)
+    %6 = "slicing-test-op"(%3, %4) : (i3, i4) -> i6 loc("<stdin>":9:10)
+    %7 = "slicing-test-op"(%1, %5) : (i1, i5) -> i7 loc("<stdin>":10:10)
+    %8 = "slicing-test-op"(%5, %6) : (i5, i6) -> i8 loc("<stdin>":11:10)
+    %9 = "slicing-test-op"(%7, %8) : (i7, i8) -> i9 loc("<stdin>":12:10)
+    "func.return"() : () -> () loc("<stdin>":13:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

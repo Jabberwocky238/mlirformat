@@ -1,0 +1,20 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4xf32>, vector<4xi1>, vector<4xi64>, vector<4xi64>) -> vector<4xf32>, sym_name = "vector_ops"}> ({
+  ^bb0(%arg0: vector<4xf32> loc("<stdin>":3:8), %arg1: vector<4xi1> loc("<stdin>":3:30), %arg2: vector<4xi64> loc("<stdin>":3:51), %arg3: vector<4xi64> loc("<stdin>":3:73)):
+    %0 = "arith.constant"() <{value = dense<4.200000e+01> : vector<4xf32>}> : () -> vector<4xf32> loc("<stdin>":4:10)
+    %1 = "arith.addf"(%arg0, %0) <{fastmath = #arith.fastmath<none>}> : (vector<4xf32>, vector<4xf32>) -> vector<4xf32> loc("<stdin>":5:10)
+    %2 = "arith.divsi"(%arg2, %arg2) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":6:10)
+    %3 = "arith.divui"(%arg2, %arg2) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":7:10)
+    %4 = "arith.remsi"(%arg2, %arg2) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":8:10)
+    %5 = "arith.remui"(%arg2, %arg2) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":9:10)
+    %6 = "arith.divf"(%arg0, %0) <{fastmath = #arith.fastmath<none>}> : (vector<4xf32>, vector<4xf32>) -> vector<4xf32> loc("<stdin>":10:10)
+    %7 = "arith.remf"(%arg0, %0) <{fastmath = #arith.fastmath<none>}> : (vector<4xf32>, vector<4xf32>) -> vector<4xf32> loc("<stdin>":11:10)
+    %8 = "arith.andi"(%arg2, %arg3) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":12:10)
+    %9 = "arith.ori"(%arg2, %arg3) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":13:10)
+    %10 = "arith.xori"(%arg2, %arg3) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":14:11)
+    %11 = "arith.shli"(%arg2, %arg2) <{overflowFlags = #arith.overflow<none>}> : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":15:11)
+    %12 = "arith.shrsi"(%arg2, %arg2) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":16:11)
+    %13 = "arith.shrui"(%arg2, %arg2) : (vector<4xi64>, vector<4xi64>) -> vector<4xi64> loc("<stdin>":17:11)
+    "func.return"(%1) : (vector<4xf32>) -> () loc("<stdin>":18:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

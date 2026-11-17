@@ -1,0 +1,31 @@
+"builtin.module"() ({
+  "wasmssa.func"() <{exported, functionType = () -> f32, sym_name = "func_0"}> ({
+    %9 = "wasmssa.local"() <{type = f32}> : () -> !wasmssa<local ref to f32> loc("<stdin>":3:10)
+    %10 = "wasmssa.local"() <{type = f32}> : () -> !wasmssa<local ref to f32> loc("<stdin>":4:11)
+    %11 = "wasmssa.const"() <{value = 8.000000e+00 : f32}> : () -> f32 loc("<stdin>":5:11)
+    "wasmssa.local_set"(%9, %11) : (!wasmssa<local ref to f32>, f32) -> () loc("<stdin>":6:5)
+    %12 = "wasmssa.local_get"(%9) : (!wasmssa<local ref to f32>) -> f32 loc("<stdin>":7:11)
+    %13 = "wasmssa.const"() <{value = 1.200000e+01 : f32}> : () -> f32 loc("<stdin>":8:11)
+    %14 = "wasmssa.local_tee"(%10, %13) : (!wasmssa<local ref to f32>, f32) -> f32 loc("<stdin>":9:11)
+    %15 = "wasmssa.add"(%12, %14) : (f32, f32) -> f32 loc("<stdin>":10:11)
+    "wasmssa.return"(%15) : (f32) -> () loc("<stdin>":11:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "wasmssa.func"() <{exported, functionType = () -> i32, sym_name = "func_1"}> ({
+    %2 = "wasmssa.local"() <{type = i32}> : () -> !wasmssa<local ref to i32> loc("<stdin>":14:10)
+    %3 = "wasmssa.local"() <{type = i32}> : () -> !wasmssa<local ref to i32> loc("<stdin>":15:10)
+    %4 = "wasmssa.const"() <{value = 8 : i32}> : () -> i32 loc("<stdin>":16:10)
+    "wasmssa.local_set"(%2, %4) : (!wasmssa<local ref to i32>, i32) -> () loc("<stdin>":17:5)
+    %5 = "wasmssa.local_get"(%2) : (!wasmssa<local ref to i32>) -> i32 loc("<stdin>":18:10)
+    %6 = "wasmssa.const"() <{value = 12 : i32}> : () -> i32 loc("<stdin>":19:10)
+    %7 = "wasmssa.local_tee"(%3, %6) : (!wasmssa<local ref to i32>, i32) -> i32 loc("<stdin>":20:10)
+    %8 = "wasmssa.add"(%5, %7) : (i32, i32) -> i32 loc("<stdin>":21:10)
+    "wasmssa.return"(%8) : (i32) -> () loc("<stdin>":22:5)
+  }) : () -> () loc("<stdin>":13:3)
+  "wasmssa.func"() <{exported, functionType = (i32) -> i32, sym_name = "func_2"}> ({
+  ^bb0(%arg0: !wasmssa<local ref to i32> loc("<stdin>":25:8)):
+    %0 = "wasmssa.const"() <{value = 3 : i32}> : () -> i32 loc("<stdin>":26:10)
+    "wasmssa.local_set"(%arg0, %0) : (!wasmssa<local ref to i32>, i32) -> () loc("<stdin>":27:5)
+    %1 = "wasmssa.local_get"(%arg0) : (!wasmssa<local ref to i32>) -> i32 loc("<stdin>":28:10)
+    "wasmssa.return"(%1) : (i32) -> () loc("<stdin>":29:5)
+  }) : () -> () loc("<stdin>":24:3)
+}) : () -> () loc("<stdin>":1:1)

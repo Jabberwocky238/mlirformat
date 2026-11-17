@@ -1,0 +1,101 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (memref<?x?xi8>, memref<?x?xi32>) -> (), sym_name = "muli"}> ({
+  ^bb0(%arg19: memref<?x?xi8> loc("<stdin>":3:8), %arg20: memref<?x?xi32> loc("<stdin>":3:32)):
+    %39 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":4:11)
+    %40 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x64xi8> loc("<stdin>":5:11)
+    %41 = "x86.amx.tile_load"(%arg19, %39, %39) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xi8>, index, index) -> !x86.amx.tile<16x64xi8> loc("<stdin>":6:11)
+    %42 = "x86.amx.tile_load"(%arg20, %39, %39) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xi32>, index, index) -> !x86.amx.tile<16x16xi32> loc("<stdin>":7:11)
+    %43 = "x86.amx.tile_muli"(%40, %41, %42) <{isZextLhs, isZextRhs}> : (!x86.amx.tile<16x64xi8>, !x86.amx.tile<16x64xi8>, !x86.amx.tile<16x16xi32>) -> !x86.amx.tile<16x16xi32> loc("<stdin>":8:11)
+    "x86.amx.tile_store"(%arg20, %39, %39, %43) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xi32>, index, index, !x86.amx.tile<16x16xi32>) -> () loc("<stdin>":9:5)
+    %44 = "x86.amx.tile_muli"(%40, %41, %42) : (!x86.amx.tile<16x64xi8>, !x86.amx.tile<16x64xi8>, !x86.amx.tile<16x16xi32>) -> !x86.amx.tile<16x16xi32> loc("<stdin>":10:11)
+    "x86.amx.tile_store"(%arg20, %39, %39, %44) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xi32>, index, index, !x86.amx.tile<16x16xi32>) -> () loc("<stdin>":11:5)
+    %45 = "x86.amx.tile_muli"(%40, %41, %42) <{isZextLhs}> : (!x86.amx.tile<16x64xi8>, !x86.amx.tile<16x64xi8>, !x86.amx.tile<16x16xi32>) -> !x86.amx.tile<16x16xi32> loc("<stdin>":12:11)
+    "x86.amx.tile_store"(%arg20, %39, %39, %45) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xi32>, index, index, !x86.amx.tile<16x16xi32>) -> () loc("<stdin>":13:5)
+    %46 = "x86.amx.tile_muli"(%40, %41, %42) <{isZextRhs}> : (!x86.amx.tile<16x64xi8>, !x86.amx.tile<16x64xi8>, !x86.amx.tile<16x16xi32>) -> !x86.amx.tile<16x16xi32> loc("<stdin>":14:11)
+    "x86.amx.tile_store"(%arg20, %39, %39, %46) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xi32>, index, index, !x86.amx.tile<16x16xi32>) -> () loc("<stdin>":15:5)
+    "func.return"() : () -> () loc("<stdin>":16:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = (memref<?x?xbf16>, memref<?x?xf32>) -> (), sym_name = "mulbf16"}> ({
+  ^bb0(%arg17: memref<?x?xbf16> loc("<stdin>":19:8), %arg18: memref<?x?xf32> loc("<stdin>":19:34)):
+    %34 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":20:11)
+    %35 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x32xbf16> loc("<stdin>":21:11)
+    %36 = "x86.amx.tile_load"(%arg17, %34, %34) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xbf16>, index, index) -> !x86.amx.tile<16x32xbf16> loc("<stdin>":22:11)
+    %37 = "x86.amx.tile_load"(%arg18, %34, %34) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf32>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":23:11)
+    %38 = "x86.amx.tile_mulf"(%35, %36, %37) : (!x86.amx.tile<16x32xbf16>, !x86.amx.tile<16x32xbf16>, !x86.amx.tile<16x16xf32>) -> !x86.amx.tile<16x16xf32> loc("<stdin>":24:11)
+    "x86.amx.tile_store"(%arg18, %34, %34, %38) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xf32>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":25:5)
+    "func.return"() : () -> () loc("<stdin>":26:5)
+  }) : () -> () loc("<stdin>":18:3)
+  "func.func"() <{function_type = (memref<?x?xf16>, memref<?x?xf32>) -> (), sym_name = "mulfp16"}> ({
+  ^bb0(%arg15: memref<?x?xf16> loc("<stdin>":29:8), %arg16: memref<?x?xf32> loc("<stdin>":29:33)):
+    %29 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":30:11)
+    %30 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x32xf16> loc("<stdin>":31:11)
+    %31 = "x86.amx.tile_load"(%arg15, %29, %29) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf16>, index, index) -> !x86.amx.tile<16x32xf16> loc("<stdin>":32:11)
+    %32 = "x86.amx.tile_load"(%arg16, %29, %29) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf32>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":33:11)
+    %33 = "x86.amx.tile_mulf"(%30, %31, %32) : (!x86.amx.tile<16x32xf16>, !x86.amx.tile<16x32xf16>, !x86.amx.tile<16x16xf32>) -> !x86.amx.tile<16x16xf32> loc("<stdin>":34:11)
+    "x86.amx.tile_store"(%arg16, %29, %29, %33) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xf32>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":35:5)
+    "func.return"() : () -> () loc("<stdin>":36:5)
+  }) : () -> () loc("<stdin>":28:3)
+  "func.func"() <{function_type = (memref<?x?xf8E4M3FN>, memref<?x?xf32>) -> (), sym_name = "mulf8E4M3FN"}> ({
+  ^bb0(%arg13: memref<?x?xf8E4M3FN> loc("<stdin>":39:8), %arg14: memref<?x?xf32> loc("<stdin>":39:38)):
+    %24 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":40:11)
+    %25 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x64xf8E4M3FN> loc("<stdin>":41:11)
+    %26 = "x86.amx.tile_load"(%arg13, %24, %24) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf8E4M3FN>, index, index) -> !x86.amx.tile<16x64xf8E4M3FN> loc("<stdin>":42:11)
+    %27 = "x86.amx.tile_load"(%arg14, %24, %24) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf32>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":43:11)
+    %28 = "x86.amx.tile_mulf"(%25, %26, %27) : (!x86.amx.tile<16x64xf8E4M3FN>, !x86.amx.tile<16x64xf8E4M3FN>, !x86.amx.tile<16x16xf32>) -> !x86.amx.tile<16x16xf32> loc("<stdin>":44:11)
+    "x86.amx.tile_store"(%arg14, %24, %24, %28) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xf32>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":45:5)
+    "func.return"() : () -> () loc("<stdin>":46:5)
+  }) : () -> () loc("<stdin>":38:3)
+  "func.func"() <{function_type = (memref<?x?xf8E5M2>, memref<?x?xf32>) -> (), sym_name = "mulf8E4M3FNxf8E5M2"}> ({
+  ^bb0(%arg11: memref<?x?xf8E5M2> loc("<stdin>":49:8), %arg12: memref<?x?xf32> loc("<stdin>":49:36)):
+    %19 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":50:11)
+    %20 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x64xf8E4M3FN> loc("<stdin>":51:11)
+    %21 = "x86.amx.tile_load"(%arg11, %19, %19) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf8E5M2>, index, index) -> !x86.amx.tile<16x64xf8E5M2> loc("<stdin>":52:11)
+    %22 = "x86.amx.tile_load"(%arg12, %19, %19) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf32>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":53:11)
+    %23 = "x86.amx.tile_mulf"(%20, %21, %22) : (!x86.amx.tile<16x64xf8E4M3FN>, !x86.amx.tile<16x64xf8E5M2>, !x86.amx.tile<16x16xf32>) -> !x86.amx.tile<16x16xf32> loc("<stdin>":54:11)
+    "x86.amx.tile_store"(%arg12, %19, %19, %23) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xf32>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":55:5)
+    "func.return"() : () -> () loc("<stdin>":56:5)
+  }) : () -> () loc("<stdin>":48:3)
+  "func.func"() <{function_type = (memref<?x?xf8E4M3FN>, memref<?x?xf32>) -> (), sym_name = "mulf8E5M2xf8E4M3FN"}> ({
+  ^bb0(%arg9: memref<?x?xf8E4M3FN> loc("<stdin>":59:8), %arg10: memref<?x?xf32> loc("<stdin>":59:37)):
+    %14 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":60:11)
+    %15 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x64xf8E5M2> loc("<stdin>":61:11)
+    %16 = "x86.amx.tile_load"(%arg9, %14, %14) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf8E4M3FN>, index, index) -> !x86.amx.tile<16x64xf8E4M3FN> loc("<stdin>":62:11)
+    %17 = "x86.amx.tile_load"(%arg10, %14, %14) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf32>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":63:11)
+    %18 = "x86.amx.tile_mulf"(%15, %16, %17) : (!x86.amx.tile<16x64xf8E5M2>, !x86.amx.tile<16x64xf8E4M3FN>, !x86.amx.tile<16x16xf32>) -> !x86.amx.tile<16x16xf32> loc("<stdin>":64:11)
+    "x86.amx.tile_store"(%arg10, %14, %14, %18) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xf32>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":65:5)
+    "func.return"() : () -> () loc("<stdin>":66:5)
+  }) : () -> () loc("<stdin>":58:3)
+  "func.func"() <{function_type = (memref<?x?xf8E5M2>, memref<?x?xf32>) -> (), sym_name = "mulf8E5M2"}> ({
+  ^bb0(%arg7: memref<?x?xf8E5M2> loc("<stdin>":69:8), %arg8: memref<?x?xf32> loc("<stdin>":69:35)):
+    %9 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":70:10)
+    %10 = "x86.amx.tile_zero"() : () -> !x86.amx.tile<16x64xf8E5M2> loc("<stdin>":71:11)
+    %11 = "x86.amx.tile_load"(%arg7, %9, %9) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf8E5M2>, index, index) -> !x86.amx.tile<16x64xf8E5M2> loc("<stdin>":72:11)
+    %12 = "x86.amx.tile_load"(%arg8, %9, %9) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<?x?xf32>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":73:11)
+    %13 = "x86.amx.tile_mulf"(%10, %11, %12) : (!x86.amx.tile<16x64xf8E5M2>, !x86.amx.tile<16x64xf8E5M2>, !x86.amx.tile<16x16xf32>) -> !x86.amx.tile<16x16xf32> loc("<stdin>":74:11)
+    "x86.amx.tile_store"(%arg8, %9, %9, %13) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<?x?xf32>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":75:5)
+    "func.return"() : () -> () loc("<stdin>":76:5)
+  }) : () -> () loc("<stdin>":68:3)
+  "func.func"() <{function_type = (memref<16x32xi8>, memref<32x32xbf16, strided<[64, 1]>>, memref<16x32xf32, strided<[?, 1]>>) -> (), sym_name = "strides_implicit"}> ({
+  ^bb0(%arg4: memref<16x32xi8> loc("<stdin>":79:8), %arg5: memref<32x32xbf16, strided<[64, 1]>> loc("<stdin>":79:33), %arg6: memref<16x32xf32, strided<[?, 1]>> loc("<stdin>":79:78)):
+    %5 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":80:10)
+    %6 = "x86.amx.tile_load"(%arg4, %5, %5) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<16x32xi8>, index, index) -> !x86.amx.tile<16x32xi8> loc("<stdin>":81:10)
+    %7 = "x86.amx.tile_load"(%arg5, %5, %5) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<32x32xbf16, strided<[64, 1]>>, index, index) -> !x86.amx.tile<16x32xbf16> loc("<stdin>":82:10)
+    %8 = "x86.amx.tile_load"(%arg6, %5, %5) <{operandSegmentSizes = array<i32: 1, 2, 0>}> : (memref<16x32xf32, strided<[?, 1]>>, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":83:10)
+    "x86.amx.tile_store"(%arg4, %5, %5, %6) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<16x32xi8>, index, index, !x86.amx.tile<16x32xi8>) -> () loc("<stdin>":84:5)
+    "x86.amx.tile_store"(%arg5, %5, %5, %7) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<32x32xbf16, strided<[64, 1]>>, index, index, !x86.amx.tile<16x32xbf16>) -> () loc("<stdin>":85:5)
+    "x86.amx.tile_store"(%arg6, %5, %5, %8) <{operandSegmentSizes = array<i32: 1, 2, 1, 0>}> : (memref<16x32xf32, strided<[?, 1]>>, index, index, !x86.amx.tile<16x16xf32>) -> () loc("<stdin>":86:5)
+    "func.return"() : () -> () loc("<stdin>":87:5)
+  }) : () -> () loc("<stdin>":78:3)
+  "func.func"() <{function_type = (index, memref<?xi8>, memref<16x32xbf16>, memref<32x32xf32, strided<[64, 1]>>) -> (), sym_name = "strides_explicit"}> ({
+  ^bb0(%arg0: index loc("<stdin>":90:8), %arg1: memref<?xi8> loc("<stdin>":90:22), %arg2: memref<16x32xbf16> loc("<stdin>":90:43), %arg3: memref<32x32xf32, strided<[64, 1]>> loc("<stdin>":90:70)):
+    %0 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":91:10)
+    %1 = "arith.constant"() <{value = 64 : index}> : () -> index loc("<stdin>":92:10)
+    %2 = "x86.amx.tile_load"(%arg1, %0, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (memref<?xi8>, index, index) -> !x86.amx.tile<16x32xi8> loc("<stdin>":93:10)
+    %3 = "x86.amx.tile_load"(%arg2, %0, %0, %arg0) <{operandSegmentSizes = array<i32: 1, 2, 1>}> : (memref<16x32xbf16>, index, index, index) -> !x86.amx.tile<16x32xbf16> loc("<stdin>":94:10)
+    %4 = "x86.amx.tile_load"(%arg3, %0, %0, %1) <{operandSegmentSizes = array<i32: 1, 2, 1>}> : (memref<32x32xf32, strided<[64, 1]>>, index, index, index) -> !x86.amx.tile<16x16xf32> loc("<stdin>":95:10)
+    "x86.amx.tile_store"(%arg1, %0, %2, %arg0) <{operandSegmentSizes = array<i32: 1, 1, 1, 1>}> : (memref<?xi8>, index, !x86.amx.tile<16x32xi8>, index) -> () loc("<stdin>":96:5)
+    "x86.amx.tile_store"(%arg2, %0, %0, %3, %arg0) <{operandSegmentSizes = array<i32: 1, 2, 1, 1>}> : (memref<16x32xbf16>, index, index, !x86.amx.tile<16x32xbf16>, index) -> () loc("<stdin>":97:5)
+    "x86.amx.tile_store"(%arg3, %0, %0, %4, %1) <{operandSegmentSizes = array<i32: 1, 2, 1, 1>}> : (memref<32x32xf32, strided<[64, 1]>>, index, index, !x86.amx.tile<16x16xf32>, index) -> () loc("<stdin>":98:5)
+    "func.return"() : () -> () loc("<stdin>":99:5)
+  }) : () -> () loc("<stdin>":89:3)
+}) : () -> () loc("<stdin>":1:1)

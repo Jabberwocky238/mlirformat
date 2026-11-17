@@ -1,0 +1,97 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "create_token"}> ({
+    %33 = "async.runtime.create"() : () -> !async.token loc("<stdin>":3:11)
+    "func.return"() : () -> () loc("<stdin>":4:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = () -> (), sym_name = "create_value"}> ({
+    %32 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":7:11)
+    "func.return"() : () -> () loc("<stdin>":8:5)
+  }) : () -> () loc("<stdin>":6:3)
+  "func.func"() <{function_type = () -> (), sym_name = "create_group"}> ({
+    %30 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":11:11)
+    %31 = "async.runtime.create_group"(%30) : (index) -> !async.group loc("<stdin>":12:11)
+    "func.return"() : () -> () loc("<stdin>":13:5)
+  }) : () -> () loc("<stdin>":10:3)
+  "func.func"() <{function_type = () -> (), sym_name = "set_token_available"}> ({
+    %29 = "async.runtime.create"() : () -> !async.token loc("<stdin>":16:11)
+    "async.runtime.set_available"(%29) : (!async.token) -> () loc("<stdin>":17:5)
+    "func.return"() : () -> () loc("<stdin>":18:5)
+  }) : () -> () loc("<stdin>":15:3)
+  "func.func"() <{function_type = () -> (), sym_name = "set_value_available"}> ({
+    %28 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":21:11)
+    "async.runtime.set_available"(%28) : (!async.value<f32>) -> () loc("<stdin>":22:5)
+    "func.return"() : () -> () loc("<stdin>":23:5)
+  }) : () -> () loc("<stdin>":20:3)
+  "func.func"() <{function_type = () -> i1, sym_name = "is_token_error"}> ({
+    %26 = "async.runtime.create"() : () -> !async.token loc("<stdin>":26:11)
+    %27 = "async.runtime.is_error"(%26) : (!async.token) -> i1 loc("<stdin>":27:11)
+    "func.return"(%27) : (i1) -> () loc("<stdin>":28:5)
+  }) : () -> () loc("<stdin>":25:3)
+  "func.func"() <{function_type = () -> i1, sym_name = "is_value_error"}> ({
+    %24 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":31:11)
+    %25 = "async.runtime.is_error"(%24) : (!async.value<f32>) -> i1 loc("<stdin>":32:11)
+    "func.return"(%25) : (i1) -> () loc("<stdin>":33:5)
+  }) : () -> () loc("<stdin>":30:3)
+  "func.func"() <{function_type = () -> (), sym_name = "await_token"}> ({
+    %23 = "async.runtime.create"() : () -> !async.token loc("<stdin>":36:11)
+    "async.runtime.await"(%23) : (!async.token) -> () loc("<stdin>":37:5)
+    "func.return"() : () -> () loc("<stdin>":38:5)
+  }) : () -> () loc("<stdin>":35:3)
+  "func.func"() <{function_type = () -> (), sym_name = "await_value"}> ({
+    %22 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":41:11)
+    "async.runtime.await"(%22) : (!async.value<f32>) -> () loc("<stdin>":42:5)
+    "func.return"() : () -> () loc("<stdin>":43:5)
+  }) : () -> () loc("<stdin>":40:3)
+  "func.func"() <{function_type = () -> (), sym_name = "await_group"}> ({
+    %20 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":46:11)
+    %21 = "async.runtime.create_group"(%20) : (index) -> !async.group loc("<stdin>":47:11)
+    "async.runtime.await"(%21) : (!async.group) -> () loc("<stdin>":48:5)
+    "func.return"() : () -> () loc("<stdin>":49:5)
+  }) : () -> () loc("<stdin>":45:3)
+  "func.func"() <{function_type = () -> (), sym_name = "await_and_resume_token"}> ({
+    %17 = "async.coro.id"() : () -> !async.coro.id loc("<stdin>":52:11)
+    %18 = "async.coro.begin"(%17) : (!async.coro.id) -> !async.coro.handle loc("<stdin>":53:11)
+    %19 = "async.runtime.create"() : () -> !async.token loc("<stdin>":54:11)
+    "async.runtime.await_and_resume"(%19, %18) : (!async.token, !async.coro.handle) -> () loc("<stdin>":55:5)
+    "func.return"() : () -> () loc("<stdin>":56:5)
+  }) : () -> () loc("<stdin>":51:3)
+  "func.func"() <{function_type = () -> (), sym_name = "await_and_resume_value"}> ({
+    %14 = "async.coro.id"() : () -> !async.coro.id loc("<stdin>":59:11)
+    %15 = "async.coro.begin"(%14) : (!async.coro.id) -> !async.coro.handle loc("<stdin>":60:11)
+    %16 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":61:11)
+    "async.runtime.await_and_resume"(%16, %15) : (!async.value<f32>, !async.coro.handle) -> () loc("<stdin>":62:5)
+    "func.return"() : () -> () loc("<stdin>":63:5)
+  }) : () -> () loc("<stdin>":58:3)
+  "func.func"() <{function_type = () -> (), sym_name = "await_and_resume_group"}> ({
+    %10 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":66:11)
+    %11 = "async.coro.id"() : () -> !async.coro.id loc("<stdin>":67:11)
+    %12 = "async.coro.begin"(%11) : (!async.coro.id) -> !async.coro.handle loc("<stdin>":68:11)
+    %13 = "async.runtime.create_group"(%10) : (index) -> !async.group loc("<stdin>":69:11)
+    "async.runtime.await_and_resume"(%13, %12) : (!async.group, !async.coro.handle) -> () loc("<stdin>":70:5)
+    "func.return"() : () -> () loc("<stdin>":71:5)
+  }) : () -> () loc("<stdin>":65:3)
+  "func.func"() <{function_type = () -> (), sym_name = "resume"}> ({
+    %8 = "async.coro.id"() : () -> !async.coro.id loc("<stdin>":74:10)
+    %9 = "async.coro.begin"(%8) : (!async.coro.id) -> !async.coro.handle loc("<stdin>":75:10)
+    "async.runtime.resume"(%9) : (!async.coro.handle) -> () loc("<stdin>":76:5)
+    "func.return"() : () -> () loc("<stdin>":77:5)
+  }) : () -> () loc("<stdin>":73:3)
+  "func.func"() <{function_type = () -> (), sym_name = "store"}> ({
+    %6 = "arith.constant"() <{value = 1.000000e+00 : f32}> : () -> f32 loc("<stdin>":80:10)
+    %7 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":81:10)
+    "async.runtime.store"(%6, %7) : (f32, !async.value<f32>) -> () loc("<stdin>":82:5)
+    "func.return"() : () -> () loc("<stdin>":83:5)
+  }) : () -> () loc("<stdin>":79:3)
+  "func.func"() <{function_type = () -> f32, sym_name = "load"}> ({
+    %4 = "async.runtime.create"() : () -> !async.value<f32> loc("<stdin>":86:10)
+    %5 = "async.runtime.load"(%4) : (!async.value<f32>) -> f32 loc("<stdin>":87:10)
+    "func.return"(%5) : (f32) -> () loc("<stdin>":88:5)
+  }) : () -> () loc("<stdin>":85:3)
+  "func.func"() <{function_type = () -> (), sym_name = "add_token_to_group"}> ({
+    %0 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":91:10)
+    %1 = "async.runtime.create"() : () -> !async.token loc("<stdin>":92:10)
+    %2 = "async.runtime.create_group"(%0) : (index) -> !async.group loc("<stdin>":93:10)
+    %3 = "async.runtime.add_to_group"(%1, %2) : (!async.token, !async.group) -> index loc("<stdin>":94:10)
+    "func.return"() : () -> () loc("<stdin>":95:5)
+  }) : () -> () loc("<stdin>":90:3)
+}) : () -> () loc("<stdin>":1:1)

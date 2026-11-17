@@ -1,0 +1,82 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (vector<4x4xf32>) -> memref<4x?xf32>, sym_name = "prepareAccTestData", sym_visibility = "private"}> ({
+  ^bb0(%arg3: vector<4x4xf32> loc("<stdin>":8:8)):
+    %29 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":9:11)
+    %30 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":10:11)
+    %31 = "arith.constant"() <{value = 4 : index}> : () -> index loc("<stdin>":11:11)
+    %32 = "vector.vscale"() : () -> index loc("<stdin>":12:11)
+    %33 = "arith.muli"(%31, %32) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index loc("<stdin>":13:11)
+    %34 = "memref.alloc"(%33) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<4x?xf32> loc("<stdin>":14:11)
+    "scf.for"(%29, %33, %31) ({
+    ^bb0(%arg4: index loc("<stdin>":16:10)):
+      "vector.transfer_write"(%arg3, %34, %29, %arg4) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (vector<4x4xf32>, memref<4x?xf32>, index, index) -> () loc("<stdin>":17:7)
+      "scf.yield"() : () -> () loc("<stdin>":18:7)
+    }) : (index, index, index) -> () loc("<stdin>":15:5)
+    "func.return"(%34) : (memref<4x?xf32>) -> () loc("<stdin>":20:5)
+  }) : () -> () loc("<stdin>":7:3)
+  "func.func"() <{function_type = (vector<4x4xbf16>) -> memref<4x4xbf16>, sym_name = "prepareLHSTestData", sym_visibility = "private"}> ({
+  ^bb0(%arg2: vector<4x4xbf16> loc("<stdin>":23:8)):
+    %27 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":24:11)
+    %28 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x4xbf16> loc("<stdin>":25:11)
+    "vector.transfer_write"(%arg2, %28, %27, %27) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (vector<4x4xbf16>, memref<4x4xbf16>, index, index) -> () loc("<stdin>":26:5)
+    "func.return"(%28) : (memref<4x4xbf16>) -> () loc("<stdin>":27:5)
+  }) : () -> () loc("<stdin>":22:3)
+  "func.func"() <{function_type = (vector<4x4xbf16>) -> memref<?xbf16>, sym_name = "prepareRHSTestData", sym_visibility = "private"}> ({
+  ^bb0(%arg0: vector<4x4xbf16> loc("<stdin>":30:8)):
+    %20 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":31:11)
+    %21 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":32:11)
+    %22 = "arith.constant"() <{value = 4 : index}> : () -> index loc("<stdin>":33:11)
+    %23 = "vector.vscale"() : () -> index loc("<stdin>":34:11)
+    %24 = "arith.muli"(%22, %23) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index loc("<stdin>":35:11)
+    %25 = "memref.alloc"(%24) <{operandSegmentSizes = array<i32: 1, 0>}> : (index) -> memref<?x4xbf16> loc("<stdin>":36:11)
+    "scf.for"(%20, %24, %22) ({
+    ^bb0(%arg1: index loc("<stdin>":38:10)):
+      "vector.transfer_write"(%arg0, %25, %arg1, %20) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 1, 2, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (vector<4x4xbf16>, memref<?x4xbf16>, index, index) -> () loc("<stdin>":39:7)
+      "scf.yield"() : () -> () loc("<stdin>":40:7)
+    }) : (index, index, index) -> () loc("<stdin>":37:5)
+    %26 = "memref.collapse_shape"(%25) <{reassociation = [[0, 1]]}> : (memref<?x4xbf16>) -> memref<?xbf16> loc("<stdin>":42:11)
+    "func.return"(%26) : (memref<?xbf16>) -> () loc("<stdin>":43:5)
+  }) : () -> () loc("<stdin>":29:3)
+  "func.func"() <{function_type = () -> (), sym_name = "test_bfmmla"}> ({
+    %2 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":46:10)
+    %3 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32 loc("<stdin>":47:10)
+    %4 = "arith.constant"() <{value = 0.000000e+00 : bf16}> : () -> bf16 loc("<stdin>":48:10)
+    %5 = "arith.constant"() <{value = dense<[[0.699999988, 1.000000e+00, -1.000000e-01, 1.800000e+00], [-5.000000e-01, 0.899999976, 0.699999988, -0.699999988], [5.000000e-01, -1.300000e+00, -2.200000e+00, 1.000000e-01], [-0.699999988, 1.000000e+00, 1.700000e+00, -1.000000e+00]]> : vector<4x4xf32>}> : () -> vector<4x4xf32> loc("<stdin>":49:10)
+    %6 = "func.call"(%5) <{callee = @prepareAccTestData}> : (vector<4x4xf32>) -> memref<4x?xf32> loc("<stdin>":50:10)
+    %7 = "vector.transfer_read"(%6, %2, %2, %3) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<4x?xf32>, index, index, f32) -> vector<4x[4]xf32> loc("<stdin>":51:10)
+    %8 = "arith.constant"() <{value = dense<[[1.000980e-01, 6.992180e-01, -8.984370e-01, 1.296880e+00], [-1.601560e+00, 6.992180e-01, -3.007810e-01, -3.007810e-01], [-4.003910e-01, 6.015630e-01, 8.007810e-01, -5.000000e-01], [-6.015630e-01, -1.000000e+00, -1.000000e+00, -1.000000e+00]]> : vector<4x4xbf16>}> : () -> vector<4x4xbf16> loc("<stdin>":52:10)
+    %9 = "func.call"(%8) <{callee = @prepareLHSTestData}> : (vector<4x4xbf16>) -> memref<4x4xbf16> loc("<stdin>":53:10)
+    %10 = "vector.transfer_read"(%9, %2, %2, %4) <{in_bounds = [true, true], operandSegmentSizes = array<i32: 1, 2, 1, 0>, permutation_map = affine_map<(d0, d1) -> (d0, d1)>}> : (memref<4x4xbf16>, index, index, bf16) -> vector<4x4xbf16> loc("<stdin>":54:11)
+    %11 = "arith.constant"() <{value = dense<[[6.015630e-01, 1.296880e+00, 1.000980e-01, -8.984370e-01], [5.000000e-01, 1.601560e+00, 1.796880e+00, 1.601560e+00], [-2.001950e-01, 4.003910e-01, 1.000000e+00, 4.003910e-01], [-1.296880e+00, -2.001950e-01, -2.203130e+00, 3.007810e-01]]> : vector<4x4xbf16>}> : () -> vector<4x4xbf16> loc("<stdin>":55:11)
+    %12 = "func.call"(%11) <{callee = @prepareRHSTestData}> : (vector<4x4xbf16>) -> memref<?xbf16> loc("<stdin>":56:11)
+    %13 = "vector.transfer_read"(%12, %2, %4) <{in_bounds = [true], operandSegmentSizes = array<i32: 1, 1, 1, 0>, permutation_map = affine_map<(d0) -> (d0)>}> : (memref<?xbf16>, index, bf16) -> vector<[16]xbf16> loc("<stdin>":57:11)
+    %14 = "vector.shape_cast"(%13) : (vector<[16]xbf16>) -> vector<[4]x4xbf16> loc("<stdin>":58:11)
+    %15 = "vector.contract"(%10, %14, %7) <{fastmath = #arith.fastmath<none>, indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>, affine_map<(d0, d1, d2) -> (d1, d2)>, affine_map<(d0, d1, d2) -> (d0, d1)>], iterator_types = [#vector.iterator_type<parallel>, #vector.iterator_type<parallel>, #vector.iterator_type<reduction>], kind = #vector.kind<add>}> : (vector<4x4xbf16>, vector<[4]x4xbf16>, vector<4x[4]xf32>) -> vector<4x[4]xf32> loc("<stdin>":59:11)
+    "vector.print"() <{punctuation = #vector.punctuation<newline>, stringLiteral = "Result(BFMMLA):\0A"}> : () -> () loc("<stdin>":60:5)
+    %16 = "vector.extract"(%15) <{static_position = array<i64: 0>}> : (vector<4x[4]xf32>) -> vector<[4]xf32> loc("<stdin>":61:11)
+    %17 = "vector.extract"(%15) <{static_position = array<i64: 1>}> : (vector<4x[4]xf32>) -> vector<[4]xf32> loc("<stdin>":62:11)
+    %18 = "vector.extract"(%15) <{static_position = array<i64: 2>}> : (vector<4x[4]xf32>) -> vector<[4]xf32> loc("<stdin>":63:11)
+    %19 = "vector.extract"(%15) <{static_position = array<i64: 3>}> : (vector<4x[4]xf32>) -> vector<[4]xf32> loc("<stdin>":64:11)
+    "vector.print"(%16) <{punctuation = #vector.punctuation<newline>}> : (vector<[4]xf32>) -> () loc("<stdin>":65:5)
+    "vector.print"(%17) <{punctuation = #vector.punctuation<newline>}> : (vector<[4]xf32>) -> () loc("<stdin>":66:5)
+    "vector.print"(%18) <{punctuation = #vector.punctuation<newline>}> : (vector<[4]xf32>) -> () loc("<stdin>":67:5)
+    "vector.print"(%19) <{punctuation = #vector.punctuation<newline>}> : (vector<[4]xf32>) -> () loc("<stdin>":68:5)
+    "memref.dealloc"(%6) : (memref<4x?xf32>) -> () loc("<stdin>":69:5)
+    "memref.dealloc"(%9) : (memref<4x4xbf16>) -> () loc("<stdin>":70:5)
+    "memref.dealloc"(%12) : (memref<?xbf16>) -> () loc("<stdin>":71:5)
+    "func.return"() : () -> () loc("<stdin>":72:5)
+  }) : () -> () loc("<stdin>":45:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "arith.constant"() <{value = 128 : i32}> : () -> i32 loc("<stdin>":75:10)
+    %1 = "arith.constant"() <{value = 256 : i32}> : () -> i32 loc("<stdin>":76:10)
+    "func.call"(%0) <{callee = @setArmVLBits}> : (i32) -> () loc("<stdin>":77:5)
+    "func.call"() <{callee = @test_bfmmla}> : () -> () loc("<stdin>":78:5)
+    "func.call"(%1) <{callee = @setArmVLBits}> : (i32) -> () loc("<stdin>":79:5)
+    "func.call"() <{callee = @test_bfmmla}> : () -> () loc("<stdin>":80:5)
+    "func.return"() : () -> () loc("<stdin>":81:5)
+  }) : () -> () loc("<stdin>":74:3)
+  "func.func"() <{function_type = (i32) -> (), sym_name = "setArmVLBits", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":83:3)
+  "func.func"() <{function_type = (memref<*xf32>) -> (), sym_name = "printMemrefF32", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":85:3)
+}) : () -> () loc("<stdin>":6:1)

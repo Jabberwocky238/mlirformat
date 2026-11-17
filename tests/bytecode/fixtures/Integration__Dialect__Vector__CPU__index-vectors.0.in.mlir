@@ -1,0 +1,17 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = () -> (), sym_name = "entry"}> ({
+    %0 = "arith.constant"() <{value = dense<[0, 1, 2, 3]> : vector<4xindex>}> : () -> vector<4xindex> loc("<stdin>":3:10)
+    %1 = "arith.constant"() <{value = dense<[0, 1]> : vector<2xindex>}> : () -> vector<2xindex> loc("<stdin>":4:10)
+    %2 = "arith.constant"() <{value = 2 : index}> : () -> index loc("<stdin>":5:10)
+    %3 = "vector.broadcast"(%0) : (vector<4xindex>) -> vector<2x4xindex> loc("<stdin>":6:10)
+    %4 = "vector.broadcast"(%1) : (vector<2xindex>) -> vector<4x2xindex> loc("<stdin>":7:10)
+    %5 = "vector.transpose"(%4) <{permutation = array<i64: 1, 0>}> : (vector<4x2xindex>) -> vector<2x4xindex> loc("<stdin>":8:10)
+    %6 = "vector.broadcast"(%2) : (index) -> vector<2x4xindex> loc("<stdin>":9:10)
+    %7 = "arith.addi"(%3, %5) <{overflowFlags = #arith.overflow<none>}> : (vector<2x4xindex>, vector<2x4xindex>) -> vector<2x4xindex> loc("<stdin>":10:10)
+    "vector.print"(%3) <{punctuation = #vector.punctuation<newline>}> : (vector<2x4xindex>) -> () loc("<stdin>":11:5)
+    "vector.print"(%5) <{punctuation = #vector.punctuation<newline>}> : (vector<2x4xindex>) -> () loc("<stdin>":12:5)
+    "vector.print"(%6) <{punctuation = #vector.punctuation<newline>}> : (vector<2x4xindex>) -> () loc("<stdin>":13:5)
+    "vector.print"(%7) <{punctuation = #vector.punctuation<newline>}> : (vector<2x4xindex>) -> () loc("<stdin>":14:5)
+    "func.return"() : () -> () loc("<stdin>":15:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)

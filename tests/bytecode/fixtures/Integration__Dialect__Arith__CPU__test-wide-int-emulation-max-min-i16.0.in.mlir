@@ -1,0 +1,96 @@
+"builtin.module"() ({
+  "func.func"() <{function_type = (i16, i16) -> i16, sym_name = "emulate_maxui"}> ({
+  ^bb0(%arg14: i16 loc("<stdin>":3:8), %arg15: i16 loc("<stdin>":3:21)):
+    %14 = "arith.maxui"(%arg14, %arg15) : (i16, i16) -> i16 loc("<stdin>":4:11)
+    "func.return"(%14) : (i16) -> () loc("<stdin>":5:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = (i16, i16) -> (), sym_name = "check_maxui"}> ({
+  ^bb0(%arg12: i16 loc("<stdin>":8:8), %arg13: i16 loc("<stdin>":8:21)):
+    %13 = "func.call"(%arg12, %arg13) <{callee = @emulate_maxui}> : (i16, i16) -> i16 loc("<stdin>":9:11)
+    "vector.print"(%13) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":10:5)
+    "func.return"() : () -> () loc("<stdin>":11:5)
+  }) : () -> () loc("<stdin>":7:3)
+  "func.func"() <{function_type = (i16, i16) -> i16, sym_name = "emulate_maxsi"}> ({
+  ^bb0(%arg10: i16 loc("<stdin>":14:8), %arg11: i16 loc("<stdin>":14:21)):
+    %12 = "arith.maxsi"(%arg10, %arg11) : (i16, i16) -> i16 loc("<stdin>":15:11)
+    "func.return"(%12) : (i16) -> () loc("<stdin>":16:5)
+  }) : () -> () loc("<stdin>":13:3)
+  "func.func"() <{function_type = (i16, i16) -> (), sym_name = "check_maxsi"}> ({
+  ^bb0(%arg8: i16 loc("<stdin>":19:8), %arg9: i16 loc("<stdin>":19:20)):
+    %11 = "func.call"(%arg8, %arg9) <{callee = @emulate_maxsi}> : (i16, i16) -> i16 loc("<stdin>":20:11)
+    "vector.print"(%11) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":21:5)
+    "func.return"() : () -> () loc("<stdin>":22:5)
+  }) : () -> () loc("<stdin>":18:3)
+  "func.func"() <{function_type = (i16, i16) -> i16, sym_name = "emulate_minui"}> ({
+  ^bb0(%arg6: i16 loc("<stdin>":25:8), %arg7: i16 loc("<stdin>":25:20)):
+    %10 = "arith.minui"(%arg6, %arg7) : (i16, i16) -> i16 loc("<stdin>":26:11)
+    "func.return"(%10) : (i16) -> () loc("<stdin>":27:5)
+  }) : () -> () loc("<stdin>":24:3)
+  "func.func"() <{function_type = (i16, i16) -> (), sym_name = "check_minui"}> ({
+  ^bb0(%arg4: i16 loc("<stdin>":30:8), %arg5: i16 loc("<stdin>":30:20)):
+    %9 = "func.call"(%arg4, %arg5) <{callee = @emulate_minui}> : (i16, i16) -> i16 loc("<stdin>":31:10)
+    "vector.print"(%9) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":32:5)
+    "func.return"() : () -> () loc("<stdin>":33:5)
+  }) : () -> () loc("<stdin>":29:3)
+  "func.func"() <{function_type = (i16, i16) -> i16, sym_name = "emulate_minsi"}> ({
+  ^bb0(%arg2: i16 loc("<stdin>":36:8), %arg3: i16 loc("<stdin>":36:20)):
+    %8 = "arith.minsi"(%arg2, %arg3) : (i16, i16) -> i16 loc("<stdin>":37:10)
+    "func.return"(%8) : (i16) -> () loc("<stdin>":38:5)
+  }) : () -> () loc("<stdin>":35:3)
+  "func.func"() <{function_type = (i16, i16) -> (), sym_name = "check_minsi"}> ({
+  ^bb0(%arg0: i16 loc("<stdin>":41:8), %arg1: i16 loc("<stdin>":41:20)):
+    %7 = "func.call"(%arg0, %arg1) <{callee = @emulate_minsi}> : (i16, i16) -> i16 loc("<stdin>":42:10)
+    "vector.print"(%7) <{punctuation = #vector.punctuation<newline>}> : (i16) -> () loc("<stdin>":43:5)
+    "func.return"() : () -> () loc("<stdin>":44:5)
+  }) : () -> () loc("<stdin>":40:3)
+  "func.func"() <{function_type = () -> (), sym_name = "entry"}> ({
+    %0 = "arith.constant"() <{value = 0 : i16}> : () -> i16 loc("<stdin>":47:10)
+    %1 = "arith.constant"() <{value = 1 : i16}> : () -> i16 loc("<stdin>":48:10)
+    %2 = "arith.constant"() <{value = 7 : i16}> : () -> i16 loc("<stdin>":49:10)
+    %3 = "arith.constant"() <{value = -1 : i16}> : () -> i16 loc("<stdin>":50:10)
+    %4 = "arith.constant"() <{value = 1337 : i16}> : () -> i16 loc("<stdin>":51:10)
+    %5 = "arith.constant"() <{value = 4096 : i16}> : () -> i16 loc("<stdin>":52:10)
+    %6 = "arith.constant"() <{value = -32768 : i16}> : () -> i16 loc("<stdin>":53:10)
+    "func.call"(%0, %0) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":54:5)
+    "func.call"(%0, %1) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":55:5)
+    "func.call"(%1, %0) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":56:5)
+    "func.call"(%1, %1) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":57:5)
+    "func.call"(%3, %1) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":58:5)
+    "func.call"(%1, %3) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":59:5)
+    "func.call"(%3, %4) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":60:5)
+    "func.call"(%4, %4) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":61:5)
+    "func.call"(%5, %5) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":62:5)
+    "func.call"(%4, %6) <{callee = @check_maxui}> : (i16, i16) -> () loc("<stdin>":63:5)
+    "func.call"(%0, %0) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":64:5)
+    "func.call"(%0, %1) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":65:5)
+    "func.call"(%1, %0) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":66:5)
+    "func.call"(%1, %1) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":67:5)
+    "func.call"(%3, %1) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":68:5)
+    "func.call"(%1, %3) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":69:5)
+    "func.call"(%3, %4) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":70:5)
+    "func.call"(%4, %4) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":71:5)
+    "func.call"(%5, %5) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":72:5)
+    "func.call"(%4, %6) <{callee = @check_maxsi}> : (i16, i16) -> () loc("<stdin>":73:5)
+    "func.call"(%0, %0) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":74:5)
+    "func.call"(%0, %1) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":75:5)
+    "func.call"(%1, %0) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":76:5)
+    "func.call"(%1, %1) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":77:5)
+    "func.call"(%3, %1) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":78:5)
+    "func.call"(%1, %3) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":79:5)
+    "func.call"(%3, %4) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":80:5)
+    "func.call"(%4, %4) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":81:5)
+    "func.call"(%5, %5) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":82:5)
+    "func.call"(%4, %6) <{callee = @check_minui}> : (i16, i16) -> () loc("<stdin>":83:5)
+    "func.call"(%0, %0) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":84:5)
+    "func.call"(%0, %1) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":85:5)
+    "func.call"(%1, %0) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":86:5)
+    "func.call"(%1, %1) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":87:5)
+    "func.call"(%3, %1) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":88:5)
+    "func.call"(%1, %3) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":89:5)
+    "func.call"(%3, %4) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":90:5)
+    "func.call"(%4, %4) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":91:5)
+    "func.call"(%5, %5) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":92:5)
+    "func.call"(%4, %6) <{callee = @check_minsi}> : (i16, i16) -> () loc("<stdin>":93:5)
+    "func.return"() : () -> () loc("<stdin>":94:5)
+  }) : () -> () loc("<stdin>":46:3)
+}) : () -> () loc("<stdin>":1:1)

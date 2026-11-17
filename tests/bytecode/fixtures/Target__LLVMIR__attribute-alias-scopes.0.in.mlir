@@ -1,0 +1,19 @@
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "foo", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  }) : () -> () loc("<stdin>":6:3)
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr)>, linkage = #llvm.linkage<external>, sym_name = "alias_scopes", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr loc("<stdin>":9:8)):
+    %0 = "llvm.mlir.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":10:10)
+    "llvm.intr.experimental.noalias.scope.decl"() <{scope = #llvm.alias_scope<id = distinct[0]<>, domain = <id = distinct[1]<>, description = "The domain">, description = "The first scope">}> : () -> () loc("<stdin>":11:5)
+    "llvm.store"(%0, %arg0) <{alias_scopes = [#llvm.alias_scope<id = distinct[0]<>, domain = <id = distinct[1]<>, description = "The domain">, description = "The first scope">], noalias_scopes = [#llvm.alias_scope<id = distinct[2]<>, domain = <id = distinct[1]<>, description = "The domain">>, #llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], ordering = 0 : i64}> : (i32, !llvm.ptr) -> () loc("<stdin>":12:5)
+    %1 = "llvm.load"(%arg0) <{alias_scopes = [#llvm.alias_scope<id = distinct[2]<>, domain = <id = distinct[1]<>, description = "The domain">>], noalias_scopes = [#llvm.alias_scope<id = distinct[0]<>, domain = <id = distinct[1]<>, description = "The domain">, description = "The first scope">, #llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], ordering = 0 : i64}> : (!llvm.ptr) -> i32 loc("<stdin>":13:10)
+    %2 = "llvm.atomicrmw"(%arg0, %0) <{alias_scopes = [#llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], bin_op = 1 : i64, noalias_scopes = [#llvm.alias_scope<id = distinct[0]<>, domain = <id = distinct[1]<>, description = "The domain">, description = "The first scope">, #llvm.alias_scope<id = distinct[2]<>, domain = <id = distinct[1]<>, description = "The domain">>], ordering = 2 : i64}> : (!llvm.ptr, i32) -> i32 loc("<stdin>":14:10)
+    %3 = "llvm.cmpxchg"(%arg0, %1, %2) <{alias_scopes = [#llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], failure_ordering = 2 : i64, success_ordering = 6 : i64}> : (!llvm.ptr, i32, i32) -> !llvm.struct<(i32, i1)> loc("<stdin>":15:10)
+    %4 = "llvm.mlir.constant"() <{value = 42 : i8}> : () -> i8 loc("<stdin>":16:10)
+    "llvm.intr.memcpy"(%arg0, %arg0, %0) <{alias_scopes = [#llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], isVolatile = false}> : (!llvm.ptr, !llvm.ptr, i32) -> () loc("<stdin>":17:5)
+    "llvm.intr.memset"(%arg0, %4, %0) <{isVolatile = false, noalias_scopes = [#llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>]}> : (!llvm.ptr, i8, i32) -> () loc("<stdin>":18:5)
+    "llvm.call"(%arg0) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, alias_scopes = [#llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], callee = @foo, fastmathFlags = #llvm.fastmath<none>, op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> () loc("<stdin>":19:5)
+    "llvm.call"(%arg0) <{CConv = #llvm.cconv<ccc>, TailCallKind = #llvm.tailcallkind<none>, callee = @foo, fastmathFlags = #llvm.fastmath<none>, noalias_scopes = [#llvm.alias_scope<id = distinct[3]<>, domain = <id = distinct[1]<>, description = "The domain">>], op_bundle_sizes = array<i32>, operandSegmentSizes = array<i32: 1, 0>}> : (!llvm.ptr) -> () loc("<stdin>":20:5)
+    "llvm.return"() : () -> () loc("<stdin>":21:5)
+  }) : () -> () loc("<stdin>":8:3)
+}) : () -> () loc("<stdin>":5:1)

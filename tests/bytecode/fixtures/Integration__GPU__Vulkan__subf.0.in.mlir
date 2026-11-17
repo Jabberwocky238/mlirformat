@@ -1,0 +1,45 @@
+"builtin.module"() ({
+  "gpu.module"() <{sym_name = "kernels"}> ({
+    "gpu.func"() <{function_type = (memref<8x4x4xf32>, memref<4x4xf32>, memref<8x4x4xf32>) -> (), kernel}> ({
+    ^bb0(%arg0: memref<8x4x4xf32> loc("<stdin>":4:10), %arg1: memref<4x4xf32> loc("<stdin>":4:36), %arg2: memref<8x4x4xf32> loc("<stdin>":4:60)):
+      %16 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":5:13)
+      %17 = "gpu.block_id"() <{dimension = #gpu<dim y>}> : () -> index loc("<stdin>":6:13)
+      %18 = "gpu.block_id"() <{dimension = #gpu<dim z>}> : () -> index loc("<stdin>":7:13)
+      %19 = "memref.load"(%arg0, %16, %17, %18) : (memref<8x4x4xf32>, index, index, index) -> f32 loc("<stdin>":8:13)
+      %20 = "memref.load"(%arg1, %17, %18) : (memref<4x4xf32>, index, index) -> f32 loc("<stdin>":9:13)
+      %21 = "arith.subf"(%19, %20) <{fastmath = #arith.fastmath<none>}> : (f32, f32) -> f32 loc("<stdin>":10:13)
+      "memref.store"(%21, %arg2, %16, %17, %18) : (f32, memref<8x4x4xf32>, index, index, index) -> () loc("<stdin>":11:7)
+      "gpu.return"() : () -> () loc("<stdin>":12:7)
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [1, 1, 1]>, sym_name = "kernel_sub"} : () -> () loc("<stdin>":3:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x4x4xf32> loc("<stdin>":16:10)
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<4x4xf32> loc("<stdin>":17:10)
+    %2 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8x4x4xf32> loc("<stdin>":18:10)
+    %3 = "arith.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":19:10)
+    %4 = "arith.constant"() <{value = 1 : i32}> : () -> i32 loc("<stdin>":20:10)
+    %5 = "arith.constant"() <{value = 2 : i32}> : () -> i32 loc("<stdin>":21:10)
+    %6 = "arith.constant"() <{value = 0.000000e+00 : f32}> : () -> f32 loc("<stdin>":22:10)
+    %7 = "arith.constant"() <{value = 3.300000e+00 : f32}> : () -> f32 loc("<stdin>":23:10)
+    %8 = "arith.constant"() <{value = 1.100000e+00 : f32}> : () -> f32 loc("<stdin>":24:10)
+    %9 = "memref.cast"(%0) : (memref<8x4x4xf32>) -> memref<?x?x?xf32> loc("<stdin>":25:10)
+    %10 = "memref.cast"(%1) : (memref<4x4xf32>) -> memref<?x?xf32> loc("<stdin>":26:11)
+    %11 = "memref.cast"(%2) : (memref<8x4x4xf32>) -> memref<?x?x?xf32> loc("<stdin>":27:11)
+    "func.call"(%9, %7) <{callee = @fillResource3DFloat}> : (memref<?x?x?xf32>, f32) -> () loc("<stdin>":28:5)
+    "func.call"(%10, %8) <{callee = @fillResource2DFloat}> : (memref<?x?xf32>, f32) -> () loc("<stdin>":29:5)
+    "func.call"(%11, %6) <{callee = @fillResource3DFloat}> : (memref<?x?x?xf32>, f32) -> () loc("<stdin>":30:5)
+    %12 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":31:11)
+    %13 = "arith.constant"() <{value = 4 : index}> : () -> index loc("<stdin>":32:11)
+    %14 = "arith.constant"() <{value = 8 : index}> : () -> index loc("<stdin>":33:11)
+    "gpu.launch_func"(%14, %13, %13, %12, %12, %12, %0, %1, %2) <{kernel = @kernels::@kernel_sub, operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 3, 0>}> : (index, index, index, index, index, index, memref<8x4x4xf32>, memref<4x4xf32>, memref<8x4x4xf32>) -> () loc("<stdin>":34:5)
+    %15 = "memref.cast"(%11) : (memref<?x?x?xf32>) -> memref<*xf32> loc("<stdin>":35:11)
+    "func.call"(%15) <{callee = @printMemrefF32}> : (memref<*xf32>) -> () loc("<stdin>":36:5)
+    "func.return"() : () -> () loc("<stdin>":37:5)
+  }) : () -> () loc("<stdin>":15:3)
+  "func.func"() <{function_type = (memref<?x?xf32>, f32) -> (), sym_name = "fillResource2DFloat", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":39:3)
+  "func.func"() <{function_type = (memref<?x?x?xf32>, f32) -> (), sym_name = "fillResource3DFloat", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":41:3)
+  "func.func"() <{function_type = (memref<*xf32>) -> (), sym_name = "printMemrefF32", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":43:3)
+}) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.0, [Shader], [SPV_KHR_storage_buffer_storage_class]>, #spirv.resource_limits<>>} : () -> () loc("<stdin>":1:1)

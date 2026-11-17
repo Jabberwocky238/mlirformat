@@ -1,0 +1,42 @@
+"builtin.module"() ({
+  "gpu.module"() <{sym_name = "kernels"}> ({
+    "gpu.func"() <{function_type = (memref<8xi32>, memref<8xi32>, memref<8xi32>, memref<8xi32>) -> (), kernel}> ({
+    ^bb0(%arg0: memref<8xi32> loc("<stdin>":4:10), %arg1: memref<8xi32> loc("<stdin>":4:32), %arg2: memref<8xi32> loc("<stdin>":4:54), %arg3: memref<8xi32> loc("<stdin>":4:76)):
+      %14 = "gpu.block_id"() <{dimension = #gpu<dim x>}> : () -> index loc("<stdin>":5:13)
+      %15 = "memref.load"(%arg0, %14) : (memref<8xi32>, index) -> i32 loc("<stdin>":6:13)
+      %16 = "memref.load"(%arg1, %14) : (memref<8xi32>, index) -> i32 loc("<stdin>":7:13)
+      %17:2 = "arith.mului_extended"(%15, %16) : (i32, i32) -> (i32, i32) loc("<stdin>":8:15)
+      "memref.store"(%17#0, %arg2, %14) : (i32, memref<8xi32>, index) -> () loc("<stdin>":9:7)
+      "memref.store"(%17#1, %arg3, %14) : (i32, memref<8xi32>, index) -> () loc("<stdin>":10:7)
+      "gpu.return"() : () -> () loc("<stdin>":11:7)
+    }) {spirv.entry_point_abi = #spirv.entry_point_abi<workgroup_size = [1, 1, 1]>, sym_name = "kernel_add"} : () -> () loc("<stdin>":3:5)
+  }) : () -> () loc("<stdin>":2:3)
+  "func.func"() <{function_type = () -> (), sym_name = "main"}> ({
+    %0 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8xi32> loc("<stdin>":15:10)
+    %1 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8xi32> loc("<stdin>":16:10)
+    %2 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8xi32> loc("<stdin>":17:10)
+    %3 = "memref.alloc"() <{operandSegmentSizes = array<i32: 0, 0>}> : () -> memref<8xi32> loc("<stdin>":18:10)
+    %4 = "arith.constant"() <{value = 0 : i32}> : () -> i32 loc("<stdin>":19:10)
+    %5 = "memref.cast"(%2) : (memref<8xi32>) -> memref<?xi32> loc("<stdin>":20:10)
+    %6 = "memref.cast"(%3) : (memref<8xi32>) -> memref<?xi32> loc("<stdin>":21:10)
+    "func.call"(%5, %4) <{callee = @fillResource1DInt}> : (memref<?xi32>, i32) -> () loc("<stdin>":22:5)
+    "func.call"(%6, %4) <{callee = @fillResource1DInt}> : (memref<?xi32>, i32) -> () loc("<stdin>":23:5)
+    %7 = "arith.constant"() <{value = 0 : index}> : () -> index loc("<stdin>":24:10)
+    %8 = "arith.constant"() <{value = 1 : index}> : () -> index loc("<stdin>":25:10)
+    %9 = "arith.constant"() <{value = 8 : index}> : () -> index loc("<stdin>":26:10)
+    %10 = "arith.constant"() <{value = dense<[0, 1, -1, -1, 65535, 65535, -65535, 7]> : vector<8xi32>}> : () -> vector<8xi32> loc("<stdin>":27:11)
+    %11 = "arith.constant"() <{value = dense<[0, 1, 2, -1, 16, -1337, -65535, -7]> : vector<8xi32>}> : () -> vector<8xi32> loc("<stdin>":28:11)
+    "vector.store"(%10, %0, %7) : (vector<8xi32>, memref<8xi32>, index) -> () loc("<stdin>":29:5)
+    "vector.store"(%11, %1, %7) : (vector<8xi32>, memref<8xi32>, index) -> () loc("<stdin>":30:5)
+    "gpu.launch_func"(%9, %8, %8, %8, %8, %8, %0, %1, %2, %3) <{kernel = @kernels::@kernel_add, operandSegmentSizes = array<i32: 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 4, 0>}> : (index, index, index, index, index, index, memref<8xi32>, memref<8xi32>, memref<8xi32>, memref<8xi32>) -> () loc("<stdin>":31:5)
+    %12 = "memref.cast"(%5) : (memref<?xi32>) -> memref<*xi32> loc("<stdin>":32:11)
+    %13 = "memref.cast"(%6) : (memref<?xi32>) -> memref<*xi32> loc("<stdin>":33:11)
+    "func.call"(%12) <{callee = @printMemrefI32}> : (memref<*xi32>) -> () loc("<stdin>":34:5)
+    "func.call"(%13) <{callee = @printMemrefI32}> : (memref<*xi32>) -> () loc("<stdin>":35:5)
+    "func.return"() : () -> () loc("<stdin>":36:5)
+  }) : () -> () loc("<stdin>":14:3)
+  "func.func"() <{function_type = (memref<?xi32>, i32) -> (), sym_name = "fillResource1DInt", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":38:3)
+  "func.func"() <{function_type = (memref<*xi32>) -> (), sym_name = "printMemrefI32", sym_visibility = "private"}> ({
+  }) : () -> () loc("<stdin>":40:3)
+}) {gpu.container_module, spirv.target_env = #spirv.target_env<#spirv.vce<v1.4, [Shader], [SPV_KHR_storage_buffer_storage_class]>, #spirv.resource_limits<>>} : () -> () loc("<stdin>":1:1)

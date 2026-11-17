@@ -1,0 +1,22 @@
+"builtin.module"() ({
+  "llvm.func"() <{CConv = #llvm.cconv<ccc>, function_type = !llvm.func<void (ptr<3>, ptr, i32, i64)>, linkage = #llvm.linkage<external>, sym_name = "tma_store_reduce_1d", unnamed_addr = 0 : i64, visibility_ = 0 : i64}> ({
+  ^bb0(%arg0: !llvm.ptr<3> loc("<stdin>":3:8), %arg1: !llvm.ptr loc("<stdin>":3:29), %arg2: i32 loc("<stdin>":3:47), %arg3: i64 loc("<stdin>":3:59)):
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<add>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":4:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<min>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":5:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<max>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":6:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<inc>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":7:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<dec>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":8:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<and>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":9:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<or>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":10:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2, %arg3) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 1>, redKind = #nvvm.tma_redux_kind<xor>}> : (!llvm.ptr, !llvm.ptr<3>, i32, i64) -> () loc("<stdin>":11:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<add>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":12:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<min>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":13:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<max>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":14:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<inc>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":15:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<dec>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":16:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<and>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":17:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<or>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":18:5)
+    "nvvm.cp.async.bulk.tensor.reduce"(%arg1, %arg0, %arg2) <{mode = #nvvm.tma_store_mode<tile>, operandSegmentSizes = array<i32: 1, 1, 1, 0>, redKind = #nvvm.tma_redux_kind<xor>}> : (!llvm.ptr, !llvm.ptr<3>, i32) -> () loc("<stdin>":19:5)
+    "llvm.return"() : () -> () loc("<stdin>":20:5)
+  }) : () -> () loc("<stdin>":2:3)
+}) : () -> () loc("<stdin>":1:1)
