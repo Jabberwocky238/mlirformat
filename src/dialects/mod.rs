@@ -62,6 +62,7 @@ pub mod apple9;
 pub mod glsl;
 pub mod image;
 pub mod isa;
+pub mod rdna2;
 #[path = "nir.gen.rs"]
 pub mod nir;
 #[path = "nvgpu.gen.rs"]

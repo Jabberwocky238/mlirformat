@@ -80,7 +80,7 @@ pub struct AgxKernel<'a> {
 }
 
 #[mlir::dialect("agx", ops = [UscInput, AgxKernel])]
-pub struct PseudoOps;
+struct PseudoOps;
 
 #[allow(non_snake_case, reason = "Mesa's field names")]
 #[path = "cmdbuf.gen.rs"]

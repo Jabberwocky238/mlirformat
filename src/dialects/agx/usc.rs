@@ -11,6 +11,7 @@ use crate::{Attribute, Error, NamedAttr};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use super::{Enc, USC_HASHES, UscOp};
+use crate::isa::IsaInt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {
@@ -50,18 +51,6 @@ pub struct UscCase<'t> {
 }
 
 impl UscField<'_> {
-    /// An integer attribute's value (hex literals too)
-    pub fn int(a: &Attribute<'_>) -> Result<i64, Error> {
-        match a {
-            Attribute::Int { lit, .. } => match lit.strip_prefix("0x") {
-                Some(h) => i64::from_str_radix(h, 16),
-                None => lit.parse(),
-            }
-            .map_err(|_| Error(format!("bad integer {lit}"))),
-            a => Err(Error(format!("{a} is not an integer"))),
-        }
-    }
-
     pub fn width(&self) -> u32 {
         self.bits.iter().map(|(a, b)| b - a + 1).sum()
     }
@@ -82,7 +71,7 @@ impl UscField<'_> {
     }
 
     pub fn raw(&self, a: &Attribute<'_>) -> Result<u128, Error> {
-        let v = UscField::int(a).or_else(|_| match a {
+        let v = IsaInt::try_from(a).map(|v| v.0).or_else(|_| match a {
             Attribute::Unit | Attribute::Bool(true) => Ok(1),
             Attribute::Bool(false) => Ok(0),
             _ => Err(Error(format!("{}: {a} is not a number", self.name))),
@@ -217,7 +206,7 @@ impl Usc {
         let Attribute::Dict(entries) = a else { return Err(Error(format!("{}: {a} is not an operand dictionary", O::ENC.name()))) };
         let num = |v: &Option<Attribute<'_>>| match v {
             None | Some(Attribute::Unit) => Ok(1),
-            Some(a) => UscField::int(a),
+            Some(a) => IsaInt::try_from(a).map(|v| v.0),
         };
         let mut k = 0;
         for e in entries.iter().filter(|e| e.name == "case") {

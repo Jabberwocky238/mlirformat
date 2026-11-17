@@ -79,3 +79,23 @@ macro_rules! attr_ops {
         pub struct $set;
     };
 }
+
+/// An instruction's integer field: an integer attribute, hex literals too (`{offset = 0x10}`)
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct IsaInt(pub i64);
+
+impl TryFrom<&crate::Attribute<'_>> for IsaInt {
+    type Error = Error;
+
+    fn try_from(a: &crate::Attribute<'_>) -> Result<IsaInt, Error> {
+        match a {
+            crate::Attribute::Int { lit, .. } => match lit.strip_prefix("0x") {
+                Some(h) => i64::from_str_radix(h, 16),
+                None => lit.parse(),
+            }
+            .map(IsaInt)
+            .map_err(|_| Error(format!("bad integer {lit}"))),
+            a => Err(Error(format!("{a} is not an integer"))),
+        }
+    }
+}
