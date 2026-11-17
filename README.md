@@ -117,6 +117,13 @@ each (`nir.fadd %a, %b : (f32, f32) -> f32`, every type written, `exact` its NIR
 opcode's sources, sizes, types and algebraic properties. It is what a GPU backend lowers SPIR-V to when it must
 compute as Mesa's drivers do.
 
+Not in `MlirOpt::upstream()` either (load it with `opt.load(glsl::GlslDialect)`): `glsl`, GLSL (ES 1.00 /
+3.00) as MLIR — `glsl.shader` and its globals (`in` / `out` / `uniform`, locations, interpolation,
+built-in variables), `glsl.load` / `glsl.store`, constructors, built-in functions, derivatives, texture
+sampling, `discard`; the rest of a shader is `func` / `arith` / `math` / `vector` / `scf`, aggregates and
+samplers `!spirv.*` types. GLSL source itself is read and written by
+[mlirbinary](https://github.com/Jabberwocky238/mlirbinary).
+
 ### Custom directives
 
 ODS keeps a `custom<X>(...)` directive's syntax out of the `.td` and leaves it to a hand-written
