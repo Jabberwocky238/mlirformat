@@ -1,5 +1,7 @@
 # mlirformat
 
+[中文](README.zh-CN.md)
+
 MLIR text ⇄ IR ⇄ typed Rust ops.
 
 MLIR behavior follows **MLIR 23.1.5** (llvm-project `llvmorg-23.1.5`): the textual format, the
