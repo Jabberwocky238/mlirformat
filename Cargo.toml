@@ -9,10 +9,10 @@ readme = "README.md"
 keywords = ["mlir", "parser", "serde", "compiler", "ir"]
 categories = ["parser-implementations", "compilers", "no-std"]
 # The mlir-opt fixtures stay in the repository.
-exclude = ["tests", "examples"]
+exclude = ["tests", "examples", "tools", "data"]
 
 [workspace]
-members = ["macros"]
+members = ["macros", "tools/*"]
 # An out-of-tree dialect: its own crate, depending on mlirformat by path.
 exclude = ["sampleplugin", "tests/nostd"]
 
