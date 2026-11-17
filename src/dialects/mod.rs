@@ -59,6 +59,7 @@ pub mod arm_sme;
 pub mod arm_sve;
 pub mod apple9;
 pub mod glsl;
+pub mod image;
 pub mod isa;
 #[path = "nir.gen.rs"]
 pub mod nir;
